@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案33：咩咩启示录风 | Cult of the Lamb</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root{--cotl-red:#d42020;--cotl-black:#111;--cotl-white:#eee;--cotl-dark:#1a1a1a}
+
+  body{background:var(--cotl-black);display:flex;justify-content:center;align-items:center;min-height:100vh;padding:12px;font-family:'Noto Sans SC',sans-serif;color:var(--cotl-white);font-size:13px}
+
+  .app{width:100%;max-width:660px}
+  .lamb-frame{background:var(--cotl-dark);border:3px solid var(--cotl-red);position:relative;overflow:hidden}
+  /* 五芒星背景 */
+  .lamb-frame::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      radial-gradient(circle at 50% 45%,rgba(212,32,32,.04) 0%,transparent 50%),
+      repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(212,32,32,.02) 40px,rgba(212,32,32,.02) 41px),
+      repeating-linear-gradient(-45deg,transparent,transparent 40px,rgba(212,32,32,.02) 40px,rgba(212,32,32,.02) 41px);
+  }
+
+  .content{position:relative;z-index:2;padding:16px 18px}
+
+  /* 标题：羔羊眼 */
+  .lamb-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--cotl-red)}
+  .lamb-header .eye{width:40px;height:40px;background:var(--cotl-white);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;border:2px solid var(--cotl-black)}
+  .lamb-header .eye .pupil{width:14px;height:14px;background:var(--cotl-black);border-radius:50%;position:relative}
+  .lamb-header .eye .pupil::after{content:'';position:absolute;top:2px;left:2px;width:5px;height:5px;background:var(--cotl-white);border-radius:50%}
+  .lamb-header .eye::before{content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:3px;height:8px;background:var(--cotl-red)}
+  .lamb-header h1{font-size:20px;font-weight:900;letter-spacing:2px;color:var(--cotl-red);flex:1}
+  .lamb-header .sub{font-size:8px;color:var(--cotl-white);opacity:.5;letter-spacing:2px}
+
+  /* 五芒星 */
+  .pentagram-divider{text-align:center;margin:6px 0;color:var(--cotl-red);font-size:16px;opacity:.6;letter-spacing:4px}
+
+  /* 状态：红黑相间 */
+  .lamb-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+  .lamb-stat{background:var(--cotl-black);border:2px solid var(--cotl-red);padding:8px 12px;position:relative;overflow:hidden}
+  .lamb-stat::after{content:'';position:absolute;top:0;right:0;width:12px;height:12px;background:var(--cotl-red);clip-path:polygon(100% 0,0 0,100% 100%)}
+  .lamb-stat .stat-head{display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px;font-weight:700}
+  .lamb-stat .stat-head .tag{color:var(--cotl-red)}
+  .lamb-stat .stat-head .val{color:var(--cotl-white)}
+  .lamb-stat .bar-bg{height:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+  .lamb-stat .bar-fill{height:100%;background:var(--cotl-red)}
+
+  /* 属性：圆圆眼纹章 */
+  .lamb-attrs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
+  .lamb-attr{width:48px;height:48px;border-radius:50%;background:var(--cotl-black);border:2px solid var(--cotl-red);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+  .lamb-attr::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--cotl-red);opacity:.15}
+  .lamb-attr .la-icon{font-size:14px}
+  .lamb-attr .la-val{font-size:10px;font-weight:900;color:var(--cotl-white)}
+  .lamb-attr .la-key{font-size:5px;color:var(--cotl-red);letter-spacing:1px}
+
+  /* 正文：敕令卷 */
+  .decree{background:var(--cotl-black);border:2px solid var(--cotl-red);padding:12px 16px;margin-bottom:8px;position:relative}
+  .decree::before{content:'DECREE';position:absolute;top:-9px;left:12px;background:var(--cotl-red);color:var(--cotl-white);font-size:7px;font-weight:900;letter-spacing:3px;padding:2px 10px}
+  .decree p{margin-bottom:4px;font-size:11px;line-height:1.8;color:#ccc}
+  .decree p:last-child{margin-bottom:0}
+  .decree .red{color:var(--cotl-red)}
+
+  /* 行动：供奉式选项 */
+  .offerings{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+  .offering{font-family:inherit;font-size:11px;font-weight:700;background:var(--cotl-black);color:var(--cotl-white);border:2px solid var(--cotl-red);padding:10px 12px;cursor:pointer;transition:.15s;text-align:left;position:relative;overflow:hidden}
+  .offering::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;background:var(--cotl-red);opacity:0;transition:.15s}
+  .offering:hover::before,.offering.primary::before{opacity:1}
+  .offering:hover{background:#1a1008}
+  .offering.primary{color:var(--cotl-white)}
+
+  /* 物品：圣物 */
+  .relics{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px}
+  .relic{display:flex;justify-content:space-between;padding:6px 10px;background:var(--cotl-black);border:1px solid rgba(212,32,32,.3);font-size:9px}
+  .relic .r-type{color:var(--cotl-red);font-size:7px}
+  .relic .r-name{color:var(--cotl-white)}
+  .doctrine-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px}
+  .doctrine-tags span{font-size:7px;padding:3px 8px;border:1px solid rgba(212,32,32,.2);color:var(--cotl-red);background:rgba(212,32,32,.04);font-weight:700}
+  .doctrine-tags span.active{border-color:var(--cotl-red);background:rgba(212,32,32,.1)}
+
+  .lamb-footer{display:flex;justify-content:space-between;align-items:center;padding:6px 0 0;border-top:2px solid var(--cotl-red);font-size:8px;font-weight:700;letter-spacing:1px}
+  .lamb-footer .eye-mini{width:12px;height:12px;border-radius:50%;background:var(--cotl-white);border:1px solid var(--cotl-black);display:flex;align-items:center;justify-content:center}
+  .lamb-footer .eye-mini::after{content:'';width:4px;height:4px;background:var(--cotl-black);border-radius:50%}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="lamb-frame">
+    <div class="content">
+
+      <div class="lamb-header">
+        <div class="eye"><div class="pupil"></div></div>
+        <div>
+          <h1>异 世 界 地 下 城</h1>
+          <div class="sub">ISEKAI DUNGEON · CULT</div>
+        </div>
+      </div>
+
+      <div class="pentagram-divider">⛤ ⛧ ⛤ ⛧ ⛤</div>
+
+      <div class="lamb-stats">
+        <div class="lamb-stat">
+          <div class="stat-head"><span class="tag">HEALTH</span><span class="val">78/100</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:78%"></div></div>
+        </div>
+        <div class="lamb-stat">
+          <div class="stat-head"><span class="tag">MANA</span><span class="val">54/100</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:54%"></div></div>
+        </div>
+        <div class="lamb-stat">
+          <div class="stat-head"><span class="tag">STAMINA</span><span class="val">90/100</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:90%"></div></div>
+        </div>
+        <div class="lamb-stat">
+          <div class="stat-head"><span class="tag">FAITH</span><span class="val">35%</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:35%"></div></div>
+        </div>
+      </div>
+
+      <div class="lamb-attrs">
+        <div class="lamb-attr"><span class="la-icon">⚔</span><div class="la-val">42</div><div class="la-key">ATK</div></div>
+        <div class="lamb-attr"><span class="la-icon">🛡</span><div class="la-val">28</div><div class="la-key">DEF</div></div>
+        <div class="lamb-attr"><span class="la-icon">⚡</span><div class="la-val">35</div><div class="la-key">SPD</div></div>
+        <div class="lamb-attr"><span class="la-icon">✧</span><div class="la-val">30</div><div class="la-key">INT</div></div>
+        <div class="lamb-attr"><span class="la-icon">☘</span><div class="la-val">18</div><div class="la-key">LCK</div></div>
+        <div class="lamb-attr"><span class="la-icon">◎</span><div class="la-val">1250</div><div class="la-key">GOLD</div></div>
+      </div>
+
+      <div class="decree">
+        <p>你推开沉重的石门，腐朽的空气中弥漫着<span class="red">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="red">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。</p>
+        <p>左侧那只头领模样的家伙眼中闪烁着<span class="red">不寻常的红光</span>。甬道两侧石壁上，古老浮雕描绘着被封印在此的<span class="red">魅魔女王</span>……</p>
+      </div>
+
+      <div class="offerings">
+        <button class="offering primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="offering">🔥 释放火球术灼烧敌群</button>
+        <button class="offering">🛡 防御姿态观察敌人弱点</button>
+        <button class="offering">💋 尝试魅惑哥布林</button>
+      </div>
+
+      <div class="relics">
+        <div class="relic"><span class="r-type">武器</span><span class="r-name">铁质长剑 Lv.3</span></div>
+        <div class="relic"><span class="r-type">防具</span><span class="r-name">皮甲 Lv.2</span></div>
+        <div class="relic"><span class="r-type">饰品</span><span class="r-name">冒险者徽章</span></div>
+        <div class="relic"><span class="r-type">圣餐</span><span class="r-name">回复药水 ×3</span></div>
+      </div>
+      <div class="doctrine-tags">
+        <span class="active">触手紧身衣·共生期</span><span class="active">蜕生项圈·中期</span><span>影子分身·无心智</span><span>淫欲晶核·关闭</span>
+      </div>
+
+      <div class="lamb-footer">
+        <span class="eye-mini"></span>
+        <span>B3F · ASTOR · 黄昏</span>
+        <span>TURN 12</span>
+        <span class="eye-mini"></span>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

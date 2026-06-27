@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案5：极简现代暗色风 | Minimal Modern Dark</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #0f0f14;
+    --bg-card: #18181f;
+    --bg-elevated: #1e1e28;
+    --border: #2a2a38;
+    --border-hover: #3a3a50;
+    --text-primary: #e8e8f0;
+    --text-secondary: #9090a0;
+    --text-muted: #585868;
+    --accent: #6366f1;
+    --accent-soft: #818cf8;
+    --accent-glow: rgba(99,102,241,0.2);
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --gold: #c9a050;
+    --purple: #a78bfa;
+    --radius: 8px;
+    --radius-sm: 4px;
+  }
+
+  body {
+    background: var(--bg-primary);
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* ── 标题栏 ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .crystal-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+  }
+  .header .subtitle {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .header-meta {
+    text-align: right;
+    font-size: 10px;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .header-meta .date {
+    color: var(--text-secondary);
+  }
+
+  /* ── 卡片通用 ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+  .card-header .dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+
+  /* ── 状态网格 ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+  .stat-label {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .stat-label .icon {
+    font-size: 12px;
+  }
+  .stat-label .icon.hp { color: var(--danger); }
+  .stat-label .icon.mp { color: #60a5fa; }
+  .stat-label .icon.sp { color: var(--warning); }
+  .stat-label .icon.exp { color: var(--success); }
+  .stat-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .progress {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .progress-fill.hp { background: linear-gradient(90deg, #dc2626, #ef4444); }
+  .progress-fill.mp { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+  .progress-fill.sp { background: linear-gradient(90deg, #d97706, #f59e0b); }
+  .progress-fill.exp { background: linear-gradient(90deg, #059669, #10b981); }
+
+  /* ── 属性芯片 ── */
+  .attr-chips {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .attr-chip {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 4px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .attr-chip:hover { border-color: var(--border-hover); }
+  .attr-chip .key {
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+  .attr-chip .val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* ── 正文区 ── */
+  .narrative {
+    padding: 16px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    border-left: 2px solid var(--accent);
+  }
+  .narrative p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: var(--text-secondary);
+  }
+  .narrative p:last-child { margin-bottom: 0; }
+  .narrative .accent { color: var(--gold); }
+  .narrative .danger { color: var(--danger); }
+  .narrative .purple { color: var(--purple); }
+
+  /* ── 行动选项 ── */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 0;
+  }
+  .action-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .action-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+  }
+  .action-btn.primary {
+    background: rgba(99,102,241,0.1);
+    border-color: rgba(99,102,241,0.3);
+    color: var(--accent-soft);
+  }
+  .action-btn.primary:hover {
+    background: rgba(99,102,241,0.15);
+    border-color: var(--accent);
+  }
+  .action-btn .num {
+    font-size: 10px;
+    color: var(--text-muted);
+    min-width: 16px;
+  }
+
+  /* ── 装备面板 ── */
+  .equip-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .equip-slot {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .equip-slot .slot-type {
+    color: var(--text-muted);
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+  .equip-slot .slot-name {
+    color: var(--text-primary);
+  }
+  .equip-slot .slot-name.empty { color: var(--text-muted); font-style: italic; }
+
+  /* ── 特殊装备标签 ── */
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    background: rgba(99,102,241,0.06);
+    border: 1px solid rgba(99,102,241,0.12);
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+  }
+  .tag.active {
+    background: rgba(99,102,241,0.1);
+    border-color: rgba(99,102,241,0.3);
+    color: var(--accent-soft);
+  }
+
+  /* ── 底部状态栏 ── */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .status-bar .dot-sep {
+    width: 3px; height: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+  .status-bar .pulse {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; box-shadow: 0 0 4px var(--success); }
+    50% { opacity: 0.4; box-shadow: 0 0 1px var(--success); }
+  }
+
+  /* ── 钻石装饰 ── */
+  .diamond-sep {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 8px;
+  }
+  .diamond-sep .line {
+    height: 1px;
+    flex: 0 1 40px;
+    background: var(--border);
+  }
+  .diamond-sep .gem {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    transform: rotate(45deg);
+    opacity: 0.4;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 标题栏 -->
+  <div class="header">
+    <div class="header-left">
+      <div class="crystal-icon">◆</div>
+      <div>
+        <h1>异世界地下城</h1>
+        <div class="subtitle">Isekai Dungeon</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span class="date">384.10.15</span>
+      <span>黄昏 · 第12回合</span>
+    </div>
+  </div>
+
+  <!-- 状态卡片 -->
+  <div class="card">
+    <div class="card-header"><span class="dot"></span>冒险者状态</div>
+    <div class="stats-grid">
+      <div class="stat-row">
+        <div class="stat-top">
+          <span class="stat-label"><span class="icon hp">♥</span>生命值</span>
+          <span class="stat-value">78/100</span>
+        </div>
+        <div class="progress"><div class="progress-fill hp" style="width:78%"></div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-top">
+          <span class="stat-label"><span class="icon mp">◆</span>魔力值</span>
+          <span class="stat-value">54/100</span>
+        </div>
+        <div class="progress"><div class="progress-fill mp" style="width:54%"></div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-top">
+          <span class="stat-label"><span class="icon sp">⚡</span>体力值</span>
+          <span class="stat-value">90/100</span>
+        </div>
+        <div class="progress"><div class="progress-fill sp" style="width:90%"></div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-top">
+          <span class="stat-label"><span class="icon exp">▲</span>经验值</span>
+          <span class="stat-value">35%</span>
+        </div>
+        <div class="progress"><div class="progress-fill exp" style="width:35%"></div></div>
+      </div>
+    </div>
+    <div class="attr-chips">
+      <div class="attr-chip"><div class="key">ATK</div><div class="val">42</div></div>
+      <div class="attr-chip"><div class="key">DEF</div><div class="val">28</div></div>
+      <div class="attr-chip"><div class="key">AGI</div><div class="val">35</div></div>
+      <div class="attr-chip"><div class="key">INT</div><div class="val">30</div></div>
+      <div class="attr-chip"><div class="key">LCK</div><div class="val">18</div></div>
+      <div class="attr-chip"><div class="key">GOLD</div><div class="val">1250</div></div>
+    </div>
+  </div>
+
+  <!-- 正文 -->
+  <div class="narrative">
+    <p>
+      你推开沉重的石门，腐朽的空气中弥漫着<span class="accent">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="danger">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+    </p>
+    <p>
+      你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="danger">不寻常的红光</span>。
+    </p>
+    <p>
+      甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="accent">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层<span class="purple">淫靡的气息</span>……
+    </p>
+  </div>
+
+  <!-- 行动选项 -->
+  <div class="actions">
+    <button class="action-btn primary"><span class="num">1</span>挥剑斩向哥布林头领</button>
+    <button class="action-btn"><span class="num">2</span>释放火球术灼烧敌群</button>
+    <button class="action-btn"><span class="num">3</span>防御姿态，观察敌人弱点</button>
+    <button class="action-btn"><span class="num">4</span>尝试魅惑其中一只哥布林</button>
+  </div>
+
+  <div class="diamond-sep"><span class="line"></span><span class="gem"></span><span class="line"></span></div>
+
+  <!-- 装备面板 -->
+  <div class="card">
+    <div class="card-header"><span class="dot"></span>装备与持有物</div>
+    <div class="equip-grid">
+      <div class="equip-slot"><span class="slot-type">武器</span><span class="slot-name">铁质长剑 Lv.3</span></div>
+      <div class="equip-slot"><span class="slot-type">防具</span><span class="slot-name">皮甲 Lv.2</span></div>
+      <div class="equip-slot"><span class="slot-type">饰品</span><span class="slot-name">冒险者徽章</span></div>
+      <div class="equip-slot"><span class="slot-type">消耗品</span><span class="slot-name">回复药水 ×3</span></div>
+    </div>
+    <div class="tags">
+      <span class="tag active">触手紧身衣·共生期</span>
+      <span class="tag active">蜕生项圈·中期</span>
+      <span class="tag">影子分身·无心智</span>
+      <span class="tag">淫欲晶核·关闭</span>
+    </div>
+  </div>
+
+  <!-- 底部状态栏 -->
+  <div class="status-bar">
+    <span><span class="pulse"></span>地下城第3层</span>
+    <span>阿斯特大陆 · 龙脊联邦</span>
+  </div>
+
+</div>
+</body>
+</html>

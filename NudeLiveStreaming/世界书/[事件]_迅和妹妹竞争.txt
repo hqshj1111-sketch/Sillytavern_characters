@@ -1,0 +1,58 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹迅三人竞争事件'] && isDaily && !isSexActive) {
+    const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+    const jin = _.get(stat, 'NPC数据.风见迅', {});
+    const makotoAffection = parseInt(_.get(makoto, '好感度', 0)) || 0;
+    const jinAffection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const makotoLewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const jinLewdness = parseInt(_.get(jin, '淫乱度', 0)) || 0;
+    const makotoDiscovered = _.get(makoto, '秘密发现', false);
+    const jinDiscovered = _.get(jin, '秘密发现', false);
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.妹妹迅三人竞争事件', 0)) || 0;
+    const makotoSexCount = parseInt(_.get(makoto, '与主角做爱次数', 0)) || 0;
+    const jinSexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：三人竞争
+event_initiator:
+  event_name: "三人竞争"
+  character: "汐见真帆、风见迅"
+  location: "住宅区 - 主角的住处"
+  time: "16:00-22:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "迅又一次出现在主角家，真帆也在。两人上次的争执还没消，彼此都知道对方的存在和威胁。这次话题滑向主角的速度更快了——几乎是迅刚坐下，真帆就用嘲讽开了头。"
+    - "两人不再试探对方的底细，而是直接点名道姓地攀比。迅说你上次和我联动直播的时候明明更爽，弹幕都看出来你更兴奋；真帆反呛说做完就拉倒的同行算什么，哥哥每天晚上都回家陪她。"
+    <%_ if (makotoSexCount > 3 && jinSexCount > 3) { _%>
+    - "两人的较量不再停留在口头上，因为他们对彼此的身体和反应都太熟悉了——可能以前轮流的时候暗暗较过劲，或者在平时的互动中观察过。他们不再要求现场比拼，而是直接质问主角上次和他做得更舒服还是和她；喜欢谁在哪里的表现更多一点。问题更具体，言语也更下流直白。"
+    - "结合真帆好感度(<%= makotoAffection %>)和迅好感度(<%= jinAffection %>)调整两人的语气。"
+    - "结尾留给主角选择：分开安抚各自承诺下次、干脆利落地选一个并当面对另一个说明、或把两人拉进卧室说轮流就不用争了。"
+    <%_ } else { _%>
+    - "两人不服气地转向主角，让他今天必须给个答案，或者当场脱光让他们比一比。"
+    - "结合真帆好感度(<%= makotoAffection %>)和淫乱度(<%= makotoLewdness %>)调整她的话风——好感度越高越嘴硬却越黏人。结合迅好感度(<%= jinAffection %>)和淫乱度(<%= jinLewdness %>)调整他的话风——从挑衅到主动自曝。"
+    - "结尾留给主角选择：选一个安抚另一个、同时拉两个人进卧室、或拒绝这场竞争。"
+    <%_ } _%>
+    <%_ } else { _%>
+    - "迅因某个理由来主角家做客。因为和真帆同是汐望高中的学生，两人的话题聊着聊着就滑向了主角——随后是关于谁更了解主角、谁更让主角满意的暗中较量。真帆嘴上嘲讽迅，却警惕后辈能这么自然地上门找哥哥；迅用雄小鬼的口吻回呛，话里话外炫耀他和主角有共同秘密，却心虚对方认识主角更久。"
+    - "话题逐渐升级，两人不再遮掩——当着主角的面问谁操起来更爽、谁更让人上头，让主角今天必须给个答案。如果主角回避，两人会追问如果说不出来，现场脱光实战比一比就知道。"
+    - "结合真帆好感度(<%= makotoAffection %>)和淫乱度(<%= makotoLewdness %>)调整她的话风——从嘴硬不服软到直接动手。结合迅好感度(<%= jinAffection %>)和淫乱度(<%= jinLewdness %>)调整他的话风——从挑衅到主动自曝。"
+    - "结尾留给主角选择：选择一个而安抚另一个、同时抱俩人进去卧室、或拒绝这场竞争。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹迅三人竞争事件" }
+      ]
+
+<%_ } } _%>

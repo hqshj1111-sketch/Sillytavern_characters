@@ -1,0 +1,428 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '地下城攻略阶段') return;
+
+const isInCombat = _.get(stat, '战斗状态.是否战斗中', false);
+const isCombatSettling = _.get(stat, '战斗状态.是否战斗结算中', false);
+const isResting = _.get(stat, '地下城攻略状态.是否休整中', false);
+const isSettling = _.get(stat, '地下城攻略状态.是否攻略结算中', false);
+const isDefeated = _.get(stat, '地下城攻略状态.是否攻略败北中', false);
+const isBusy = isInCombat || isCombatSettling || isResting || isSettling || isDefeated;
+
+const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
+const currentFloor = _.get(stat, '地下城攻略状态.当前所在层数', 0);
+const floorProgress = _.get(stat, '地下城攻略状态.本层进度', 0);
+
+const dungeonData = _.get(stat, `地下城信息.${dungeonName}`, {});
+const floorIndex = currentFloor - 1;
+const floorTypes = dungeonData.每层区域类型 || [];
+const floorDescs = dungeonData.每层区域描述 || [];
+const dangerLevels = dungeonData.每层区域危险等级 || [];
+const totalFloors = dungeonData.总层数 || 0;
+const currentFloorType = (floorTypes[floorIndex] || '未知区域');
+const currentFloorDesc = (floorDescs[floorIndex] || '深入地下，环境难以辨识');
+const currentDanger = (dangerLevels[floorIndex] !== undefined ? Number(dangerLevels[floorIndex]) : 1) || 1;
+
+const RANKS = ['F','E','D','C','B','A','S','SS','SSS','EX'];
+const rankToNum = { F:1,E:2,D:3,C:4,B:5,A:6,S:7,SS:8,SSS:9,EX:10 };
+const dungeonRank = _.get(dungeonData, '地下城等级', 'F');
+const rankNum = rankToNum[dungeonRank] || 1;
+
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function vary(base, pct) { return Math.round(base * (1 - pct + Math.random() * pct * 2)); }
+
+function calcEnemyStats(type, danger) {
+  const mult = type === 'boss' ? 3.0 : (type === 'elite' ? 1.8 : 1.0);
+  const level = Math.max(1, Math.round(rankNum * 1.5 + danger * 0.5) + randInt(-1, 1));
+  const hp = vary(Math.round((50 + rankNum * 30 + danger * 20) * mult), 0.10);
+  const atk = vary(Math.round((10 + rankNum * 5 + danger * 3) * mult), 0.10);
+  const def = vary(Math.round((5 + rankNum * 3 + danger * 2) * mult), 0.10);
+  const count = type === 'boss' ? 1 : randInt(1, Math.min(3, 1 + Math.floor(danger / 3)));
+  return { level, hp, atk, def, count };
+}
+
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const trapEvent = pendingEvents['陷阱触发事件'] || '';
+const treasureEvent = pendingEvents['宝箱发现事件'] || '';
+const puzzleEvent = pendingEvents['谜题触发事件'] || '';
+const hasActiveEvent = !!trapEvent || !!treasureEvent || !!puzzleEvent;
+
+const dungeonType = dungeonData.类型 || '';
+
+const mcLevel = _.get(stat, '主角.当前状态.等级', 1);
+const mcExp = _.get(stat, '主角.当前状态.经验值', 0);
+const puzzleExpGain = randInt(rankNum * 5 + currentDanger * 3, rankNum * 12 + currentDanger * 6);
+let puzzleLevelGain = 0, puzzleRemainExp = mcExp + puzzleExpGain, puzzleLv = mcLevel;
+while (true) {
+  const needed = puzzleLv * 100 + 50;
+  if (puzzleRemainExp >= needed) { puzzleRemainExp -= needed; puzzleLv++; puzzleLevelGain++; }
+  else break;
+}
+const puzzleWillLevelUp = puzzleLevelGain > 0;
+
+const progressDelta = {
+  nothing: randInt(5, 10),
+  encounter_normal: randInt(15, 25),
+  encounter_elite: randInt(25, 35),
+  entrance: randInt(5, 15),
+  trap: 5,
+  treasure: 5
+};
+
+let rollResult = 'none';
+let treasureQuality = 'common';
+let enemyStats = null;
+if (!isBusy && !hasActiveEvent) {
+  if (currentFloorType === 'BOSS层') {
+    rollResult = Math.random() < 0.5 ? 'boss_encounter' : 'boss_none';
+    if (rollResult === 'boss_encounter') enemyStats = calcEnemyStats('boss', currentDanger);
+  } else if (currentFloorType !== '休整层') {
+    const dangerBonus = Math.min(currentDanger * 5, 30);
+    const progressThreshold = Math.max(0, 100 - floorProgress) * 0.3;
+    const nothingChance = Math.max(15, 65 - dangerBonus - progressThreshold);
+    const trapChance = 10;
+    const treasureChance = 10;
+    if (dungeonType === '探索型') {
+      const puzzleChance = 50 + dangerBonus + progressThreshold;
+      const totalE = nothingChance + puzzleChance + trapChance + treasureChance;
+      const rollE = Math.random() * totalE;
+      if (rollE < nothingChance) rollResult = 'none';
+      else if (rollE < nothingChance + puzzleChance) rollResult = 'puzzle';
+      else if (rollE < nothingChance + puzzleChance + trapChance) rollResult = 'trap';
+      else { rollResult = 'treasure'; }
+    } else {
+      const monsterBase = 50;
+      const monsterChance = monsterBase + dangerBonus + progressThreshold;
+      const eliteChance = Math.max(0, currentDanger >= 3 ? Math.floor(dangerBonus * 0.4) : 0);
+      const totalC = nothingChance + monsterChance + eliteChance + trapChance + treasureChance;
+      const rollC = Math.random() * totalC;
+      if (rollC < nothingChance) rollResult = 'none';
+      else if (rollC < nothingChance + monsterChance) { rollResult = 'monster'; enemyStats = calcEnemyStats('normal', currentDanger); }
+      else if (rollC < nothingChance + monsterChance + eliteChance) { rollResult = 'elite'; enemyStats = calcEnemyStats('elite', currentDanger); }
+      else if (rollC < nothingChance + monsterChance + eliteChance + trapChance) rollResult = 'trap';
+      else { rollResult = 'treasure'; }
+    }
+  }
+}
+if (rollResult === 'treasure') {
+  const tr = Math.random();
+  if (tr < 0.5) treasureQuality = 'common';
+  else if (tr < 0.8) treasureQuality = 'uncommon';
+  else treasureQuality = 'rare';
+}
+_%>
+# 系统指令：地下城攻略系统
+
+  current_dungeon: "<%= dungeonName %>"
+  current_floor: "<%= currentFloor %> / <%= totalFloors %>"
+  floor_type: "<%= currentFloorType %>"
+  floor_description: "<%= currentFloorDesc %>"
+<%_ if (currentFloorType !== '休整层' && currentFloorType !== 'BOSS层') { _%>
+  progress: "<%= floorProgress %>%"
+<%_ } _%>
+
+<%_ if (isBusy) { _%>
+> **当前子阶段由其他系统条目处理（战斗/休整/结算/败北），本条目仅提供基础环境信息，不触发新事件。**
+
+<%_ } else if (hasActiveEvent) { _%>
+> **当前存在活跃事件，根据事件类型进行对应处理，不再触发新遭遇。**
+
+<%_ if (trapEvent) { _%>
+  narrative_guidance:
+    - "主角已触发陷阱——<%= trapEvent %>。描写主角应对陷阱的过程——躲避、拆解、承受或利用环境化解危机。"
+
+  mandatory_data_sync:
+    instruction: "仅当陷阱危机确切解除后执行："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/陷阱触发事件" }
+      ]
+
+<%_ } else if (treasureEvent) { _%>
+  narrative_guidance:
+    - "主角发现了一个宝箱。描写宝箱的外观——材质、锁具、附着的魔法光晕——以及主角开箱的过程。"
+    <%_ if (treasureEvent === 'common') { _%>
+    - "宝箱内含少量金币（10~30）和可能的普通消耗品。"
+    <%_ } else if (treasureEvent === 'uncommon') { _%>
+    - "宝箱内含中等金币（30~70），可能附带普通道具或基础素材。"
+    <%_ } else if (treasureEvent === 'rare') { _%>
+    - "宝箱内含较多金币（70~100），可能附带稀有道具、技能卷轴或高级素材。"
+<%_ } _%>
+
+<%_ } else if (puzzleEvent) { _%>
+  narrative_guidance:
+    - "主角正在尝试破解谜题——<%= puzzleEvent %>。描写主角专注解题的过程。"
+    - "谜题的难度受地下城等级和本层危险度影响。描写主角在解题过程中的紧张与专注。"
+    - "主角的魔力属性可辅助解读魔法谜题，速度属性影响机关解谜的反应窗口，意志属性决定在反复试错中不被挫败感吞噬的韧性。"
+
+  mandatory_data_sync:
+    instruction: "仅当主角成功解开谜题后执行，解开谜题后可获得金币、经验和可能的素材/道具奖励："
+    patch_code: |
+      [
+        { "op": "delta", "path": "/地下城攻略状态/本次攻略获得金币", "value": [<%= randInt(rankNum * 10 + currentDanger * 5, rankNum * 30 + currentDanger * 15) %>] }
+        // 若解开谜题后获得素材，追加：{ "op": "delta", "path": "/地下城攻略状态/本次攻略获得素材/[AI命名的素材名称]", "value": 1 }
+        // 若解开谜题后获得道具，追加：{ "op": "insert", "path": "/主角/道具栏/[AI命名的道具名称]", "value": { "类型": "[消耗品/素材/装备]", "数量": 1, "描述": "[道具描述]" } }
+        <%_ if (puzzleWillLevelUp) { _%>
+        { "op": "replace", "path": "/主角/当前状态/经验值", "value": <%= puzzleRemainExp %> },
+        { "op": "delta", "path": "/主角/当前状态/等级", "value": <%= puzzleLevelGain %> },
+        { "op": "insert", "path": "/系统状态/待处理事件/升级事件", "value": <%= puzzleLevelGain %> }
+        <%_ } else { _%>
+        { "op": "delta", "path": "/主角/当前状态/经验值", "value": <%= puzzleExpGain %> }
+        <%_ } _%>,
+        { "op": "remove", "path": "/系统状态/待处理事件/谜题触发事件" }
+      ]
+<%_ } _%>
+
+<%_ } else { _%>
+
+<%_ if (currentFloorType === '休整层') { _%>
+  narrative_guidance:
+    - "本层为休整层，无任何怪物和陷阱。描写安全区域的环境——可能设有温泉、魔力泉眼、前人留下的安全结界或简易营地。"
+    - "主角可在此自由休整，饮食、睡眠、恢复状态。描写紧绷神经在安全环境中逐渐松弛的过程。"
+
+  mandatory_data_sync:
+    instruction: "当玩家决定在此休整时执行："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/地下城攻略状态/是否休整中", "value": true }
+      ]
+
+<%_ } else if (currentFloorType === 'BOSS层') { _%>
+<%_ if (rollResult === 'boss_encounter') { _%>
+<%_ if (dungeonType === '魅惑型') { _%>
+  narrative_guidance:
+    - "主角抵达了魅惑型地下城的最深处——<%= dungeonData.boss名称 || '魅惑之主' %>的领域。空气中弥漫着令人窒息的催情魔力，每一口呼吸都让身体不由自主地燥热起来。"
+    - "描写色情BOSS的惊艳与压迫并存的登场——<%= dungeonData.boss描述 || '从黑暗中浮现的妖艳身姿，散发着引诱与支配并存的气息' %>。她的美丽足以让人忘记眼前的危险。"
+    - "战斗一触即发，但这场战斗不仅关乎力量——更关乎意志与欲望的对抗。"
+<%_ } else { _%>
+  narrative_guidance:
+    - "主角抵达了BOSS——<%= dungeonData.boss名称 || '未知BOSS' %>的面前。"
+    - "描写BOSS的登场画面与压迫感：<%= dungeonData.boss描述 || '无法看清深处的黑暗' %>。战斗一触即发。"
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "遭遇BOSS，启动战斗："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/战斗状态/是否战斗中", "value": true },
+        { "op": "replace", "path": "/战斗状态/敌方名称", "value": "<%= dungeonData.boss名称 || '未知BOSS' %>" },
+        { "op": "replace", "path": "/战斗状态/敌方种族", "value": "[BOSS种族]" },
+        { "op": "replace", "path": "/战斗状态/敌方等级", "value": <%= enemyStats ? enemyStats.level : 10 %> },
+        { "op": "replace", "path": "/战斗状态/敌方数量", "value": 1 },
+        { "op": "replace", "path": "/战斗状态/敌方HP", "value": <%= enemyStats ? enemyStats.hp : 300 %> },
+        { "op": "replace", "path": "/战斗状态/敌方最大HP", "value": <%= enemyStats ? enemyStats.hp : 300 %> },
+        { "op": "replace", "path": "/战斗状态/敌方攻击力", "value": <%= enemyStats ? enemyStats.atk : 50 %> },
+        { "op": "replace", "path": "/战斗状态/敌方防御力", "value": <%= enemyStats ? enemyStats.def : 30 %> },
+        { "op": "replace", "path": "/战斗状态/敌方技能", "value": [BOSS技能列表] },
+        { "op": "replace", "path": "/战斗状态/敌方buff", "value": {} },
+        { "op": "replace", "path": "/战斗状态/敌方debuff", "value": {} }
+      ]
+
+<%_ } else { _%>
+<%_ if (dungeonType === '魅惑型') { _%>
+  narrative_guidance:
+    - "主角身处魅惑型地下城BOSS层——<%= dungeonData.boss名称 || '魅惑之主' %>的领域。空气中飘荡着甜腻的暗香，墙壁上渗出的暖蜜微微发光，远处隐约传来令人心跳加速的低吟。"
+    - "描写这种魅惑氛围对主角身体的影响——皮肤表面仿佛被无形的羽毛轻抚，腰际以下隐隐发热，但理智提醒着前方还有更危险的诱惑在等待。"
+    - "严禁直接描写与BOSS相遇。本回合仅推进探索进度，渲染魅惑的氛围与主角内心欲望与克制的角力。"
+<%_ } else { _%>
+  narrative_guidance:
+    - "主角身处BOSS层——<%= dungeonData.boss名称 || '未知BOSS' %>的领域。描写BOSS领域的压迫氛围，但严禁直接描写与BOSS相遇或对峙。"
+    - "描写环境细节和气氛渲染——远处的震响、空气中异常的魔力波动、地面上散落的前人遗物——暗示BOSS的存在但保持距离。"
+    - "本回合仅推进探索进度，BOSS的正式遭遇留给未来。"
+<%_ } _%>
+
+<%_ } _%>
+
+<%_ } else { _%>
+<%_ if (floorProgress >= 100) { _%>
+  narrative_guidance:
+    - "主角已抵达本层终点。描写本层通道末端的环境，和通往下一层的通道形式。"
+    - "主角在此稍作整备，调整呼吸，检查装备，为下一层做准备。严禁在本回合中描写进入下一层的内容。"
+
+  mandatory_data_sync:
+    instruction: "抵达本层终点，推进至下一层："
+    patch_code: |
+      [
+        { "op": "delta", "path": "/地下城攻略状态/当前所在层数", "value": 1 },
+        { "op": "replace", "path": "/地下城攻略状态/本层进度", "value": 0 }
+      ]
+
+<%_ } else { _%>
+<%_ if (floorProgress === 0) { _%>
+  narrative_guidance:
+    - "主角刚踏入本层。根据<%= currentFloorDesc %>描写本层的初入体验——视野所及的环境全貌、空气中的气味与温度、远处隐约可辨的声响。"
+    - "刚进入新区域，尚无迫近的威胁。本回合仅描写环境的初步探索与氛围铺垫，不触发任何遭遇事件。"
+
+  mandatory_data_sync:
+    instruction: "初入本层推进进度："
+    patch_code: |
+      [
+        { "op": "delta", "path": "/地下城攻略状态/本层进度", "value": <%= progressDelta.entrance %> }
+      ]
+
+<%_ } else { _%>
+  encounter_roll:
+    result: "<%= rollResult %>"
+
+<%_ if (rollResult === 'none') { _%>
+    narrative_guidance:
+      - "当前推进无事发生。正常描写地下城探索过程——环境细节、气氛渲染、主角的警觉与观察。"
+      - "可在叙事中暗示潜在的危险——远处微弱的声响、地面新留下的痕迹、空气微妙的变化——为下次遭遇铺垫。"
+
+    mandatory_data_sync:
+      instruction: "推进本层进度："
+      patch_code: |
+        [
+          { "op": "delta", "path": "/地下城攻略状态/本层进度", "value": <%= progressDelta.nothing %> }
+        ]
+
+<%_ } else if (rollResult === 'monster') { _%>
+<%_ if (dungeonType === '魅惑型') { _%>
+    narrative_guidance:
+      - "判定遭遇色情魔物。描写魅惑型地下城中特有的色情魔物从环境中现身。"
+      - "色情魔物不以杀死为目的，而是通过快感、束缚和榨取来消耗对手。描写主角面对色情魔物时身体不自觉的燥热反应与警惕交织的复杂心境。"
+      - "本回合仅描写遭遇的开端，战斗过程和结果留给后续回合。"
+<%_ } else { _%>
+    narrative_guidance:
+      - "判定遭遇普通怪物。描写怪物从环境中出现的方式——从阴影中现身、从天花板坠下、从转角冲出——以及主角摆出战斗姿态的第一反应。"
+      - "本回合仅描写遭遇的开端，战斗过程和结果留给后续回合。"
+<%_ } _%>
+
+    mandatory_data_sync:
+      instruction: "启动战斗并推进进度："
+      patch_code: |
+        [
+          { "op": "delta", "path": "/地下城攻略状态/本层进度", "value": <%= progressDelta.encounter_normal %> },
+          { "op": "replace", "path": "/战斗状态/是否战斗中", "value": true },
+          { "op": "replace", "path": "/战斗状态/敌方名称", "value": "[AI生成的怪物名称]" },
+          { "op": "replace", "path": "/战斗状态/敌方种族", "value": "[怪物种族]" },
+          { "op": "replace", "path": "/战斗状态/敌方等级", "value": <%= enemyStats ? enemyStats.level : 1 %> },
+          { "op": "replace", "path": "/战斗状态/敌方数量", "value": <%= enemyStats ? enemyStats.count : 1 %> },
+          { "op": "replace", "path": "/战斗状态/敌方HP", "value": <%= enemyStats ? enemyStats.hp : 100 %> },
+          { "op": "replace", "path": "/战斗状态/敌方最大HP", "value": <%= enemyStats ? enemyStats.hp : 100 %> },
+          { "op": "replace", "path": "/战斗状态/敌方攻击力", "value": <%= enemyStats ? enemyStats.atk : 15 %> },
+          { "op": "replace", "path": "/战斗状态/敌方防御力", "value": <%= enemyStats ? enemyStats.def : 8 %> },
+          { "op": "replace", "path": "/战斗状态/敌方技能", "value": [怪物技能列表] },
+          { "op": "replace", "path": "/战斗状态/敌方buff", "value": {} },
+          { "op": "replace", "path": "/战斗状态/敌方debuff", "value": {} }
+        ]
+
+<%_ } else if (rollResult === 'elite') { _%>
+<%_ if (dungeonType === '魅惑型') { _%>
+    narrative_guidance:
+      - "判定遭遇强力的色情魔物。描写强大的色情魔物的震撼登场。"
+      - "空气中弥漫着令人晕眩的催情魔力，主角能感到皮肤表面被无形的欲望之丝轻抚。色情魔物的压迫感不仅是力量上的，更是意志与欲望的考验。"
+      - "本回合仅描写遭遇的开端，战斗过程和结果留给后续回合。"
+<%_ } else { _%>
+    narrative_guidance:
+      - "判定遭遇精英怪物。描写精英怪物更具压迫感的登场，以及主角严阵以待的紧张氛围。"
+      - "本回合仅描写遭遇的开端，战斗过程和结果留给后续回合。"
+<%_ } _%>
+
+    mandatory_data_sync:
+      instruction: "启动精英战斗并推进进度："
+      patch_code: |
+        [
+          { "op": "delta", "path": "/地下城攻略状态/本层进度", "value": <%= progressDelta.encounter_elite %> },
+          { "op": "replace", "path": "/战斗状态/是否战斗中", "value": true },
+          { "op": "replace", "path": "/战斗状态/敌方名称", "value": "[AI生成的精英怪物名称]" },
+          { "op": "replace", "path": "/战斗状态/敌方种族", "value": "[精英种族]" },
+          { "op": "replace", "path": "/战斗状态/敌方等级", "value": <%= enemyStats ? enemyStats.level : 5 %> },
+          { "op": "replace", "path": "/战斗状态/敌方数量", "value": 1 },
+          { "op": "replace", "path": "/战斗状态/敌方HP", "value": <%= enemyStats ? enemyStats.hp : 200 %> },
+          { "op": "replace", "path": "/战斗状态/敌方最大HP", "value": <%= enemyStats ? enemyStats.hp : 200 %> },
+          { "op": "replace", "path": "/战斗状态/敌方攻击力", "value": <%= enemyStats ? enemyStats.atk : 30 %> },
+          { "op": "replace", "path": "/战斗状态/敌方防御力", "value": <%= enemyStats ? enemyStats.def : 15 %> },
+          { "op": "replace", "path": "/战斗状态/敌方技能", "value": [精英技能列表] },
+          { "op": "replace", "path": "/战斗状态/敌方buff", "value": {} },
+          { "op": "replace", "path": "/战斗状态/敌方debuff", "value": {} }
+        ]
+
+<%_ } else if (rollResult === 'trap') { _%>
+<%_ if (dungeonType === '魅惑型') { _%>
+    narrative_guidance:
+      - "判定触发色情陷阱。描写魅惑型地下城中特有的色情陷阱的触发瞬间。"
+      - "陷阱不以伤害身体为目的，而是通过束缚、催情和快感刺激来消耗冒险者的体力与意志。描写主角被陷阱缠住时挣扎与燥热交织的窘境。"
+      - "本回合仅描写陷阱触发的开端，主角的应对和结果留给后续回合。"
+<%_ } else { _%>
+    narrative_guidance:
+      - "判定触发陷阱。描写陷阱触发瞬间的感官冲击，以及主角的即时反应。"
+      - "本回合仅描写陷阱触发的开端，主角的应对和结果留给后续回合。"
+<%_ } _%>
+
+    mandatory_data_sync:
+      instruction: "记录陷阱事件并推进进度："
+      patch_code: |
+        [
+          { "op": "delta", "path": "/地下城攻略状态/本层进度", "value": <%= progressDelta.trap %> },
+          { "op": "insert", "path": "/系统状态/待处理事件/陷阱触发事件", "value": "[AI生成的陷阱类型]" }
+        ]
+
+<%_ } else if (rollResult === 'treasure') { _%>
+<%_ if (dungeonType === '魅惑型') { _%>
+    narrative_guidance:
+      - "判定发现带有色情意味的宝箱。描写宝箱的外观，暗示其品质为<%= treasureQuality === 'common' ? '普通（common）' : (treasureQuality === 'uncommon' ? '精良（uncommon）' : '稀有（rare）') %>。"
+      - "这类宝箱内可能藏有媚药、情趣魔道具、敏感度增幅饰品等带有色情意味的特殊物品。主角面对这样一个散发着暧昧气息的宝箱，不免心生犹豫。"
+      - "本回合仅描写发现宝箱的场景，主角的开箱决定和结果留给后续回合。"
+<%_ } else { _%>
+    narrative_guidance:
+      - "判定发现宝箱。描写宝箱的外观，暗示其品质为<%= treasureQuality === 'common' ? '普通（common）' : (treasureQuality === 'uncommon' ? '精良（uncommon）' : '稀有（rare）') %>。"
+      - "本回合仅描写发现宝箱的场景，主角的开箱决定和结果留给后续回合。"
+<%_ } _%>
+
+    mandatory_data_sync:
+      instruction: "记录宝箱事件并推进进度："
+      patch_code: |
+        [
+          { "op": "delta", "path": "/地下城攻略状态/本层进度", "value": <%= progressDelta.treasure %> },
+          { "op": "insert", "path": "/系统状态/待处理事件/宝箱发现事件", "value": "<%= treasureQuality %>" }
+        ]
+<%_ } else if (rollResult === 'puzzle') { _%>
+    narrative_guidance:
+      - "判定发现谜题。描写谜题外观。"
+      - "谜题考验主角的智力与观察力——魔力感知可帮助解读魔法符文、速度属性影响机关反应时间、意志属性决定在试错中不被反噬的能力。"
+      - "本回合仅描写谜题的发现与初步观察，主角的破解尝试和结果留给后续回合。"
+
+    mandatory_data_sync:
+      instruction: "记录谜题事件并推进进度："
+      patch_code: |
+        [
+          { "op": "delta", "path": "/地下城攻略状态/本层进度", "value": [25~35] },
+          { "op": "insert", "path": "/系统状态/待处理事件/谜题触发事件", "value": "[AI生成的谜题类型]" }
+        ]
+
+<%_ } _%>
+
+<%_ } _%>
+<%_ } _%>
+<%_ } _%>
+
+  ★高优先级——以下若被玩家触发，则忽略系统指令：地下城攻略系统中所有其他 mandatory_data_sync（如有），仅执行对应操作：
+
+  escape:
+    narrative_guidance:
+      - "玩家明确表示退出地下城。描写主角沿着来路返回，从黑暗中一步步走向出口的光亮。"
+
+    mandatory_data_sync:
+      instruction: "退出地下城返回日常阶段："
+      patch_code: |
+        [
+          { "op": "replace", "path": "/进程/阶段", "value": "日常阶段" }
+        ]
+
+<%_ if (currentFloorType !== '休整层') { _%>
+  rest:
+    narrative_guidance:
+      - "玩家明确表示在原地休整。描写主角找到一处相对安全的角落，在紧绷的冒险中挤出片刻喘息。"
+
+    mandatory_data_sync:
+      instruction: "进入休整状态："
+      patch_code: |
+        [
+          { "op": "replace", "path": "/地下城攻略状态/是否休整中", "value": true }
+        ]
+<%_ } _%>
+
+<%_ } _%>
+<%_ } _%>

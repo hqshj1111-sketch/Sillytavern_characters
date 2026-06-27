@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案21：仪表盘控制台风 | Cockpit Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #020408;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 10px;
+    font-family: 'Noto Sans SC', 'Share Tech Mono', monospace;
+    color: #c0d0e0; font-size: 12px;
+  }
+
+  .cockpit {
+    width: 100%; max-width: 660px;
+    display: grid;
+    grid-template-columns: 160px 1fr 160px;
+    grid-template-rows: auto auto auto auto;
+    gap: 6px;
+  }
+
+  /* ====== 中央面板 ====== */
+  .center-panel {
+    grid-column: 2; grid-row: 1 / 5;
+    display: flex; flex-direction: column;
+    border: 2px solid #1a3050;
+    background: linear-gradient(180deg, rgba(4,8,20,0.95), rgba(2,4,12,0.95));
+    box-shadow: inset 0 0 40px rgba(0,80,160,0.06);
+    position: relative; overflow: hidden;
+  }
+  .center-panel::before {
+    content: ''; position: absolute;
+    inset: 4px; border: 1px solid rgba(0,120,200,0.08);
+    pointer-events: none; z-index: 5;
+  }
+  /* 扫描线 */
+  .center-panel::after {
+    content: ''; position: absolute;
+    inset: 0; z-index: 3; pointer-events: none;
+    background: linear-gradient(180deg, transparent 0%, rgba(0,200,255,0.015) 50%, transparent 100%);
+    animation: scan 3s ease-in-out infinite;
+  }
+  @keyframes scan { 0%,100% { opacity: 0.3; } 50% { opacity: 0.6; } }
+  .center-header {
+    position: relative; z-index: 6;
+    padding: 10px 14px; text-align: center;
+    border-bottom: 1px solid rgba(0,120,200,0.2);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; letter-spacing: 4px; color: #40a0d0;
+    text-shadow: 0 0 10px rgba(64,160,208,0.4);
+  }
+  .center-narrative {
+    position: relative; z-index: 6;
+    flex: 1; padding: 14px 16px;
+    color: #8098b0; font-size: 13px; line-height: 1.9;
+    overflow-y: auto;
+  }
+  .center-narrative p { margin-bottom: 10px; text-indent: 2em; }
+  .center-narrative p:last-child { margin-bottom: 0; }
+  .center-narrative .data { color: #40c0e0; }
+  .center-narrative .warn { color: #e06060; }
+  .center-actions {
+    position: relative; z-index: 6;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+    padding: 8px 10px; border-top: 1px solid rgba(0,120,200,0.15);
+  }
+  .center-actions button {
+    font-family: 'Noto Sans SC', sans-serif; font-size: 11px;
+    background: rgba(10,20,40,0.6); color: #6088a0;
+    border: 1px solid rgba(0,100,180,0.25); padding: 7px 10px;
+    cursor: pointer; transition: all 0.2s; text-align: left;
+  }
+  .center-actions button:hover { color: #80c0e0; border-color: #40a0d0; background: rgba(0,80,160,0.1); }
+  .center-actions button.primary { color: #80d0f0; border-color: #3090c0; }
+
+  /* ====== 左列：径向仪表 ====== */
+  .gauge-column { grid-column: 1; grid-row: 1 / 5; display: flex; flex-direction: column; gap: 6px; }
+  .gauge {
+    border: 2px solid #1a3050;
+    background: rgba(2,4,12,0.9);
+    box-shadow: inset 0 0 20px rgba(0,60,120,0.05);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 6px; position: relative;
+  }
+  .gauge svg { width: 90px; height: 90px; transform: rotate(-90deg); }
+  .gauge .ring-bg { fill: none; stroke: #0a1018; stroke-width: 6; }
+  .gauge .ring-fill { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.5s; }
+  .gauge .ring-fill.hp { stroke: #e04040; filter: drop-shadow(0 0 6px rgba(224,64,64,0.5)); }
+  .gauge .ring-fill.mp { stroke: #4080e0; filter: drop-shadow(0 0 6px rgba(64,128,224,0.5)); }
+  .gauge .ring-fill.sp { stroke: #e0b040; filter: drop-shadow(0 0 6px rgba(224,176,64,0.5)); }
+  .gauge .ring-fill.exp { stroke: #40c060; filter: drop-shadow(0 0 6px rgba(64,192,96,0.5)); }
+  .gauge .label {
+    position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
+    text-align: center; font-family: 'Share Tech Mono', monospace;
+  }
+  .gauge .label .val { font-size: 18px; font-weight: 700; color: #c0d8f0; }
+  .gauge .label .tag { font-size: 8px; color: #406080; letter-spacing: 2px; }
+  .gauge .gauge-bottom {
+    font-family: 'Share Tech Mono', monospace; font-size: 8px;
+    color: #305070; letter-spacing: 2px; margin-top: 2px;
+  }
+
+  /* ====== 右列：属性 + 装备 ====== */
+  .right-column { grid-column: 3; grid-row: 1 / 5; display: flex; flex-direction: column; gap: 6px; }
+
+  .attr-hex-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px;
+    border: 2px solid #1a3050; background: rgba(2,4,12,0.9);
+    box-shadow: inset 0 0 20px rgba(0,60,120,0.05);
+    padding: 8px 6px;
+  }
+  .hex-stat {
+    text-align: center; padding: 4px 2px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .hex-stat .icon { font-size: 14px; display: block; opacity: 0.6; }
+  .hex-stat .val { font-size: 12px; color: #90b8d0; font-weight: 600; }
+  .hex-stat .key { font-size: 6px; color: #305070; letter-spacing: 1px; }
+
+  .equip-list {
+    border: 2px solid #1a3050; background: rgba(2,4,12,0.9);
+    box-shadow: inset 0 0 20px rgba(0,60,120,0.05);
+    padding: 8px; font-size: 10px;
+  }
+  .equip-list .eq-section {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 7px; color: #305070; letter-spacing: 2px;
+    padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px solid rgba(0,100,180,0.1);
+  }
+  .equip-list .eq-row {
+    display: flex; justify-content: space-between;
+    padding: 3px 0; color: #6088a0;
+  }
+  .equip-list .eq-row .eq-empty { color: #203040; font-style: italic; }
+  .equip-list .special-tags {
+    margin-top: 6px; display: flex; flex-wrap: wrap; gap: 2px;
+  }
+  .equip-list .special-tag {
+    font-size: 8px; padding: 2px 6px;
+    border: 1px solid rgba(0,100,180,0.2);
+    color: #406080;
+  }
+  .equip-list .special-tag.on { color: #60a0c0; border-color: rgba(0,140,200,0.4); }
+
+  /* ====== 底部状态条 ====== */
+  .footer-bar {
+    grid-column: 1 / 4; grid-row: auto;
+    border: 2px solid #1a3050; background: rgba(2,4,12,0.9);
+    padding: 6px 14px; display: flex; justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace; font-size: 8px;
+    color: #305070; letter-spacing: 2px;
+    box-shadow: inset 0 0 20px rgba(0,60,120,0.05);
+  }
+  .footer-bar .blip {
+    display: inline-block; width: 5px; height: 5px;
+    background: #40c060; border-radius: 50%;
+    margin-right: 4px;
+    animation: blip 1.5s ease infinite;
+  }
+  @keyframes blip { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  .altitude-tape {
+    grid-column: 2; grid-row: auto;
+    display: flex; justify-content: center; gap: 6px;
+    font-family: 'Share Tech Mono', monospace; font-size: 8px;
+    color: #305070; letter-spacing: 1px; padding: 2px 0;
+  }
+  .altitude-tape .tick { color: #40a0d0; }
+</style>
+</head>
+<body>
+<div class="cockpit">
+
+  <!-- 左列：4个径向仪表 -->
+  <div class="gauge-column">
+    <div class="gauge">
+      <svg viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="40"/><circle class="ring-fill hp" cx="50" cy="50" r="40" stroke-dasharray="251.33" stroke-dashoffset="55.3"/></svg>
+      <div class="label"><div class="val">78</div><div class="tag">HP</div></div>
+      <div class="gauge-bottom">78/100</div>
+    </div>
+    <div class="gauge">
+      <svg viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="40"/><circle class="ring-fill mp" cx="50" cy="50" r="40" stroke-dasharray="251.33" stroke-dashoffset="115.6"/></svg>
+      <div class="label"><div class="val">54</div><div class="tag">MP</div></div>
+      <div class="gauge-bottom">54/100</div>
+    </div>
+    <div class="gauge">
+      <svg viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="40"/><circle class="ring-fill sp" cx="50" cy="50" r="40" stroke-dasharray="251.33" stroke-dashoffset="25.1"/></svg>
+      <div class="label"><div class="val">90</div><div class="tag">SP</div></div>
+      <div class="gauge-bottom">90/100</div>
+    </div>
+    <div class="gauge">
+      <svg viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="40"/><circle class="ring-fill exp" cx="50" cy="50" r="40" stroke-dasharray="251.33" stroke-dashoffset="163.4"/></svg>
+      <div class="label"><div class="val">35</div><div class="tag">EXP</div></div>
+      <div class="gauge-bottom">35%</div>
+    </div>
+  </div>
+
+  <!-- 中央主体 -->
+  <div class="center-panel">
+    <div class="center-header">◆ ISEKAI DUNGEON · SYS ONLINE ◆</div>
+    <div class="center-narrative">
+      <p>你推开沉重的石门，腐朽的空气中弥漫着<span class="data">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="warn">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。</p>
+      <p>你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="warn">不寻常的红光</span>。</p>
+      <p>甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="data">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……</p>
+    </div>
+    <div class="center-actions">
+      <button class="primary">⚔ 挥剑斩向哥布林头领</button>
+      <button>🔥 释放火球术灼烧敌群</button>
+      <button>🛡 防御姿态，观察敌人弱点</button>
+      <button>💋 尝试魅惑其中一只哥布林</button>
+    </div>
+  </div>
+
+  <!-- 右列 -->
+  <div class="right-column">
+    <div class="attr-hex-grid">
+      <div class="hex-stat"><span class="icon">⚔</span><div class="val">42</div><div class="key">ATK</div></div>
+      <div class="hex-stat"><span class="icon">🛡</span><div class="val">28</div><div class="key">DEF</div></div>
+      <div class="hex-stat"><span class="icon">⚡</span><div class="val">35</div><div class="key">AGI</div></div>
+      <div class="hex-stat"><span class="icon">✧</span><div class="val">30</div><div class="key">INT</div></div>
+      <div class="hex-stat"><span class="icon">☘</span><div class="val">18</div><div class="key">LCK</div></div>
+      <div class="hex-stat"><span class="icon">◎</span><div class="val">1250</div><div class="key">GOLD</div></div>
+    </div>
+    <div class="equip-list">
+      <div class="eq-section">// MODULES</div>
+      <div class="eq-row"><span>WPN</span><span>铁质长剑 Lv.3</span></div>
+      <div class="eq-row"><span>ARM</span><span>皮甲 Lv.2</span></div>
+      <div class="eq-row"><span>ACC</span><span>冒险者徽章</span></div>
+      <div class="eq-row"><span>ITM</span><span>回复药水 ×3</span></div>
+      <div class="special-tags">
+        <span class="special-tag on">触手紧身衣·共生期</span>
+        <span class="special-tag on">蜕生项圈·中期</span>
+        <span class="special-tag">影子分身·无心智</span>
+        <span class="special-tag">淫欲晶核·关闭</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部状态条 -->
+  <div class="footer-bar">
+    <span><span class="blip"></span>DUNGEON B3F · ASTOR</span>
+    <span>ALT: -042M</span>
+    <span>384.10.15 20:30</span>
+    <span>TURN 12</span>
+  </div>
+
+</div>
+</body>
+</html>

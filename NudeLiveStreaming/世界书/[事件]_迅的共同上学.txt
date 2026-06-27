@@ -1,0 +1,37 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const jin = _.get(stat, 'NPC数据.风见迅', {});
+  const jinDiscovered = _.get(jin, '秘密发现', false);
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['迅共同上学事件'] && isDaily && !jinDiscovered && !isSexActive ) {
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(jin, '淫乱度', 0)) || 0;
+_%>
+# 事件：共同上学
+event_initiator:
+  event_name: "共同上学"
+  character: "风见迅"
+  location: "住宅区至文教区途中"
+  time: "7:00-8:30"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "清晨，主角碰巧和迅一起出门。尽管一个是大学生一个是高中生，但今天的方向恰好一样。迅穿着与平时无异的改短校服，双手插兜，步伐慵懒，嘴上还是那副欠揍的雄小鬼腔调。"
+    - "主角不知道的是，迅今天校服里面一丝不挂，后穴里还塞着一枚肛塞。走路时偶尔会不自然地停顿半步，脸上掠过一丝隐忍的潮红。他用嘴臭掩饰身体的不适——岔开话题、加速脚步、反过来嘲讽主角走得太慢。"
+    - "结合好感度(<%= affection %>)调整迅的表现——好感度越高，他的挑衅越亲近。结合淫乱度(<%= lewdness %>)调整他的身体反应——淫乱度越高，肛塞的存在感越强，他的掩饰越慌乱。"
+    - "前路还长。结尾留给主角选择：继续普通的同行、问他是不是身体不舒服、或戳穿他的异常举动。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/迅共同上学事件" }
+      ]
+
+<%_ } } _%>

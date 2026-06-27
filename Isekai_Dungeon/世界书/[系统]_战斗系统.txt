@@ -1,0 +1,187 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const isInCombat = _.get(stat, '战斗状态.是否战斗中', false);
+if (!isInCombat) return;
+
+const enemyName = _.get(stat, '战斗状态.敌方名称', '');
+const enemyRace = _.get(stat, '战斗状态.敌方种族', '未知');
+const enemyLevel = _.get(stat, '战斗状态.敌方等级', 1);
+const enemyCount = _.get(stat, '战斗状态.敌方数量', 1);
+const enemyHP = _.get(stat, '战斗状态.敌方HP', 100);
+const enemyMaxHP = _.get(stat, '战斗状态.敌方最大HP', 100);
+const enemyAtkBase = _.get(stat, '战斗状态.敌方攻击力', 50);
+const enemyDefBase = _.get(stat, '战斗状态.敌方防御力', 50);
+const enemySkills = _.get(stat, '战斗状态.敌方技能', []);
+const enemyBuffs = _.get(stat, '战斗状态.敌方buff', {});
+const enemyDebuffs = _.get(stat, '战斗状态.敌方debuff', {});
+const enemyBuffNames = Object.keys(enemyBuffs);
+const enemyDebuffNames = Object.keys(enemyDebuffs);
+
+const enemyAtkDisp = Math.round(enemyAtkBase * (0.5 + Math.random() * 0.6));
+const enemyDefDisp = Math.round(enemyDefBase * (0.5 + Math.random() * 0.6));
+
+const mcHP = _.get(stat, '主角.当前状态.当前HP', 100);
+const mcMaxHP = _.get(stat, '主角.战斗属性.最大HP', 100);
+const mcMP = _.get(stat, '主角.当前状态.当前MP', 50);
+const mcMPMax = _.get(stat, '主角.战斗属性.最大MP', 50);
+const mcSP = _.get(stat, '主角.当前状态.当前SP', 100);
+const mcSPMax = _.get(stat, '主角.战斗属性.最大SP', 100);
+const mcAtk = _.get(stat, '主角.战斗属性.攻击力', 10);
+const mcDef = _.get(stat, '主角.战斗属性.防御力', 5);
+const mcMag = _.get(stat, '主角.战斗属性.魔力', 5);
+const mcSpd = _.get(stat, '主角.战斗属性.速度', 10);
+const mcWil = _.get(stat, '主角.战斗属性.意志', 5);
+const mcLuk = _.get(stat, '主角.战斗属性.幸运', 5);
+
+const mcBuffNames = Object.keys(_.get(stat, '主角.当前状态.当前buff', {}));
+const mcDebuffNames = Object.keys(_.get(stat, '主角.当前状态.当前debuff', {}));
+
+const teammates = _.get(stat, '队友信息', {});
+let totalAtk = mcAtk, totalDef = mcDef, totalMag = mcMag, totalSpd = mcSpd, totalWil = mcWil, totalLuk = mcLuk;
+let combatants = 1;
+Object.entries(teammates).forEach(([name, t]) => {
+  if ((t.当前HP || 0) > 0) {
+    totalAtk += (t.攻击力 || 0);
+    totalDef += (t.防御力 || 0);
+    totalMag += (t.魔力 || 0);
+    totalSpd += (t.速度 || 0);
+    totalWil += (t.意志 || 0);
+    totalLuk += (t.幸运 || 0);
+    combatants++;
+  }
+});
+const mult = 1.0 + (combatants - 1) * 0.1;
+const avgAtk = Math.round(totalAtk / combatants * mult);
+const avgDef = Math.round(totalDef / combatants * mult);
+const avgMag = Math.round(totalMag / combatants * mult);
+const avgSpd = Math.round(totalSpd / combatants * mult);
+const avgWil = Math.round(totalWil / combatants * mult);
+const avgLuk = Math.round(totalLuk / combatants * mult);
+
+const skills = _.get(stat, '主角.技能列表', []);
+
+const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
+const dungeonData = _.get(stat, `地下城信息.${dungeonName}`, {});
+const dungeonType = dungeonData.类型 || '';
+_%>
+# 系统指令：战斗系统
+
+  enemy:
+    name: "<%= enemyName %>"
+    type: "<%= enemyRace %>"
+    level: "<%= enemyLevel %> × <%= enemyCount %>"
+    status: "HP：<%= enemyHP %>/<%= enemyMaxHP %> | 攻击力：<%= enemyAtkDisp %> | 防御力：<%= enemyDefDisp %>"
+  <%_ if (enemySkills.length > 0) { _%>
+    skills: "<%= enemySkills.join('、') %>"
+  <%_ } _%>
+  <%_ if (enemyBuffNames.length > 0) { _%>
+    buff: "<%= enemyBuffNames.join('、') %>"
+  <%_ } _%>
+  <%_ if (enemyDebuffNames.length > 0) { _%>
+    debuff: "<%= enemyDebuffNames.join('、') %>"
+  <%_ } _%>
+
+  party:
+    members: "<%= combatants %> 人"
+    average: "攻击力 <%= avgAtk %> | 防御力 <%= avgDef %> | 魔力 <%= avgMag %> | 速度 <%= avgSpd %> | 意志 <%= avgWil %> | 幸运 <%= avgLuk %>（已含人数系数 ×<%= mult.toFixed(1) %>）"
+    mc:
+      HP: "<%= mcHP %>/<%= mcMaxHP %>"
+      MP: "<%= mcMP %>/<%= mcMPMax %>"
+      SP: "<%= mcSP %>/<%= mcSPMax %>"
+      <%_ if (mcBuffNames.length > 0) { _%>
+      buff: "<%= mcBuffNames.join('、') %>"
+      <%_ } _%>
+      <%_ if (mcDebuffNames.length > 0) { _%>
+      debuff: "<%= mcDebuffNames.join('、') %>"
+      <%_ } _%>
+    <%_ Object.entries(teammates).forEach(([name, t]) => {
+      if ((t.当前HP || 0) > 0) {
+        const equip = t.装备 || {};
+        _%>
+     <%= name %>:
+       HP: "<%= t.当前HP || 0 %>/<%= t.最大HP || 100 %>"
+       MP: "<%= t.当前MP || 0 %>/<%= t.最大MP || 50 %>"
+       SP: "<%= t.当前SP || 0 %>/<%= t.最大SP || 100 %>"
+       <%_ const tbuffs = Object.keys(t.当前buff || {}); if (tbuffs.length > 0) { _%>
+       buff: "<%= tbuffs.join('、') %>"
+       <%_ } _%>
+       <%_ const tdebuffs = Object.keys(t.当前debuff || {}); if (tdebuffs.length > 0) { _%>
+       debuff: "<%= tdebuffs.join('、') %>"
+       <%_ } _%>
+       武器: "<%= equip.武器 || '无' %>"
+       护甲: "<%= equip.护甲 || '无' %>"
+       饰品: "<%= equip.饰品 || '无' %>"
+    <%_ } }); _%>
+
+  narrative_guidance:
+<%_ if (dungeonType === '魅惑型') { _%>
+    - "【色情战斗模式】：本场战斗的特殊之处在于——敌方不以杀戮为目的，而是通过快感、束缚和榨取来消耗主角的体力与意志。每一次受到攻击不仅是伤害，更伴随着被挑逗的身体反应。"
+    - "【回合制叙事】：每回合包含——主角行动（玩家指定或AI判断）→ 队友配合或自主行动 → 色情魔物的魅惑/束缚/榨取行动 → 双方状态反馈。"
+    - "【队友行动】：队友同样会受到色情魔物的攻击影响——可能被触手缠住、被魅魔的媚眼迷惑、或被催情花粉熏得动作迟缓。但危机时刻队友也可能奋力挣脱，为主角创造反击机会。"
+    - "【视野约束】：严格以主角视角为主。敌方的HP不可数值直出，转为观察。"
+    - "【伤害具象】：受到的伤害不仅有痛感，更交织着被强行挑起的快感。HP的减少同样体现为体力与意志力被快感消耗的虚脱。"
+    - "【意志属性】：在魅惑型战斗中，意志属性尤为重要——意志越高，越能抵御色情魔物的魅惑效果和快感侵蚀；意志低下时，身体会不由自主地对敌方的触碰产生更强烈的反应。"
+    - "【buff/debuff体现】：增益/减益通过叙事融入角色状态描写，而非直述数值。"
+<%_ } else { _%>
+    - "【回合制叙事】：每回合包含——主角行动（玩家指定或AI判断）→ 队友配合或自主行动 → 敌方行动 → 结果反馈。"
+    - "【队友行动】：队友可根据自身判断协同攻击、掩护主角、使用辅助技能或治疗；也可由玩家口头指定队友的行动方向。"
+    - "【视野约束】：严格以主角视角为主。敌方HP不可数值直出，转为外观线索。"
+    - "【技能描写】：主角释放技能时描写前摇（蓄力、咒文、魔力震颤）再描写命中效果。"
+    - "【伤害具象】：HP/MP/SP消耗需转化为身体感受——撕裂的灼痛、魔力枯竭的眩晕、体力耗尽时膝盖的震颤。"
+    - "【buff/debuff体现】：增益/减益通过叙事融入角色状态描写，而非直述数值。"
+<%_ } _%>
+    - "【战斗结果判定】：计算本回合双方伤害后——若敌方HP归零，叙事描述主角战胜敌方的决胜画面；若主角HP归零，叙事描述主角被击败倒下的场景；若均未归零，正常描述本回合交锋结果并等待玩家下一行动。"
+
+  combat_actions:
+    available_skills:
+      <%_ if (skills.length > 0) {
+        skills.forEach((s, i) => {
+          const effParts = [];
+          if (s.技能属性) effParts.push(s.技能属性);
+          if (s.技能增幅) effParts.push(s.技能增幅);
+          const effectStr = effParts.join('');
+      _%>
+      - "技能效果: <%= effectStr %> <%= s.技能名称 %>(<%= s.技能类型 %>, ×<%= s.技能倍率 %>): <%= s.技能描述 %>"
+      <%_ }); } else { _%>
+      - "无可用技能"
+      <%_ } _%>
+
+    action_types:
+      - "[普通攻击]——物理伤害 = 攻击力 × 1.0 - 敌方防御力（最低1）。不消耗SP。"
+      - "[物理技能]——使用物理类型技能。伤害 = 攻击力 × 技能倍率 - 敌方防御力（最低1）。消耗SP。"
+      - "[魔法技能]——使用魔法类型技能。伤害 = 魔力 × 技能倍率 - 敌方防御力（最低1）。消耗MP。"
+      - "[辅助技能]——赋予己方buff、驱散debuff、治疗回复等。消耗MP。"
+      <%_ if (dungeonType === '魅惑型') { _%>
+      - "[意志抵抗]——消耗SP，尝试挣脱束缚或抵抗魅惑效果。意志属性越高成功率越大。失败则本回合受到额外快感伤害。"
+      <%_ } _%>
+      - "[防御]——本回合承伤减半，恢复少量SP（+5~10）。"
+      - "[使用道具]——使用背包中的回复药水等道具。"
+      - "[逃跑]——尝试脱离战斗，消耗HP/SP，速度判定影响成功率。"
+
+  mandatory_data_sync:
+    damage_formula: "物理伤害 = 攻击力 × 技能倍率 - 敌方防御力（最低1）。魔法伤害 = 魔力 × 技能倍率 - 敌方防御力（最低1）。"
+    consume: "普通攻击不消耗；物理技能消耗SP；魔法/辅助技能消耗MP。<% if (dungeonType === '魅惑型') { %>抵抗诱惑消耗SP；被快感攻击额外消耗SP。<% } %>"
+
+    patch_code: |
+      [
+        { "op": "delta", "path": "/战斗状态/敌方HP", "value": [-(给敌方造成的总伤害)] }
+        // 根据叙事决定受伤方，从对应路径扣除HP：
+<%_ if (dungeonType === '魅惑型') { _%>
+        // 主角理智下降：{ "op": "delta", "path": "/主角/当前状态/当前HP", "value": [-(伤害)] }
+        // 队友理智下降：{ "op": "delta", "path": "/队友信息/[名称]/当前HP", "value": [-(伤害)] }
+<%_ } else { _%>
+        // 主角受伤：{ "op": "delta", "path": "/主角/当前状态/当前HP", "value": [-(伤害)] }
+        // 队友受伤：{ "op": "delta", "path": "/队友信息/[名称]/当前HP", "value": [-(伤害)] }
+<%_ } _%>
+        // 主角消耗SP：{ "op": "delta", "path": "/主角/当前状态/当前SP", "value": [-(消耗)] }
+        // 主角消耗MP：{ "op": "delta", "path": "/主角/当前状态/当前MP", "value": [-(消耗)] }
+        // 队友消耗SP：{ "op": "delta", "path": "/队友信息/[名称]/当前SP", "value": [-(消耗)] }
+        // 队友消耗MP：{ "op": "delta", "path": "/队友信息/[名称]/当前MP", "value": [-(消耗)] }
+        // 主角HP归零时追加：
+        // { "op": "replace", "path": "/战斗状态/是否战斗中", "value": false },
+        // { "op": "replace", "path": "/地下城攻略状态/是否攻略败北中", "value": true }
+        // 敌方HP归零时追加：
+        // { "op": "replace", "path": "/战斗状态/是否战斗中", "value": false },
+        // { "op": "replace", "path": "/战斗状态/是否战斗结算中", "value": true }
+      ]
+<%_ } _%>

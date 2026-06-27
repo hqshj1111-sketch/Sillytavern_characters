@@ -1,0 +1,58 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+if (phase !== '日常阶段' || pendingEvents['训练进行中事件']) return;
+
+const trainEvent = _.get(stat, '系统状态.待处理事件.前往训练事件', null);
+if (!trainEvent || !trainEvent.训练类型) return;
+
+const trainType = trainEvent.训练类型;
+const isLearnSkill = trainType === '学习技能';
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+
+const importantNPCs = _.get(stat, '重要NPC信息', {});
+const normalNPCs = _.get(stat, '一般NPC信息', {});
+const localImportant = Object.entries(importantNPCs).filter(([n, d]) => d.所在国家 === currentCountry && d.所在城市 === currentCity);
+const localNormal = Object.entries(normalNPCs).filter(([n, d]) => d.所在国家 === currentCountry && d.所在城市 === currentCity);
+const localNPCs = [...localImportant, ...localNormal];
+const hasLocalNPC = localNPCs.length > 0;
+
+const selfTrain = Math.random() < 0.5;
+const useNPC = hasLocalNPC && !selfTrain;
+
+let teacherName = '', teacherTitle = '';
+if (useNPC) {
+  const pool = localImportant.length > 0 ? localImportant : localNPCs;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  teacherName = pick[0];
+  teacherTitle = pick[1].职业 || pick[1].身份 || '当地居民';
+}
+_%>
+# 系统指令：前往训练
+
+  训练类型：<%= trainType %>
+  所在城镇：<%= currentCity %>（<%= currentCountry %>）
+  <%_ if (useNPC) { _%>
+  指导者：<%= teacherName %>（<%= teacherTitle %>）
+  <%_ } else { _%>
+  方式：独自训练
+  <%_ } _%>
+
+  narrative_guidance:
+<%_ if (isLearnSkill) { _%>
+    - "主角决定学习新技能。<% if (useNPC) { %>在<%= currentCity %>找到了<%= teacherName %>（<%= teacherTitle %>），向对方说明来意后，不在此回合直接开始教学，而是描写主角说明想学习的方向、对方点头应允并为接下来的训练做准备的场景。描写<%= teacherName %>打量主角的眼神、准备的动作——为下一回合的训练留出悬念。<% } else { %>主角独自来到<%= currentCity %>的训练场（或郊外的僻静处），凝视着训练假人或远处的风景回顾过往战斗，心中隐隐预感某种新的领悟已在酝酿。描写主角寻找灵感的过程——冥想、翻阅旧笔记、或模拟之前的战斗动作——但不在此回合直接领悟技能，为下一回合留出悬念。<% } %>"
+<%_ } else { _%>
+    - "主角决定进行基础属性提升。<% if (useNPC) { %>在<%= currentCity %>的街道上找上了<%= teacherName %>（<%= teacherTitle %>），拍肩提出切磋互练的请求。描写对方的表情反应——爽快地放下手中的活计，或摇头叹气后摆出切磋的架势。本回合以摆开架势的对峙作为画面收束，不描写训练过程。<% } else { %>主角独自来到<%= currentCity %>的训练场，做了几组热身拉伸后站在训练器材前，深吸一口气。描写热身时的身体感受——肌肉的紧绷、魔力的流动——为下一回合的高强度训练做铺垫。<% } %>"
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "移除前往训练事件标记，插入训练进行中事件："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/前往训练事件" },
+        { "op": "insert", "path": "/系统状态/待处理事件/训练进行中事件", "value": "<%= trainType %>" }
+      ]
+<%_ } _%>

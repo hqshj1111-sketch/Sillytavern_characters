@@ -1,0 +1,44 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹早安咬事件'] && isDaily && !isSexActive) {
+    const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+    const affection = parseInt(_.get(makoto, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.妹妹早安咬事件', 0)) || 0;
+    const sexCount = parseInt(_.get(makoto, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：早安咬
+event_initiator:
+  event_name: "早安咬"
+  character: "汐见真帆"
+  location: "住宅区 - 主角的房间"
+  time: "6:00-8:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端：一个普通的清晨，主角尚未完全清醒。"
+    <%_ if (eventCount > 0) { _%>
+    - "下体熟悉的湿热触感让主角逐渐醒来。他不用睁眼就知道是谁——妹妹又在给他早安咬了。主角伸手揉了揉妹妹的头发，自然地和她道了早安。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)评价她这次的技术——好感度越高越温柔地夸奖进步，好感度偏低则更偏向抖S式的客观评价，指出哪里比上次好。结合淫乱度(<%= lewdness %>)调整妹妹听到评价后的回应——淫乱度越高越得意地承认自己练习过了，甚至直接说网上学了新招想试。"
+    - "结尾留给主角选择：继续躺着享受并指导她、把她拉上来接吻、或翻身把她压到下面说该换人了。"
+    <%_ } else { _%>
+    - "下体传来的湿热触感让主角逐渐从迷糊中醒来。不用睁眼，仅凭感知就能分辨——妹妹正趴在腿间，笨拙但认真地用嘴巴伺候。"
+    - "真帆以为哥哥还在睡。她动作间夹杂着低声的自言自语，那些她平日里死也不会当面说的肉麻情话——说喜欢哥哥的鸡巴，说昨晚梦到被哥哥操醒，说想一直这样下去。"
+    - "结合好感度(<%= affection %>)和淫乱度(<%= lewdness %>)调整妹妹情话的深度——更高好感度偏向告白式情话，更高淫乱度偏向直白下流的渴求。"
+    - "结尾留给主角选择：继续装睡享受、突然睁眼抓住她、或反过来把她压到身下。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹早安咬事件" }
+      ]
+
+<%_ } } _%>

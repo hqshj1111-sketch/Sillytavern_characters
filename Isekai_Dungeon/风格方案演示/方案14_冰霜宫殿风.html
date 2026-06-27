@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案14：冰霜宫殿风 | Frozen Palace</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #040810;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Sans SC', sans-serif;
+    color: #c0d0e8;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(100,180,255,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 80%, rgba(150,200,255,0.03) 0%, transparent 40%);
+  }
+
+  .app { width: 100%; max-width: 660px; }
+
+  .ice-frame {
+    background: linear-gradient(180deg, #0a0e1a 0%, #060a14 100%);
+    border: 2px solid #1a3050;
+    box-shadow: 0 0 40px rgba(80,160,240,0.08), inset 0 0 60px rgba(40,100,180,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  /* 冰霜结晶 */
+  .ice-frame::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(180,220,255,0.4), rgba(255,255,255,0.6), rgba(180,220,255,0.4), transparent);
+    z-index: 4;
+    pointer-events: none;
+  }
+  /* 雪花 */
+  .ice-frame::after {
+    content: '✦';
+    position: absolute;
+    top: 14px; right: 20px;
+    font-size: 12px;
+    color: rgba(200,220,255,0.3);
+    z-index: 4;
+    pointer-events: none;
+    animation: snow-drift 6s ease infinite;
+  }
+  @keyframes snow-drift {
+    0%,100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+    50% { transform: translateY(4px) rotate(180deg); opacity: 0.6; }
+  }
+
+  .frost-header {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 18px 20px 8px;
+  }
+  .frost-header .crystal-crown {
+    font-size: 22px;
+    color: #90c0e8;
+    text-shadow: 0 0 15px rgba(140,200,255,0.4);
+    letter-spacing: 3px;
+  }
+  .frost-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: 6px;
+    color: #c0d8f0;
+    text-shadow: 0 0 20px rgba(150,200,240,0.25);
+  }
+  .frost-header .rime {
+    font-size: 9px;
+    color: #4070a0;
+    letter-spacing: 6px;
+    margin-top: 2px;
+  }
+
+  .snow-divider {
+    height: 14px;
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .snow-divider .flake { color: rgba(180,210,240,0.4); font-size: 8px; }
+  .snow-divider .frost-line {
+    flex: 0 1 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(100,160,220,0.3), transparent);
+  }
+
+  .ice-panel {
+    position: relative;
+    z-index: 5;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(10,14,24,0.6);
+    border: 1px solid rgba(30,60,100,0.3);
+    box-shadow: inset 0 0 20px rgba(40,100,180,0.04);
+  }
+  .ice-panel .panel-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: #80b8e0;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label .shard-icon {
+    width: 12px; height: 12px;
+    background: rgba(140,200,240,0.3);
+    clip-path: polygon(50% 0%, 80% 40%, 100% 50%, 80% 60%, 50% 100%, 20% 60%, 0% 50%, 20% 40%);
+    flex-shrink: 0;
+  }
+
+  .glacial-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .glacial-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(8,12,20,0.5);
+    border: 1px solid rgba(30,60,100,0.2);
+  }
+  .glacial-stat .icicle {
+    width: 26px; height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .icicle.hp { background: rgba(100,180,220,0.1); border: 1px solid rgba(100,180,220,0.25); color: #80c0e0; }
+  .icicle.mp { background: rgba(140,180,240,0.1); border: 1px solid rgba(140,180,240,0.25); color: #a0c0f0; }
+  .icicle.sp { background: rgba(180,200,220,0.1); border: 1px solid rgba(180,200,220,0.25); color: #c0d8f0; }
+  .icicle.exp { background: rgba(100,200,160,0.1); border: 1px solid rgba(100,200,160,0.25); color: #80d0b0; }
+  .glacial-stat .body { flex: 1; min-width: 0; }
+  .glacial-stat .head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .head .tag { color: #4070a0; letter-spacing: 1px; }
+  .head .val { color: #90b8d8; font-weight: 500; }
+  .frost-bar {
+    height: 4px;
+    background: rgba(10,15,25,0.5);
+    border: 1px solid rgba(30,60,100,0.2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .frost-fill { height: 100%; border-radius: 2px; }
+  .frost-fill::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+  }
+  .frost-fill.hp { background: #5090c0; }
+  .frost-fill.mp { background: #6080c0; }
+  .frost-fill.sp { background: #80a0c0; }
+  .frost-fill.exp { background: #50a080; }
+
+  .snowflake-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .snow-attr {
+    text-align: center;
+    min-width: 48px;
+    padding: 6px 4px;
+    border: 1px solid rgba(30,60,100,0.15);
+    background: rgba(10,14,24,0.3);
+  }
+  .snow-attr .flake-icon {
+    font-size: 14px;
+    color: #80b8e0;
+    display: block;
+  }
+  .snow-attr .val {
+    font-size: 14px;
+    color: #c0d8f0;
+    font-weight: 500;
+  }
+  .snow-attr .key {
+    font-size: 7px;
+    color: #306090;
+    letter-spacing: 2px;
+  }
+
+  .tundra-text {
+    margin: 6px 14px;
+    padding: 18px 22px;
+    background: rgba(8,12,20,0.5);
+    border: 1px solid rgba(30,60,100,0.2);
+    border-left: 2px solid rgba(100,180,220,0.3);
+    position: relative;
+    z-index: 5;
+  }
+  .tundra-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #8098b8;
+  }
+  .tundra-text p:last-child { margin-bottom: 0; }
+  .tundra-text .ice { color: #a0d0f0; }
+  .tundra-text .aurora { color: #c0a0e0; }
+
+  .arctic-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .arctic-btn {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    background: rgba(10,16,28,0.5);
+    border: 1px solid rgba(30,60,100,0.3);
+    color: #80a8c8;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 2px;
+  }
+  .arctic-btn:hover {
+    border-color: rgba(100,180,220,0.5);
+    color: #b0d8f0;
+    box-shadow: 0 0 12px rgba(100,180,240,0.08);
+  }
+  .arctic-btn.primary {
+    border-color: rgba(100,180,220,0.5);
+    color: #c0e0f8;
+  }
+  .arctic-btn.primary::before { content: '❄ '; }
+
+  .cache-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .cache-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(10,14,24,0.3);
+    border: 1px solid rgba(30,60,100,0.15);
+    font-size: 11px;
+  }
+  .cache-item .type { color: #4070a0; font-size: 9px; letter-spacing: 1px; }
+  .cache-item .name { color: #90b8d8; }
+
+  .frost-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .frost-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(80,120,180,0.06);
+    border: 1px solid rgba(80,120,180,0.12);
+    color: #5080b0;
+    border-radius: 2px;
+  }
+  .frost-tag.enchanted {
+    background: rgba(80,120,180,0.12);
+    border-color: rgba(100,160,220,0.3);
+    color: #80b8e0;
+  }
+
+  .ice-footer {
+    position: relative;
+    z-index: 5;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #306090;
+    letter-spacing: 3px;
+    border-top: 1px solid rgba(30,60,100,0.15);
+    margin: 0 14px;
+  }
+  .ice-footer .aurora-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+  .ice-footer .aurora-line .beam {
+    width: 20px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(140,200,240,0.3), transparent);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="ice-frame">
+
+    <div class="frost-header">
+      <div class="crystal-crown">❄ ❅ ❄</div>
+      <h1>异 世 界 地 下 城</h1>
+      <div class="rime">ISEKAI DUNGEON · GLACIES</div>
+    </div>
+
+    <div class="snow-divider">
+      <span class="frost-line"></span><span class="flake">✦</span><span class="frost-line"></span>
+      <span class="flake">❅</span>
+      <span class="frost-line"></span><span class="flake">✦</span><span class="frost-line"></span>
+    </div>
+
+    <div class="ice-panel">
+      <div class="panel-label"><span class="shard-icon"></span> 冰 封 之 躯</div>
+      <div class="glacial-stats">
+        <div class="glacial-stat">
+          <div class="icicle hp">♥</div>
+          <div class="body">
+            <div class="head"><span class="tag">生命</span><span class="val">78 / 100</span></div>
+            <div class="frost-bar"><div class="frost-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="glacial-stat">
+          <div class="icicle mp">✦</div>
+          <div class="body">
+            <div class="head"><span class="tag">魔力</span><span class="val">54 / 100</span></div>
+            <div class="frost-bar"><div class="frost-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="glacial-stat">
+          <div class="icicle sp">⚔</div>
+          <div class="body">
+            <div class="head"><span class="tag">体力</span><span class="val">90 / 100</span></div>
+            <div class="frost-bar"><div class="frost-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="glacial-stat">
+          <div class="icicle exp">⏫</div>
+          <div class="body">
+            <div class="head"><span class="tag">经验</span><span class="val">350 / 1000</span></div>
+            <div class="frost-bar"><div class="frost-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="snowflake-attrs">
+        <div class="snow-attr"><span class="flake-icon">⚔</span><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="snow-attr"><span class="flake-icon">🛡</span><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="snow-attr"><span class="flake-icon">⚡</span><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="snow-attr"><span class="flake-icon">✧</span><div class="val">30</div><div class="key">INT</div></div>
+        <div class="snow-attr"><span class="flake-icon">☘</span><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="snow-attr"><span class="flake-icon">◎</span><div class="val">1250</div><div class="key">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="tundra-text">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="ice">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="ice">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="aurora">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="ice">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="ice-panel">
+      <div class="panel-label"><span class="shard-icon"></span> 极 寒 选 择</div>
+      <div class="arctic-actions">
+        <button class="arctic-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="arctic-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="arctic-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="arctic-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="ice-panel">
+      <div class="panel-label"><span class="shard-icon"></span> 霜 匣 储 藏</div>
+      <div class="cache-grid">
+        <div class="cache-item"><span class="type">武器</span><span class="name">铁质长剑 Lv.3</span></div>
+        <div class="cache-item"><span class="type">防具</span><span class="name">皮甲 Lv.2</span></div>
+        <div class="cache-item"><span class="type">饰品</span><span class="name">冒险者徽章</span></div>
+        <div class="cache-item"><span class="type">消耗</span><span class="name">回复药水 ×3</span></div>
+      </div>
+      <div class="frost-tags">
+        <span class="frost-tag enchanted">触手紧身衣·共生期</span>
+        <span class="frost-tag enchanted">蜕生项圈·中期</span>
+        <span class="frost-tag">影子分身·无心智</span>
+        <span class="frost-tag">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="ice-footer">
+      <div class="aurora-line"><span class="beam"></span>❅<span class="beam"></span></div>
+      <div>冰霜地下城第三层 · 阿斯特大陆 · 黄昏 · 第十二回合</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

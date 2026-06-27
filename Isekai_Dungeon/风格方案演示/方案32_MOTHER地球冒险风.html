@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案32：MOTHER地球冒险风 | Earthbound / Mother</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+SC:wght@400;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:12px;font-family:'Noto Sans SC',sans-serif;color:#fff;font-size:13px}
+  .app{width:100%;max-width:660px;position:relative}
+
+  /* 迷幻条纹背景 */
+  .mother-frame{background:#0a0a1a;border:4px solid #fff;position:relative;overflow:hidden;box-shadow:inset 0 0 80px rgba(100,60,200,.1)}
+  .mother-frame::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      /* 条纹 */
+      repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(255,200,100,.04) 8px,rgba(255,200,100,.04) 9px),
+      repeating-linear-gradient(90deg,transparent,transparent 20px,rgba(200,100,255,.03) 20px,rgba(200,100,255,.03) 21px),
+      /* 晕状色块 */
+      radial-gradient(ellipse at 30% 25%,rgba(255,220,60,.08) 0%,transparent 40%),
+      radial-gradient(ellipse at 70% 60%,rgba(220,60,255,.06) 0%,transparent 40%),
+      radial-gradient(ellipse at 50% 80%,rgba(60,220,180,.06) 0%,transparent 30%);
+  }
+
+  .content{position:relative;z-index:2;padding:14px 16px}
+
+  /* 标题：像素+迷幻渐变 */
+  .mb-header{text-align:center;margin-bottom:10px}
+  .mb-header .swirl{display:flex;justify-content:center;gap:8px;margin-bottom:6px;font-size:20px}
+  .mb-header .swirl span:nth-child(1){color:#ffcc00;animation:spin3 3s linear infinite}
+  .mb-header .swirl span:nth-child(2){color:#ff66cc;animation:spin3 4s linear .3s infinite reverse}
+  .mb-header .swirl span:nth-child(3){color:#66ffcc;animation:spin3 3.5s linear .6s infinite}
+  .mb-header .swirl span:nth-child(4){color:#cc66ff;animation:spin3 4.5s linear .9s infinite reverse}
+  @keyframes spin3{from{transform:rotate(0deg) scale(1)}50%{transform:rotate(180deg) scale(1.3)}to{transform:rotate(360deg) scale(1)}}
+  .mb-header h1{font-family:'Press Start 2P',cursive;font-size:13px;color:#ffcc00;text-shadow:3px 3px 0 rgba(0,0,0,.6),0 0 10px rgba(255,200,40,.3);line-height:1.6;letter-spacing:2px}
+  .mb-header .sub{font-family:'Press Start 2P',cursive;font-size:7px;color:#cc88ff;margin-top:4px;letter-spacing:2px}
+
+  .battle-bg{position:relative;margin-bottom:10px;border:2px solid #fff;overflow:hidden}
+
+  /* 状态区：Earthbound 风格超简血条 */
+  .eb-stats{padding:10px 14px;background:linear-gradient(180deg,rgba(10,10,30,.9),rgba(5,5,15,.95))}
+  .eb-stat-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-family:'Press Start 2P',cursive}
+  .eb-stat-row .eb-tag{font-size:8px;width:30px;color:#fff}
+  .eb-stat-row .eb-bar-outer{flex:1;height:14px;background:#000;border:2px solid #fff;position:relative}
+  .eb-stat-row .eb-bar-inner{height:100%;position:relative}
+  .eb-stat-row .eb-bar-inner::after{content:'';position:absolute;right:0;top:0;bottom:0;width:3px;background:rgba(255,255,255,.5)}
+  .eb-stat-row .eb-bar-inner.hp{background:linear-gradient(0deg,#ff4400,#ff8800,#ffcc00)}
+  .eb-stat-row .eb-bar-inner.mp{background:linear-gradient(0deg,#4400ff,#8800ff,#cc44ff)}
+  .eb-stat-row .eb-bar-inner.sp{background:linear-gradient(0deg,#00aa44,#00dd66,#44ff88)}
+  .eb-stat-row .eb-bar-inner.exp{background:linear-gradient(0deg,#0088cc,#00bbee,#66ddff)}
+  .eb-stat-row .eb-num{font-size:8px;width:70px;color:#ffcc00;text-align:right}
+  .eb-stat-row .eb-num span{color:#fff}
+
+  /* 骰子属性 */
+  .eb-attrs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:4px 0 8px}
+  .eb-attr{min-width:44px;text-align:center;padding:4px;border:2px solid #fff;background:rgba(20,20,40,.5)}
+  .eb-attr .eb-attr-icon{font-size:16px;display:block}
+  .eb-attr .eb-attr-val{font-family:'Press Start 2P',cursive;font-size:10px;color:#ffcc00;margin-top:2px}
+  .eb-attr .eb-attr-key{font-family:'Press Start 2P',cursive;font-size:5px;color:#cc88ff;letter-spacing:1px;margin-top:1px}
+
+  /* 对话气泡 */
+  .speech-bubble{position:relative;background:#fff;color:#000;padding:14px 16px;margin:0 10px 10px;border-radius:0 16px 16px 16px;font-size:11px;line-height:1.7;box-shadow:4px 4px 0 rgba(0,0,0,.3)}
+  .speech-bubble::before{content:'';position:absolute;top:0;left:-10px;width:0;height:0;border-right:12px solid #fff;border-bottom:10px solid transparent}
+  .speech-bubble p{margin-bottom:4px}.speech-bubble p:last-child{margin-bottom:0}
+  .speech-bubble .highlight{color:#ff4400;font-weight:700}
+
+  /* 行动：大色块按钮 */
+  .eb-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 10px;margin-bottom:10px}
+  .eb-act{font-family:'Press Start 2P',cursive;font-size:7px;color:#000;padding:12px 8px;text-align:center;cursor:pointer;border:3px solid #000;transition:.1s;line-height:1.4;position:relative}
+  .eb-act:nth-child(1){background:#ffcc00}
+  .eb-act:nth-child(2){background:#ff6688}
+  .eb-act:nth-child(3){background:#66aaff}
+  .eb-act:nth-child(4){background:#aa66ff;color:#fff}
+  .eb-act:hover{transform:scale(1.05);filter:brightness(1.1)}
+  .eb-act.primary{border-color:#fff;box-shadow:0 0 10px rgba(255,200,40,.4)}
+
+  /* 物品 */
+  .eb-items{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:0 10px;margin-bottom:8px}
+  .eb-item{font-family:'Press Start 2P',cursive;font-size:6px;padding:8px 6px;border:2px solid #fff;color:#fff;background:rgba(0,0,0,.4);text-align:center;line-height:1.6}
+  .eb-item span{display:block;color:#ffcc00;font-size:8px}
+  .eb-tags{display:flex;flex-wrap:wrap;gap:3px;padding:0 10px;margin-bottom:6px}
+  .eb-tags span{font-family:'Press Start 2P',cursive;font-size:5px;padding:3px 6px;border:2px solid #666;color:#999;background:rgba(0,0,0,.3)}
+  .eb-tags span.on{border-color:#ffcc00;color:#ffcc00}
+
+  .eb-footer{display:flex;justify-content:space-between;padding:6px 10px 0;font-family:'Press Start 2P',cursive;font-size:6px;color:#554488;letter-spacing:1px;border-top:2px solid rgba(255,255,255,.1)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="mother-frame">
+    <div class="content">
+
+      <div class="mb-header">
+        <div class="swirl"><span>✦</span><span>✦</span><span>✦</span><span>✦</span></div>
+        <h1>异世界<br>地下城</h1>
+        <div class="sub">★ ISEKAI DUNGEON ★</div>
+      </div>
+
+      <div class="battle-bg">
+        <div class="eb-stats">
+          <div class="eb-stat-row">
+            <span class="eb-tag">HP</span>
+            <div class="eb-bar-outer"><div class="eb-bar-inner hp" style="width:78%"></div></div>
+            <span class="eb-num">78<span>/100</span></span>
+          </div>
+          <div class="eb-stat-row">
+            <span class="eb-tag">PP</span>
+            <div class="eb-bar-outer"><div class="eb-bar-inner mp" style="width:54%"></div></div>
+            <span class="eb-num">54<span>/100</span></span>
+          </div>
+          <div class="eb-stat-row">
+            <span class="eb-tag">SP</span>
+            <div class="eb-bar-outer"><div class="eb-bar-inner sp" style="width:90%"></div></div>
+            <span class="eb-num">90<span>/100</span></span>
+          </div>
+          <div class="eb-stat-row">
+            <span class="eb-tag">EX</span>
+            <div class="eb-bar-outer"><div class="eb-bar-inner exp" style="width:35%"></div></div>
+            <span class="eb-num">35<span>%</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="eb-attrs">
+        <div class="eb-attr"><span class="eb-attr-icon">⚔</span><div class="eb-attr-val">42</div><div class="eb-attr-key">OFFENSE</div></div>
+        <div class="eb-attr"><span class="eb-attr-icon">🛡</span><div class="eb-attr-val">28</div><div class="eb-attr-key">DEFENSE</div></div>
+        <div class="eb-attr"><span class="eb-attr-icon">⚡</span><div class="eb-attr-val">35</div><div class="eb-attr-key">SPEED</div></div>
+        <div class="eb-attr"><span class="eb-attr-icon">✧</span><div class="eb-attr-val">30</div><div class="eb-attr-key">IQ</div></div>
+        <div class="eb-attr"><span class="eb-attr-icon">☘</span><div class="eb-attr-val">18</div><div class="eb-attr-key">LUCK</div></div>
+        <div class="eb-attr"><span class="eb-attr-icon">◎</span><div class="eb-attr-val">1250</div><div class="eb-attr-key">$</div></div>
+      </div>
+
+      <div class="speech-bubble">
+        <p>你推开沉重的石门，腐朽的空气中弥漫着<span class="highlight">魔素</span>的微光！</p>
+        <p>甬道深处——<span class="highlight">三只哥布林</span>从阴影中窜出来了！领头的那只眼睛里闪烁着<span class="highlight">奇怪的红光</span>……</p>
+        <p>石壁上画着<span class="highlight">魅魔女王</span>的古老浮雕……姿态有点让人脸红……</p>
+      </div>
+
+      <div class="eb-actions">
+        <div class="eb-act primary">BASH<br>挥剑斩向头领</div>
+        <div class="eb-act">PSI FIRE<br>火球术灼烧敌群</div>
+        <div class="eb-act">DEFEND<br>防御姿态观察</div>
+        <div class="eb-act">PSI CHARM<br>尝试魅惑哥布林</div>
+      </div>
+
+      <div class="eb-items">
+        <div class="eb-item"><span>铁质长剑 Lv.3</span>武器</div>
+        <div class="eb-item"><span>皮甲 Lv.2</span>防具</div>
+        <div class="eb-item"><span>冒险者徽章</span>饰品</div>
+        <div class="eb-item"><span>回复药水 ×3</span>道具</div>
+      </div>
+      <div class="eb-tags">
+        <span class="on">触手紧身衣</span><span class="on">蜕生项圈</span><span>影子分身</span><span>淫欲晶核</span>
+      </div>
+
+      <div class="eb-footer">
+        <span>B3F 地下城</span><span>阿斯特 384年</span><span>TURN 12</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

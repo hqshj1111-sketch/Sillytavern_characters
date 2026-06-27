@@ -1,0 +1,129 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const isSettling = _.get(stat, '地下城攻略状态.是否攻略结算中', false);
+if (!isSettling) return;
+
+const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
+const raidKills = _.get(stat, '地下城攻略状态.本次攻略击杀数', 0);
+const raidGold = _.get(stat, '地下城攻略状态.本次攻略获得金币', 0);
+const materials = _.get(stat, '地下城攻略状态.本次攻略获得素材', {});
+
+const dungeonData = _.get(stat, `地下城信息.${dungeonName}`, {});
+const dungeonRank = dungeonData.地下城等级 || 'F';
+
+const RANKS = ['F','E','D','C','B','A','S','SS','SSS','EX'];
+const rankToNum = { F:1,E:2,D:3,C:4,B:5,A:6,S:7,SS:8,SSS:9,EX:10 };
+const numToRank = { 1:'F',2:'E',3:'D',4:'C',5:'B',6:'A',7:'S',8:'SS',9:'SSS',10:'EX' };
+
+const mcRank = _.get(stat, '主角.冒险者信息.冒险者等级', 'F');
+const mcRankNum = rankToNum[mcRank] || 1;
+const dungeonRankNum = rankToNum[dungeonRank] || 1;
+const promotionCount = _.get(stat, '主角.冒险者信息.升阶次数', 0);
+const afterCount = promotionCount + 1;
+const currentFame = _.get(stat, '主角.冒险者信息.知名度', 0);
+
+const currentYear = _.get(stat, '进程.当前年份', '?');
+const currentMonth = _.get(stat, '进程.当前月份', 1);
+const currentDay = _.get(stat, '进程.当前日份', 1);
+const timeSlot = _.get(stat, '进程.当前时间段', '早');
+
+const FAME_TIERS = [
+  { max: 49, name: '默默无闻' },
+  { max: 199, name: '小有名气' },
+  { max: 499, name: '崭露头角' },
+  { max: 1499, name: '声名远播' },
+  { max: 4999, name: '名震大陆' },
+  { max: Infinity, name: '传说级' }
+];
+
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+const fameGain = Math.round((dungeonRankNum * 10 + randInt(5, 20)) * (0.8 + Math.random() * 0.4));
+const newFame = currentFame + fameGain;
+
+function getFameTier(fame) {
+  for (const t of FAME_TIERS) { if (fame <= t.max) return t.name; }
+  return '传说级';
+}
+const oldTier = getFameTier(currentFame);
+const newTier = getFameTier(newFame);
+const fameTierChanged = oldTier !== newTier;
+
+const canPromote = dungeonRankNum > mcRankNum - 1;
+const isFullyQualified = afterCount >= 3;
+let willPromote = false;
+if (canPromote) {
+  if (isFullyQualified) { willPromote = true; }
+}
+
+const teammates = _.get(stat, '队友信息', {});
+const aliveTeammates = Object.entries(teammates).filter(([n, t]) => (t.当前HP || 0) > 0);
+
+const importantNPCs = _.get(stat, '重要NPC信息', {});
+const npcPromotions = [];
+aliveTeammates.forEach(function ([name]) {
+    const npc = importantNPCs[name];
+    if (!npc) return;
+    const npcRank = npc.冒险者等级 || 'F';
+    const npcRankNum = rankToNum[npcRank] || 1;
+    if (dungeonRankNum <= npcRankNum - 1) return;
+    // NPC at or above dungeon rank has a chance to promote
+    const promoteChance = dungeonRankNum >= npcRankNum + 2 ? 0.8 : (dungeonRankNum >= npcRankNum + 1 ? 0.4 : 0.15);
+    if (Math.random() < promoteChance) {
+        const newNpcRank = numToRank[npcRankNum + 1] || npcRank;
+        npcPromotions.push({ name: name, oldRank: npcRank, newRank: newNpcRank });
+    }
+});
+_%>
+# 系统指令：攻略结算
+
+  narrative_guidance:
+    - "主角完成了【<%= dungeonName %>】的攻略，返回城镇的冒险者公会进行汇报。描写离开地下城、重见天日的感受。"
+    - "在冒险者公会——接待员仔细记录本次攻略的各项数据：击杀数 <%= raidKills %>、获得金币 <%= raidGold %>。"
+    - "描写素材的提交——<% const matList = Object.entries(materials).map(([k,v]) => `${k}×${v}`).join('、'); %><%= matList || '本次未获得素材' %>——鉴定师逐一评估素材品质。"
+    <%_ if (aliveTeammates.length > 0) { _%>
+    - "与队友分配本次攻略的奖励——<% aliveTeammates.forEach(([name, t], i) => { %><%= name %><%= i < aliveTeammates.length - 1 ? '、' : '' %><% }); %>共同分享战利品与金币，交流本次攻略的心得。"
+    <%_ } _%>
+    <%_ if (npcPromotions.length > 0) { _%>
+    - "在结算过程中，<% npcPromotions.forEach(function(p) { %>同行的<%= p.name %>因其在本次攻略中的表现被公会认可，冒险者等级从【<%= p.oldRank %>】晋升至【<%= p.newRank %>】。描写<%= p.name %>接过新徽章时的表情与反应——以符合其性格的方式。<%; }); %>"
+    <%_ } _%>
+    <%_ if (fameTierChanged) { _%>
+    - "本次攻略后，主角的知名度从「<%= oldTier %>」提升至「<%= newTier %>」——描写公会大厅中其他冒险者的窃窃私语、接待员眼中一闪而过的惊讶、以及主角感受到的微妙变化。"
+    <%_ } else { _%>
+    - "主角的知名度保持在「<%= oldTier %>」级别。"
+    <%_ } _%>
+    <%_ if (willPromote) { _%>
+    - "接待员在汇总数据时突然抬起头，推了推眼镜仔细核对了主角的全部记录。然后她从抽屉中取出一枚崭新的冒险者徽章——主角的冒险者等级正式从【<%= mcRank %>】晋升为【<%= numToRank[mcRankNum + 1] || mcRank %>】！描写晋升仪式的庄重感与主角内心的感慨——一路走来，成长有目共睹。"
+    - "公会根据主角的过往战绩与冒险风格，授予新的冒险者称号。称号应由AI根据主角的种族、经历、常用技能和战斗风格动态创作——例如以火系魔法著称的精灵族冒险者可能获得'炎翼精灵'、以双剑闻名的人类女性可能获得'双剑姬'等风雅独特的称号。"
+    - "接待员翻开公会评价栏，重新审视主角一路走来的成长轨迹。根据主角的过往战绩、新冒险者等级和独特的战斗风格，撰写一段全新的公会评价——笔触间流露出对其成长的认可与未来的期许。评价应以官方评定口吻行文，体现主角的个性与职业特色，语言凝练优雅。"
+    <%_ } else if (canPromote) { _%>
+    - "接待员翻看着主角的记录本，微微点头：「距离下次升阶评定还需完成 <%= 3 - afterCount %> 次与本级相当或更高级别的地下城攻略。」完成3次后即可触发升阶评定。"
+    <%_ } _%>
+    - "结算完毕后，主角离开公会柜台，回归日常的自由活动状态。"
+
+  mandatory_data_sync:
+    instruction: "完成攻略结算："
+    patch_code: |
+      [
+        { "op": "delta", "path": "/主角/当前状态/金币", "value": [经过奖励加成和队友分配后主角实际获得的金额] },
+        { "op": "delta", "path": "/主角/冒险者信息/知名度", "value": <%= fameGain %> },
+        { "op": "replace", "path": "/地下城攻略状态/是否攻略结算中", "value": false },
+        { "op": "replace", "path": "/进程/阶段", "value": "日常阶段" },
+        { "op": "delta", "path": "/地下城信息/<%= dungeonName %>/被主角攻略次数", "value": 1 },
+        { "op": "delta", "path": "/主角/冒险者信息/攻略地下城总数", "value": 1 },
+        { "op": "replace", "path": "/地下城攻略状态/本次攻略结束日期", "value": "<%= currentYear %>年<%= currentMonth %>月<%= currentDay %>日-<%= timeSlot %>" }
+        <%_ if (willPromote) { _%>,
+        { "op": "replace", "path": "/主角/冒险者信息/冒险者等级", "value": "<%= numToRank[mcRankNum + 1] || mcRank %>" },
+        { "op": "replace", "path": "/主角/冒险者信息/冒险者称号", "value": "[AI根据主角种族、经历、战斗风格动态创作的独特称号]" },
+        { "op": "replace", "path": "/主角/冒险者信息/公会评价", "value": "[AI根据主角过往战绩、新等级和冒险风格，用官方评定口吻撰写一段新的公会评价]" },
+        { "op": "replace", "path": "/主角/冒险者信息/升阶次数", "value": 0 }
+        <%_ } else if (canPromote) { _%>,
+        { "op": "delta", "path": "/主角/冒险者信息/升阶次数", "value": 1 }
+        <%_ } _%>
+        <%_ npcPromotions.forEach(function(p) { _%>,
+        { "op": "replace", "path": "/重要NPC信息/<%= p.name %>/冒险者等级", "value": "<%= p.newRank %>" },
+        { "op": "replace", "path": "/重要NPC信息/<%= p.name %>/冒险者称号", "value": "[AI根据<%= p.name %>的种族、经历、战斗风格动态创作的独特称号]" },
+        { "op": "replace", "path": "/重要NPC信息/<%= p.name %>/最近升阶日期", "value": "<%= currentYear %>年<%= currentMonth %>月<%= currentDay %>日" }
+        <%_ }); _%>
+        // 若主角决定保留某些特殊素材不提交，追加：{ "op": "insert", "path": "/主角/道具栏/[素材名称]", "value": { "类型": "素材", "数量": [数量], "描述": "[素材描述]" } }
+      ]
+<%_ } _%>

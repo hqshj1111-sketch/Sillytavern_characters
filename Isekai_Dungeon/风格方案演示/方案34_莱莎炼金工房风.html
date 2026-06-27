@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案34：莱莎炼金工房风 | Atelier Ryza</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  body{
+    background:#f5f0e8;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px;
+    font-family:'Noto Sans SC','Kosugi Maru',sans-serif;color:#4a3a2a;font-size:13px;
+    /* 水彩渲染底 */
+    background-image:
+      radial-gradient(ellipse at 30% 25%,rgba(255,180,200,.12) 0%,transparent 50%),
+      radial-gradient(ellipse at 70% 55%,rgba(180,220,240,.10) 0%,transparent 50%),
+      radial-gradient(ellipse at 50% 75%,rgba(200,220,180,.10) 0%,transparent 40%),
+      radial-gradient(ellipse at 80% 15%,rgba(255,220,180,.08) 0%,transparent 40%);
+  }
+  .app{width:100%;max-width:680px;background:rgba(255,252,246,.85);border-radius:12px;box-shadow:0 4px 30px rgba(0,0,0,.08);padding:20px 22px;position:relative;overflow:hidden;
+    border:1px solid rgba(180,160,120,.2);
+  }
+  /* 和纸胶带装饰条 */
+  .app::before{content:'';position:absolute;top:0;left:30px;width:60px;height:10px;background:linear-gradient(90deg,#f0b8c8,#f0c8d8 50%,#f0b8c8);z-index:5;border-radius:0 0 2px 2px;opacity:.7;transform:rotate(-2deg)}
+  .app::after{content:'';position:absolute;top:0;right:50px;width:50px;height:10px;background:linear-gradient(90deg,#b8d8e8,#c8e0f0 50%,#b8d8e8);z-index:5;border-radius:0 0 2px 2px;opacity:.7;transform:rotate(3deg)}
+  .content{position:relative;z-index:2}
+
+  /* 标题：手帐风 */
+  .atelier-header{display:flex;align-items:flex-end;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px dashed rgba(200,170,120,.3)}
+  .atelier-header .flask{font-size:28px}
+  .atelier-header h1{font-size:20px;font-weight:500;letter-spacing:2px;color:#5a3a2a;font-family:'Kosugi Maru',sans-serif}
+  .atelier-header .memo{font-size:9px;color:#a08870;letter-spacing:2px;margin-left:auto;text-align:right}
+
+  /* 状态：配方卡 */
+  .recipe-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .recipe-card{background:#fffdf9;border:1px solid rgba(200,170,120,.25);border-radius:8px;padding:10px 14px;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  /* 标签纸带 */
+  .recipe-card::before{content:'';position:absolute;top:-6px;left:16px;right:16px;height:4px;border-radius:2px}
+  .recipe-card:nth-child(1)::before{background:linear-gradient(90deg,#f0a8b8,#f0c0d0)}
+  .recipe-card:nth-child(2)::before{background:linear-gradient(90deg,#a8c8e0,#c0d8f0)}
+  .recipe-card:nth-child(3)::before{background:linear-gradient(90deg,#c8d8a8,#d8e8b8)}
+  .recipe-card:nth-child(4)::before{background:linear-gradient(90deg,#e0c8a0,#f0d8b0)}
+  .recipe-card .card-head{display:flex;justify-content:space-between;font-size:11px;margin:4px 0 6px}
+  .recipe-card .card-head .label{color:#8a7060}
+  .recipe-card .card-head .val{color:#5a3a2a;font-weight:600}
+  .recipe-bar{height:6px;background:rgba(0,0,0,.04);border-radius:3px;overflow:hidden}
+  .recipe-fill{height:100%;border-radius:3px}
+  .recipe-fill.hp{background:linear-gradient(90deg,#f0a0b0,#f0c0d0)}
+  .recipe-fill.mp{background:linear-gradient(90deg,#a0c0e0,#c0d8f0)}
+  .recipe-fill.sp{background:linear-gradient(90deg,#b0d0a0,#c8e0b8)}
+  .recipe-fill.exp{background:linear-gradient(90deg,#e0c090,#f0d8b0)}
+
+  /* 属性：小标签贴纸 */
+  .sticker-attrs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+  .sticker{text-align:center;min-width:42px;padding:6px 4px;background:#fffdf9;border:1px solid rgba(200,180,150,.25);border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative}
+  .sticker::after{content:'';position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:10px;height:3px;background:rgba(200,160,120,.3);border-radius:1px}
+  .sticker .s-icon{font-size:16px;display:block}
+  .sticker .s-val{font-size:12px;font-weight:600;color:#5a3a2a}
+  .sticker .s-key{font-size:7px;color:#a08870;letter-spacing:1px}
+
+  /* 正文：手帐页 */
+  .diary{background:linear-gradient(180deg,#fffdf8,#fdf9f2);border:1px solid rgba(200,170,120,.2);border-radius:8px;padding:14px 18px;margin-bottom:10px;position:relative}
+  /* 手帐横线 */
+  .diary::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+    background:repeating-linear-gradient(0deg,transparent,transparent 23px,rgba(200,180,150,.06) 23px,rgba(200,180,150,.06) 24px);
+    border-radius:8px;
+  }
+  .diary p{position:relative;z-index:1;margin-bottom:6px;font-size:12px;line-height:24px;color:#5a4a3a;text-indent:2em}
+  .diary p:last-child{margin-bottom:0}
+  .diary .pink{color:#d08090}
+  .diary .blue{color:#6088a0}
+
+  /* 行动：材料选择式 */
+  .material-choices{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+  .mat-choice{font-family:'Kosugi Maru','Noto Sans SC',sans-serif;font-size:11px;background:#fffdf9;border:1px solid rgba(200,170,120,.2);border-radius:8px;color:#5a3a2a;padding:10px 12px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
+  .mat-choice:hover{background:#fdf5ec;border-color:rgba(200,150,100,.35);box-shadow:0 2px 8px rgba(200,150,100,.1)}
+  .mat-choice.primary{background:linear-gradient(180deg,#fdf5ec,#fdf0e0);border-color:rgba(200,140,80,.3)}
+  .mat-choice .mat-icon{font-size:16px;flex-shrink:0}
+
+  /* 装备：材料栏 */
+  .mat-box{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+  .mat-item{display:flex;justify-content:space-between;padding:6px 10px;background:#fdfaf4;border:1px solid rgba(200,170,120,.15);border-radius:6px;font-size:10px}
+  .mat-item .m-type{color:#a08870}.mat-item .m-name{color:#5a3a2a}
+  .effect-tags{display:flex;flex-wrap:wrap;gap:3px}
+  .effect-tags span{font-size:8px;padding:3px 8px;border-radius:4px;background:rgba(240,180,200,.15);border:1px solid rgba(240,180,200,.2);color:#c08090}
+  .effect-tags span.active{background:rgba(240,180,200,.25);border-color:rgba(240,150,180,.3);color:#b06070}
+
+  .footer-note{display:flex;justify-content:space-between;padding:6px 0 0;border-top:1px dashed rgba(200,170,120,.2);font-size:9px;color:#a08870;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="content">
+
+    <div class="atelier-header">
+      <span class="flask">⚗</span>
+      <h1>异 世 界 地 下 城</h1>
+      <div class="memo">探索手帐<br>384年10月15日</div>
+    </div>
+
+    <div class="recipe-cards">
+      <div class="recipe-card">
+        <div class="card-head"><span class="label">💖 生命力</span><span class="val">78 / 100</span></div>
+        <div class="recipe-bar"><div class="recipe-fill hp" style="width:78%"></div></div>
+      </div>
+      <div class="recipe-card">
+        <div class="card-head"><span class="label">💎 魔力</span><span class="val">54 / 100</span></div>
+        <div class="recipe-bar"><div class="recipe-fill mp" style="width:54%"></div></div>
+      </div>
+      <div class="recipe-card">
+        <div class="card-head"><span class="label">💪 体力</span><span class="val">90 / 100</span></div>
+        <div class="recipe-bar"><div class="recipe-fill sp" style="width:90%"></div></div>
+      </div>
+      <div class="recipe-card">
+        <div class="card-head"><span class="label">✨ 炼金经验</span><span class="val">35%</span></div>
+        <div class="recipe-bar"><div class="recipe-fill exp" style="width:35%"></div></div>
+      </div>
+    </div>
+
+    <div class="sticker-attrs">
+      <div class="sticker"><span class="s-icon">⚔</span><div class="s-val">42</div><div class="s-key">ATK</div></div>
+      <div class="sticker"><span class="s-icon">🛡</span><div class="s-val">28</div><div class="s-key">DEF</div></div>
+      <div class="sticker"><span class="s-icon">⚡</span><div class="s-val">35</div><div class="s-key">SPD</div></div>
+      <div class="sticker"><span class="s-icon">✧</span><div class="s-val">30</div><div class="s-key">INT</div></div>
+      <div class="sticker"><span class="s-icon">☘</span><div class="s-val">18</div><div class="s-key">LCK</div></div>
+      <div class="sticker"><span class="s-icon">◎</span><div class="s-val">1250</div><div class="s-key">COLE</div></div>
+    </div>
+
+    <div class="diary">
+      <p>你推开沉重的<span class="blue">石门</span>，腐朽的空气中弥漫着<span class="pink">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="pink">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。</p>
+      <p>左侧那只头领模样的家伙眼中闪烁着<span class="pink">不寻常的红光</span>。甬道两侧石壁上，古老浮雕描绘着被封印在此的<span class="blue">魅魔女王</span>……</p>
+    </div>
+
+    <div class="material-choices">
+      <button class="mat-choice primary"><span class="mat-icon">⚔</span>挥剑斩向哥布林头领</button>
+      <button class="mat-choice"><span class="mat-icon">🔥</span>释放火球术灼烧敌群</button>
+      <button class="mat-choice"><span class="mat-icon">🛡</span>防御姿态观察敌人弱点</button>
+      <button class="mat-choice"><span class="mat-icon">💋</span>尝试魅惑哥布林</button>
+    </div>
+
+    <div class="mat-box">
+      <div class="mat-item"><span class="m-type">武器</span><span class="m-name">铁质长剑 Lv.3</span></div>
+      <div class="mat-item"><span class="m-type">防具</span><span class="m-name">皮甲 Lv.2</span></div>
+      <div class="mat-item"><span class="m-type">饰品</span><span class="m-name">冒险者徽章</span></div>
+      <div class="mat-item"><span class="m-type">道具</span><span class="m-name">回复药水 ×3</span></div>
+    </div>
+    <div class="effect-tags">
+      <span class="active">触手紧身衣·共生期</span><span class="active">蜕生项圈·中期</span><span>影子分身·无心智</span><span>淫欲晶核·关闭</span>
+    </div>
+
+    <div class="footer-note">
+      <span>地下城 B3F · 阿斯特</span><span>黄昏 · 第12回合</span>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

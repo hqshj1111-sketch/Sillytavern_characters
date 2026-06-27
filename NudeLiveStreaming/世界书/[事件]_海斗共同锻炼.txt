@@ -1,0 +1,51 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentHour = parseInt(_.get(stat, '进程.当前小时', 12)) || 12;
+  const currentRegion = _.get(stat, '主角.当前状态.当前区域', '');
+  const isDaily = _.get(stat, '进程.阶段', '日常阶段') === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['海斗共同锻炼事件'] && isDaily && !isSexActive) {
+    const kaido = _.get(stat, 'NPC数据.黑崎海斗', {});
+    const lewdness = parseInt(_.get(kaido, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.海斗共同锻炼事件', 0)) || 0;
+    const sexCount = parseInt(_.get(kaido, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：共同锻炼
+event_initiator:
+  event_name: "共同锻炼"
+  character: "黑崎海斗"
+  location: "文教区 - 体育馆/住宅区 - 社区健身房"
+  time: "15:00-19:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "海斗邀请主角一起锻炼。"
+    <%_ if (eventCount > 0) { _%>
+    - "两人已经不是第一次一起训练了。热身时二人互相评价各自身材的长进。"
+    - "辅助动作中的托举、保护和纠正姿势早已超越了单纯的训练范畴——海斗的手在主角身上停留的时间越来越长，主角也很自然地在他做深蹲时扶住他的腰。借着训练的名义，两人光明正大地把对方摸了个遍。"
+    - "很快，彼此的运动短裤都鼓了起来。结合淫乱度(<%= lewdness %>)和做爱次数(<%= sexCount %>)调整海斗的反应——次数越多他越不掩饰，直接说训练差不多了，该换种方式继续流汗了，拉着主角的手按在自己裆部。"
+    - "结尾留给主角选择：提议再来一组就休息、调侃他是不是每次锻炼都为了这个、或主动把他拉进更衣室。"
+    <%_ } else { _%>
+    - "海斗邀请主角一起锻炼。辅助动作中的托举、保护、纠正姿势等不可避免的肢体接触，让两人逐渐起了生理反应。"
+    <%_ if (lewdness < 25) { _%>
+    - "海斗注意到彼此的运动短裤都鼓了起来，动作停顿了一下，微微尴尬地放开扶着主角的手，干咳一声说训练差不多了。"
+    <%_ } else if (lewdness < 50) { _%>
+    - "海斗察觉两人的反应，坦然一笑说运动充血很正常，自己一周撸好几次，没什么好尴尬的。"
+    <%_ } else { _%>
+    - "海斗低头看了一眼，然后直视主角，故意收紧手臂把主角拉得更近，用下流的话问主角是不是也憋着，要不要换个方式继续练。"
+    <%_ } _%>
+    - "结尾留给主角选择：假装无事结束训练、用玩笑带过但继续、或回应海斗的暗示。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/海斗共同锻炼事件" }
+      ]
+
+<%_ } } _%>

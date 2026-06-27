@@ -1,0 +1,70 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['淫乱度升级事件'] && currentPhase === '日常阶段' && !isSexActive) {
+    const currentLewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+
+    // 合并后的阶段获取函数
+    const getLewdStage = (val) => {
+      if (val >= 75) return { level: 4, name: '极度淫乱', text: '沉沦于肉欲的深渊，身体与心灵都已彻底放开，追寻更极致的快感。' };
+      if (val >= 50) return { level: 3, name: '淫乱', text: '熟练运用身体取悦自己和他人，享受性爱，大胆追求刺激。' };
+      if (val >= 25) return { level: 2, name: '入门', text: '开始习惯身体接触，偶尔会主动尝试，但技巧生疏。' };
+      return { level: 1, name: '青涩', text: '对性事陌生而懵懂，任何亲密接触都带着笨拙和犹豫。' };
+    };
+
+    const current = getLewdStage(currentLewdness);
+    // 淫乱度上升，前一阶段 level 为 current.level - 1，最低为1
+    const prevLevel = Math.max(1, current.level - 1);
+    const getPrevStage = (level) => {
+      if (level >= 4) return getLewdStage(100);
+      if (level >= 3) return getLewdStage(60);
+      if (level >= 2) return getLewdStage(35);
+      return getLewdStage(10);
+    };
+    const previous = getPrevStage(prevLevel);
+
+    const getSpeechStyle = (level) => {
+        if (level === 1) return '青涩拘谨，说话支支吾吾，涉及色情话题时会脸红语塞。';
+        if (level === 2) return '逐渐放开，能接住黄腔但回应仍显生硬，偶尔会说漏嘴蹦出下流词。';
+        if (level === 3) return '大胆直白，主动使用色情词汇，毫不避讳描述自己的身体与欲望。';
+        return '满嘴污言秽语，用词极其下流露骨，已无任何羞耻修饰。';
+    };
+    const previousSpeech = getSpeechStyle(prevLevel);
+    const currentSpeech = getSpeechStyle(current.level);
+
+    const isLive = _.get(stat, '直播状态.是否正在直播', false);
+    const phaseHint = isLive
+      ? "镜头如同助燃剂，每一次弹幕指令都在点燃更深处的欲火，主角的身体正向更放荡的方向进化。"
+      : "即使在日常的宁静中，主角也能感受到体内那股愈加贪婪的燥热，一种更主动的渴求正在浮现。";
+_%>
+# 事件：淫乱度攀升
+lewdness_evolution:
+  event_name: "淫乱度攀升"
+  current_lewdness_value: <%= currentLewdness %>
+  prior_stage: "<%= previous.name %>"
+  new_stage: "<%= current.name %>"
+  prior_stage_text: "<%= previous.text %>"
+  new_stage_text: "<%= current.text %>"
+  focus: "身体对快感的渴望正在质变为更深层次的贪婪，每一次刺激都在唤醒更淫荡的本能。"
+  
+  narrative_guidance:
+    - "主角刚刚经历了一次淫乱度的攀升。他的淫荡程度已从【<%= previous.name %>】转变为【<%= current.name %>】。"
+    - "【变化前】：<%= previous.text %>"
+    - "【变化后】：<%= current.text %>"
+    - "<%= phaseHint %>"
+    - "请在叙事中自然地展现这种心境的进化。不必宣告，而是通过言行上的转变，侧面反映淫荡本性的释放。"
+    - “请展现攀升前后说话方式的转变——升级前（<%= previous.name %>）为「<%= previousSpeech %>」，升级后（<%= current.name %>）变为「<%= currentSpeech %>」。并在叙事中体现这种用词和语气的变化。”
+
+  mandatory_data_sync:
+    instruction: "若淫乱度升级已在叙事中体现，在 <JSONPatch> 块中移除本事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/淫乱度升级事件" }
+      ]
+
+<%_ } } _%>

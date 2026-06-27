@@ -1,0 +1,36 @@
+  <%_
+  {
+    const stat = getvar('stat_data') || {};
+    const events = _.get(stat, '系统状态.待处理事件', {});
+    const npcName = events['NPC身体开发事件'];
+    const isDaily = _.get(stat, '进程.阶段', '日常阶段') === '日常阶段';
+    const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+    const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+    if (npcName && isDaily && !isSexActive) {
+      const npc = _.get(stat, `NPC数据.${npcName}`, {});
+      const prev = _.get(npc, '身体.性器官描述', '未经开发的初始模样');
+      const sexCount = parseInt(npc.与主角做爱次数) || 0;
+  _%>
+  # 事件：NPC身体开发
+  npc_dev_event:
+    event_name: "身体开发"
+    character: "<%= npcName %>"
+    sex_count: <%= sexCount %>
+
+    narrative_guidance:
+      - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+      - "切换至<%= npcName %>的视角，聚焦其性器官在被主角多次使用后的外观变化。曾经还是<%= _.get(npc, '身体.性器官描述', '未经开发的初始模样') %>的模样，现在又有些不同了。"
+      - "回忆近期与主角的几次性交，描述性器因反复使用而产生的具体生理改变（颜色、松紧、敏感度等）。"
+      - "<%= npcName %>在独处时本能地自慰，脑中回想和主角做爱的感觉，并拍下性器特写发给主角，配以简短求欢文字。"
+
+    mandatory_data_sync:
+      instruction: "事件展示后，更新该NPC的性器官描述并移除事件标记："
+      patch_code: |
+        [
+          //这里更新的value反映的不是一个临时的状态，而是变化后稳定表现的一个状态 
+          { "op": "replace", "path": "/NPC数据/<%= npcName %>/身体/性器官描述", "value": "[结合做爱次数描述的露骨变化后的性器官描述]" },
+          { "op": "remove", "path": "/系统状态/待处理事件/NPC身体开发事件" }
+        ]
+
+  <%_ } } _%>

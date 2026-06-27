@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>混合字体方案对比 — 羊皮卷风</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css">
+
+<style>
+  :root {
+    --bg-parchment: #f4ecd8;
+    --bg-dark: #e8ddc4;
+    --text-primary: #3d2b1a;
+    --text-secondary: #6b5540;
+    --text-dim: #9b8468;
+    --border: #c4a882;
+    --border-dark: #8b6914;
+    --accent: #8b4513;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #3d2b1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    gap: 24px;
+    color: var(--text-primary);
+  }
+
+  .card {
+    width: 500px;
+    background: var(--bg-parchment);
+    border: 2px solid var(--border-dark);
+    padding: 20px 24px;
+    box-shadow: 3px 3px 0 rgba(139,105,20,0.3), 0 6px 20px rgba(0,0,0,0.4);
+    position: relative;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid var(--border);
+    pointer-events: none;
+  }
+
+  .card h3 {
+    font-size: 16px;
+    margin-bottom: 2px;
+    border-bottom: 2px solid var(--border-dark);
+    padding-bottom: 6px;
+  }
+  .card .desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .spec-table {
+    width: 100%;
+    font-size: 10px;
+    margin: 6px 0 10px;
+    border-collapse: collapse;
+  }
+  .spec-table td {
+    padding: 2px 8px;
+    border-bottom: 1px dotted var(--border);
+  }
+  .spec-table td:first-child {
+    color: var(--text-dim);
+    width: 80px;
+  }
+  .spec-table .font-tag {
+    font-size: 9px;
+    border: 1px solid var(--accent);
+    padding: 0 5px;
+    border-radius: 2px;
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+  .tag-serif { border-color: #5a3a8a; color: #5a3a8a; }
+  .tag-kai { border-color: #8b6914; color: #8b6914; }
+  .tag-sans { border-color: #3a5a8a; color: #3a5a8a; }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    border-left: 2px solid var(--accent);
+    padding-left: 8px;
+    color: var(--text-dim);
+  }
+
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    padding: 3px 0;
+    border-bottom: 1px dotted var(--border);
+  }
+  .status-left { display: flex; gap: 6px; }
+  .status-label { color: var(--text-dim); font-size: 10px; }
+  .lv-badge {
+    border: 1px solid var(--accent);
+    padding: 1px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 2px;
+  }
+
+  .story {
+    font-size: 15px;
+    line-height: 2;
+    margin: 10px 0;
+    text-indent: 2em;
+  }
+  .story .first { font-weight: 600; text-indent: 0; }
+  .story .first::first-letter { font-size: 24px; color: var(--accent); }
+
+  .btn-row {
+    display: flex;
+    gap: 4px;
+    margin: 8px 0;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn {
+    font-size: 11px;
+    border: 1px solid var(--border);
+    background: #faf3e6;
+    padding: 4px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .action {
+    flex: 1;
+    font-size: 11px;
+    padding: 6px 8px;
+    border: 1px dashed var(--border);
+    background: #fef9ed;
+    cursor: pointer;
+    text-align: center;
+  }
+  .action:hover { border-style: solid; border-color: var(--accent); }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border-dark), transparent);
+    margin: 10px 0;
+  }
+
+  .tab-demo {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    float: right;
+    font-size: 12px;
+    letter-spacing: 3px;
+    margin-left: 12px;
+    margin-bottom: 6px;
+    color: var(--text-dim);
+    border-right: 2px solid var(--accent);
+    padding: 4px 6px;
+    background: rgba(139,69,19,0.04);
+    user-select: none;
+  }
+
+  /* ===== 混合方案 ===== */
+
+  /* G: 正文文楷 + 界面思源宋体 */
+  .f-G { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+  .f-G h3, .f-G .section-label { font-family: 'Noto Serif SC', serif; font-weight: 700; }
+  .f-G .btn, .f-G .action, .f-G .status-row, .f-G .status-label, .f-G .status-left { font-family: 'Noto Serif SC', serif; }
+  .f-G .tab-demo { font-family: 'Noto Serif SC', serif; }
+
+  /* H: 正文思源 + 界面文楷 */
+  .f-H { font-family: 'Noto Serif SC', serif; }
+  .f-H h3, .f-H .section-label { font-family: 'LXGW WenKai', 'KaiTi', serif; font-weight: 700; }
+  .f-H .btn, .f-H .action, .f-H .status-row, .f-H .status-label, .f-H .status-left { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+  .f-H .tab-demo { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+
+  /* I: 三段式 — 正文文楷 / 标题思源 bold / 按钮思源 */
+  .f-I { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+  .f-I h3, .f-I .section-label { font-family: 'Noto Serif SC', serif; font-weight: 900; letter-spacing: 2px; }
+  .f-I .btn, .f-I .action { font-family: 'Noto Serif SC', serif; font-weight: 400; }
+  .f-I .status-row, .f-I .status-label, .f-I .status-left { font-family: 'Noto Serif SC', serif; }
+  .f-I .tab-demo { font-family: 'Noto Serif SC', serif; }
+
+  /* J: 三段式 — 正文思源 / 标题文楷 bold / 按钮文楷 */
+  .f-J { font-family: 'Noto Serif SC', serif; }
+  .f-J h3, .f-J .section-label { font-family: 'LXGW WenKai', 'KaiTi', serif; font-weight: 700; letter-spacing: 2px; }
+  .f-J .btn, .f-J .action { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+  .f-J .status-row, .f-J .status-label, .f-J .status-left { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+  .f-J .tab-demo { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+
+  /* K: 标题思源 / 正文文楷 / 状态栏文楷 / 按钮思源（互动区分） */
+  .f-K { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+  .f-K h3, .f-K .section-label { font-family: 'Noto Serif SC', serif; font-weight: 700; }
+  .f-K .btn, .f-K .action { font-family: 'Noto Serif SC', serif; }
+  .f-K .status-row, .f-K .status-label, .f-K .status-left { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+  .f-K .tab-demo { font-family: 'Noto Serif SC', serif; }
+
+  /* L: 标题文楷 / 正文思源300 / 按钮思源500 / 状态栏文楷 */
+  .f-L { font-family: 'Noto Serif SC', serif; font-weight: 300; }
+  .f-L h3, .f-L .section-label { font-family: 'LXGW WenKai', 'KaiTi', serif; font-weight: 700; }
+  .f-L .btn, .f-L .action { font-family: 'Noto Serif SC', serif; font-weight: 500; }
+  .f-L .status-row, .f-L .status-label, .f-L .status-left { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+  .f-L .tab-demo { font-family: 'LXGW WenKai', 'KaiTi', serif; }
+
+  .hint {
+    color: #c8b896;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 4px;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<!-- G -->
+<div class="card f-G">
+  <h3>G — 正文手稿风 + 界面稳重大气</h3>
+  <div class="desc">Story: 霞鹜文楷 ／ UI全部: 思源宋体</div>
+  <table class="spec-table">
+    <tr><td>正文叙述</td><td><span class="font-tag tag-kai">霞鹜文楷</span> 温暖手写札记感</td></tr>
+    <tr><td>标题·标签</td><td><span class="font-tag tag-serif">思源宋体 Bold</span> 沉稳有力</td></tr>
+    <tr><td>状态栏·按钮</td><td><span class="font-tag tag-serif">思源宋体</span> 清晰可辨</td></tr>
+  </table>
+  <div class="section-label">状态栏</div>
+  <div class="status-row">
+    <span class="status-left"><span class="status-label">日常阶段</span> 384年10月15日 早 · 龙脊联邦·烬喉</span>
+    <span><span class="lv-badge">Lv.5</span> ⏣ 1,280G</span>
+  </div>
+  <div class="section-label">正文</div>
+  <div class="story">
+    <span class="first">推开龙息公会厚重的黑曜石大门，</span>温暖的火焰光芒迎面扑来。大厅内高挑的穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼。
+  </div>
+  <div class="btn-row"><span class="btn">摘要</span><span class="btn">技能</span><span class="btn">道具</span><span class="btn">任务</span><span class="btn">快捷行动 ▾</span></div>
+  <div class="actions">
+    <span class="action">前往冒险者公会查看任务板</span>
+    <span class="action">与身边的NPC交谈</span>
+    <span class="action">在城镇中四处走走</span>
+    <span class="action">回到旅店休息</span>
+  </div>
+</div>
+
+<!-- H -->
+<div class="card f-H">
+  <h3>H — 正文经典可读 + 界面温暖手写</h3>
+  <div class="desc">Story: 思源宋体 ／ UI全部: 霞鹜文楷</div>
+  <table class="spec-table">
+    <tr><td>正文叙述</td><td><span class="font-tag tag-serif">思源宋体</span> 经典刻本，高可读</td></tr>
+    <tr><td>标题·标签</td><td><span class="font-tag tag-kai">霞鹜文楷 Bold</span> 温暖手写</td></tr>
+    <tr><td>状态栏·按钮</td><td><span class="font-tag tag-kai">霞鹜文楷</span> 人情味界面</td></tr>
+  </table>
+  <div class="section-label">状态栏</div>
+  <div class="status-row">
+    <span class="status-left"><span class="status-label">日常阶段</span> 384年10月15日 早 · 龙脊联邦·烬喉</span>
+    <span><span class="lv-badge">Lv.5</span> ⏣ 1,280G</span>
+  </div>
+  <div class="section-label">正文</div>
+  <div class="story">
+    <span class="first">推开龙息公会厚重的黑曜石大门，</span>温暖的火焰光芒迎面扑来。大厅内高挑的穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼。
+  </div>
+  <div class="btn-row"><span class="btn">摘要</span><span class="btn">技能</span><span class="btn">道具</span><span class="btn">任务</span><span class="btn">快捷行动 ▾</span></div>
+  <div class="actions">
+    <span class="action">前往冒险者公会查看任务板</span>
+    <span class="action">与身边的NPC交谈</span>
+    <span class="action">在城镇中四处走走</span>
+    <span class="action">回到旅店休息</span>
+  </div>
+</div>
+
+<!-- I -->
+<div class="card f-I">
+  <h3>I — 标题重刻 + 正文手写 + 按钮规矩</h3>
+  <div class="desc">标题: 思源宋体 Heavy ／ 正文: 霞鹜文楷 ／ 按钮: 思源宋体</div>
+  <table class="spec-table">
+    <tr><td>标题·标签</td><td><span class="font-tag tag-serif">思源宋体 900</span> 极重刻本，强烈存在感</td></tr>
+    <tr><td>正文叙述</td><td><span class="font-tag tag-kai">霞鹜文楷</span> 柔软札记</td></tr>
+    <tr><td>按钮</td><td><span class="font-tag tag-serif">思源宋体</span> 规整可操作</td></tr>
+    <tr><td>状态栏</td><td><span class="font-tag tag-serif">思源宋体</span></td></tr>
+  </table>
+  <div class="section-label">状态栏</div>
+  <div class="status-row">
+    <span class="status-left"><span class="status-label">日常阶段</span> 384年10月15日 早 · 龙脊联邦·烬喉</span>
+    <span><span class="lv-badge">Lv.5</span> ⏣ 1,280G</span>
+  </div>
+  <div class="section-label">正文</div>
+  <div class="story">
+    <span class="first">推开龙息公会厚重的黑曜石大门，</span>温暖的火焰光芒迎面扑来。大厅内高挑的穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼。
+  </div>
+  <div class="btn-row"><span class="btn">摘要</span><span class="btn">技能</span><span class="btn">道具</span><span class="btn">任务</span><span class="btn">快捷行动 ▾</span></div>
+</div>
+
+<!-- J -->
+<div class="card f-J">
+  <h3>J — 标题暖手写 + 正文宋体 + 按钮文楷</h3>
+  <div class="desc">标题: 霞鹜文楷 Bold ／ 正文: 思源宋体 ／ 按钮: 霞鹜文楷</div>
+  <table class="spec-table">
+    <tr><td>标题·标签</td><td><span class="font-tag tag-kai">霞鹜文楷 Bold</span> 标题带人情味</td></tr>
+    <tr><td>正文叙述</td><td><span class="font-tag tag-serif">思源宋体</span> 经典耐读</td></tr>
+    <tr><td>按钮</td><td><span class="font-tag tag-kai">霞鹜文楷</span> 按钮温和</td></tr>
+    <tr><td>状态栏</td><td><span class="font-tag tag-kai">霞鹜文楷</span></td></tr>
+  </table>
+  <div class="section-label">状态栏</div>
+  <div class="status-row">
+    <span class="status-left"><span class="status-label">日常阶段</span> 384年10月15日 早 · 龙脊联邦·烬喉</span>
+    <span><span class="lv-badge">Lv.5</span> ⏣ 1,280G</span>
+  </div>
+  <div class="section-label">正文</div>
+  <div class="story">
+    <span class="first">推开龙息公会厚重的黑曜石大门，</span>温暖的火焰光芒迎面扑来。大厅内高挑的穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼。
+  </div>
+  <div class="btn-row"><span class="btn">摘要</span><span class="btn">技能</span><span class="btn">道具</span><span class="btn">任务</span><span class="btn">快捷行动 ▾</span></div>
+</div>
+
+<!-- K -->
+<div class="card f-K">
+  <h3>K — 正文 UI 混合：按钮思源·其余文楷</h3>
+  <div class="desc">标题思源 ／ 正文文楷 ／ 状态栏文楷 ／ 按钮思源（点击区与阅读区字体分离）</div>
+  <table class="spec-table">
+    <tr><td>标题·标签</td><td><span class="font-tag tag-serif">思源宋体 Bold</span></td></tr>
+    <tr><td>正文叙述</td><td><span class="font-tag tag-kai">霞鹜文楷</span> 沉浸阅读</td></tr>
+    <tr><td>状态栏</td><td><span class="font-tag tag-kai">霞鹜文楷</span> 沉浸延续</td></tr>
+    <tr><td>按钮·操作</td><td><span class="font-tag tag-serif">思源宋体</span> 操作区区分</td></tr>
+  </table>
+  <div class="section-label">状态栏</div>
+  <div class="status-row">
+    <span class="status-left"><span class="status-label">日常阶段</span> 384年10月15日 早 · 龙脊联邦·烬喉</span>
+    <span><span class="lv-badge">Lv.5</span> ⏣ 1,280G</span>
+  </div>
+  <div class="section-label">正文</div>
+  <div class="story">
+    <span class="first">推开龙息公会厚重的黑曜石大门，</span>温暖的火焰光芒迎面扑来。大厅内高挑的穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼。
+  </div>
+  <div class="btn-row"><span class="btn">摘要</span><span class="btn">技能</span><span class="btn">道具</span><span class="btn">任务</span><span class="btn">快捷行动 ▾</span></div>
+</div>
+
+<!-- L -->
+<div class="card f-L">
+  <h3>L — 正文思源 Light + 标题文楷 + 按钮思源 Med</h3>
+  <div class="desc">正文思源300轻字重 ／ 标题文楷Bold ／ 按钮思源500中粗 ／ 状态栏文楷</div>
+  <table class="spec-table">
+    <tr><td>标题·标签</td><td><span class="font-tag tag-kai">霞鹜文楷 Bold</span></td></tr>
+    <tr><td>正文叙述</td><td><span class="font-tag tag-serif">思源宋体 300</span> 轻盈不压眼</td></tr>
+    <tr><td>状态栏</td><td><span class="font-tag tag-kai">霞鹜文楷</span></td></tr>
+    <tr><td>按钮·操作</td><td><span class="font-tag tag-serif">思源宋体 500</span> 中粗可辨</td></tr>
+  </table>
+  <div class="section-label">状态栏</div>
+  <div class="status-row">
+    <span class="status-left"><span class="status-label">日常阶段</span> 384年10月15日 早 · 龙脊联邦·烬喉</span>
+    <span><span class="lv-badge">Lv.5</span> ⏣ 1,280G</span>
+  </div>
+  <div class="section-label">正文</div>
+  <div class="story">
+    <span class="first">推开龙息公会厚重的黑曜石大门，</span>温暖的火焰光芒迎面扑来。大厅内高挑的穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼。
+  </div>
+  <div class="btn-row"><span class="btn">摘要</span><span class="btn">技能</span><span class="btn">道具</span><span class="btn">任务</span><span class="btn">快捷行动 ▾</span></div>
+</div>
+
+<p class="hint">G/H 为两段式（正文 vs UI全部）；I/J 为三段式（标题/正文/按钮各自不同）；K/L 为细粒度混合（操作区字体与阅读区刻意区分）。</p>
+
+</body>
+</html>

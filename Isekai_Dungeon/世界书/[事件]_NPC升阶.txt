@@ -1,0 +1,48 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const event = _.get(stat, '系统状态.待处理事件.NPC升阶事件', null);
+if (!event || !event.NPC名字) return;
+
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '日常阶段') return;
+
+const npcName = event.NPC名字;
+const oldRank = event.旧等级 || '?';
+const npc = _.get(stat, '重要NPC信息.' + npcName, null);
+if (!npc) return;
+
+const RANK_ORDER = { F:1,E:2,D:3,C:4,B:5,A:6,S:7,SS:8,SSS:9,EX:10 };
+const NUM_TO_RANK = { 1:'F',2:'E',3:'D',4:'C',5:'B',6:'A',7:'S',8:'SS',9:'SSS',10:'EX' };
+const oldRankNum = RANK_ORDER[oldRank] || 1;
+const newRank = NUM_TO_RANK[oldRankNum + 1] || oldRank;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const npcCountry = npc.所在国家 || '';
+const isLocal = npcCountry === currentCountry && npc.所在城市 === currentCity;
+
+const currentYear = _.get(stat, '进程.当前年份', 384);
+const currentMonth = _.get(stat, '进程.当前月份', 1);
+const currentDay = _.get(stat, '进程.当前日份', 1);
+_%>
+# 事件：NPC升阶
+
+  晋升者：<%= npcName %> | <%= npc.种族||'?' %> / <%= npc.性别||'?' %> / <%= npc.年龄||'?' %>岁<%= npc.职业 ? ' | ' + npc.职业 : '' %>
+  等级变化：<%= oldRank %> → <%= newRank %>
+  所在地：<%= npc.所在国家 || '?' %>·<%= npc.所在城市 || '?' %><%= isLocal ? '（与主角同城）' : '（异地）' %>
+
+  narrative_guidance:
+<%_ if (isLocal) { _%>
+    - "主角在<%= currentCity %>得知<%= npcName %>升阶的消息——可能是<%= npcName %>本人兴冲冲地找到主角分享喜悦、在公会大厅偶遇时对方展示新徽章、或是街头茶余饭后的议论中听到了这个名字。叙事以二人面对面交流或主角偶然撞见对方被簇拥祝贺的场景切入，展现<%= npcName %>的喜悦和骄傲。"
+<%_ } else { _%>
+    - "主角通过非直接渠道得知<%= npcName %>在<%= npc.所在城市 || '异地' %>升阶的消息——可能是冒险者公会的跨城通告栏、商旅带来的口信、或<%= npcName %>写给主角的书信。描写主角听闻消息时的反应——为远方故人的进步感到欣慰、或回想起与对方并肩作战时的点滴。"
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "NPC的冒险者等级和最近升阶日期已由后台自动更新。此处仅需AI创作新称号并移除事件标记："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/重要NPC信息/<%= npcName %>/冒险者称号", "value": "[AI为<%= npcName %>根据其种族、职业和战斗风格创作的新称号]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/NPC升阶事件" }
+      ]
+<%_ } _%>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案37·恶堕变体：吉卜力腐蚀绘卷 | Ghibli Corruption</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  /* ═══════════════════════════════════════════
+     底色：曾经的吉卜力天空，被暗紫从四周吞噬
+     ═══════════════════════════════════════════ */
+  body{
+    background:linear-gradient(180deg,#201028 0%,#2a1a30 30%,#221828 60%,#1a1018 100%);
+    display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px;
+    font-family:'Noto Serif SC',serif;color:#c0a8b8;font-size:14px;
+    position:relative;
+  }
+  /* 腐蚀晕染：外围暗色往中间渗 */
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(ellipse at 20% 15%,rgba(120,30,80,.25) 0%,transparent 50%),
+      radial-gradient(ellipse at 80% 20%,rgba(80,20,100,.20) 0%,transparent 45%),
+      radial-gradient(ellipse at 50% 70%,rgba(60,10,40,.30) 0%,transparent 55%),
+      radial-gradient(ellipse at 30% 85%,rgba(100,20,60,.18) 0%,transparent 40%);
+  }
+  .app{width:100%;max-width:680px;position:relative;z-index:1}
+
+  /* ═══════════════════════════════════════════
+     魔导书：曾经是温暖奶油色，现在蒙上灰紫
+     ═══════════════════════════════════════════ */
+  .corrupted-book{
+    background:rgba(28,20,30,.92);
+    border-radius:16px;padding:24px 28px;
+    position:relative;overflow:hidden;
+    box-shadow:0 8px 40px rgba(0,0,0,.3),0 0 60px rgba(120,30,80,.12);
+  }
+  /* 曾经的暖色水彩边角 → 腐蚀墨渍 */
+  .corrupted-book::before{
+    content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+    background:
+      /* 墨渍侵入四角 */
+      radial-gradient(ellipse at 90% 5%,rgba(160,40,80,.35) 0%,transparent 40%),
+      radial-gradient(ellipse at 5% 90%,rgba(100,30,140,.25) 0%,transparent 40%),
+      radial-gradient(ellipse at 50% 95%,rgba(120,20,60,.20) 0%,transparent 35%),
+      radial-gradient(ellipse at 10% 15%,rgba(80,20,100,.18) 0%,transparent 35%),
+      /* 中央残留一丝暖光 */
+      radial-gradient(ellipse at 50% 40%,rgba(200,160,100,.04) 0%,transparent 50%);
+  }
+  /* 边框：曾经的手绘金线 → 断裂的暗紫线 */
+  .corrupted-book::after{
+    content:'';position:absolute;inset:10px;pointer-events:none;z-index:0;
+    border:2px solid rgba(160,60,120,.25);
+    border-radius:10px;
+    filter:drop-shadow(0 0 6px rgba(160,40,100,.08));
+  }
+
+  /* ═══════════════════════════════════════════
+     墨渍斑点贴图（模拟纸上蔓延的污渍）
+     ═══════════════════════════════════════════ */
+  .ink-stains{
+    position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      radial-gradient(circle at 15% 10%,rgba(80,20,40,.25) 0%,rgba(80,20,40,.08) 30%,transparent 50%),
+      radial-gradient(ellipse at 85% 80%,rgba(60,10,80,.22) 0%,rgba(60,10,80,.06) 40%,transparent 60%),
+      radial-gradient(circle at 70% 12%,rgba(100,30,50,.18) 0%,transparent 35%),
+      radial-gradient(ellipse at 20% 75%,rgba(50,15,70,.20) 0%,transparent 45%);
+    opacity:.8;
+  }
+
+  .content{position:relative;z-index:2}
+
+  /* ═══════════════════════════════════════════
+     标题：星尘变成暗紫 + 妖异闪烁
+     ═══════════════════════════════════════════ */
+  .corrupted-header{text-align:center;margin-bottom:14px;position:relative}
+  .corrupted-header .star-dust{display:flex;justify-content:center;gap:6px;margin-bottom:4px;font-size:12px}
+  .corrupted-header .star-dust span{opacity:.6}
+  /* 星尘变成暗紫/血红色系 + 紊乱动画 */
+  .corrupted-header .star-dust span:nth-child(1){color:#c06090;animation:corrupt-float 2.5s ease infinite}
+  .corrupted-header .star-dust span:nth-child(2){color:#8040b0;animation:corrupt-float 3s ease .2s infinite}
+  .corrupted-header .star-dust span:nth-child(3){color:#a04060;animation:corrupt-float 2.8s ease .5s infinite}
+  .corrupted-header .star-dust span:nth-child(4){color:#904080;animation:corrupt-float 3.2s ease .8s infinite}
+  .corrupted-header .star-dust span:nth-child(5){color:#b05070;animation:corrupt-float 2.6s ease 1s infinite}
+  @keyframes corrupt-float{
+    0%{transform:translateY(0) rotate(0deg) scale(1);opacity:.4}
+    30%{transform:translateY(-3px) rotate(8deg) scale(1.4);opacity:.8}
+    60%{transform:translateY(1px) rotate(-4deg) scale(.8);opacity:.3}
+    100%{transform:translateY(0) rotate(0deg) scale(1);opacity:.4}
+  }
+  .corrupted-header h1{
+    font-size:26px;font-weight:600;letter-spacing:5px;
+    color:#c080a0;font-family:'Noto Serif SC',serif;
+    text-shadow:0 0 20px rgba(160,60,120,.25);
+  }
+  .corrupted-header .sub{
+    font-size:10px;color:#806080;letter-spacing:4px;font-style:italic;margin-top:2px;
+  }
+
+  /* ═══════════════════════════════════════════
+     分隔线：金线变成暗玫色 + 斑点
+     ═══════════════════════════════════════════ */
+  .corrupt-divider{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 12px}
+  .corrupt-divider .wiggle-line{
+    flex:0 1 60px;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(160,60,120,.3),transparent);
+  }
+  .corrupt-divider .spark{font-size:10px;color:rgba(160,60,120,.5)}
+
+  /* ═══════════════════════════════════════════
+     状态卡片：温暖奶油 → 灰紫底 + 暗色边框
+     ═══════════════════════════════════════════ */
+  .corrupt-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .corrupt-stat{
+    background:rgba(35,25,40,.6);
+    border:1px solid rgba(140,60,100,.2);
+    border-radius:12px;padding:10px 14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.2),inset 0 0 12px rgba(100,20,50,.04);
+  }
+  .corrupt-stat .cs-head{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+  .corrupt-stat .cs-head .tag{color:#9070a0}
+  .corrupt-stat .cs-head .val{color:#c0a0b0;font-weight:600}
+  .cs-bar{height:6px;background:rgba(60,20,50,.15);border-radius:3px;overflow:hidden}
+  .cs-fill{height:100%;border-radius:3px}
+  .cs-fill.hp{background:linear-gradient(90deg,#c05070,#e07090)}     /* 曾经的桃色 → 血色 */
+  .cs-fill.mp{background:linear-gradient(90deg,#7040a0,#9060c0)}     /* 曾经的蓝色 → 暗紫 */
+  .cs-fill.sp{background:linear-gradient(90deg,#905040,#b07060)}     /* 曾经的绿色 → 枯褐 */
+  .cs-fill.exp{background:linear-gradient(90deg,#a06080,#c080a0)}    /* 曾经的金色 → 玫紫 */
+
+  /* ═══════════════════════════════════════════
+     属性圆章：金色 → 暗紫
+     ═══════════════════════════════════════════ */
+  .corrupt-attrs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+  .corrupt-attr{text-align:center;min-width:42px}
+  .corrupt-attr .ca-circle{
+    width:36px;height:36px;border-radius:50%;margin:0 auto 2px;
+    display:flex;align-items:center;justify-content:center;font-size:16px;
+    background:rgba(35,25,40,.6);
+    border:2px solid rgba(140,60,100,.25);
+    box-shadow:0 0 8px rgba(120,40,80,.06);
+  }
+  .corrupt-attr .ca-val{font-size:12px;font-weight:600;color:#c0a0b0}
+  .corrupt-attr .ca-key{font-size:7px;color:#706080;letter-spacing:1px}
+
+  /* ═══════════════════════════════════════════
+     正文：纸张染上灰紫 + 高亮变成妖异色
+     ═══════════════════════════════════════════ */
+  .corrupt-text{
+    background:rgba(30,22,35,.5);
+    border:1px solid rgba(140,60,100,.15);
+    border-radius:10px;padding:14px 18px;margin-bottom:10px;position:relative;
+    box-shadow:inset 0 0 20px rgba(80,20,40,.04);
+  }
+  .corrupt-text p{margin-bottom:5px;font-size:13px;line-height:2;color:#a090a8;text-indent:2em}
+  .corrupt-text p:last-child{margin-bottom:0}
+  .corrupt-text .gold{color:#c080a0}      /* 曾金色 → 暗玫 */
+  .corrupt-text .warm{color:#d06070}       /* 曾暖橘 → 血色 */
+
+  /* ═══════════════════════════════════════════
+     行动按钮
+     ═══════════════════════════════════════════ */
+  .corrupt-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+  .corrupt-act{
+    font-family:inherit;font-size:12px;
+    background:rgba(35,25,40,.6);
+    border:1px solid rgba(140,60,100,.2);
+    border-radius:10px;color:#b090b0;padding:10px 14px;
+    cursor:pointer;transition:.25s;text-align:left;
+  }
+  .corrupt-act:hover{
+    background:rgba(50,30,55,.7);
+    border-color:rgba(180,70,120,.4);
+    box-shadow:0 0 16px rgba(160,40,100,.12);
+    color:#d0b0c8;
+  }
+  .corrupt-act.primary{
+    background:rgba(50,28,52,.7);
+    border-color:rgba(180,60,110,.35);
+    color:#d0a0c0;
+  }
+
+  /* ═══════════════════════════════════════════
+     装备 / 标签
+     ═══════════════════════════════════════════ */
+  .corrupt-equip{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px}
+  .corrupt-item{
+    display:flex;justify-content:space-between;padding:6px 12px;
+    background:rgba(30,22,35,.4);
+    border:1px solid rgba(140,60,100,.12);
+    border-radius:8px;font-size:10px;
+  }
+  .corrupt-item .ce-type{color:#706080}
+  .corrupt-item .ce-name{color:#b090b0}
+  .corrupt-tags{display:flex;flex-wrap:wrap;gap:3px}
+  .corrupt-tags span{
+    font-size:8px;padding:3px 8px;
+    border:1px solid rgba(140,60,100,.18);
+    border-radius:6px;color:#806080;
+    background:rgba(35,25,40,.4);
+  }
+  .corrupt-tags span.on{
+    border-color:rgba(200,70,120,.3);
+    color:#c080a0;background:rgba(60,25,40,.5);
+    box-shadow:0 0 8px rgba(160,40,80,.08);
+  }
+
+  /* ═══════════════════════════════════════════
+     底部：曾经温暖的页脚 → 冷暗
+     ═══════════════════════════════════════════ */
+  .corrupt-footer{
+    display:flex;justify-content:space-between;padding:8px 0 0;
+    border-top:1px solid rgba(140,60,100,.12);
+    font-size:9px;color:#605070;font-style:italic;letter-spacing:1px;
+  }
+
+  /* ═══════════════════════════════════════════
+     额外：边缘墨渍渗入动画
+     ═══════════════════════════════════════════ */
+  .edge-bleed{
+    position:absolute;inset:0;pointer-events:none;z-index:3;
+    background:
+      radial-gradient(circle at 100% 0%,rgba(120,30,60,.15) 0%,transparent 25%),
+      radial-gradient(circle at 0% 100%,rgba(80,20,100,.12) 0%,transparent 25%);
+    animation:bleed-pulse 4s ease-in-out infinite alternate;
+  }
+  @keyframes bleed-pulse{
+    0%{opacity:.6}
+    50%{opacity:1}
+    100%{opacity:.5}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="corrupted-book">
+
+    <!-- 墨渍斑点 -->
+    <div class="ink-stains"></div>
+    <!-- 边缘渗入 -->
+    <div class="edge-bleed"></div>
+
+    <div class="content">
+
+      <div class="corrupted-header">
+        <div class="star-dust"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></div>
+        <h1>异 世 界 地 下 城</h1>
+        <div class="sub">~ Isekai Dungeon · Corrupted ~</div>
+      </div>
+
+      <div class="corrupt-divider">
+        <span class="wiggle-line"></span><span class="spark">✦</span><span class="wiggle-line"></span>
+        <span class="spark">✧</span>
+        <span class="wiggle-line"></span><span class="spark">✦</span><span class="wiggle-line"></span>
+      </div>
+
+      <div class="corrupt-stats">
+        <div class="corrupt-stat">
+          <div class="cs-head"><span class="tag">生命</span><span class="val">78 / 100</span></div>
+          <div class="cs-bar"><div class="cs-fill hp" style="width:78%"></div></div>
+        </div>
+        <div class="corrupt-stat">
+          <div class="cs-head"><span class="tag">魔力</span><span class="val">54 / 100</span></div>
+          <div class="cs-bar"><div class="cs-fill mp" style="width:54%"></div></div>
+        </div>
+        <div class="corrupt-stat">
+          <div class="cs-head"><span class="tag">体力</span><span class="val">90 / 100</span></div>
+          <div class="cs-bar"><div class="cs-fill sp" style="width:90%"></div></div>
+        </div>
+        <div class="corrupt-stat">
+          <div class="cs-head"><span class="tag">经验</span><span class="val">350 / 1000</span></div>
+          <div class="cs-bar"><div class="cs-fill exp" style="width:35%"></div></div>
+        </div>
+      </div>
+
+      <div class="corrupt-attrs">
+        <div class="corrupt-attr"><div class="ca-circle">⚔</div><div class="ca-val">42</div><div class="ca-key">ATK</div></div>
+        <div class="corrupt-attr"><div class="ca-circle">🛡</div><div class="ca-val">28</div><div class="ca-key">DEF</div></div>
+        <div class="corrupt-attr"><div class="ca-circle">⚡</div><div class="ca-val">35</div><div class="ca-key">SPD</div></div>
+        <div class="corrupt-attr"><div class="ca-circle">✧</div><div class="ca-val">30</div><div class="ca-key">INT</div></div>
+        <div class="corrupt-attr"><div class="ca-circle">☘</div><div class="ca-val">18</div><div class="ca-key">LCK</div></div>
+        <div class="corrupt-attr"><div class="ca-circle">◎</div><div class="ca-val">1250</div><div class="ca-key">GOLD</div></div>
+      </div>
+
+      <div class="corrupt-text">
+        <p>你推开沉重的<span class="gold">石门</span>，腐朽的空气中弥漫着<span class="gold">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="warm">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。</p>
+        <p>左侧那只头领模样的家伙眼中闪烁着<span class="warm">不寻常的红光</span>。石壁上古老浮雕描绘着曾被封印在此的<span class="gold">魅魔女王</span>……</p>
+      </div>
+
+      <div class="corrupt-actions">
+        <button class="corrupt-act primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="corrupt-act">🔥 释放火球术灼烧敌群</button>
+        <button class="corrupt-act">🛡 防御姿态观察敌人弱点</button>
+        <button class="corrupt-act">💋 尝试魅惑哥布林</button>
+      </div>
+
+      <div class="corrupt-equip">
+        <div class="corrupt-item"><span class="ce-type">武器</span><span class="ce-name">铁质长剑 Lv.3</span></div>
+        <div class="corrupt-item"><span class="ce-type">防具</span><span class="ce-name">皮甲 Lv.2</span></div>
+        <div class="corrupt-item"><span class="ce-type">饰品</span><span class="ce-name">冒险者徽章</span></div>
+        <div class="corrupt-item"><span class="ce-type">道具</span><span class="ce-name">回复药水 ×3</span></div>
+      </div>
+      <div class="corrupt-tags">
+        <span class="on">触手紧身衣·共生期</span><span class="on">蜕生项圈·中期</span><span>影子分身·无心智</span><span>淫欲晶核·关闭</span>
+      </div>
+
+      <div class="corrupt-footer">
+        <span>地下城 第三层</span><span>阿斯特大陆 · 黄昏时分</span><span>第十二页</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

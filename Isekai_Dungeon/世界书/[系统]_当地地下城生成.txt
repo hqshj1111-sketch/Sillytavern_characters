@@ -1,0 +1,147 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+
+const RANKS = ['F','E','D','C','B','A','S','SS','SSS','EX'];
+const rankToNum = { F:1,E:2,D:3,C:4,B:5,A:6,S:7,SS:8,SSS:9,EX:10 };
+
+const mcRank = _.get(stat, '主角.冒险者信息.冒险者等级', 'F');
+const mcRankIdx = RANKS.indexOf(mcRank);
+const rankLow = Math.max(0, mcRankIdx - 1);
+const rankHigh = Math.min(RANKS.length - 1, mcRankIdx + 1);
+const rankRange = RANKS.slice(rankLow, rankHigh + 1);
+
+const FLOOR_MAP = { F:3,E:3,D:3,C:4,B:4,A:4,S:5,SS:5,SSS:5,EX:6 };
+
+const CLEAR_CHANCE = { F:1.0,E:0.89,D:0.78,C:0.67,B:0.56,A:0.45,S:0.34,SS:0.23,SSS:0.12,EX:0.01 };
+const CLEAR_MAX = { F:5,E:10,D:20,C:50,B:100,A:200,S:500,SS:1000,SSS:2000,EX:5000 };
+
+const allDungeons = _.get(stat, '地下城信息', {});
+const geoData = _.get(stat, '地理信息', {});
+
+const localDungeons = Object.entries(allDungeons).filter(([name, d]) =>
+  d.所在国家 === currentCountry && d.所在城市 === currentCity
+);
+
+const localInRange = localDungeons.filter(([name, d]) => rankRange.includes(d.地下城等级));
+const totalLocal = localInRange.length;
+const unclearedLocal = localInRange.filter(([n, d]) => (d.被主角攻略次数 || 0) === 0).length;
+
+const needForTotal = Math.max(0, 3 - totalLocal);
+const needForUncleared = Math.max(0, 2 - unclearedLocal);
+const totalNeed = Math.max(needForTotal, needForUncleared);
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+const newDungeons = [];
+if (totalNeed > 0) {
+  const typePool = [];
+  for (let i = 0; i < 4; i++) typePool.push('战斗型');
+  for (let i = 0; i < 2; i++) typePool.push('探索型');
+  for (let i = 0; i < 4; i++) typePool.push('魅惑型');
+  const types = shuffle(typePool).slice(0, totalNeed);
+
+  for (let i = 0; i < totalNeed; i++) {
+    const rank = rankRange[Math.floor(Math.random() * rankRange.length)];
+    const floors = FLOOR_MAP[rank];
+    let restFloor = -1;
+    if (!['F','E','D'].includes(rank) && Math.random() < 0.5) {
+      restFloor = Math.floor(Math.random() * (floors - 2)) + 2;
+    }
+    const clearedByOthers = Math.random() < CLEAR_CHANCE[rank] ?
+      Math.floor(Math.random() * CLEAR_MAX[rank]) + 1 : 0;
+    newDungeons.push({ type: types[i], rank: rank, floors: floors, restFloor: restFloor, clearedByOthers: clearedByOthers });
+  }
+}
+_%>
+# 系统指令：当地地下城生成
+
+dungeon_local_lookup:
+  location: "<%= currentCountry || '未知国家' %> · <%= currentCity || '未知城市' %>"
+  player_level: "<%= mcRank %>（适用等级范围：<%= rankRange.join('/') %>）"
+  current_count: "<%= totalLocal %> 个地下城（其中 <%= unclearedLocal %> 个未攻略）"
+
+  narrative_guidance:
+    - "主角正在查看当地【<%= currentCountry || '未知国家' %>·<%= currentCity || '未知城市' %>】可攻略的地下城信息。"
+     <%_ if (localInRange.length > 0) { _%>
+     - "当地已有适合主角当前等级的地下城：<% localInRange.forEach(([name, d], i) => { %><%= name %>（<%= d.地下城等级 %>级，<%= d.类型 || '未指定' %>，Boss：<%= d.boss名称 || '未知' %>，简述：<%= d.地下城描述 || '暂无描述' %>）<%= i < localInRange.length - 1 ? ' | ' : '' %><% }); %>。列出这些已有地下城的简要信息供主角选择。"
+     <%_ } _%>
+     - "叙事仅向主角展示地下城的名字、等级、位置、类型、整体攻略情况（被他人攻略次数/被主角攻略次数）和模糊的Boss信息及地下城描述。总层数、各层区域详情、具体危险等级等内部信息对主角不可见。"
+     - "地下城的生成是系统后台操作，叙事上仅体现为主角在冒险者公会查询当地可攻略地下城信息的过程。"
+    <%_ if (totalNeed > 0) { _%>
+    - "当前当地适合主角等级的地下城数量不足——需要 <%= totalNeed %> 个新地下城（共需至少3个，其中至少2个未攻略）。请按以下预分配生成："
+    <%_ newDungeons.forEach((d, i) => { _%>
+    - "新地下城 #<%= i + 1 %>：【类型】<%= d.type %> | 【等级】<%= d.rank %> | 【总层数】<%= d.floors %>层<% if (d.restFloor > 0) { %> | 第<%= d.restFloor %>层为休整层<% } %> | 【被他人攻略次数】<%= d.clearedByOthers %> | 【被主角攻略次数】0"
+    <%_ }); _%>
+    <%_ } else { _%>
+    - "当前当地适合主角等级的地下城数量已够用（<%= totalLocal %> 个，其中 <%= unclearedLocal %> 个未攻略），无需生成新地下城。仅列出已有列表供主角选择。"
+    <%_ } _%>
+
+  <%_ if (totalNeed > 0) { _%>
+  generation_rules:
+    description_by_type:
+      战斗型: "以凶险的战斗环境为核心，描述高强度的战斗氛围和暴力美学，突出怪物横行、处处杀机的紧张压迫感。"
+      探索型: "以复杂的迷宫结构和古老谜题为核心，描述环境的诡谲多变与步步为营的探索感，侧重未知与发现的魅力。"
+      魅惑型: "以催情的魔雾、欲望试炼和色情魔物为核心，描述环境对感官和意志的侵蚀，突出诱惑与堕落的氛围，将欲望本身作为敌人。色情魔物不以杀戮为目的，而是通过快感、束缚和榨取来消耗主角的体力与意志。"
+
+    boss_by_type:
+      战斗型: "以高攻击力、强韧体魄为主的BOSS，战斗风格直接暴烈。"
+      探索型: "以狡猾、多阶段机制为主的BOSS，需要破解其规律而非蛮力。"
+      魅惑型: "以魅惑、束缚、快感榨取为主的BOSS，如魅魔女王、触手集合体、催情花妖等色情魔物，击败的关键是意志与欲望的对抗。"
+
+    floor_by_type:
+      战斗型: "每层突出一种独立的战斗环境，地形直接影响战斗策略，各层有明确的战斗主题和场景特征。"
+      探索型: "每层为不同风格的迷宫或遗迹，各层有独立的解谜主题、探索机制和隐藏区域。"
+       魅惑型: "每层为递进的欲望试炼，难度和诱惑程度逐层加深，各层有独立的欲望主题和色情魔物配置。"
+
+  mandatory_data_sync:
+    patch_code: |
+      [
+      <%_ newDungeons.forEach((d, i) => {
+        const floorTypes = [];
+        const floorDescs = [];
+        const dangerLevels = [];
+        for (let f = 1; f <= d.floors; f++) {
+          if (f === d.restFloor) {
+            floorTypes.push('休整层');
+            floorDescs.push('[休整层描述——有当前地下城特色的安全区域]');
+            dangerLevels.push(0);
+          } else if (f === d.floors) {
+            floorTypes.push('BOSS层');
+            floorDescs.push('[BOSS层描述——根据BOSS设定描写最终决战区域]');
+            dangerLevels.push(Math.min(10, rankToNum[d.rank] + 3));
+          } else {
+            const dangerNum = Math.max(1, rankToNum[d.rank] + f - 1);
+            floorTypes.push('[由AI填充：根据地下城类型和当前楼层生成区域类型名称]');
+            floorDescs.push('[由AI填充：根据地下城类型和当前楼层生成区域描述]');
+            dangerLevels.push(Math.min(10, dangerNum));
+          }
+        }
+      _%>
+        { "op": "insert", "path": "/地下城信息/[AI生成的<%= d.type %>地下城名称]", "value": {
+          "类型": "<%= d.type %>",
+          "地下城描述": "[根据<%= d.type %>类型的description_by_type规则填充]",
+          "地下城等级": "<%= d.rank %>",
+          "所在国家": "<%= currentCountry %>",
+          "所在城市": "<%= currentCity %>",
+          "所在地点": "[具体入口位置描述]",
+          "boss名称": "[根据<%= d.type %>类型的boss_by_type规则生成]",
+          "boss描述": "[根据<%= d.type %>类型的boss_by_type规则填充BOSS外观与能力]",
+          "总层数": <%= d.floors %>,
+          "每层区域类型": <%= JSON.stringify(floorTypes) %>,
+          "每层区域描述": <%= JSON.stringify(floorDescs) %>,
+          "每层区域危险等级": <%= JSON.stringify(dangerLevels) %>,
+           "被他人攻略次数": <%= d.clearedByOthers %>,
+           "被主角攻略次数": 0,
+           "被主角攻略失败次数": 0
+        }}<%= i < newDungeons.length - 1 ? ',' : '' %>
+      <%_ }); _%>
+      ]
+<%_ } } _%>

@@ -1,0 +1,101 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const isCombatSettling = _.get(stat, '战斗状态.是否战斗结算中', false);
+if (!isCombatSettling) return;
+
+const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
+const currentFloor = _.get(stat, '地下城攻略状态.当前所在层数', 0);
+const dungeonData = _.get(stat, `地下城信息.${dungeonName}`, {});
+const totalFloors = dungeonData.总层数 || 0;
+const isFinalFloor = currentFloor >= totalFloors;
+const enemyName = _.get(stat, '战斗状态.敌方名称', '未知敌人');
+const enemyLevel = _.get(stat, '战斗状态.敌方等级', 1);
+
+const specialLoot = isFinalFloor && Math.random() < 0.1;
+
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+const goldGain = isFinalFloor ? randInt(200, 1000) : randInt(5, 70);
+const killCount = 1;
+
+const mcLevel = _.get(stat, '主角.当前状态.等级', 1);
+const mcExp = _.get(stat, '主角.当前状态.经验值', 0);
+const expGain = isFinalFloor
+  ? randInt(enemyLevel * 8 + 20, enemyLevel * 12 + 30)
+  : randInt(enemyLevel * 3 + 5, enemyLevel * 5 + 15);
+let levelGain = 0, remainExp = mcExp + expGain, currentLv = mcLevel;
+while (true) {
+  const needed = currentLv * 100 + 50;
+  if (remainExp >= needed) { remainExp -= needed; currentLv++; levelGain++; }
+  else break;
+}
+const willLevelUp = levelGain > 0;
+_%>
+# 系统指令：战斗结算
+
+<%_ if (isFinalFloor) { _%>
+  boss_victory:
+    narrative_guidance:
+      - "主角战胜了本层关底BOSS【<%= enemyName %>】。描写战斗胜利的决胜瞬间与劫后余生的喜悦，以及BOSS倒下后环境回归沉寂的余韵。"
+      - "描写战利品的收获——BOSS身上的稀有素材、散落的金币、以及BOSS守护的宝箱内容。"
+      <%_ if (specialLoot) { _%>
+      - "BOSS掉落了一件稀有装备——增加一条稀有武器、护甲或饰品的获取叙事，具体类型和属性由AI创作。"
+      <%_ } _%>
+      - "禁止描写离开地下城或结束攻略的场景。主角仍在地下城中，但此时已无危险。"
+
+     mandatory_data_sync:
+       instruction: "结算BOSS战利品，推进至攻略结算阶段："
+       patch_code: |
+        [
+          { "op": "delta", "path": "/地下城攻略状态/本次攻略获得金币", "value": <%= goldGain %> },
+          { "op": "delta", "path": "/地下城攻略状态/本次攻略击杀数", "value": <%= killCount %> },
+          { "op": "delta", "path": "/主角/冒险者信息/讨伐怪物总数", "value": <%= killCount %> },
+          { "op": "delta", "path": "/地下城攻略状态/本次攻略获得素材/[AI命名的BOSS素材名称]", "value": 1 }
+          <%_ if (specialLoot) { _%>,
+          { "op": "insert", "path": "/主角/道具栏/[稀有装备名称]", "value": { "类型": "装备", "数量": 1, "描述": "[由AI填充装备描述与属性]" } }
+          <%_ } _%>,
+          <%_ if (willLevelUp) { _%>
+          { "op": "replace", "path": "/主角/当前状态/经验值", "value": <%= remainExp %> },
+          { "op": "delta", "path": "/主角/当前状态/等级", "value": <%= levelGain %> },
+          { "op": "insert", "path": "/系统状态/待处理事件/升级事件", "value": <%= levelGain %> }
+          <%_ } else { _%>
+          { "op": "delta", "path": "/主角/当前状态/经验值", "value": <%= expGain %> }
+          <%_ } _%>,
+          { "op": "replace", "path": "/战斗状态/是否战斗结算中", "value": false },
+          { "op": "replace", "path": "/地下城攻略状态/是否攻略结算中", "value": true },
+        ]
+
+<%_ } else { _%>
+  enemy_defeated:
+    narrative_guidance:
+      - "主角击败了【<%= enemyName %>】。描写战斗结束后的短暂喘息——收起武器、检查伤势、以及从敌人身上或周围搜寻战利品的过程。"
+      - "根据敌人的强度（等级<%= enemyLevel %>），决定战利品的内容——"
+      <%_ if (enemyLevel >= 15) { _%>
+      - "此战敌人较强，掉落物应包含较丰厚的金币和1-2件稀有素材或高品质消耗品。"
+      <%_ } else if (enemyLevel >= 8) { _%>
+      - "此战敌人中等，掉落物包含适量金币和1件素材或普通消耗品。"
+      <%_ } else { _%>
+      - "此战敌人较弱，掉落物为少量金币，可能附带普通素材。"
+      <%_ } _%>
+      - "禁止描写新的危险或敌人出现。此阶段为纯粹的战后收尾与短暂休整。"
+
+    mandatory_data_sync:
+      instruction: "结算本场战斗，退出战斗结算状态："
+      patch_code: |
+        [
+          { "op": "delta", "path": "/地下城攻略状态/本次攻略获得金币", "value": <%= goldGain %> },
+          { "op": "delta", "path": "/地下城攻略状态/本次攻略击杀数", "value": <%= killCount %> },
+          { "op": "delta", "path": "/主角/冒险者信息/讨伐怪物总数", "value": <%= killCount %> },
+          // 若有素材掉落，追加：{ "op": "delta", "path": "/地下城攻略状态/本次攻略获得素材/[AI命名的素材名称]", "value": [数量] }
+          // 若掉落消耗品道具，追加：{ "op": "insert", "path": "/主角/道具栏/[AI命名的道具名称]", "value": { "类型": "消耗品", "数量": [数量], "描述": "[道具描述]" } }
+          <%_ if (willLevelUp) { _%>
+          { "op": "replace", "path": "/主角/当前状态/经验值", "value": <%= remainExp %> },
+          { "op": "delta", "path": "/主角/当前状态/等级", "value": <%= levelGain %> },
+          { "op": "insert", "path": "/系统状态/待处理事件/升级事件", "value": <%= levelGain %> }
+          <%_ } else { _%>
+          { "op": "delta", "path": "/主角/当前状态/经验值", "value": <%= expGain %> }
+          <%_ } _%>,
+          { "op": "replace", "path": "/战斗状态/是否战斗结算中", "value": false }
+        ]
+
+<%_ } _%>
+<%_ } _%>

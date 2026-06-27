@@ -1,0 +1,48 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const jin = _.get(stat, 'NPC数据.风见迅', {});
+  const jinDiscovered = _.get(jin, '秘密发现', false);
+  const jinSuspicion = parseInt(_.get(jin, '秘密察觉程度', 0)) || 0;
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['迅共同直播事件'] && isDaily && jinDiscovered && jinSuspicion >= 100 && !isSexActive) {
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const jinFans = _.get(jin, '主播信息.粉丝数', 0);
+    const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.迅共同直播事件', 0)) || 0;
+    const sexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：共同直播邀约
+event_initiator:
+  event_name: "共同直播邀约"
+  character: "风见迅"
+  location: "不限"
+  time: "17:00-22:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "迅又来找主角了。这次连苦恼粉丝增长的铺垫都没有，他直接打开手机给主角看他和主角上一次联动直播的回放数据——比他自己单播时高出好几倍的热度和弹幕量。"
+    - "他收起手机，用雄小鬼的口吻说主角得负责——自从和他联动之后，自己单播的时候弹幕全在刷主角去哪了。所以他决定了，以后定期联动，让主角别想跑。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整迅的坦诚度——次数越多他越不掩饰联动只是表面理由，实际是想借直播为名和主角一起玩。他可能一边嘴臭一边往主角身上靠，说既然数据这么好就别浪费时间，直接在开播前把今天的联动内容排练一遍。"
+    - "结尾留给主角选择：爽快答应并商量今天的联动剧本、先吐槽他现在找借口都懒得编了再答应、或说今天想看他单播一次。"
+    <%_ } else { _%>
+    - "迅主动找上门来，难得没摆雄小鬼的谱。他坦言最近粉丝增长变慢了，自己单打独斗的露出直播虽然有特色，但观众已经开始审美疲劳。"
+    - "迅说出他的想法——想和主角一起开播，两个人配合露出的场面绝对比单人更有爆点。他用雄小鬼的口吻说主角别拖他后腿，但眼神暴露了信任和兴奋。"
+    - "结合好感度(<%= affection %>)调整迅提出邀约时的坦诚度——好感度越高越透露出对主角的依赖感和承认主角比自己厉害的话；好感度越低嘴上越逞强说是在给主角一个抱他大腿的机会。"
+    - "结尾留给主角选择：爽快答应并讨论联动内容、先嘲讽他再答应、或暂时拒绝。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/迅共同直播事件" }
+      ]
+
+<%_ } } _%>

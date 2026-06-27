@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案9：巴洛克宫廷风 | Baroque Palace</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0608;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', 'Playfair Display', serif;
+    color: #d4c4b0;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(139,30,60,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(80,40,100,0.05) 0%, transparent 50%);
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+  }
+
+  .palace-frame {
+    border: 3px double #4a2840;
+    background: linear-gradient(180deg, #120a10 0%, #0c060a 100%);
+    position: relative;
+    box-shadow: inset 0 0 80px rgba(60,20,40,0.15);
+  }
+  .palace-frame::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(180,140,100,0.08);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* ── 冠冕标题 ── */
+  .crown-header {
+    text-align: center;
+    padding: 22px 20px 14px;
+    position: relative;
+    z-index: 1;
+  }
+  .crown-header .tiara {
+    font-size: 28px;
+    color: #c9a060;
+    text-shadow: 0 0 15px rgba(200,150,80,0.3);
+    letter-spacing: 6px;
+    margin-bottom: 4px;
+  }
+  .crown-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    color: #c99860;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+  .crown-header .motto {
+    font-family: 'Playfair Display', serif;
+    font-size: 10px;
+    font-style: italic;
+    color: #8a6070;
+    letter-spacing: 4px;
+    margin-top: 4px;
+  }
+
+  /* ── 华丽分隔线 ── */
+  .ornate-rule {
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+    margin: 2px 0;
+  }
+  .ornate-rule .curl {
+    font-size: 14px;
+    color: #8a5060;
+  }
+  .ornate-rule .rule-line {
+    flex: 0 1 50px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(180,140,100,0.25), transparent);
+  }
+
+  /* ── 面板：鎏金边框 ── */
+  .gilt-panel {
+    position: relative;
+    z-index: 1;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(18,12,16,0.6);
+    border: 2px solid rgba(180,140,100,0.12);
+    box-shadow: inset 0 0 20px rgba(60,20,40,0.1);
+  }
+  .gilt-panel .panel-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: #c99860;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title .fleur {
+    color: #8a5060;
+    font-size: 14px;
+  }
+
+  /* ── 状态：金框肖像 ── */
+  .portrait-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .portrait-stat {
+    padding: 10px 12px;
+    background: rgba(10,6,8,0.5);
+    border: 1px solid rgba(180,140,100,0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .portrait-stat .medallion {
+    width: 30px; height: 30px;
+    border: 2px solid rgba(180,140,100,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .medallion.hp { color: #c05060; border-color: rgba(192,80,96,0.3); }
+  .medallion.mp { color: #6070c0; border-color: rgba(96,112,192,0.3); }
+  .medallion.sp { color: #c0a050; border-color: rgba(192,160,80,0.3); }
+  .medallion.exp { color: #609050; border-color: rgba(96,144,80,0.3); }
+  .portrait-stat .stat-body { flex: 1; min-width: 0; }
+  .stat-body .stat-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-bottom: 3px;
+  }
+  .stat-label-row .label { color: #8a6070; letter-spacing: 2px; }
+  .stat-label-row .value {
+    color: #c99860;
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+  }
+  .portrait-bar {
+    height: 4px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(180,140,100,0.08);
+    position: relative;
+  }
+  .portrait-bar-fill { height: 100%; }
+  .portrait-bar-fill.hp { background: linear-gradient(90deg, #6b2030, #b05060); }
+  .portrait-bar-fill.mp { background: linear-gradient(90deg, #20306b, #5060b0); }
+  .portrait-bar-fill.sp { background: linear-gradient(90deg, #5a4a1a, #b09030); }
+  .portrait-bar-fill.exp { background: linear-gradient(90deg, #204a2a, #508050); }
+
+  /* ── 属性纹章 ── */
+  .heraldry-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .escutcheon {
+    text-align: center;
+    min-width: 52px;
+    padding: 6px;
+    border: 1px solid rgba(180,140,100,0.1);
+    background: rgba(10,6,8,0.4);
+    position: relative;
+  }
+  .escutcheon .emblem {
+    font-size: 16px;
+    color: #c99860;
+    display: block;
+  }
+  .escutcheon .figure {
+    font-size: 14px;
+    font-weight: 700;
+    color: #d4c4b0;
+    font-family: 'Playfair Display', serif;
+  }
+  .escutcheon .title {
+    font-size: 7px;
+    color: #6a4a5a;
+    letter-spacing: 2px;
+  }
+
+  /* ── 正文：信笺 ── */
+  .vellum {
+    margin: 8px 14px;
+    padding: 20px 24px;
+    background: linear-gradient(180deg, rgba(22,16,18,0.5), rgba(16,10,12,0.6));
+    border: 1px solid rgba(180,140,100,0.1);
+    border-left: 2px solid rgba(200,150,100,0.15);
+    position: relative;
+    z-index: 1;
+  }
+  .vellum p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #b4a490;
+  }
+  .vellum p:last-child { margin-bottom: 0; }
+  .vellum .gilt { color: #d4b060; }
+  .vellum .crimson { color: #d06070; }
+  .vellum .violet { color: #a080b0; }
+
+  /* ── 敕令式行动 ── */
+  .edict-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 14px;
+  }
+  .edict-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: linear-gradient(180deg, rgba(30,18,22,0.5), rgba(18,10,14,0.6));
+    border: 1px solid rgba(180,140,100,0.12);
+    color: #b4a490;
+    padding: 9px 18px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .edict-btn:hover {
+    border-color: rgba(200,150,100,0.3);
+    color: #d4c4b0;
+    background: linear-gradient(180deg, rgba(40,24,28,0.5), rgba(24,14,18,0.6));
+  }
+  .edict-btn.royal {
+    border-color: rgba(200,150,100,0.35);
+    color: #d4c4b0;
+  }
+  .edict-btn.royal::before { content: '✦ '; color: #c99860; }
+
+  /* ── 宝物库 ── */
+  .treasury-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .treasury-item {
+    padding: 8px 12px;
+    background: rgba(10,6,8,0.4);
+    border: 1px solid rgba(180,140,100,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .treasury-item .category {
+    font-size: 9px;
+    color: #6a4a5a;
+    letter-spacing: 2px;
+  }
+  .treasury-item .artifact {
+    font-size: 11px;
+    color: #d4c4b0;
+  }
+  .treasury-item .artifact.blank { color: #3a2a30; font-style: italic; }
+
+  .regalia-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .regalia-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(60,20,40,0.15);
+    border: 1px solid rgba(139,30,60,0.15);
+    color: #8a6070;
+  }
+  .regalia-tag.equipped {
+    background: rgba(60,20,40,0.25);
+    border-color: rgba(139,30,60,0.35);
+    color: #b07080;
+  }
+
+  /* ── 底部 ── */
+  .palace-footer {
+    text-align: center;
+    padding: 10px 20px 16px;
+    font-size: 10px;
+    color: #6a4a5a;
+    letter-spacing: 3px;
+    position: relative;
+    z-index: 1;
+  }
+  .palace-footer .foot-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #8a5060;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="palace-frame">
+
+    <div class="crown-header">
+      <div class="tiara">♛</div>
+      <h1>異 世 界 地 下 城</h1>
+      <div class="motto">Isekai Dungeon — Per Ardua ad Astra</div>
+    </div>
+
+    <div class="ornate-rule">
+      <span class="curl">❧</span>
+      <span class="rule-line"></span><span class="curl">✿</span><span class="rule-line"></span>
+      <span class="curl">❧</span>
+    </div>
+
+    <div class="gilt-panel">
+      <div class="panel-title"><span class="fleur">⚜</span> 冒険者之肖像</div>
+      <div class="portrait-stats">
+        <div class="portrait-stat">
+          <div class="medallion hp">♥</div>
+          <div class="stat-body">
+            <div class="stat-label-row"><span class="label">生命</span><span class="value">78 / 100</span></div>
+            <div class="portrait-bar"><div class="portrait-bar-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="portrait-stat">
+          <div class="medallion mp">✦</div>
+          <div class="stat-body">
+            <div class="stat-label-row"><span class="label">魔力</span><span class="value">54 / 100</span></div>
+            <div class="portrait-bar"><div class="portrait-bar-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="portrait-stat">
+          <div class="medallion sp">⚔</div>
+          <div class="stat-body">
+            <div class="stat-label-row"><span class="label">気力</span><span class="value">90 / 100</span></div>
+            <div class="portrait-bar"><div class="portrait-bar-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="portrait-stat">
+          <div class="medallion exp">⏫</div>
+          <div class="stat-body">
+            <div class="stat-label-row"><span class="label">経験</span><span class="value">350 / 1000</span></div>
+            <div class="portrait-bar"><div class="portrait-bar-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="heraldry-row">
+        <div class="escutcheon"><span class="emblem">⚔</span><div class="figure">42</div><div class="title">ATK</div></div>
+        <div class="escutcheon"><span class="emblem">🛡</span><div class="figure">28</div><div class="title">DEF</div></div>
+        <div class="escutcheon"><span class="emblem">⚡</span><div class="figure">35</div><div class="title">AGI</div></div>
+        <div class="escutcheon"><span class="emblem">✧</span><div class="figure">30</div><div class="title">INT</div></div>
+        <div class="escutcheon"><span class="emblem">☘</span><div class="figure">18</div><div class="title">LCK</div></div>
+        <div class="escutcheon"><span class="emblem">◎</span><div class="figure">1250</div><div class="title">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="vellum">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="gilt">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="crimson">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="crimson">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="gilt">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层<span class="violet">淫靡的气息</span>……
+      </p>
+    </div>
+
+    <div class="gilt-panel">
+      <div class="panel-title"><span class="fleur">⚜</span> 行動之敕令</div>
+      <div class="edict-actions">
+        <button class="edict-btn royal">⚔ 挥剑斩向哥布林头领</button>
+        <button class="edict-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="edict-btn">🛡 防御姿态，观察敌人弱点</button>
+        <button class="edict-btn">💋 尝试魅惑其中一只哥布林</button>
+      </div>
+    </div>
+
+    <div class="gilt-panel">
+      <div class="panel-title"><span class="fleur">⚜</span> 宝物庫</div>
+      <div class="treasury-grid">
+        <div class="treasury-item"><span class="category">武器</span><span class="artifact">铁质长剑 Lv.3</span></div>
+        <div class="treasury-item"><span class="category">防具</span><span class="artifact">皮甲 Lv.2</span></div>
+        <div class="treasury-item"><span class="category">飾品</span><span class="artifact">冒险者徽章</span></div>
+        <div class="treasury-item"><span class="category">消耗</span><span class="artifact">回复药水 ×3</span></div>
+      </div>
+      <div class="regalia-tags">
+        <span class="regalia-tag equipped">触手紧身衣·共生期</span>
+        <span class="regalia-tag equipped">蜕生项圈·中期</span>
+        <span class="regalia-tag">影子分身·无心智</span>
+        <span class="regalia-tag">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="palace-footer">
+      <div class="foot-ornament">
+        <span>❦</span><span>⚜</span><span>❦</span>
+      </div>
+      <div>地下城 第三層 · 阿斯特大陸 · 384年露月望日 · 黄昏</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+#NPC档案
+
+<%_ {
+const stat = getvar('stat_data') || {};
+const npcData = stat.NPC数据 || {};
+const npcNames = Object.keys(npcData);
+if (npcNames.length > 0) {
+    npcNames.forEach(name => {
+        const npc = npcData[name];
+        const identity = npc.身份信息 || {};
+        const residence = npc.住处 || '';
+        const appearance = npc.外貌 || {};
+        const body = npc.身体 || {};
+        const clothing = npc.着装 || {};
+        const personality = npc.性格 || {};
+        const suspicion = parseInt(npc.秘密察觉程度, 10) || 0;
+        const activeZones = npc.活跃区域 || [];
+        const npcAffection = parseInt(npc.好感度) || 0;
+        const npcLewdVal = parseInt(npc.淫乱度) || 0;
+        const stageKey = npcLewdVal >= 75 ? '阶段4' : (npcLewdVal >= 50 ? '阶段3' : (npcLewdVal >= 25 ? '阶段2' : '阶段1'));
+        const npcLewdStageText = _.get(npc, `淫乱度阶段.${stageKey}`, '青涩');
+
+        let suspicionStage = '';
+        let suspicionText = '';
+        if (suspicion <= 25) { suspicionStage = '毫不知情'; suspicionText = '完全不知道主角在从事任何与露出相关的事情。'; }
+        else if (suspicion <= 50) { suspicionStage = '初生疑心'; suspicionText = '隐约觉得主角最近行为有些反常，但未往那方面想。'; }
+        else if (suspicion <= 75) { suspicionStage = '隐约察觉'; suspicionText = '察觉到一些蛛丝马迹，开始怀疑但尚无确凿证据。'; }
+        else if (suspicion <= 99) { suspicionStage = '隐约知晓'; suspicionText = '掌握了一些线索，对主角的秘密有所猜测但并未表露。'; }
+        else { suspicionStage = '知晓一切'; suspicionText = '完全清楚主角的露出行径与主播身份，已无需伪装。'; }
+
+_%>
+## <%= name %>
+- 身份：<%= identity.年龄 || '未知' %> | <%= identity.身份 || '未知' %>
+- 住所：<%= residence %>
+- 外貌：<%= appearance.脸型与发型 || '未知' %> | <%= appearance.眼睛 || '未知' %> | <%= appearance.皮肤 || '未知' %>
+- 身体：身高 <%= body.身高 || '未知' %> | 三围 <%= body.三围 || '未知' %> | <%= body.体态 || '未知' %> 
+- 性器：<%= body.性器官描述 || '未知' %> | 体毛：<%= body.体毛 || '未设定' %>
+- 着装：<%= clothing.日常 || '未知' %>
+- 性格：外在<%= personality.外在 || '未知' %>；内在<%= personality.内在 || '未知' %>
+- 活跃区域：<%= activeZones.length > 0 ? activeZones.join('、') : '全市' %>
+- 爱好：<%= npc.爱好 || '未设定' %>
+- 偏好性行为：<%= npc.偏好性行为 || '未设定' %>
+- 与主角关系：<%= identity.与主角关系 || '未知' %> | 好感度: <%= npcAffection %>/100
+- 淫乱度：<%= npcLewdVal %>/100【<%= npcLewdStageText %>】
+- 与主角做爱次数：<%= npc.与主角做爱次数 || 0 %>
+<%_ if (name === '风见迅') {
+  const jinFans = parseInt(_.get(npc, '主播信息.粉丝数', 0)) || 0;
+  let jinPopStage = '';
+  let jinPopDesc = '';
+  if (jinFans < 100) { jinPopStage = '新人主播'; jinPopDesc = '默默无闻的新人，偶尔有路人点进又离开。'; }
+  else if (jinFans < 500) { jinPopStage = '小透明'; jinPopDesc = '开始拥有零星固定观众，弹幕偶尔飘过几条。'; }
+  else if (jinFans < 2000) { jinPopStage = '崭露头角'; jinPopDesc = '圈内小有讨论，每次开播都有熟面孔蹲守。'; }
+  else if (jinFans < 10000) { jinPopStage = '小有名气'; jinPopDesc = '露出系红人，粉丝群活跃，二创切片开始出现。'; }
+  else if (jinFans < 100000) { jinPopStage = '人气新星'; jinPopDesc = '平台头部主播之一，一举一动都引发热议。'; }
+  else if (jinFans < 1000000) { jinPopStage = '现象级主播'; jinPopDesc = '全网皆知的露出传奇，弹幕与打赏如潮水般涌来。'; }
+  else { jinPopStage = 'TOP1'; jinPopDesc = '色情直播界的绝对王者，他的名字就是流量与欲望的代名词。'; }
+_%>
+- 主播信息：「<%= _.get(npc, '主播信息.主播名字', '银犬') %>」 | 粉丝：<%= jinFans %>（<%= jinPopStage %>——<%= jinPopDesc %>）
+<%_ } _%>
+- 主角秘密察觉程度：<%= suspicion %>/100【<%= suspicionStage %>】- <%= suspicionText %>
+<%_ if (suspicion < 100) { _%>
+  > 约束：该角色尚未完全知晓主角的露出行径和主播身份，严禁表现出了解或提及相关事宜。
+<%_ } _%>
+<%_ if (name === '汐见真帆' || name === '冰室纱耶' || name === '风见迅') {
+  const discovered = _.get(npc, '秘密发现', false);
+  let secretHint = "";
+  if (name === '汐见真帆') {
+    secretHint = discovered
+      ? "主角已知晓她在网上是资深老司机的真实面目。"
+      : "主角尚未发现她纯情外表下隐藏的二次元老司机身份。严禁出现任何主角了解其秘密的叙事。";
+  } else if (name === '冰室纱耶') {
+    secretHint = discovered
+      ? "主角已知晓她知性面具下是多炮友、三穴开发的淫乱肉食者。"
+      : "主角尚未发现她那温柔知性的外表下隐藏着极度淫乱的真实面目。严禁出现任何主角了解其秘密的叙事。";
+  } else if (name === '风见迅') {
+    secretHint = discovered
+      ? "主角已知晓他不仅是邻居，还是同行露出系主播「银犬」。"
+      : "主角尚未发现他雄小鬼面具下隐藏着露出系主播「银犬」的身份。严禁出现任何主角了解其秘密的叙事。";
+  }
+_%>
+  > 自身秘密揭露: <%= secretHint %>
+<%_ } _%>
+---
+<%_ 
+    });
+} else if (npcNames.length === 0) { _%>
+(当前暂无NPC档案)
+<%_ } } _%>

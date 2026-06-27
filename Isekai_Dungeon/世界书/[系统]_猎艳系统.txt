@@ -1,0 +1,60 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const pleasureEvent = pendingEvents['猎艳进行中事件'];
+if (phase !== '日常阶段' || !pleasureEvent) return;
+
+const isTavern = pleasureEvent === '酒馆猎艳';
+const isBrothel = pleasureEvent === '妓院猎艳';
+const isSolo = isTavern || isBrothel;
+const isNamed = !isSolo;
+const targetName = pleasureEvent;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+
+const importantNPCs = _.get(stat, '重要NPC信息', {});
+const normalNPCs = _.get(stat, '一般NPC信息', {});
+let targetData = {};
+if (isNamed) {
+  targetData = importantNPCs[targetName] || normalNPCs[targetName] || {};
+}
+_%>
+# 系统指令：猎艳系统
+
+<%_ if (isTavern) { _%>
+  猎艳地点：<%= currentCity %>的酒馆
+  猎艳对象：偶遇之人
+
+  narrative_guidance:
+    - "主角正在<%= currentCity %>的酒馆中与偶遇的对方继续周旋。延续上一回合的搭讪氛围——酒馆的嘈杂背景音成为两人之间私语的屏障，吧台烛火在对方脸上投下摇曳的光影。描写从陌生到慢慢靠近的过程：酒杯的轻碰、对方不经意讲述的自己的故事、笑声中逐渐缩小的距离感。"
+    - "随着气氛升温，自然过渡到私密空间。描写激情性爱实况——以酒后的炽热与放纵为主调，双方在微醺中卸下日常的克制，身体的契合带有酒精催化下的坦诚与冲动。禁止在一回合内直接描写性爱结束——每回合适量推进，为玩家留出选择空间（换个姿势、再来一次、或结束）。"
+    - "仅当玩家明确表示结束猎艳时，描写事后的余韵：酒醒后的晨光透过旅店窗帘的缝隙、对方的睡颜或已悄然离去的空枕。然后自然结束。"
+
+<%_ } else if (isBrothel) { _%>
+  猎艳地点：<%= currentCity %>的妓院
+  猎艳对象：从业者
+
+  narrative_guidance:
+    - "主角正在<%= currentCity %>妓院的私室中，面前是方才挑选的对方。延续上一回合的铺垫——对方以职业化的从容引导节奏，但细节中偶有真实的反应透露出来。描写对方的外貌特征和举止风韵、房间内的陈设。"
+    - "正式进入性爱描写——对方展现专业的技巧与经验，服务与享受之间的界限模糊。描写对方在过程中的反应：职业微笑中偶尔露出的意外喘息、对主角某个动作的短暂失神。禁止在一回合内直接描写性爱结束——每回合适量推进，为玩家留出选择空间（换个姿势、再来一次、或结束）。"
+    - "仅当玩家明确表示结束猎艳时，描写事后的收尾：结账、对方整理衣冠时的几句闲谈、或对方破例说出的一句真话。然后自然告别。"
+
+<%_ } else { _%>
+  猎艳对象：<%= targetName %>
+
+  narrative_guidance:
+    - "主角找上了<%= targetName %>继续上一回合的暧昧。描写两人的私密互动。"
+    - "随着对话中的暗示逐渐明确、肢体接触的自然升级，气氛从调情过渡到激情——描写与<%= targetName %>的性爱实况：对方在这个过程中的反应和特点、身体的契合与碰撞的节奏。禁止在一回合内直接描写性爱结束——每回合适量推进，为玩家留出选择空间。"
+    - "仅当玩家明确表示结束猎艳时，描写事后的温存与告别。"
+
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "仅当玩家明确表示结束猎艳时，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/猎艳进行中事件" }
+      ]
+<%_ } _%>

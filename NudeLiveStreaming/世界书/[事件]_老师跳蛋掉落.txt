@@ -1,0 +1,49 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['老师跳蛋掉落事件'] && isDaily && isSexActive) {
+    const saya = _.get(stat, 'NPC数据.冰室纱耶', {});
+    const affection = parseInt(_.get(saya, '好感度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.老师跳蛋掉落事件', 0)) || 0;
+    const sexCount = parseInt(_.get(saya, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：跳蛋掉落
+event_initiator:
+  event_name: "跳蛋掉落"
+  character: "冰室纱耶"
+  location: "文教区 - 教学楼走廊"
+  time: "9:00-16:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "走廊上，纱耶正和主角说着话，一个熟悉的小东西又从她裙底滑落——跳蛋。两人同时低头看了一眼。"
+    - "纱耶笑出声来，弯腰捡起那枚还嗡嗡震着的跳蛋，语气毫无尴尬，反而带着几分无奈和坦荡。她说这东西最近越来越夹不住了，不知道是她里面变松了还是跳蛋太小了。"
+    - "结合做爱次数(<%= sexCount %>)调整她的下一步——次数越多她越直接，可能把跳蛋放进主角手心，说既然每次都掉在主角面前，说明这东西想让主角帮忙塞回去。或者更直白地说，今天干脆不用跳蛋了，让主角用真的替掉它。"
+    - "结尾留给主角选择：帮她塞回跳蛋然后继续聊天、把她拉到最近的空教室或厕所、或调侃她下次换个尺寸大点的。"
+    <%_ } else { _%>
+    - "主角在教学楼走廊遇到纱耶，两人正寒暄时，一个小巧的跳蛋从她裙底滑落。气氛凝固。"
+    <%_ if (affection < 25) { _%>
+    - "纱耶面不改色地弯腰捡起跳蛋，随手揣进口袋解释说是按摩器而已，最近腰不太好。她的语气恢复了教师的从容，告诫主角别多想，然后迈着平稳的步子离开了——只是耳根微微发红。"
+    <%_ } else if (affection < 75) { _%>
+    - "纱耶愣了一下，然后无奈地笑出声。她捡起跳蛋，用闲聊的语气说早上的时候塞得太深了，一路走来都夹不太好，说着就把跳蛋重新塞了回去，手指在里面推了几秒。她抬眼问主角这样会不会太明显。"
+    <%_ } else { _%>
+    - "纱耶捡起跳蛋放进主角手心，上面还带着温热和湿润。她靠近一步，笑容依然温柔但眼神已经变了味，问主角想把这个给她塞回去，还是把自己那根塞进去。"
+    <%_ } _%>
+    - "结尾留给主角选择：假装没看见、帮她遮掩、或接受暗示。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/老师跳蛋掉落事件" }
+      ]
+
+<%_ } } _%>

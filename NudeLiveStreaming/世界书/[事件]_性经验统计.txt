@@ -1,0 +1,66 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+
+  if (isDaily) {
+    // 主角自身经验
+    const mcExp = _.get(stat, '主角.性经验记录', {});
+    const masturbation = parseInt(mcExp.自慰次数) || 0;
+    const toys = parseInt(mcExp.情趣玩具使用次数) || 0;
+    const activeHandjob = parseInt(mcExp.主动手交次数) || 0;
+    const passiveHandjob = parseInt(mcExp.被动手交次数) || 0;
+    const activeFootjob = parseInt(mcExp.主动足交次数) || 0;
+    const passiveFootjob = parseInt(mcExp.被动足交次数) || 0;
+    const activeOral = parseInt(mcExp.主动口交次数) || 0;
+    const passiveOral = parseInt(mcExp.被动口交次数) || 0;
+    const passiveTitjob = parseInt(mcExp.被动乳交次数) || 0;
+    const vaginalSex = parseInt(mcExp.小穴插入性爱次数) || 0;
+    const analInsert = parseInt(mcExp.后穴插入性爱次数) || 0; // 主角插入他人后穴
+    const analReceive = parseInt(mcExp.后穴性爱次数) || 0; // 主角后穴被插入
+    const strangerSex = parseInt(mcExp.与陌生人做爱次数) || 0;
+
+    // 各NPC与主角做爱次数
+    const npcData = _.get(stat, 'NPC数据', {});
+    const makotoSex = parseInt(_.get(npcData, '汐见真帆.与主角做爱次数', 0)) || 0;
+    const kaidoSex = parseInt(_.get(npcData, '黑崎海斗.与主角做爱次数', 0)) || 0;
+    const sayaSex = parseInt(_.get(npcData, '冰室纱耶.与主角做爱次数', 0)) || 0;
+    const jinSex = parseInt(_.get(npcData, '风见迅.与主角做爱次数', 0)) || 0;
+
+    const totalSex = makotoSex + kaidoSex + sayaSex + jinSex + strangerSex;
+    const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
+    const mcLewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+_%>
+# 事件：性经验统计
+event_initiator:
+  event_name: "性经验统计"
+  character: "无"
+  location: "无"
+  time: "无"
+  statistics:
+    total_sex: <%= totalSex %>
+    makoto: <%= makotoSex %>
+    kaido: <%= kaidoSex %>
+    saya: <%= sayaSex %>
+    jin: <%= jinSex %>
+    stranger: <%= strangerSex %>
+    masturbation: <%= masturbation %>
+    toys: <%= toys %>
+    active_handjob: <%= activeHandjob %>
+    passive_handjob: <%= passiveHandjob %>
+    active_footjob: <%= activeFootjob %>
+    passive_footjob: <%= passiveFootjob %>
+    active_oral: <%= activeOral %>
+    passive_oral: <%= passiveOral %>
+    passive_titjob: <%= passiveTitjob %>
+    vaginal_sex: <%= vaginalSex %>
+    anal_insert: <%= analInsert %>
+    anal_receive: <%= analReceive %>
+
+  narrative_guidance:
+    - "主角打开露出直播APP，点进了性经验统计功能页面。界面设计得颇具挑逗性，数据被分门别类地陈列在屏幕中央，每一个数字旁边都附有暧昧的图标。一个淫荡的AI合成女声开始用清脆又下流的语调逐一宣读。"
+    - "AI从总览开始：总做爱次数<%= totalSex %>次——其中与妹妹<%= makotoSex %>次，与竹马<%= kaidoSex %>次，与老师<%= sayaSex %>次，与邻居<%= jinSex %>次，与匿名陌生人<%= strangerSex %>次。它用挑逗的语气点评这些数据，结合次数高低和主角当前的淫乱度(<%= mcLewdness %>)进行不留情面的下流评价——如果某角色次数远超他人，它会说主角对这个人的鸡巴或穴已经上瘾了；如果有角色次数还很低，它会用激将法问主角是不是不行。"
+    - "接着AI切换到具体性行为统计：自慰<%= masturbation %>次，情趣玩具使用<%= toys %>次，主动手交<%= activeHandjob %>次，被动手交<%= passiveHandjob %>次，主动足交<%= activeFootjob %>次，被动足交<%= passiveFootjob %>次，主动口交<%= activeOral %>次，被动口交<%= passiveOral %>次，被动乳交<%= passiveTitjob %>次，小穴插入<%= vaginalSex %>次，主动后穴插入<%= analInsert %>次，被动后穴使用<%= analReceive %>次。AI会挑出次数最高和最低的项目进行重点嘲讽或夸奖，用词犀利且充满性暗示，把每一个数字都评价得让主角面红耳赤。"
+
+<%_ } } _%>

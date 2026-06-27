@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案2：魔导书卷奥术风 | Arcane Grimoire</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0a14;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', 'Cormorant Garamond', serif;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(120,80,200,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(200,156,75,0.05) 0%, transparent 60%);
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+    color: #d4c5a9;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  /* ── 魔法书内核效果 ── */
+  .grimoire {
+    background:
+      linear-gradient(180deg, #1a1028 0%, #120d1f 30%, #0f0b18 100%);
+    border: 2px solid #3a2850;
+    box-shadow:
+      inset 0 0 60px rgba(80,40,140,0.15),
+      0 0 30px rgba(80,40,140,0.1),
+      0 4px 20px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  .grimoire::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(180,130,255,0.04) 0%, transparent 30%),
+      radial-gradient(circle at 80% 90%, rgba(200,156,75,0.04) 0%, transparent 30%),
+      radial-gradient(circle at 50% 50%, rgba(120,80,200,0.02) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* ── 顶部奥术纹饰 ── */
+  .arcane-header {
+    position: relative;
+    z-index: 1;
+    padding: 20px 20px 10px;
+    text-align: center;
+  }
+  .rune-corners {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+    color: #8b6baf;
+    font-size: 28px;
+    margin-bottom: 6px;
+    text-shadow: 0 0 12px rgba(139,107,175,0.5);
+  }
+  .arcane-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: #c9a050;
+    text-shadow: 0 0 20px rgba(200,156,75,0.4);
+  }
+  .arcane-header .subtitle {
+    font-size: 11px;
+    color: #6b5088;
+    letter-spacing: 6px;
+    margin-top: 4px;
+  }
+
+  /* ── 魔法阵分隔线 ── */
+  .magic-separator {
+    position: relative;
+    z-index: 1;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 2px 0;
+  }
+  .magic-separator .line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #4a3070, transparent);
+    max-width: 80px;
+  }
+  .magic-separator .glyph {
+    color: #7b5ea7;
+    font-size: 14px;
+    text-shadow: 0 0 8px rgba(123,94,167,0.6);
+  }
+  .magic-separator .glyph.center {
+    font-size: 18px;
+    color: #c9a050;
+    text-shadow: 0 0 15px rgba(200,156,75,0.5);
+  }
+
+  /* ── 面板：书页风格 ── */
+  .page-panel {
+    position: relative;
+    z-index: 1;
+    margin: 8px 16px;
+    padding: 16px 20px;
+    background: rgba(20,12,30,0.7);
+    border: 1px solid #2a1a40;
+    border-radius: 2px;
+    box-shadow: inset 0 0 20px rgba(60,20,100,0.08);
+  }
+  .page-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: linear-gradient(180deg, #c9a050, #6b3fa0, #c9a050);
+    opacity: 0.5;
+  }
+  .page-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: #c9a050;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .page-label .ornament { color: #6b3fa0; }
+
+  /* ── 奥术环形状态 ── */
+  .arcane-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 10px;
+    text-align: center;
+  }
+  .arcane-ring {
+    position: relative;
+    width: 64px; height: 64px;
+    margin: 0 auto 6px;
+  }
+  .arcane-ring svg { transform: rotate(-90deg); }
+  .arcane-ring .ring-bg {
+    stroke: #1a1030;
+    stroke-width: 4;
+    fill: none;
+  }
+  .arcane-ring .ring-fill {
+    stroke-width: 4;
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s;
+  }
+  .arcane-ring .ring-fill.hp { stroke: #c0395b; }
+  .arcane-ring .ring-fill.mp { stroke: #6b7ec9; }
+  .arcane-ring .ring-fill.sp { stroke: #c9a050; }
+  .arcane-ring .ring-fill.exp { stroke: #5a9e6f; }
+  .arcane-ring .ring-val {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #d4c5a9;
+  }
+  .arcane-ring .ring-val small {
+    font-size: 9px;
+    color: #7b6b8f;
+    letter-spacing: 2px;
+    font-weight: 400;
+  }
+  .ring-glow {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .ring-glow.hp { box-shadow: inset 0 0 12px rgba(192,57,91,0.2); }
+  .ring-glow.mp { box-shadow: inset 0 0 12px rgba(107,126,201,0.2); }
+  .ring-glow.sp { box-shadow: inset 0 0 12px rgba(201,160,80,0.2); }
+  .ring-glow.exp { box-shadow: inset 0 0 12px rgba(90,158,111,0.2); }
+
+  /* ── 属性符文 ── */
+  .rune-attrs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .rune-attr {
+    text-align: center;
+    min-width: 52px;
+  }
+  .rune-attr .rune-glyph {
+    font-size: 18px;
+    color: #7b5ea7;
+    text-shadow: 0 0 6px rgba(123,94,167,0.4);
+    display: block;
+  }
+  .rune-attr .rune-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: #d4c5a9;
+  }
+  .rune-attr .rune-key {
+    font-size: 8px;
+    color: #5c4870;
+    letter-spacing: 2px;
+  }
+
+  /* ── 正文区：羊皮纸效果 ── */
+  .parchment {
+    position: relative;
+    z-index: 1;
+    margin: 10px 16px;
+    padding: 20px 24px;
+    background: linear-gradient(180deg,
+      rgba(40,30,20,0.55) 0%,
+      rgba(35,25,18,0.6) 50%,
+      rgba(40,30,20,0.55) 100%);
+    border: 1px solid #3a2a18;
+    border-radius: 1px;
+    color: #c4b595;
+  }
+  .parchment::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px dotted rgba(180,140,100,0.12);
+    pointer-events: none;
+  }
+  .parchment p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+  }
+  .parchment .gold { color: #d4a550; }
+  .parchment .purple { color: #9b7ec9; }
+  .parchment .danger { color: #c06070; }
+
+  /* ── 魔法行动选项 ── */
+  .spell-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .spell-btn {
+    background: linear-gradient(180deg, rgba(60,30,100,0.4), rgba(30,15,60,0.5));
+    border: 1px solid #4a3070;
+    color: #c4b0d8;
+    padding: 9px 16px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .spell-btn:hover {
+    border-color: #c9a050;
+    color: #e0c890;
+    box-shadow: 0 0 12px rgba(200,156,75,0.2), inset 0 0 12px rgba(200,156,75,0.05);
+  }
+  .spell-btn.primary {
+    border-color: #c9a050;
+    background: linear-gradient(180deg, rgba(100,60,20,0.3), rgba(50,30,10,0.4));
+    color: #e0c890;
+  }
+  .spell-btn.primary::before { content: '✧ '; color: #c9a050; }
+
+  /* ── 装备槽 ── */
+  .slots-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .slot-card {
+    background: rgba(20,12,30,0.5);
+    border: 1px solid #2a1a40;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .slot-card .slot-label {
+    font-size: 10px;
+    color: #6b5088;
+    letter-spacing: 2px;
+  }
+  .slot-card .slot-name {
+    font-size: 13px;
+    color: #c4b595;
+  }
+  .slot-card .slot-name.empty { color: #3a2a50; font-style: italic; }
+
+  /* ── 特殊装备水晶标签 ── */
+  .crystal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .crystal-tag {
+    background: rgba(60,20,100,0.3);
+    border: 1px solid #4a2070;
+    color: #9b7ec9;
+    padding: 4px 12px;
+    font-size: 11px;
+    border-radius: 1px;
+    transition: all 0.2s;
+  }
+  .crystal-tag.active {
+    background: rgba(80,30,130,0.4);
+    border-color: #7b5ea7;
+    color: #c4b0d8;
+    box-shadow: 0 0 10px rgba(123,94,167,0.25);
+  }
+
+  /* ── 底部 ── */
+  .arcane-footer {
+    position: relative;
+    z-index: 1;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #5c4870;
+    letter-spacing: 3px;
+  }
+  .arcane-footer .rune-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    color: #7b5ea7;
+  }
+  .arcane-footer .rune-line .moon { font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="grimoire">
+
+    <!-- 顶部奥术纹饰 -->
+    <div class="arcane-header">
+      <div class="rune-corners">
+        <span>⏣ ✦ ⏣</span>
+        <span>⏣ ✦ ⏣</span>
+      </div>
+      <h1>异 世 界 地 下 城</h1>
+      <div class="subtitle">✦  I S E K A I  ·  D U N G E O N  ✦</div>
+    </div>
+
+    <div class="magic-separator">
+      <span class="line"></span><span class="glyph">◇</span><span class="line"></span>
+      <span class="glyph center">⬡</span>
+      <span class="line"></span><span class="glyph">◇</span><span class="line"></span>
+    </div>
+
+    <!-- 状态环 -->
+    <div class="page-panel">
+      <div class="page-label"><span class="ornament">✧</span> 冒险者灵格 <span class="ornament">✧</span></div>
+      <div class="arcane-stats">
+        <div>
+          <div class="arcane-ring">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle class="ring-bg" cx="32" cy="32" r="28"/>
+              <circle class="ring-fill hp" cx="32" cy="32" r="28"
+                stroke-dasharray="175.93" stroke-dashoffset="38.7"/>
+            </svg>
+            <div class="ring-glow hp"></div>
+            <div class="ring-val">78<small>HP</small></div>
+          </div>
+        </div>
+        <div>
+          <div class="arcane-ring">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle class="ring-bg" cx="32" cy="32" r="28"/>
+              <circle class="ring-fill mp" cx="32" cy="32" r="28"
+                stroke-dasharray="175.93" stroke-dashoffset="80.9"/>
+            </svg>
+            <div class="ring-glow mp"></div>
+            <div class="ring-val">54<small>MP</small></div>
+          </div>
+        </div>
+        <div>
+          <div class="arcane-ring">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle class="ring-bg" cx="32" cy="32" r="28"/>
+              <circle class="ring-fill sp" cx="32" cy="32" r="28"
+                stroke-dasharray="175.93" stroke-dashoffset="17.6"/>
+            </svg>
+            <div class="ring-glow sp"></div>
+            <div class="ring-val">90<small>SP</small></div>
+          </div>
+        </div>
+        <div>
+          <div class="arcane-ring">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle class="ring-bg" cx="32" cy="32" r="28"/>
+              <circle class="ring-fill exp" cx="32" cy="32" r="28"
+                stroke-dasharray="175.93" stroke-dashoffset="114.4"/>
+            </svg>
+            <div class="ring-glow exp"></div>
+            <div class="ring-val">35<small>EXP</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="rune-attrs">
+        <div class="rune-attr">
+          <span class="rune-glyph">⚔</span>
+          <div class="rune-val">42</div>
+          <div class="rune-key">ATK</div>
+        </div>
+        <div class="rune-attr">
+          <span class="rune-glyph">🛡</span>
+          <div class="rune-val">28</div>
+          <div class="rune-key">DEF</div>
+        </div>
+        <div class="rune-attr">
+          <span class="rune-glyph">⚡</span>
+          <div class="rune-val">35</div>
+          <div class="rune-key">AGI</div>
+        </div>
+        <div class="rune-attr">
+          <span class="rune-glyph">✧</span>
+          <div class="rune-val">30</div>
+          <div class="rune-key">INT</div>
+        </div>
+        <div class="rune-attr">
+          <span class="rune-glyph">☘</span>
+          <div class="rune-val">18</div>
+          <div class="rune-key">LCK</div>
+        </div>
+        <div class="rune-attr">
+          <span class="rune-glyph">◎</span>
+          <div class="rune-val">1,250</div>
+          <div class="rune-key">GOLD</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 正文区：羊皮纸 -->
+    <div class="parchment">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="gold">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="danger">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="danger">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="gold">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层<span class="purple">淫靡的气息</span>……
+      </p>
+    </div>
+
+    <!-- 魔法行动选项 -->
+    <div class="spell-actions">
+      <button class="spell-btn primary">⚔ 挥剑斩向哥布林头领</button>
+      <button class="spell-btn">🔥 释放火球术灼烧敌群</button>
+      <button class="spell-btn">🛡 防御姿态，观察敌人弱点</button>
+      <button class="spell-btn">💋 尝试魅惑其中一只哥布林</button>
+    </div>
+
+    <!-- 装备面板 -->
+    <div class="page-panel">
+      <div class="page-label"><span class="ornament">✧</span> 持有物与装备 <span class="ornament">✧</span></div>
+      <div class="slots-row">
+        <div class="slot-card">
+          <span class="slot-label">◆ 武器</span>
+          <span class="slot-name">铁质长剑 Lv.3</span>
+        </div>
+        <div class="slot-card">
+          <span class="slot-label">◆ 防具</span>
+          <span class="slot-name">皮甲 Lv.2</span>
+        </div>
+        <div class="slot-card">
+          <span class="slot-label">◆ 饰品</span>
+          <span class="slot-name">冒险者徽章</span>
+        </div>
+        <div class="slot-card">
+          <span class="slot-label">◆ 消耗品</span>
+          <span class="slot-name">回复药水 ×3</span>
+        </div>
+      </div>
+      <div class="crystal-tags">
+        <span class="crystal-tag active">触手紧身衣·共生期</span>
+        <span class="crystal-tag active">蜕生项圈·中期</span>
+        <span class="crystal-tag">影子分身·无心智</span>
+        <span class="crystal-tag">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <!-- 底部奥术符文 -->
+    <div class="arcane-footer">
+      <div class="rune-line">
+        <span class="moon">☽</span> 地下城第3层 · 阿斯特大陆 <span class="moon">☾</span>
+      </div>
+      <div>⏣ 384年10月15日 · 黄昏时分 · 第12回合 ⏣</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

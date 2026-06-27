@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>异世界地下城 — 前端UI美术风格方案汇总</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0f; color: #c0c0d0;
+    font-family: 'Noto Serif SC', 'Inter', system-ui, sans-serif;
+    font-size: 14px; line-height: 1.8; padding: 0;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px 60px; }
+  h1 { font-size: 28px; color: #e0d0b0; text-align: center; letter-spacing: 6px; margin-bottom: 4px; }
+  .doc-subtitle { text-align: center; font-size: 12px; color: #606070; letter-spacing: 4px; margin-bottom: 30px; }
+  .intro {
+    background: #12141e; border: 1px solid #2a2a3a; border-radius: 8px;
+    padding: 20px 24px; margin-bottom: 30px; color: #9090a0; font-size: 13px;
+  }
+  .intro strong { color: #c0c0d0; }
+  .intro code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #a090c0; }
+  .section-title {
+    font-size: 18px; color: #c0b090; letter-spacing: 3px; margin: 30px 0 16px;
+    padding-bottom: 8px; border-bottom: 1px solid #2a2a3a;
+  }
+  .scheme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 700px) { .scheme-grid { grid-template-columns: 1fr; } }
+  .scheme-card {
+    background: #12141e; border: 1px solid #2a2a3a; border-radius: 8px;
+    padding: 18px; transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .scheme-card:hover { border-color: #4a4a6a; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+  .scheme-card .idx {
+    position: absolute; top: 12px; right: 16px;
+    font-size: 40px; font-weight: 800; color: rgba(255,255,255,0.025);
+    font-family: 'Inter', sans-serif; pointer-events: none;
+  }
+  .scheme-card h3 { font-size: 16px; margin-bottom: 4px; color: #e0d0b0; }
+  .scheme-card .en-name { font-size: 11px; color: #606070; letter-spacing: 2px; margin-bottom: 8px; }
+  .scheme-card .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .scheme-card .tag {
+    font-size: 10px; padding: 2px 8px; border-radius: 3px;
+    border: 1px solid #2a2a3a; color: #808090; background: rgba(255,255,255,0.02);
+  }
+  .scheme-card .desc { font-size: 12px; color: #808090; margin-bottom: 8px; line-height: 1.7; }
+  .scheme-card .demo-link {
+    font-size: 11px; color: #6090c0; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;
+  }
+  .scheme-card .demo-link:hover { color: #80b0e0; }
+  .comparison-table {
+    width: 100%; border-collapse: collapse; margin-top: 24px;
+  }
+  .comparison-table th, .comparison-table td {
+    padding: 9px 12px; text-align: left; border: 1px solid #1a1a2a; font-size: 12px;
+  }
+  .comparison-table th {
+    background: #12141e; color: #9090a0; font-weight: 600;
+    letter-spacing: 1px; font-size: 10px; text-transform: uppercase;
+  }
+  .comparison-table td { background: #0e1018; color: #707080; }
+  .comparison-table tr:hover td { background: #141620; }
+  .footer-note {
+    margin-top: 30px; padding: 16px 20px; background: #12141e;
+    border: 1px solid #2a2a3a; border-radius: 8px; font-size: 12px;
+    color: #606070; text-align: center; line-height: 1.8;
+  }
+  .footer-note strong { color: #9090a0; }
+  .badge {
+    display: inline-block; font-size: 9px; padding: 2px 6px; border-radius: 3px;
+    margin-left: 4px; font-weight: 600;
+  }
+  .badge-new { background: rgba(80,160,200,0.15); color: #6090c0; border: 1px solid rgba(80,160,200,0.3); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>异世界地下城</h1>
+  <div class="doc-subtitle">前端UI美术风格方案汇总 · 共计20案</div>
+
+  <div class="intro">
+    <p>
+      本文件为<strong>《异世界地下城》AIRP角色卡前端页面</strong>的美术风格方案汇总，
+      共设计<strong>20种</strong>不同的视觉风格方案，每种方案均附有独立HTML演示页面。
+      所有演示页面均包含：标题栏、角色状态面板（HP/MP/SP/EXP + 属性）、正文叙述区、
+      行动选项按钮、装备/特殊装备面板、底部状态栏，完整展现视觉语言。
+    </p>
+    <p style="margin-top:8px;">
+      技术约束：运行于 SillyTavern 扩展 iframe · Vue 3 + Pinia + TailwindCSS ·
+      无 vh 单位 · 卡片式设计 · 深色主题兼容。演示文件路径：
+      <code>Isekai_Dungeon/风格方案演示/方案N_名称.html</code>
+    </p>
+  </div>
+
+  <!-- ==================== 第一批：1-10 ==================== -->
+  <div class="section-title">第一批：方案 01 - 10</div>
+  <div class="scheme-grid">
+
+    <div class="scheme-card">
+      <div class="idx">01</div>
+      <h3>暗黑地牢哥特风</h3>
+      <div class="en-name">Darkest Dungeon Gothic</div>
+      <div class="tags"><span class="tag">哥特</span><span class="tag">暗黑</span><span class="tag">粗糙纹理</span><span class="tag">火焰光效</span></div>
+      <div class="desc">受《暗黑地牢》启发。红黑金三色主调，石质纹理叠加，烛火摇曳动画，血条红色渗光，Cinzel哥特体标题。整体沉重压迫，适合硬核战斗向地牢叙事。</div>
+      <a class="demo-link" href="方案1_暗黑地牢哥特风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">02</div>
+      <h3>魔导书卷奥术风</h3>
+      <div class="en-name">Arcane Grimoire</div>
+      <div class="tags"><span class="tag">魔法书</span><span class="tag">奥术</span><span class="tag">紫色金</span><span class="tag">SVG光环</span></div>
+      <div class="desc">魔法书/卷轴美学。紫+深蓝+金调，SVG奥术圆环状态指示器，羊皮纸质感的正文区，发光符文装饰，魔法阵分隔线。精致的Cormorant Garamond衬线体，适合强调魔法氛围和异世界仪式感。</div>
+      <a class="demo-link" href="方案2_魔导书卷奥术风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">03</div>
+      <h3>像素复古冒险风</h3>
+      <div class="en-name">Retro Pixel RPG</div>
+      <div class="tags"><span class="tag">16-bit</span><span class="tag">像素</span><span class="tag">JRPG</span><span class="tag">怀旧</span></div>
+      <div class="desc">致敬16位JRPG。Press Start 2P像素字体，粗像素边框+浮雕阴影，像素化分段血条，闪烁光标，星形装饰。强烈的游戏感和趣味性，数值展示直观，适合玩法感重的互动。</div>
+      <a class="demo-link" href="方案3_像素复古冒险风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">04</div>
+      <h3>优雅新艺术风</h3>
+      <div class="en-name">Art Nouveau Elegance</div>
+      <div class="tags"><span class="tag">穆夏</span><span class="tag">花卉</span><span class="tag">彩色玻璃</span><span class="tag">浪漫</span></div>
+      <div class="desc">穆夏式新艺术运动美学。柔和拱券装饰、花卉藤蔓元素、彩色玻璃边框渐变、象牙/玫瑰/丁香色系。EB Garamond衬线体，将成人内容升华为情色艺术，适合偏浪漫和叙事深度的玩法。</div>
+      <a class="demo-link" href="方案4_优雅新艺术风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">05</div>
+      <h3>极简现代暗色风</h3>
+      <div class="en-name">Minimal Modern Dark</div>
+      <div class="tags"><span class="tag">现代UI</span><span class="tag">暗色</span><span class="tag">玻璃拟态</span><span class="tag">Indigo</span></div>
+      <div class="desc">现代暗色UI设计语言。Inter + 思源黑体，玻璃拟态卡片（backdrop-filter），CSS变量驱动的靛蓝/紫色点缀，几何钻石装饰，流畅过渡动画。信息层级清晰，可读性强，与SillyTavern暗色主题兼容性最好，实现成本最低。</div>
+      <a class="demo-link" href="方案5_极简现代暗色风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">06</div>
+      <h3>赛博奇幻霓虹风</h3>
+      <div class="en-name">Cyber-Fantasy Neon</div>
+      <div class="tags"><span class="tag">赛博</span><span class="tag">霓虹</span><span class="tag">扫描线</span><span class="tag">Orbitron</span></div>
+      <div class="desc">赛博朋克与奇幻的跨界融合。青色+洋红霓虹配色，Orbitron科技感字体，全息面板框角装饰，扫描线叠层。血条带霓虹光晕，属性用LCD风格的参数矩阵展示。强烈视觉冲击的未来感。</div>
+      <a class="demo-link" href="方案6_赛博奇幻霓虹风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">07</div>
+      <h3>和风浮世绘风</h3>
+      <div class="en-name">Ukiyo-e Fantasy</div>
+      <div class="tags"><span class="tag">浮世绘</span><span class="tag">和风</span><span class="tag">墨绘</span><span class="tag">纹样</span></div>
+      <div class="desc">日本浮世绘/木版画美学。朱红+靛蓝+金调，Noto Serif JP衬线体，青海波纹样分隔线，圆相装饰，家纹式属性标签，卷物正文区。适合东方奇幻风格的叙事，有禁欲与情色交织的独特美感。</div>
+      <a class="demo-link" href="方案7_和风浮世绘风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">08</div>
+      <h3>炼金工房蒸汽风</h3>
+      <div class="en-name">Alchemy Workshop</div>
+      <div class="tags"><span class="tag">炼金术</span><span class="tag">蒸汽</span><span class="tag">黄铜</span><span class="tag">药瓶</span></div>
+      <div class="desc">炼金术/蒸汽工房美学。黄铜+琥珀+木色调，IM Fell English古老字体，铆钉装饰、气压计式状态条、药瓶图标、储物柜式装备面板。暖色金属质感，适合强调道具/装备系统和"工房"氛围的玩法。</div>
+      <a class="demo-link" href="方案8_炼金工房蒸汽风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">09</div>
+      <h3>巴洛克宫廷风</h3>
+      <div class="en-name">Baroque Palace</div>
+      <div class="tags"><span class="tag">巴洛克</span><span class="tag">宫廷</span><span class="tag">鎏金</span><span class="tag">纹章</span></div>
+      <div class="desc">巴洛克/洛可可宫廷美学。深红+皇家紫+鎏金，Playfair Display华丽衬线体，三重边框、冠冕标题、勋章式状态圆章、纹章属性面板、敕令式按钮。极致的奢华戏剧感，适合将冒险包装为贵族宫廷叙事的玩法。</div>
+      <a class="demo-link" href="方案9_巴洛克宫廷风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">10</div>
+      <h3>虚空星辰风</h3>
+      <div class="en-name">Starry Void Astral</div>
+      <div class="tags"><span class="tag">星空</span><span class="tag">深空</span><span class="tag">星云</span><span class="tag">星座</span></div>
+      <div class="desc">宇宙深空美学。深暗背景散落CSS星辰粒子，球形渐变HP/MP宝珠，星座连线装饰，星云渐变叠层，黄道十二宫符号属性标签。银蓝紫冷色调，营造宏大神秘的星界氛围。</div>
+      <a class="demo-link" href="方案10_虚空星辰风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+  </div>
+
+  <!-- ==================== 第二批：11-20 ==================== -->
+  <div class="section-title">第二批：方案 11 - 20 <span class="badge badge-new">NEW</span></div>
+  <div class="scheme-grid">
+
+    <div class="scheme-card">
+      <div class="idx">11</div>
+      <h3>中世纪羊皮卷风</h3>
+      <div class="en-name">Medieval Parchment Scroll</div>
+      <div class="tags"><span class="tag">羊皮纸</span><span class="tag">中世纪</span><span class="tag">手抄本</span><span class="tag">蜡封</span></div>
+      <div class="desc">中世纪修道院手抄本美学。羊皮纸底色渐变+老化烧边效果，UnifrakturMaguntia首字母大写，EB Garamond正文，蜡封印章装饰，虚线墨迹状态条，绳索结分隔线。醇厚的古籍质感。</div>
+      <a class="demo-link" href="方案11_中世纪羊皮卷风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">12</div>
+      <h3>彩绘玻璃大教堂风</h3>
+      <div class="en-name">Stained Glass Cathedral</div>
+      <div class="tags"><span class="tag">彩色玻璃</span><span class="tag">哥特教堂</span><span class="tag">铅条</span><span class="tag">宝石</span></div>
+      <div class="desc">哥特大教堂彩绘玻璃窗美学。五色铅条分隔线，拱顶标题框，菱形宝石属性签，conic-gradient玫瑰窗，五色铅条拼接分隔线。光影透过彩窗投射的神圣感。</div>
+      <a class="demo-link" href="方案12_彩绘玻璃大教堂风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">13</div>
+      <h3>地狱业火风</h3>
+      <div class="en-name">Hellfire Infernal</div>
+      <div class="tags"><span class="tag">地狱</span><span class="tag">业火</span><span class="tag">熔岩</span><span class="tag">恶魔</span></div>
+      <div class="desc">地狱火狱美学。熔岩裂缝+火焰动画，深渊黑+灼红+暗橙配色，MedievalSharp恶魔字体，五芒星装饰，火舌分隔线闪烁动画。极致的黑暗炽热压迫感。</div>
+      <a class="demo-link" href="方案13_地狱业火风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">14</div>
+      <h3>冰霜宫殿风</h3>
+      <div class="en-name">Frozen Glacial Palace</div>
+      <div class="tags"><span class="tag">冰霜</span><span class="tag">极寒</span><span class="tag">水晶</span><span class="tag">雪花</span></div>
+      <div class="desc">极地冰封美学。冰蓝+银白冷色系，Cormorant Garamond轻盈衬线体，雪花飘落动画，冰晶结晶顶线，半透明冰块面板，六边形属性标签。清冷高贵的寂静感。</div>
+      <a class="demo-link" href="方案14_冰霜宫殿风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">15</div>
+      <h3>森灵德鲁伊风</h3>
+      <div class="en-name">Forest Druidic Grove</div>
+      <div class="tags"><span class="tag">森林</span><span class="tag">德鲁伊</span><span class="tag">藤蔓</span><span class="tag">自然</span></div>
+      <div class="desc">密林自然美学。深绿+翠绿+大地色调，Sorts Mill Goudy自然衬线体，藤蔓侧边装饰、木质边框、嫩芽标签、橡果图标。生机盎然的神秘林地感。</div>
+      <a class="demo-link" href="方案15_森灵德鲁伊风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">16</div>
+      <h3>发条齿轮机械风</h3>
+      <div class="en-name">Clockwork Mechanical</div>
+      <div class="tags"><span class="tag">机械</span><span class="tag">齿轮</span><span class="tag">蒸汽朋克</span><span class="tag">等宽字体</span></div>
+      <div class="desc">精密机械工程美学。金属暗灰配绿色指示灯，Share Tech Mono等宽字体，旋转齿轮动画、铆钉分隔线、分段管道血条、模块化接口面板。冷峻的工业精密感。</div>
+      <a class="demo-link" href="方案16_发条齿轮机械风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">17</div>
+      <h3>千夜之夜阿拉伯风</h3>
+      <div class="en-name">Arabian Nights Mosaic</div>
+      <div class="tags"><span class="tag">阿拉伯</span><span class="tag">马赛克</span><span class="tag">拱券</span><span class="tag">金饰</span></div>
+      <div class="desc">中东风情美学。暖金+宝石蓝+陶红配色，伊斯兰几何重复纹样边框，拱形标题框，八芒星装饰，彩色瓷砖拼接分隔线。浓郁异域奢华感。</div>
+      <a class="demo-link" href="方案17_千夜之夜阿拉伯风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">18</div>
+      <h3>黑白电影暗巷风</h3>
+      <div class="en-name">Film Noir Monochrome</div>
+      <div class="tags"><span class="tag">黑白</span><span class="tag">黑色电影</span><span class="tag">颗粒</span><span class="tag">打字机</span></div>
+      <div class="desc">黑色电影黑白单色美学。全灰阶配色，Special Elite打字机体，胶片颗粒叠层、侧边漏光、命中点准星图标、证物标签。冷峻疏离的都市暗夜感。</div>
+      <a class="demo-link" href="方案18_黑白电影暗巷风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">19</div>
+      <h3>幻梦境马卡龙风</h3>
+      <div class="en-name">Dreamy Pastel Macaron</div>
+      <div class="tags"><span class="tag">粉彩</span><span class="tag">梦幻</span><span class="tag">马卡龙</span><span class="tag">Quicksand</span></div>
+      <div class="desc">梦幻甜品系美学。柔粉+淡蓝+薄荷+奶橘四色渐变，Quicksand圆体，毛玻璃面板、浮动云朵动画、心形标签、圆角卡片。甜美柔软与成人内容的强烈反差。</div>
+      <a class="demo-link" href="方案19_幻梦境马卡龙风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+    <div class="scheme-card">
+      <div class="idx">20</div>
+      <h3>上古石碑遗迹风</h3>
+      <div class="en-name">Ancient Stone Relic</div>
+      <div class="tags"><span class="tag">石碑</span><span class="tag">遗迹</span><span class="tag">凿刻</span><span class="tag">考古</span></div>
+      <div class="desc">考古发掘遗迹美学。风化砂石基底+凿痕边框，Cinzel石碑体，拉丁语化属性名、裂纹分隔线、楔形文字风标签。厚重的远古文明失落感。</div>
+      <a class="demo-link" href="方案20_上古石碑遗迹风.html" target="_blank">▶ 查看演示页面</a>
+    </div>
+
+  </div>
+
+  <!-- ==================== 对比表格 ==================== -->
+  <div class="section-title">全部20方案横向对比</div>
+  <table class="comparison-table">
+    <thead>
+      <tr><th>#</th><th>风格名称</th><th>主色调</th><th>核心字体</th><th>状态展示</th><th>难度</th><th>核心特色</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>暗黑地牢哥特</td><td>黑·红·暗金</td><td>Cinzel</td><td>横条血槽</td><td>中</td><td>颗粒纹理叠加</td></tr>
+      <tr><td>02</td><td>魔导书卷奥术</td><td>紫·深蓝·金</td><td>Cormorant Garamond</td><td>SVG圆环</td><td>中</td><td>魔法阵装饰</td></tr>
+      <tr><td>03</td><td>像素复古冒险</td><td>黑·灰·金</td><td>Press Start 2P</td><td>像素分段条</td><td>低</td><td>浮雕边框动画</td></tr>
+      <tr><td>04</td><td>优雅新艺术</td><td>深蓝·象牙·梅紫</td><td>EB Garamond</td><td>弧线填充条</td><td>中</td><td>彩色玻璃边框</td></tr>
+      <tr><td>05</td><td>极简现代暗色</td><td>黑·Indigo·翠</td><td>Inter</td><td>细进度条</td><td>低</td><td>玻璃拟态卡片</td></tr>
+      <tr><td>06</td><td>赛博奇幻霓虹</td><td>黑·青·洋红</td><td>Orbitron</td><td>霓虹光晕条</td><td>中</td><td>扫描线叠层</td></tr>
+      <tr><td>07</td><td>和风浮世绘</td><td>黑·朱红·金</td><td>Noto Serif JP</td><td>墨绘细条</td><td>中</td><td>青海波/家纹装饰</td></tr>
+      <tr><td>08</td><td>炼金工房蒸汽</td><td>黑·琥珀·铜</td><td>IM Fell English</td><td>气压计管道</td><td>中</td><td>铆钉/齿轮元素</td></tr>
+      <tr><td>09</td><td>巴洛克宫廷</td><td>黑·深红·鎏金</td><td>Playfair Display</td><td>金框肖像条</td><td>中</td><td>纹章/三重边框</td></tr>
+      <tr><td>10</td><td>虚空星辰</td><td>黑·银·蓝紫</td><td>Cormorant Garamond</td><td>球体光珠</td><td>中</td><td>星空粒子/星座</td></tr>
+      <tr style="border-top:2px solid #2a2a4a;"><td>11</td><td>中世纪羊皮卷</td><td>羊皮褐·朱红·金</td><td>UnifrakturMaguntia</td><td>墨迹条</td><td>中</td><td>烧边老化纹理</td></tr>
+      <tr><td>12</td><td>彩绘玻璃教堂</td><td>黑·宝石五色·金</td><td>Cinzel Decorative</td><td>彩窗光条</td><td>中</td><td>铅条/玫瑰窗</td></tr>
+      <tr><td>13</td><td>地狱业火</td><td>黑·灼红·暗橙</td><td>MedievalSharp</td><td>熔岩余烬条</td><td>中</td><td>裂缝火舌动画</td></tr>
+      <tr><td>14</td><td>冰霜宫殿</td><td>黑·冰蓝·银白</td><td>Cormorant Garamond</td><td>霜冻条</td><td>中</td><td>雪花飘落动画</td></tr>
+      <tr><td>15</td><td>森灵德鲁伊</td><td>黑·深绿·翠绿</td><td>Sorts Mill Goudy</td><td>树皮质感条</td><td>中</td><td>藤蔓侧边装饰</td></tr>
+      <tr><td>16</td><td>发条齿轮机械</td><td>黑·暗灰·绿</td><td>Share Tech Mono</td><td>分段管道条</td><td>中</td><td>旋转齿轮动画</td></tr>
+      <tr><td>17</td><td>千夜之夜阿拉伯</td><td>黑·暖金·宝石蓝</td><td>Noto Naskh Arabic</td><td>流沙填充条</td><td>中</td><td>伊斯兰几何纹样</td></tr>
+      <tr><td>18</td><td>黑白电影暗巷</td><td>全灰阶</td><td>Special Elite</td><td>灰阶渐变条</td><td>低</td><td>胶片颗粒/漏光</td></tr>
+      <tr><td>19</td><td>幻梦境马卡龙</td><td>暗底+粉彩四色</td><td>Quicksand</td><td>糖果渐变条</td><td>中</td><td>浮动云朵动画</td></tr>
+      <tr><td>20</td><td>上古石碑遗迹</td><td>黑·砂褐·赭石</td><td>Cinzel</td><td>石质刻痕条</td><td>中</td><td>风化凿纹纹理</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer-note">
+    <p><strong>全部演示页面可直接在浏览器中打开查看</strong></p>
+    <p>文件路径：<code>Isekai_Dungeon/风格方案演示/方案N_名称.html</code></p>
+    <p style="margin-top:6px;">
+      <strong>推荐优先级（按实用角度排序）：</strong><br>
+      ⑤ 极简现代暗色 — 信息密度最优且实现成本最低 · SillyTavern暗色主题无缝兼容<br>
+      ⑪ 中世纪羊皮卷 — 中世纪奇幻RPG气质最正 · 特殊装备叙事语境高度匹配<br>
+      ② 魔导书卷奥术 — 魔法世界氛围最契合 · 视觉层次丰富<br>
+      ⑩ 虚空星辰 — 独特视觉记忆点强 · 适合强调世界观的宏大感<br>
+      ⑦ 和风浮世绘 — 东方美学差异化路线 · 叙事的文学气质突出
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

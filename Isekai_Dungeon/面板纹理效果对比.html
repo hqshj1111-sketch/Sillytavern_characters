@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面板纹理效果对比 — 羊皮卷风</title>
+<style>
+  :root {
+    --bg: #f4ecd8; --bg2: #e8ddc4;
+    --text: #3d2b1a; --text2: #6b5540; --text3: #9b8468;
+    --border: #c4a882; --border2: #8b6914; --accent: #8b4513;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #1a1410;
+    display:flex; flex-direction:column; align-items:center;
+    padding:24px; gap:24px;
+    font-family: 'Georgia', 'Noto Serif SC', serif;
+    color: var(--text);
+  }
+  h2 { color: #e8d5b7; font-size:17px; margin-bottom:6px; text-align:center; }
+  .panel-row { display:flex; gap:16px; }
+
+  .panel {
+    width: 260px;
+    padding: 18px 20px;
+    position:relative;
+    font-size:13px;
+    line-height:1.8;
+  }
+  .panel h4 {
+    font-size:14px;
+    margin-bottom:8px;
+    border-bottom:2px solid var(--border2);
+    padding-bottom:4px;
+    letter-spacing:2px;
+  }
+  .panel .stat { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dotted var(--border); font-size:12px; }
+  .panel .bar-row { margin:6px 0; }
+  .panel .bar-row .lbl { display:flex; justify-content:space-between; font-size:10px; color:var(--text3); }
+  .panel .bar { height:8px; border-radius:3px; background:var(--bg2); overflow:hidden; margin:2px 0 6px; }
+  .panel .bar .fill { height:100%; border-radius:3px; }
+  .hp-fill { width:75%; background:#b05048; }
+  .mp-fill { width:40%; background:#3a6a9a; }
+  .sp-fill { width:60%; background:#4a8a4a; }
+
+  /* ── 1. 基线（原版）── */
+  .p-base {
+    background: var(--bg);
+    border: 2px solid var(--border2);
+    box-shadow: 3px 3px 0 rgba(139,105,20,0.3);
+  }
+  .p-base::before {
+    content:''; position:absolute; inset:4px;
+    border:1px solid var(--border); pointer-events:none;
+  }
+
+  /* ── 2. 纸纤维噪点 ── */
+  .p-noise {
+    background: var(--bg);
+    border: 2px solid var(--border2);
+    box-shadow: 3px 3px 0 rgba(139,105,20,0.3);
+  }
+  .p-noise::before {
+    content:''; position:absolute; inset:4px;
+    border:1px solid var(--border); pointer-events:none;
+  }
+  .p-noise::after {
+    content:'';
+    position:absolute; inset:0; pointer-events:none; z-index:1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    background-size: 120px 120px;
+    opacity: 0.7;
+  }
+  .p-noise * { position:relative; z-index:2; }
+
+  /* ── 3. 边缘内阴影 ── */
+  .p-shadow {
+    background: var(--bg);
+    border: 2px solid var(--border2);
+    box-shadow:
+      3px 3px 0 rgba(139,105,20,0.3),
+      inset 0 0 40px rgba(139,105,20,0.08),
+      inset 0 0 60px rgba(139,105,20,0.04);
+  }
+  .p-shadow::before {
+    content:''; position:absolute; inset:4px;
+    border:1px solid var(--border); pointer-events:none;
+  }
+  .p-shadow::after {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(139,105,20,0.07) 100%);
+  }
+
+  /* ── 4. 墨迹晕染 ── */
+  .p-ink {
+    background: var(--bg);
+    border: 2px solid #5a4030;
+    box-shadow:
+      3px 3px 0 rgba(139,105,20,0.25),
+      1px 0 3px rgba(60,30,10,0.15),
+      -1px 1px 4px rgba(60,30,10,0.1);
+  }
+  .p-ink::before {
+    content:''; position:absolute; inset:4px;
+    border:1px solid rgba(90,64,48,0.5); pointer-events:none;
+  }
+  .p-ink::after {
+    content:'';
+    position:absolute; pointer-events:none; z-index:1;
+    width: 12px; height: 8px;
+    bottom: 14px; right: 20px;
+    background: radial-gradient(ellipse, rgba(90,64,48,0.2) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  /* additional ink spots via box-shadow on pseudo element */
+  .p-ink .ink-dots {
+    position:absolute; inset:0; pointer-events:none; z-index:1;
+  }
+  .p-ink .ink-dots::before {
+    content:''; position:absolute;
+    top: 22px; left: 30px;
+    width: 6px; height: 4px;
+    background: radial-gradient(ellipse, rgba(90,64,48,0.18) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .p-ink .ink-dots::after {
+    content:''; position:absolute;
+    bottom: 38px; left: 50px;
+    width: 8px; height: 5px;
+    background: radial-gradient(ellipse, rgba(60,30,10,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .p-ink * { position:relative; z-index:2; }
+
+  /* border irregularity via SVG clip/mask */
+  .p-ink {
+    clip-path: polygon(
+      0 0, 100% 0, 100% 100%, 0 100%,
+      0px 0px, 260px 0px,
+      259px 3px, 260px 4px, 258px 5px,
+      260px 6px, 259px 7px,
+      256px 200px, 258px 202px,
+      255px 204px, 260px 205px,
+      257px 320px, 255px 322px,
+      3px 320px, 1px 318px,
+      4px 315px, 0px 317px,
+      2px 200px, 1px 198px,
+      3px 4px, 1px 2px
+    );
+  }
+
+  /* ── 5. 全效果叠加 ── */
+  .p-all {
+    background: var(--bg);
+    border: 2px solid #5a4030;
+    box-shadow:
+      3px 3px 0 rgba(139,105,20,0.25),
+      inset 0 0 40px rgba(139,105,20,0.06),
+      inset 0 0 70px rgba(139,105,20,0.04),
+      1px 0 4px rgba(60,30,10,0.12);
+  }
+  .p-all::before {
+    content:''; position:absolute; inset:4px;
+    border:1px solid rgba(90,64,48,0.5); pointer-events:none; z-index:1;
+  }
+  .p-all::after {
+    content:'';
+    position:absolute; inset:0; pointer-events:none; z-index:1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    background-size: 120px 120px;
+    opacity: 0.5;
+  }
+  .p-all .vignette {
+    position:absolute; inset:0; pointer-events:none; z-index:2;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(139,105,20,0.06) 100%);
+  }
+  .p-all .ink-dots-all {
+    position:absolute; inset:0; pointer-events:none; z-index:2;
+  }
+  .p-all .ink-dots-all::before {
+    content:''; position:absolute;
+    bottom:12px; right:28px;
+    width:10px; height:6px;
+    background: radial-gradient(ellipse, rgba(90,64,48,0.16) 0%, transparent 70%);
+    border-radius:50%;
+  }
+  .p-all .ink-dots-all::after {
+    content:''; position:absolute;
+    top:18px; left:24px;
+    width:5px; height:3px;
+    background: radial-gradient(ellipse, rgba(90,64,48,0.14) 0%, transparent 70%);
+    border-radius:50%;
+  }
+  .p-all * { position:relative; z-index:3; }
+
+  .desc {
+    font-size:10px; color:var(--text3); margin-top:10px;
+    font-style:italic; border-top:1px dotted var(--border); padding-top:6px;
+  }
+</style>
+</head>
+<body>
+
+<h2>面板纹理效果对比</h2>
+
+<div class="panel-row">
+
+  <!-- 1 -->
+  <div style="text-align:center">
+    <h2 style="font-size:14px;">1 — 基线（现有）</h2>
+    <div class="panel p-base">
+      <h4>情报面板</h4>
+      <div class="stat"><span>HP</span><span>85 / 100</span></div>
+      <div class="stat"><span>MP</span><span>40 / 50</span></div>
+      <div class="stat"><span>SP</span><span>60 / 100</span></div>
+      <div class="bar-row">
+        <div class="lbl"><span>HP</span><span>85/100</span></div>
+        <div class="bar"><div class="fill hp-fill"></div></div>
+        <div class="lbl"><span>MP</span><span>40/50</span></div>
+        <div class="bar"><div class="fill mp-fill"></div></div>
+      </div>
+      <div class="desc">双线边框 + 外投影，简洁</div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div style="text-align:center">
+    <h2 style="font-size:14px;">2 — 纸纤维噪点</h2>
+    <div class="panel p-noise">
+      <h4>情报面板</h4>
+      <div class="stat"><span>HP</span><span>85 / 100</span></div>
+      <div class="stat"><span>MP</span><span>40 / 50</span></div>
+      <div class="stat"><span>SP</span><span>60 / 100</span></div>
+      <div class="bar-row">
+        <div class="lbl"><span>HP</span><span>85/100</span></div>
+        <div class="bar"><div class="fill hp-fill"></div></div>
+        <div class="lbl"><span>MP</span><span>40/50</span></div>
+        <div class="bar"><div class="fill mp-fill"></div></div>
+      </div>
+      <div class="desc">SVG feTurbulence 噪点叠加，模拟粗纸纤维</div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div style="text-align:center">
+    <h2 style="font-size:14px;">3 — 边缘内阴影</h2>
+    <div class="panel p-shadow">
+      <h4>情报面板</h4>
+      <div class="stat"><span>HP</span><span>85 / 100</span></div>
+      <div class="stat"><span>MP</span><span>40 / 50</span></div>
+      <div class="stat"><span>SP</span><span>60 / 100</span></div>
+      <div class="bar-row">
+        <div class="lbl"><span>HP</span><span>85/100</span></div>
+        <div class="bar"><div class="fill hp-fill"></div></div>
+        <div class="lbl"><span>MP</span><span>40/50</span></div>
+        <div class="bar"><div class="fill mp-fill"></div></div>
+      </div>
+      <div class="desc">inset box-shadow + radial gradient，仿页面隆起</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="panel-row">
+
+  <!-- 4 -->
+  <div style="text-align:center">
+    <h2 style="font-size:14px;">4 — 墨迹晕染</h2>
+    <div class="panel p-ink">
+      <span class="ink-dots"></span>
+      <h4>情报面板</h4>
+      <div class="stat"><span>HP</span><span>85 / 100</span></div>
+      <div class="stat"><span>MP</span><span>40 / 50</span></div>
+      <div class="stat"><span>SP</span><span>60 / 100</span></div>
+      <div class="bar-row">
+        <div class="lbl"><span>HP</span><span>85/100</span></div>
+        <div class="bar"><div class="fill hp-fill"></div></div>
+        <div class="lbl"><span>MP</span><span>40/50</span></div>
+        <div class="bar"><div class="fill mp-fill"></div></div>
+      </div>
+      <div class="desc">深棕边框 + 随机墨点 + clip-path 微不规则边缘</div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div style="text-align:center">
+    <h2 style="font-size:14px;">5 — 全部叠加</h2>
+    <div class="panel p-all">
+      <span class="vignette"></span>
+      <span class="ink-dots-all"></span>
+      <h4>情报面板</h4>
+      <div class="stat"><span>HP</span><span>85 / 100</span></div>
+      <div class="stat"><span>MP</span><span>40 / 50</span></div>
+      <div class="stat"><span>SP</span><span>60 / 100</span></div>
+      <div class="bar-row">
+        <div class="lbl"><span>HP</span><span>85/100</span></div>
+        <div class="bar"><div class="fill hp-fill"></div></div>
+        <div class="lbl"><span>MP</span><span>40/50</span></div>
+        <div class="bar"><div class="fill mp-fill"></div></div>
+      </div>
+      <div class="desc">噪点 + 内阴影 + 墨点 + 深棕边框，全效果融合</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹白天自慰事件'] && isDaily && !isSexActive) {
+    const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+    const affection = parseInt(_.get(makoto, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const discovered = _.get(makoto, '秘密发现', false);
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.妹妹白天自慰事件', 0)) || 0;  
+_%>
+# 事件：白天自慰撞破
+event_initiator:
+  event_name: "白天自慰撞破"
+  character: "汐见真帆"
+  location: "住宅区 - 客厅"
+  time: "10:00-16:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "主角推开家门，客厅里又传来熟悉的震动声和压抑的喘息。真帆还是老样子——裙子堆在腰间，手里握着假鸡巴，电视里放着里番。"
+    - "主角习以为常地换鞋、走进厨房倒了杯水，路过沙发时自然地和她对话，问她今天论坛上又有什么新瓜、作业写完了没、晚饭想吃什么。"
+    - "真帆一边喘着粗气一边回嘴，手上的动作也没停。两人就在这种诡异的日常感中完成了兄妹间的交流。"
+    - "结合好感度(<%= affection %>)调整对话的亲近度。结合淫乱度(<%= lewdness %>)调整她回话时的下流程度。"
+    - "结尾留给主角选择：坐在旁边看她玩、替她接过手里的东西、或提醒她别弄脏沙发然后回自己房间。"
+    <%_ } else { _%>
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角白天提前回到家，推开客厅门，眼前的景象让他愣在门口。真帆正半躺在沙发上，裙子堆在腰间，一只脚搭在沙发扶手上，手里握着假鸡巴在自己下面进进出出。电视里放着里番，她自己嘴里还在断断续续地淫叫，没注意到门已经开了。"
+    - "被主角的脚步声惊醒，和哥哥四目相对，她的手和假鸡巴都停在原地。短暂的死寂后——"
+    <%_ if (!discovered) { _%>
+    - "真帆的表情从震惊变成破罐子破摔。她没有遮掩身体，而是把假鸡巴抽出来丢到一边，用前所未有的放荡口吻说既然被看到了就不装了——她就是闷骚的色胚，现在湿成这样，让哥哥负责。"
+    <%_ } else { _%>
+    - "真帆翻了个白眼，手上动作都没停。她喘着气使唤哥哥别光站着，过来用真的让她爽。"
+    <%_ } _%>
+    - "结合好感度(<%= affection %>)调整她的语气——好感度越高越带着撒娇的黏腻。结合淫乱度(<%= lewdness %>)调整她的身体状态和用词下流程度。"
+    - "结尾留给主角选择：过去接手她手里的活、先退出去给她整理的时间、或直接把她扛进卧室。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹白天自慰事件" }
+      ]
+
+<%_ } } _%>

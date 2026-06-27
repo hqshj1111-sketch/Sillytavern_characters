@@ -1,0 +1,50 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+
+  if (isDaily) {
+    const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
+    const totalStreams = parseInt(_.get(stat, '主角.主播信息.直播总次数', 0)) || 0;
+    const peakViewers = parseInt(_.get(stat, '主角.主播信息.单次直播最高人数', 0)) || 0;
+    const peakClimax = parseInt(_.get(stat, '主角.主播信息.单次直播最高高潮次数', 0)) || 0;
+    const fans = parseInt(_.get(stat, '主角.主播信息.粉丝数', 0)) || 0;
+    const lewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+
+    // 知名度判断函数
+    const getPopularity = (fans) => {
+      if (fans < 100) return { stage: '新人主播', desc: '默默无闻的新人，偶尔有路人点进又离开。' };
+      if (fans < 500) return { stage: '小透明', desc: '开始拥有零星固定观众，弹幕偶尔飘过几条。' };
+      if (fans < 2000) return { stage: '崭露头角', desc: '圈内小有讨论，每次开播都有熟面孔蹲守。' };
+      if (fans < 10000) return { stage: '小有名气', desc: '露出系红人，粉丝群活跃，二创切片开始出现。' };
+      if (fans < 100000) return { stage: '人气新星', desc: '平台头部主播之一，一举一动都引发热议。' };
+      if (fans < 1000000) return { stage: '现象级主播', desc: '全网皆知的露出传奇，弹幕与打赏如潮水般涌来。' };
+      return { stage: 'TOP1', desc: '色情直播界的绝对王者，他的名字就是流量与欲望的代名词。' };
+    };
+    const popInfo = getPopularity(fans);
+_%>
+# 事件：直播数据统计
+event_initiator:
+  event_name: "直播数据统计"
+  character: "无"
+  location: "无"
+  time: "无"
+  statistics:
+    streamer_name: "<%= streamerName %>"
+    total_streams: <%= totalStreams %>
+    peak_viewers: <%= peakViewers %>
+    peak_climax: <%= peakClimax %>
+    fans: <%= fans %>
+    popularity_stage: "<%= popInfo.stage %>"
+    popularity_desc: "<%= popInfo.desc %>"
+
+  narrative_guidance:
+    - "主角打开露出直播APP，点进了主播数据中心。界面立刻弹出一个全息投影般的统计面板，各项数据以淫荡的粉色字体跳动。一个低沉又放荡的AI男声从手机里响起，语气充满挑逗和嘲讽，开始逐条评论。"
+    - "AI先念出主播名「<%= streamerName %>」，然后用极其下流的语调点评这个名字有多骚，或者有多装纯，直接戳穿主角直播时的真实嘴脸。"
+    - "接着AI读出直播总次数<%= totalStreams %>次，结合当前淫乱度(<%= lewdness %>)评价主角是越来越放得开，还是仍然扭捏作态，用各种粗俗比喻形容主角的直播状态变化。"
+    - "AI切换到单次直播最高人数<%= peakViewers %>和最高高潮次数<%= peakClimax %>，用夸张的语气描述那一场直播主角有多骚、多能喷，或者嘲笑这水平还差得远，让主角羞愧或兴奋。"
+    - "最后AI公布粉丝数<%= fans %>和当前知名度「<%= popInfo.stage %>」（<%= popInfo.desc %>），根据知名度阶段给出下流至极的评语：如果是新人就嘲笑主角还是个小透明、被路人操都没人看；如果已是人气主播就夸主角是万人骑的公用肉便器，用词极度露骨煽情。"
+    - "整个过程中，AI的语气始终保持着一种高高在上、看透主角本质的淫荡戏谑，让主角面红耳赤、心跳加速，却又忍不住听完。"
+
+<%_ } } _%>

@@ -1,0 +1,60 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+if (phase !== '日常阶段' || pendingEvents['猎艳进行中事件']) return;
+
+const pleasureEvent = _.get(stat, '系统状态.待处理事件.前往猎艳事件', null);
+if (!pleasureEvent || !pleasureEvent.类型) return;
+
+const isNamed = pleasureEvent.类型 === '指定NPC';
+const isTavern = pleasureEvent.类型 === '酒馆猎艳';
+const isBrothel = pleasureEvent.类型 === '妓院猎艳';
+const targetName = pleasureEvent.目标名字 || '';
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+
+const importantNPCs = _.get(stat, '重要NPC信息', {});
+const normalNPCs = _.get(stat, '一般NPC信息', {});
+let targetNPC = null;
+if (isNamed && targetName) {
+  targetNPC = importantNPCs[targetName] || normalNPCs[targetName] || null;
+}
+_%>
+# 系统指令：前往猎艳
+
+  所在地：<%= currentCity %>（<%= currentCountry %>）
+<%_ if (isNamed) { _%>
+  猎艳方式：指定对象 — <%= targetName %>
+  <%_ if (targetNPC) { _%>
+  NPC信息：<%= targetNPC.种族||'?' %> / <%= targetNPC.性别||'?' %> / <%= targetNPC.年龄||'?' %> | <%= targetNPC.简述||targetNPC.职业||'' %>
+  <%_ } else { _%>
+  ⚠ 警告：<%= currentCity %>没有名为「<%= targetName %>」的NPC记录。请描写主角在城中尝试寻找此人但未能找到，转而随机应变。
+  <%_ } _%>
+<%_ } else if (isTavern) { _%>
+  猎艳方式：酒馆猎艳 — 纯粹偶遇
+<%_ } else { _%>
+  猎艳方式：妓院猎艳 — 花钱买春
+<%_ } _%>
+
+  narrative_guidance:
+<%_ if (isNamed && targetNPC) { _%>
+    - "主角在<%= currentCity %>的街道上找到了<%= targetName %>。描写主角与<%= targetName %>的见面场景——对方当时正在做什么、抬头看见主角时的表情和反应。通过对话自然地过渡到暧昧氛围，言辞间的暗示、眼神的交汇或不经意的肢体触碰。本回合以两人之间的气氛明显升温收束，但禁止直接开始描写性爱。"
+<%_ } else if (isNamed && !targetNPC) { _%>
+    - "主角在<%= currentCity %>试图寻找<%= targetName %>，但城中似乎没有这个人的踪迹。描写主角在街道和酒馆中打听却屡屡落空的茫然感。最终主角只得改变计划——前往当地的酒馆或妓院，在人群中物色心仪的目标。"
+<%_ } else if (isTavern) { _%>
+    - "主角独自前往<%= currentCity %>的酒馆。描写推开木门时扑面而来的麦酒与烤肉的气味、吧台前零散的酒客、角落里几个独自啜饮的身影。主角的目光扫过人群，在某个身影上短暂停留。走上前去搭讪——以符合主角性格的方式开场，对方的反应则基于其外显的特征与神态。本回合以与目标初步接触、气氛尚在试探中收束，禁止直接开始描写性爱。"
+<%_ } else { _%>
+    - "主角独自前往<%= currentCity %>的红灯区花街。描写巷子里的暧昧灯光、沿街揽客的轻佻笑语和薄纱帘后晃动的身影。挑选一家妓院推门进去——鸨母热情迎上前来报价介绍今晚的姑娘/小哥，或某位正在大厅候客的从业者主动走上前来。本回合以与目标初步接触、气氛尚在试探中收束，禁止直接开始描写性爱。"
+<%_ } _%>
+    - "结尾为玩家留出自由选择空间——继续靠近、换个目标、或就此作罢。"
+
+  mandatory_data_sync:
+    instruction: "完成开场叙事后，移除前往猎艳事件标记，插入猎艳进行中事件："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/前往猎艳事件" },
+        { "op": "insert", "path": "/系统状态/待处理事件/猎艳进行中事件", "value": "<%= isNamed && targetNPC ? targetName : pleasureEvent.类型 %>" }
+      ]
+<%_ } _%>

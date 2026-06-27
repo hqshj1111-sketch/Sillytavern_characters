@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案26：西幻古卷翻书风 | Western Fantasy Tome</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cinzel+Decorative:wght@400;700;900&family=EB+Garamond:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #040508;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 20px;
+    font-family: 'Noto Serif SC', 'EB Garamond', serif;
+    background-image:
+      radial-gradient(ellipse at 50% 30%, rgba(255,180,80,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 80%, rgba(255,140,40,0.03) 0%, transparent 60%);
+  }
+
+  /* ═══════════════════════════════════════════════
+     整体容器：书桌
+     ═══════════════════════════════════════════════ */
+  .desk {
+    width: 100%; max-width: 700px; position: relative;
+    padding: 30px 10px 40px;
+  }
+  /* 桌面木纹 */
+  .desk::before {
+    content: ''; position: absolute;
+    inset: 0; z-index: 0;
+    background:
+      linear-gradient(180deg, #1a1208 0%, #120c06 50%, #0e0804 100%),
+      repeating-linear-gradient(90deg,
+        transparent, transparent 3px,
+        rgba(80,50,20,0.06) 3px, rgba(80,50,20,0.06) 4px,
+        transparent 4px, transparent 8px,
+        rgba(60,30,10,0.05) 8px, rgba(60,30,10,0.05) 9px);
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  }
+  /* 桌沿 */
+  .desk::after {
+    content: ''; position: absolute;
+    bottom: 20px; left: -5px; right: -5px; height: 6px;
+    background: linear-gradient(180deg, #2a1a0a, #1a0e04);
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    z-index: 1;
+  }
+
+  /* ═══════════════════════════════════════════════
+     书本主体
+     ═══════════════════════════════════════════════ */
+  .book {
+    position: relative; z-index: 2;
+    display: flex; justify-content: center;
+    filter: drop-shadow(0 10px 30px rgba(0,0,0,0.7));
+  }
+
+  /* 展开的书本结构 */
+  .tome {
+    position: relative;
+    width: 640px; min-height: 500px;
+    display: flex;
+    /* 皮革封面背景 */
+    background:
+      /* 封面皮革纹理 */
+      linear-gradient(90deg,
+        #1a0e06 0%, #2a1a0c 3%, #1a0e06 6%, #2a1a0c 8%,
+        #1a0e06 10%, #241408 15%, #1a0e06 20%,
+        transparent 25%,
+        transparent 75%,
+        #1a0e06 80%, #241408 85%, #1a0e06 90%,
+        #2a1a0c 92%, #1a0e06 94%, #2a1a0c 97%, #1a0e06 100%);
+    border-radius: 8px 12px 12px 8px;
+    overflow: visible;
+    box-shadow:
+      inset 0 0 30px rgba(0,0,0,0.5),
+      0 0 0 2px #1a0e06;
+  }
+  /* 封面压印纹样 */
+  .tome::before {
+    content: ''; position: absolute;
+    inset: -8px -10px; z-index: -1;
+    background: linear-gradient(180deg, #2a1a0c, #1a0e06);
+    border-radius: 12px 14px 14px 12px;
+    box-shadow: 0 0 0 1px rgba(180,120,40,0.1);
+  }
+
+  /* ═══════════════════════════════════════════════
+     书脊
+     ═══════════════════════════════════════════════ */
+  .spine {
+    position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 20px; transform: translateX(-50%);
+    z-index: 10;
+    /* 书脊皮革 */
+    background:
+      linear-gradient(90deg,
+        #1a0e06, #2a180c 20%, #3a2010 40%,
+        #2a180c 60%, #1a0e06);
+    box-shadow:
+      -2px 0 4px rgba(0,0,0,0.4),
+      2px 0 4px rgba(0,0,0,0.4);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 30px;
+  }
+  /* 书脊竹节（raised band） */
+  .spine .band {
+    width: 24px; height: 3px;
+    background: linear-gradient(180deg,
+      rgba(180,120,40,0.4),
+      rgba(140,90,30,0.7) 30%,
+      rgba(200,140,50,0.3) 50%,
+      rgba(140,90,30,0.7) 70%,
+      rgba(120,80,30,0.3));
+    border-radius: 1px;
+    position: relative; z-index: 2;
+  }
+  /* 书脊金标 */
+  .spine .gold-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 7px; color: #c09040;
+    letter-spacing: 2px; writing-mode: vertical-rl;
+    text-shadow: 0 0 6px rgba(200,140,40,0.3);
+  }
+
+  /* ═══════════════════════════════════════════════
+     对开页面
+     ═══════════════════════════════════════════════ */
+  .page-spread {
+    display: flex; margin: 0 10%;
+    position: relative; z-index: 5;
+  }
+
+  /* 左页 */
+  .page-left, .page-right {
+    flex: 1; position: relative;
+    /* 羊皮纸底色 */
+    background:
+      linear-gradient(180deg,
+        #e8d5a8 0%, #e2ce9c 2%, #e5d2a2 10%,
+        #dcc896 30%, #dfc998 60%,
+        #e0cb9a 85%, #ddc696 98%, #d4bc8c 100%),
+      /* 纸纤维纹理 */
+      repeating-linear-gradient(0deg,
+        transparent, transparent 2px,
+        rgba(139,105,20,0.03) 2px, rgba(139,105,20,0.03) 3px),
+      /* 老化斑点 */
+      radial-gradient(circle at 30% 20%, rgba(100,60,20,0.06) 0%, transparent 40%),
+      radial-gradient(circle at 70% 75%, rgba(80,40,10,0.05) 0%, transparent 30%),
+      radial-gradient(circle at 50% 85%, rgba(120,80,30,0.04) 0%, transparent 25%),
+      radial-gradient(circle at 15% 60%, rgba(90,50,15,0.04) 0%, transparent 20%);
+    padding: 18px 16px 14px;
+    min-height: 460px;
+  }
+  /* 左页 - 靠书脊侧阴影 */
+  .page-left {
+    border-radius: 2px 0 0 2px;
+    box-shadow: inset -8px 0 12px -6px rgba(0,0,0,0.25);
+  }
+  /* 右页 - 靠书脊侧阴影 */
+  .page-right {
+    border-radius: 0 2px 2px 0;
+    box-shadow: inset 8px 0 12px -6px rgba(0,0,0,0.25);
+  }
+
+  /* 页内鎏金边框 */
+  .page-left::before, .page-right::before {
+    content: ''; position: absolute;
+    inset: 8px; z-index: 1; pointer-events: none;
+    border: 2px solid;
+    border-image: linear-gradient(135deg,
+      rgba(180,120,30,0.2) 0%, rgba(200,150,50,0.5) 20%,
+      rgba(200,150,50,0.5) 50%, rgba(160,100,20,0.3) 80%,
+      rgba(180,120,30,0.2) 100%) 2;
+  }
+  .page-left::after, .page-right::after {
+    content: '❦';
+    position: absolute;
+    font-size: 12px;
+    color: rgba(180,120,30,0.3);
+    pointer-events: none; z-index: 2;
+  }
+  .page-left::after { top: 12px; left: 14px; }
+  .page-right::after { top: 12px; right: 14px; }
+
+  /* ═══════════════════════════════════════════════
+     左页内容：状态 & 装备
+     ═══════════════════════════════════════════════ */
+  .left-content {
+    position: relative; z-index: 2;
+    color: #3a2010; font-size: 11px;
+  }
+  .left-content .section-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 10px; letter-spacing: 3px;
+    color: #5a2810; text-align: center;
+    margin-bottom: 6px; padding-bottom: 4px;
+    border-bottom: 1px double rgba(139,105,20,0.3);
+  }
+
+  /* 状态条：墨水瓶 */
+  .stat-inkwell {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 4px; padding: 3px 4px;
+    font-size: 10px;
+  }
+  .stat-inkwell .ink-icon {
+    width: 20px; text-align: center; font-size: 12px;
+    color: #5a2810; flex-shrink: 0;
+  }
+  .stat-inkwell .ink-label {
+    width: 30px; color: #5a3810;
+    font-family: 'EB Garamond', serif; font-weight: 600;
+  }
+  .stat-inkwell .ink-track {
+    flex: 1; height: 4px;
+    background: rgba(139,105,20,0.1);
+    border: 1px solid rgba(139,105,20,0.2);
+    border-radius: 2px; overflow: hidden;
+  }
+  .stat-inkwell .ink-fill { height: 100%; border-radius: 2px; }
+  .ink-fill.vita { background: linear-gradient(90deg, #8b2020, #c04040); }
+  .ink-fill.mana { background: linear-gradient(90deg, #1a3060, #4050b0); }
+  .ink-fill.vigor { background: linear-gradient(90deg, #5a3a10, #a07030); }
+  .ink-fill.lumen { background: linear-gradient(90deg, #1a4020, #40804a); }
+  .stat-inkwell .ink-num {
+    width: 44px; text-align: right; font-size: 9px;
+    color: #5a3810; font-family: 'EB Garamond', serif;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 属性：方形徽记 */
+  .virtues-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 4px; margin-top: 6px;
+  }
+  .virtue {
+    text-align: center; padding: 4px 2px;
+    border: 1px solid rgba(139,105,20,0.15);
+    background: rgba(200,170,110,0.06);
+  }
+  .virtue .sigil {
+    font-size: 14px; color: #5a2810; display: block;
+  }
+  .virtue .value {
+    font-size: 14px; font-weight: 700;
+    color: #3a2010; font-family: 'EB Garamond', serif;
+  }
+  .virtue .name {
+    font-size: 6px; color: #6b4a20;
+    letter-spacing: 2px; font-family: 'Cinzel Decorative', serif;
+  }
+
+  /* 装备列表 */
+  .armarium {
+    margin-top: 8px;
+    border: 1px solid rgba(139,105,20,0.12);
+    padding: 6px 8px; font-size: 9px;
+    background: rgba(200,170,110,0.05);
+  }
+  .armarium .arm-row {
+    display: flex; justify-content: space-between;
+    padding: 2px 0;
+  }
+  .armarium .arm-row .arm-slot { color: #6b4a20; font-size: 8px; }
+  .armarium .arm-row .arm-item { color: #3a2010; }
+  .armarium .arm-row .arm-item.nihil { color: #8b7a60; font-style: italic; }
+
+  /* 特殊装备 */
+  .reliquiae {
+    display: flex; flex-wrap: wrap; gap: 3px;
+    margin-top: 5px;
+  }
+  .reliquiae span {
+    font-size: 7px; padding: 2px 6px;
+    border: 1px solid rgba(139,105,20,0.12);
+    color: #6b4a20; background: rgba(200,170,110,0.04);
+    font-family: 'EB Garamond', serif; font-style: italic;
+  }
+  .reliquiae span.active {
+    border-color: rgba(160,60,20,0.3);
+    color: #5a2010; background: rgba(200,120,60,0.06);
+  }
+
+  /* ═══════════════════════════════════════════════
+     右页内容：叙事 & 行动
+     ═══════════════════════════════════════════════ */
+  .right-content {
+    position: relative; z-index: 2;
+    color: #3a2010; font-size: 11px;
+    display: flex; flex-direction: column; height: 100%;
+  }
+  .right-content .chapter-head {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 9px; letter-spacing: 4px;
+    color: #5a2810; text-align: center;
+    margin-bottom: 6px; padding-bottom: 4px;
+    border-bottom: 1px double rgba(139,105,20,0.3);
+  }
+
+  /* 手抄本首字母下沉 */
+  .illuminated-drop {
+    float: left;
+    font-family: 'UnifrakturMaguntia', serif;
+    font-size: 48px; line-height: 0.8;
+    color: #8b2020;
+    padding: 0 6px 0 0;
+    margin-top: -4px;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.1), 0 0 8px rgba(139,32,32,0.15);
+    position: relative;
+  }
+  .illuminated-drop::after {
+    content: '';
+    position: absolute; bottom: 2px; left: 2px; right: 2px;
+    height: 2px;
+    background: rgba(200,140,20,0.4);
+  }
+
+  .narrative-text {
+    flex: 1; line-height: 1.8; color: #3a2810;
+    font-size: 12px;
+  }
+  .narrative-text p { margin-bottom: 6px; text-indent: 1.5em; }
+  .narrative-text p:last-child { margin-bottom: 0; }
+  .narrative-text .gilt { color: #8b6914; }
+  .narrative-text .ruby { color: #8b2020; }
+  .narrative-text .umber { color: #6b4a20; }
+
+  /* 行间鎏金装饰段 */
+  .ornament-break {
+    text-align: center; margin: 6px 0; font-size: 10px;
+    color: rgba(180,120,30,0.4); letter-spacing: 3px;
+  }
+
+  /* 行动：卷轴式选项 */
+  .scroll-choices {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px; margin-top: 6px;
+  }
+  .scroll-choice {
+    font-family: 'EB Garamond', serif; font-size: 11px;
+    font-style: italic;
+    background: linear-gradient(180deg,
+      rgba(200,170,110,0.1) 0%, rgba(180,140,80,0.06) 100%);
+    border: 1px solid rgba(139,105,20,0.2);
+    color: #4a2a10; padding: 6px 10px;
+    cursor: pointer; transition: all 0.3s;
+    text-align: left;
+  }
+  .scroll-choice:hover {
+    border-color: rgba(139,80,20,0.4);
+    background: linear-gradient(180deg,
+      rgba(200,150,90,0.15) 0%, rgba(180,130,70,0.1) 100%);
+    color: #5a2810;
+    box-shadow: inset 0 0 10px rgba(180,120,40,0.05);
+  }
+  .scroll-choice.primary {
+    border-color: rgba(139,80,20,0.35);
+    color: #5a2810;
+  }
+
+  /* ═══════════════════════════════════════════════
+     丝带书签
+     ═══════════════════════════════════════════════ */
+  .ribbon {
+    position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%);
+    width: 14px; height: 70px; z-index: 20;
+    background: linear-gradient(90deg,
+      #6b1010 0%, #a02020 20%, #c03030 40%,
+      #b02828 60%, #901818 80%, #6b1010 100%);
+    border-radius: 0 0 2px 2px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .ribbon::before {
+    content: ''; position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 8px;
+    background: linear-gradient(180deg,
+      #a02020, #c03030 30%, #b02828 60%, #901818);
+    border-radius: 4px 4px 0 0;
+  }
+  .ribbon::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 8px solid #6b1010;
+  }
+
+  /* ═══════════════════════════════════════════════
+     烛光微动效果
+     ═══════════════════════════════════════════════ */
+  .candle-glow {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    width: 300px; height: 200px; z-index: 25; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 100%,
+      rgba(255,160,50,0.06) 0%, rgba(255,120,30,0.03) 30%,
+      transparent 70%);
+    animation: candle-flicker 3s ease-in-out infinite alternate;
+  }
+  @keyframes candle-flicker {
+    0% { opacity: 0.7; transform: translateX(-50%) scaleX(1.05); }
+    25% { opacity: 1; transform: translateX(-50%) scaleX(0.95); }
+    50% { opacity: 0.6; transform: translateX(-50%) scaleX(1.1); }
+    75% { opacity: 0.9; transform: translateX(-50%) scaleX(0.98); }
+    100% { opacity: 0.7; transform: translateX(-50%) scaleX(1.02); }
+  }
+
+  /* ═══════════════════════════════════════════════
+     页脚
+     ═══════════════════════════════════════════════ */
+  .colophon {
+    margin-top: auto; padding-top: 6px;
+    font-family: 'EB Garamond', serif; font-style: italic;
+    font-size: 8px; color: #8b7a60; text-align: center;
+    border-top: 1px dotted rgba(139,105,20,0.2);
+  }
+
+  /* 页码 */
+  .folio {
+    position: absolute; bottom: 10px; font-size: 8px;
+    color: rgba(139,105,20,0.4);
+    font-family: 'EB Garamond', serif; font-style: italic;
+  }
+  .folio.left { left: 20px; }
+  .folio.right { right: 20px; }
+
+  /* ═══════════════════════════════════════════════
+     桌面光影
+     ═══════════════════════════════════════════════ */
+  .desk-shine {
+    position: absolute; bottom: -10px; left: 20px; right: 20px;
+    height: 20px; z-index: 1;
+    background: radial-gradient(ellipse at 50% 0%,
+      rgba(255,180,80,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ═══════════════════════════════════════════════
+     封面金色角护
+     ═══════════════════════════════════════════════ */
+  .corner-guard {
+    position: absolute; width: 24px; height: 24px; z-index: 6;
+    pointer-events: none;
+  }
+  .corner-guard::before, .corner-guard::after {
+    content: ''; position: absolute;
+    background: linear-gradient(135deg,
+      rgba(180,130,50,0.5), rgba(140,90,30,0.7) 40%,
+      rgba(200,150,60,0.4) 60%, rgba(160,110,40,0.6));
+    border-radius: 1px;
+  }
+  .corner-guard.top-left { top: -3px; left: -4px; }
+  .corner-guard.top-left::before { top: 0; left: 0; width: 18px; height: 3px; }
+  .corner-guard.top-left::after { top: 0; left: 0; width: 3px; height: 18px; }
+  .corner-guard.top-right { top: -3px; right: -4px; }
+  .corner-guard.top-right::before { top: 0; right: 0; width: 18px; height: 3px; }
+  .corner-guard.top-right::after { top: 0; right: 0; width: 3px; height: 18px; }
+  .corner-guard.bottom-left { bottom: -3px; left: -4px; }
+  .corner-guard.bottom-left::before { bottom: 0; left: 0; width: 18px; height: 3px; }
+  .corner-guard.bottom-left::after { bottom: 0; left: 0; width: 3px; height: 18px; }
+  .corner-guard.bottom-right { bottom: -3px; right: -4px; }
+  .corner-guard.bottom-right::before { bottom: 0; right: 0; width: 18px; height: 3px; }
+  .corner-guard.bottom-right::after { bottom: 0; right: 0; width: 3px; height: 18px; }
+</style>
+</head>
+<body>
+<div class="desk">
+
+  <div class="book">
+    <div class="tome">
+      <!-- 书脊 -->
+      <div class="spine">
+        <div class="band"></div>
+        <div class="gold-title">地 下 城</div>
+        <div class="band"></div>
+        <div class="gold-title">异世界</div>
+        <div class="band"></div>
+      </div>
+
+      <!-- 封面角护 -->
+      <div class="corner-guard top-left"></div>
+      <div class="corner-guard top-right"></div>
+      <div class="corner-guard bottom-left"></div>
+      <div class="corner-guard bottom-right"></div>
+
+      <!-- 对开页面 -->
+      <div class="page-spread">
+
+        <!-- ═══ 左页 ═══ -->
+        <div class="page-left">
+          <div class="left-content">
+            <div class="section-title">◆ STATVS · ADVENTVRER ◆</div>
+
+            <div class="stat-inkwell">
+              <span class="ink-icon">♥</span>
+              <span class="ink-label">Vita</span>
+              <div class="ink-track"><div class="ink-fill vita" style="width:78%"></div></div>
+              <span class="ink-num">78 / 100</span>
+            </div>
+            <div class="stat-inkwell">
+              <span class="ink-icon">✦</span>
+              <span class="ink-label">Mana</span>
+              <div class="ink-track"><div class="ink-fill mana" style="width:54%"></div></div>
+              <span class="ink-num">54 / 100</span>
+            </div>
+            <div class="stat-inkwell">
+              <span class="ink-icon">⚔</span>
+              <span class="ink-label">Vigor</span>
+              <div class="ink-track"><div class="ink-fill vigor" style="width:90%"></div></div>
+              <span class="ink-num">90 / 100</span>
+            </div>
+            <div class="stat-inkwell">
+              <span class="ink-icon">❋</span>
+              <span class="ink-label">Lumen</span>
+              <div class="ink-track"><div class="ink-fill lumen" style="width:35%"></div></div>
+              <span class="ink-num">350 / 1000</span>
+            </div>
+
+            <div class="virtues-grid">
+              <div class="virtue"><span class="sigil">⚔</span><div class="value">42</div><div class="name">ATK</div></div>
+              <div class="virtue"><span class="sigil">🛡</span><div class="value">28</div><div class="name">DEF</div></div>
+              <div class="virtue"><span class="sigil">⚡</span><div class="value">35</div><div class="name">AGI</div></div>
+              <div class="virtue"><span class="sigil">✧</span><div class="value">30</div><div class="name">INT</div></div>
+              <div class="virtue"><span class="sigil">☘</span><div class="value">18</div><div class="name">LCK</div></div>
+              <div class="virtue"><span class="sigil">◎</span><div class="value">1250</div><div class="name">Aurum</div></div>
+            </div>
+
+            <div class="section-title" style="margin-top:8px;">◆ ARMARIVM · 持有物 ◆</div>
+            <div class="armarium">
+              <div class="arm-row"><span class="arm-slot">Gladius</span><span class="arm-item">铁质长剑 Lv.III</span></div>
+              <div class="arm-row"><span class="arm-slot">Lorica</span><span class="arm-item">皮甲 Lv.II</span></div>
+              <div class="arm-row"><span class="arm-slot">Insigne</span><span class="arm-item">冒险者徽章</span></div>
+              <div class="arm-row"><span class="arm-slot">Potio</span><span class="arm-item">回复药水 ×III</span></div>
+            </div>
+            <div class="reliquiae">
+              <span class="active">✠ 触手紧身衣·共生期</span>
+              <span class="active">✠ 蜕生项圈·中期</span>
+              <span>✠ 影子分身·无心智</span>
+              <span>✠ 淫欲晶核·关闭</span>
+            </div>
+          </div>
+          <div class="folio left">- II -</div>
+        </div>
+
+        <!-- ═══ 右页 ═══ -->
+        <div class="page-right">
+          <div class="right-content">
+            <div class="chapter-head">◆ CAPVT · III ◆</div>
+
+            <div class="narrative-text">
+              <p>
+                <span class="illuminated-drop">你</span>
+                推开沉重的<span class="ruby">石门</span>，腐朽的空气中弥漫着<span class="gilt">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="ruby">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+              </p>
+              <p>
+                你握紧手中的<span class="gilt">长剑</span>，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="ruby">不寻常的红光</span>。
+              </p>
+              <div class="ornament-break">❦ ✦ ❦</div>
+              <p>
+                甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="gilt">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层<span class="umber">淫靡的气息</span>……
+              </p>
+            </div>
+
+            <div class="scroll-choices">
+              <div class="scroll-choice primary">⚔ 挥剑斩向哥布林头领</div>
+              <div class="scroll-choice">🔥 释放火球术灼烧敌群</div>
+              <div class="scroll-choice">🛡 防御姿态，观察敌人弱点</div>
+              <div class="scroll-choice">💋 尝试魅惑其中一只哥布林</div>
+            </div>
+
+            <div class="colophon">
+              ✠ 地下城第三层 · 阿斯特大陆 · 黄昏 · 第十二回合 ✠
+            </div>
+          </div>
+          <div class="folio right">- III -</div>
+        </div>
+
+      </div>
+
+      <!-- 丝带书签 -->
+      <div class="ribbon"></div>
+
+    </div>
+  </div>
+
+  <!-- 烛光 -->
+  <div class="candle-glow"></div>
+
+  <!-- 桌面反光 -->
+  <div class="desk-shine"></div>
+
+</div>
+</body>
+</html>

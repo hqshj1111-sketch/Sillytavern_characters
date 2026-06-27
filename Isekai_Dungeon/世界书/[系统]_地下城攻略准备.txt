@@ -1,0 +1,95 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+
+const isPrepared = _.get(stat, '地下城攻略状态.是否准备完毕', false);
+const selectedDungeon = _.get(stat, '地下城攻略状态.当前地下城名称', '');
+
+if (isPrepared || !selectedDungeon) return;
+
+const dungeonData = _.get(stat, `地下城信息.${selectedDungeon}`, {});
+const currentYear = _.get(stat, '进程.当前年份', 384);
+const currentMonth = _.get(stat, '进程.当前月份', 10);
+const currentDay = _.get(stat, '进程.当前日份', 15);
+
+const teammates = _.get(stat, '队友信息', {});
+const hasTeammates = Object.keys(teammates).length > 0;
+
+const clearedCount = dungeonData.被主角攻略次数 || 0;
+const failedCount = dungeonData.被主角攻略失败次数 || 0;
+const isFirstTime = clearedCount === 0 && failedCount === 0;
+const hasCleared = clearedCount > 0;
+const hasFailed = failedCount > 0;
+_%>
+# 系统指令：地下城攻略准备
+
+dungeon_preparation:
+  selected_dungeon: "<%= selectedDungeon %>"
+
+  <%_ if (Object.keys(dungeonData).length > 0) { _%>
+  dungeon_info:
+    description: "<%= dungeonData.地下城描述 %>"
+    type: "<%= dungeonData.类型 || '未指定' %>"
+    level: "<%= dungeonData.地下城等级 %>"
+    location: "<%= dungeonData.所在国家 %> · <%= dungeonData.所在城市 %> · <%= dungeonData.所在地点 %>"
+    boss: "<%= dungeonData.boss名称 %>——<%= dungeonData.boss描述 %>"
+    floors: "<%= dungeonData.总层数 %>层"
+  <%_ } else { _%>
+  dungeon_info_not_found: "警告：地下城【<%= selectedDungeon %>】的资料未在变量中登记。请检查变量数据或先在日常阶段使用当地/世界地下城生成条目创建该地下城信息。"
+  <%_ } _%>
+
+  narrative_guidance:
+    <%_ if (isFirstTime) { _%>
+    - "主角是首次攻略【<%= selectedDungeon %>】。描写面对未知地下城的紧张与期待——对未曾涉足之地的敬畏、对新敌人的想象、以及初出茅庐的冒险者特有的跃跃欲试。"
+    <%_ } else if (hasCleared && !hasFailed) { _%>
+    - "主角曾成功攻略过【<%= selectedDungeon %>】（共 <%= clearedCount %> 次）。描写老练冒险者的沉稳与从容——对地下城结构的熟悉、对敌人弱点的了然于胸、以及雪耻或再战的从容心态。"
+    <%_ } else if (hasFailed && !hasCleared) { _%>
+    - "主角曾在此受挫——【<%= selectedDungeon %>】有过 <%= failedCount %> 次失败记录。描写重返故地的复杂心境：不甘的火焰、更周全的准备、以及对上次失败的反思与成长。"
+    <%_ } else { _%>
+    - "主角对【<%= selectedDungeon %>】有过成功（<%= clearedCount %> 次）也有过失败（<%= failedCount %> 次）。描写与这座地下城多次交手的深厚羁绊——既熟悉又警惕的微妙平衡。"
+    <%_ } _%>
+    - "主角已选定攻略目标【<%= selectedDungeon %>】，正处于出发前的准备阶段。描写准备过程——购买补给、修理装备、整理背包。"
+    - "根据地下城的类型（<%= dungeonData.类型 || '未指定' %>）调整准备的描写侧重——战斗型强调武器打磨和药水储备，探索型强调地图研读和解谜工具，魅惑型强调防护魔道具和抗性药水。"
+    <%_ if (dungeonData.类型 === '魅惑型') { _%>
+    - "对于魅惑型地下城，队友或公会职员可能会用微妙的表情或欲言又止的提醒，暗示主角做好'额外的心理准备'。"
+    <%_ } _%>
+    - "若主角尚未组建完整的攻略队伍，可前往公会或酒馆寻找、招募合适的队友。描写与潜在队友的相遇、商讨加入条件、确认队伍分工的过程。"
+    <%_ if (hasTeammates) { _%>
+    - "当前队伍已有队友：<%= Object.keys(teammates).join('、') %>。可描写主角与队友确认分工、交代战术安排、以及出征前的相互激励。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    entrance_init:
+      instruction: "仅当主角确切完成所有准备、来到地下城入口前并即将踏入时，才执行以下变量更新："
+      patch_code: |
+        [
+          { "op": "replace", "path": "/地下城攻略状态/是否准备完毕", "value": true },
+          { "op": "replace", "path": "/地下城攻略状态/本次攻略开始日期", "value": "<%= currentYear %>年<%= currentMonth %>月<%= currentDay %>日-<%= _.get(stat, '进程.当前时间段', '早') %>" }
+        ]
+
+    recruit_teammate:
+      instruction: "若主角在准备阶段成功招募了新队友，执行以下 insert 操作将队友信息写入变量："
+      patch_code: |
+        [
+          { "op": "insert", "path": "/队友信息/[队友名称]", "value": {
+            "最大HP": [根据种族和等级设定],
+            "最大MP": [根据种族和等级设定],
+            "最大SP": [根据种族和等级设定],
+            "当前HP": [同最大HP],
+            "当前MP": [同最大MP],
+            "当前SP": [同最大SP],
+            "当前buff": {},
+            "当前debuff": {},
+            "攻击力": [根据种族和等级设定],
+            "防御力": [根据种族和等级设定],
+            "速度": [根据种族和等级设定],
+            "魔力": [根据种族和等级设定],
+            "意志": [根据种族和等级设定],
+            "幸运": [根据种族和等级设定],
+            "装备": {
+              "武器": "",
+              "护甲": "",
+              "饰品": ""
+            }
+          }}
+        ]
+<%_ } _%>

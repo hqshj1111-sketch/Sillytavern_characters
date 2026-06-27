@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案15：森灵德鲁伊风 | Forest Druidic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sorts+Mill+Goudy&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #080c06;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', serif;
+    color: #b0c0a0;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(ellipse at 30% 20%, rgba(80,160,60,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(100,140,40,0.04) 0%, transparent 50%);
+  }
+
+  .app { width: 100%; max-width: 660px; }
+
+  .grove-frame {
+    background: linear-gradient(180deg, #0c1008 0%, #080c04 100%);
+    border: 2px solid #1a2a10;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 60px rgba(40,80,20,0.06);
+  }
+  /* 藤蔓装饰 */
+  .grove-frame::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #3a6a1a, #5a9a2a, #3a6a1a);
+    z-index: 4;
+    opacity: 0.5;
+    border-radius: 2px;
+  }
+  .grove-frame::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #3a6a1a, #5a9a2a, #3a6a1a);
+    z-index: 4;
+    opacity: 0.5;
+    border-radius: 2px;
+  }
+
+  .druid-header {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 18px 20px 8px;
+  }
+  .druid-header .canopy {
+    font-size: 20px;
+    color: #4a8a30;
+    letter-spacing: 6px;
+    text-shadow: 0 0 15px rgba(80,160,40,0.3);
+  }
+  .druid-header h1 {
+    font-family: 'Sorts Mill Goudy', serif;
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    color: #a0c060;
+    text-shadow: 0 0 15px rgba(140,200,60,0.2);
+  }
+  .druid-header .whisper {
+    font-size: 9px;
+    color: #3a5a20;
+    letter-spacing: 6px;
+    margin-top: 2px;
+    font-style: italic;
+  }
+
+  .vine-divider {
+    height: 14px;
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .vine-divider .leaf {
+    color: #4a7a20;
+    font-size: 10px;
+    opacity: 0.6;
+  }
+  .vine-divider .tendril {
+    flex: 0 1 30px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #3a5a10, transparent);
+  }
+
+  .moss-panel {
+    position: relative;
+    z-index: 5;
+    margin: 6px 16px;
+    padding: 14px 18px;
+    background: rgba(12,16,8,0.6);
+    border: 1px solid #1a2a10;
+    border-radius: 8px 0 8px 0;
+    box-shadow: inset 0 0 20px rgba(30,50,10,0.08);
+  }
+  .moss-panel .panel-label {
+    font-family: 'Sorts Mill Goudy', serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: #80b040;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label .acorn {
+    font-size: 14px;
+    color: #6a9a30;
+  }
+
+  .wood-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .wood-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(8,12,4,0.4);
+    border: 1px solid #1a2808;
+    border-radius: 4px;
+  }
+  .wood-stat .spirit {
+    width: 26px; height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .spirit.hp { background: rgba(200,60,40,0.1); color: #e07060; }
+  .spirit.mp { background: rgba(60,100,200,0.1); color: #7090e0; }
+  .spirit.sp { background: rgba(200,160,40,0.1); color: #e0c060; }
+  .spirit.exp { background: rgba(60,180,80,0.1); color: #70d090; }
+  .wood-stat .body { flex: 1; min-width: 0; }
+  .wood-stat .head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .head .tag { color: #4a6a28; letter-spacing: 1px; }
+  .head .val { color: #90b068; }
+  .bark-bar {
+    height: 5px;
+    background: rgba(10,15,5,0.5);
+    border: 1px solid #1a2808;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bark-fill { height: 100%; border-radius: 3px; }
+  .bark-fill.hp { background: linear-gradient(90deg, #6b2020, #c04040); }
+  .bark-fill.mp { background: linear-gradient(90deg, #203060, #4040c0); }
+  .bark-fill.sp { background: linear-gradient(90deg, #5a4010, #b09030); }
+  .bark-fill.exp { background: linear-gradient(90deg, #206030, #40a040); }
+
+  .seed-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .seed {
+    text-align: center;
+    min-width: 48px;
+    padding: 6px 4px;
+    background: rgba(8,12,4,0.3);
+    border: 1px solid #1a2808;
+    border-radius: 4px;
+  }
+  .seed .sprout { font-size: 16px; color: #6a9a30; display: block; }
+  .seed .val { font-size: 14px; color: #b0c0a0; font-weight: 600; }
+  .seed .key { font-size: 7px; color: #3a5a20; letter-spacing: 2px; }
+
+  .glade-text {
+    margin: 6px 16px;
+    padding: 18px 22px;
+    background: rgba(10,14,6,0.5);
+    border: 1px solid #1a2a10;
+    border-left: 3px solid #5a8a2a;
+    border-radius: 0 6px 6px 0;
+    position: relative;
+    z-index: 5;
+  }
+  .glade-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #90a080;
+  }
+  .glade-text p:last-child { margin-bottom: 0; }
+  .glade-text .bloom { color: #c0d060; }
+  .glade-text .thorn { color: #d07050; }
+
+  .grove-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 16px;
+  }
+  .grove-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: rgba(12,18,6,0.5);
+    border: 1px solid #2a3810;
+    color: #90a070;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 4px;
+  }
+  .grove-btn:hover {
+    border-color: #6a9a30;
+    color: #b0d080;
+    box-shadow: 0 0 10px rgba(80,140,30,0.1);
+  }
+  .grove-btn.primary {
+    border-color: #6a9a30;
+    color: #b0d080;
+  }
+  .grove-btn.primary::before { content: '🌿 '; }
+
+  .hollow-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .hollow-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(8,12,4,0.3);
+    border: 1px solid #1a2808;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+  .hollow-item .type { color: #4a6a28; font-size: 9px; }
+  .hollow-item .name { color: #a0b890; }
+
+  .sprout-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .sprout-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(60,100,20,0.06);
+    border: 1px solid rgba(60,100,20,0.12);
+    color: #5a7a30;
+    border-radius: 4px;
+  }
+  .sprout-tag.blooming {
+    background: rgba(60,100,20,0.12);
+    border-color: rgba(80,140,30,0.3);
+    color: #80b040;
+  }
+
+  .grove-footer {
+    position: relative;
+    z-index: 5;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #3a5a20;
+    letter-spacing: 3px;
+    border-top: 1px dotted #2a3a10;
+    margin: 0 16px;
+    font-style: italic;
+  }
+  .grove-footer .roots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="grove-frame">
+
+    <div class="druid-header">
+      <div class="canopy">🌿 ✦ 🌿</div>
+      <h1>异 世 界 地 下 城</h1>
+      <div class="whisper">Isekai Dungeon · Sylvae</div>
+    </div>
+
+    <div class="vine-divider">
+      <span class="tendril"></span><span class="leaf">🍃</span><span class="tendril"></span>
+      <span class="leaf">🌱</span>
+      <span class="tendril"></span><span class="leaf">🍃</span><span class="tendril"></span>
+    </div>
+
+    <div class="moss-panel">
+      <div class="panel-label"><span class="acorn">🌰</span> 生 灵 之 息</div>
+      <div class="wood-stats">
+        <div class="wood-stat">
+          <div class="spirit hp">♥</div>
+          <div class="body">
+            <div class="head"><span class="tag">生命</span><span class="val">78 / 100</span></div>
+            <div class="bark-bar"><div class="bark-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="wood-stat">
+          <div class="spirit mp">✦</div>
+          <div class="body">
+            <div class="head"><span class="tag">魔力</span><span class="val">54 / 100</span></div>
+            <div class="bark-bar"><div class="bark-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="wood-stat">
+          <div class="spirit sp">⚔</div>
+          <div class="body">
+            <div class="head"><span class="tag">体力</span><span class="val">90 / 100</span></div>
+            <div class="bark-bar"><div class="bark-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="wood-stat">
+          <div class="spirit exp">⏫</div>
+          <div class="body">
+            <div class="head"><span class="tag">经验</span><span class="val">350 / 1000</span></div>
+            <div class="bark-bar"><div class="bark-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="seed-attrs">
+        <div class="seed"><span class="sprout">⚔</span><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="seed"><span class="sprout">🛡</span><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="seed"><span class="sprout">⚡</span><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="seed"><span class="sprout">✧</span><div class="val">30</div><div class="key">INT</div></div>
+        <div class="seed"><span class="sprout">☘</span><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="seed"><span class="sprout">◎</span><div class="val">1250</div><div class="key">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="glade-text">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="bloom">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="thorn">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="thorn">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="bloom">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="moss-panel">
+      <div class="panel-label"><span class="acorn">🌰</span> 林 间 选 择</div>
+      <div class="grove-actions">
+        <button class="grove-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="grove-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="grove-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="grove-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="moss-panel">
+      <div class="panel-label"><span class="acorn">🌰</span> 树 洞 储 藏</div>
+      <div class="hollow-grid">
+        <div class="hollow-item"><span class="type">武器</span><span class="name">铁质长剑 Lv.3</span></div>
+        <div class="hollow-item"><span class="type">防具</span><span class="name">皮甲 Lv.2</span></div>
+        <div class="hollow-item"><span class="type">饰品</span><span class="name">冒险者徽章</span></div>
+        <div class="hollow-item"><span class="type">消耗</span><span class="name">回复药水 ×3</span></div>
+      </div>
+      <div class="sprout-tags">
+        <span class="sprout-tag blooming">触手紧身衣·共生期</span>
+        <span class="sprout-tag blooming">蜕生项圈·中期</span>
+        <span class="sprout-tag">影子分身·无心智</span>
+        <span class="sprout-tag">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="grove-footer">
+      <div class="roots">〰 〰 〰</div>
+      <div>密林深处第三层 · 阿斯特大陆 · 黄昏 · 第十二轮月相</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

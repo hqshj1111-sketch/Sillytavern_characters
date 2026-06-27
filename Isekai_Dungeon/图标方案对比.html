@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图标方案对比 — 羊皮卷风</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css">
+<style>
+  :root {
+    --bg: #f4ecd8;
+    --bg2: #e8ddc4;
+    --text: #3d2b1a;
+    --text2: #6b5540;
+    --text3: #9b8468;
+    --border: #c4a882;
+    --border2: #8b6914;
+    --accent: #8b4513;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #1a1410;
+    display:flex; flex-direction:column; align-items:center;
+    padding:24px; gap:28px;
+    font-family: 'Noto Serif SC', serif;
+    color: var(--text);
+  }
+  h2 {
+    color: #e8d5b7;
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+  .card {
+    width: 500px;
+    background: var(--bg);
+    border: 2px solid var(--border2);
+    padding: 20px 24px;
+    box-shadow: 3px 3px 0 rgba(139,105,20,0.3), 0 6px 20px rgba(0,0,0,0.4);
+    position:relative;
+  }
+  .card::before {
+    content:''; position:absolute; inset:4px;
+    border:1px solid var(--border); pointer-events:none;
+  }
+  .card h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 900;
+    font-size: 16px;
+    border-bottom: 2px solid var(--border2);
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+  }
+  .card .sub { font-size:11px; color:var(--text3); margin-bottom:12px; }
+
+  /* icon grid */
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .icon-cell {
+    display:flex; align-items:center; gap:6px;
+    font-size:12px; padding:4px 6px;
+    border-bottom:1px dotted var(--border);
+    font-family: 'LXGW WenKai', 'KaiTi', serif;
+  }
+  .icon-cell .val { color: var(--text3); font-size:10px; margin-left:auto; }
+
+  /* ── 方案：Unicode几何符号 ── */
+  .u-ico { font-size:14px; width:20px; text-align:center; color:var(--accent); }
+  .u-hp  { color:#a03030; }
+  .u-mp  { color:#2e5a8a; }
+  .u-sp  { color:#3a6a3a; }
+  .u-buff { color:#3a6a3a; }
+  .u-debuff { color:#a03030; }
+
+  /* ── 方案：内联SVG ── */
+  .s-ico { width:18px; height:18px; }
+  .s-hp  { filter: invert(20%) sepia(90%) saturate(2500%) hue-rotate(-20deg); }
+  .s-mp  { filter: invert(30%) sepia(90%) saturate(2000%) hue-rotate(190deg); }
+  .s-sp  { filter: invert(30%) sepia(60%) saturate(2000%) hue-rotate(80deg); }
+  .s-buff { filter: invert(30%) sepia(60%) saturate(2000%) hue-rotate(80deg); }
+  .s-debuff { filter: invert(20%) sepia(90%) saturate(2500%) hue-rotate(-20deg); }
+
+  .divider {
+    height:1px;
+    background: linear-gradient(to right, transparent, var(--border2), transparent);
+    margin:12px 0;
+  }
+
+  .legend {
+    font-family: 'LXGW WenKai', 'KaiTi', serif;
+    font-size:10px; color:var(--text3); line-height:1.8;
+  }
+  .legend span { color:var(--accent); font-weight:600; }
+</style>
+</head>
+<body>
+
+<!-- ====== 方案1：Emoji ====== -->
+<h2>方案 1 — 系统 Emoji</h2>
+<div class="card">
+  <h3>✦ 原生 Emoji，跨平台零依赖，系统原生渲染</h3>
+  <div class="sub">最直观的图标方案，每个图标有公认语义，但样式完全依赖操作系统</div>
+  <div class="icon-grid">
+    <div class="icon-cell"><span class="u-ico u-hp">❤️</span>HP<span class="val">85/100</span></div>
+    <div class="icon-cell"><span class="u-ico u-mp">💎</span>MP<span class="val">40/50</span></div>
+    <div class="icon-cell"><span class="u-ico u-sp">⚡</span>SP<span class="val">60/100</span></div>
+    <div class="icon-cell"><span class="u-ico u-buff">⬆️</span>攻击力提升</div>
+    <div class="icon-cell"><span class="u-ico u-debuff">⬇️</span>毒素侵蚀</div>
+    <div class="icon-cell"><span class="u-ico">⚔️</span>攻击力</div>
+    <div class="icon-cell"><span class="u-ico">🛡️</span>防御力</div>
+    <div class="icon-cell"><span class="u-ico">💨</span>速度</div>
+    <div class="icon-cell"><span class="u-ico">✨</span>魔力</div>
+    <div class="icon-cell"><span class="u-ico">🔥</span>意志</div>
+    <div class="icon-cell"><span class="u-ico">🍀</span>幸运</div>
+    <div class="icon-cell"><span class="u-ico">💰</span>金币</div>
+    <div class="icon-cell"><span class="u-ico">⭐</span>经验值</div>
+    <div class="icon-cell"><span class="u-ico">👊</span>攻击</div>
+    <div class="icon-cell"><span class="u-ico">📜</span>技能</div>
+    <div class="icon-cell"><span class="u-ico">🎯</span>任务</div>
+  </div>
+  <div class="divider"></div>
+  <div class="legend">
+    <span>优点：</span>全局通用语义，零开发成本，系统级渲染质量<br>
+    <span>缺点：</span>不同OS(Windows/macOS/iOS/Android)样式差异巨大；彩色Emoji在羊皮卷暗色系中显得跳脱；设计要求禁止emoji
+  </div>
+</div>
+
+<!-- ====== 方案2：Unicode几何符号 ====== -->
+<h2>方案 2 — Unicode 几何符号</h2>
+<div class="card">
+  <h3>✦ 纯文本图标，零加载，依赖系统字体渲染</h3>
+  <div class="sub">使用 Unicode 符号区的几何/箭头/星形字符，适用于标签和按钮前缀</div>
+  <div class="icon-grid">
+    <div class="icon-cell"><span class="u-ico u-hp">♥</span>HP<span class="val">85/100</span></div>
+    <div class="icon-cell"><span class="u-ico u-mp">◆</span>MP<span class="val">40/50</span></div>
+    <div class="icon-cell"><span class="u-ico u-sp">▲</span>SP<span class="val">60/100</span></div>
+    <div class="icon-cell"><span class="u-ico u-buff">↑</span>攻击力提升</div>
+    <div class="icon-cell"><span class="u-ico u-debuff">↓</span>毒素侵蚀</div>
+    <div class="icon-cell"><span class="u-ico">⚔</span>攻击力</div>
+    <div class="icon-cell"><span class="u-ico">🛡</span>防御力</div>
+    <div class="icon-cell"><span class="u-ico">⚡</span>速度</div>
+    <div class="icon-cell"><span class="u-ico">★</span>魔力</div>
+    <div class="icon-cell"><span class="u-ico">🔥</span>意志</div>
+    <div class="icon-cell"><span class="u-ico">🍀</span>幸运</div>
+    <div class="icon-cell"><span class="u-ico">⏣</span>金币</div>
+    <div class="icon-cell"><span class="u-ico">❖</span>经验值</div>
+    <div class="icon-cell"><span class="u-ico">▶</span>攻击</div>
+    <div class="icon-cell"><span class="u-ico">▣</span>技能</div>
+    <div class="icon-cell"><span class="u-ico">📜</span>任务</div>
+  </div>
+  <div class="divider"></div>
+  <div class="legend">
+    <span>优点：</span>零网络请求，极速加载，无依赖<br>
+    <span>缺点：</span>样式受系统字体影响，跨平台差异大；Emoji类符号（📜等）在不同OS表现差异明显
+  </div>
+</div>
+
+<!-- ====== 方案3：内联SVG ====== -->
+<h2>方案 3 — 内联 SVG 手绘图标</h2>
+<div class="card">
+  <h3>✦ 精致矢量图标，嵌入 HTML 内，可缩放可着色</h3>
+  <div class="sub">使用内联 SVG 元素手工绘制的小型图标，颜色通过 currentColor 或 filter 控制</div>
+  <div class="icon-grid">
+
+    <!-- HP heart -->
+    <div class="icon-cell">
+      <svg class="s-ico s-hp" viewBox="0 0 24 24"><path d="M12 21C12 21 3 13.5 3 7.5C3 5 5 3 7.5 3C9 3 10.5 4 12 5.5C13.5 4 15 3 16.5 3C19 3 21 5 21 7.5C21 13.5 12 21 12 21Z" fill="#a03030"/></svg>
+      HP <span class="val">85/100</span>
+    </div>
+
+    <!-- MP diamond -->
+    <div class="icon-cell">
+      <svg class="s-ico s-mp" viewBox="0 0 24 24"><polygon points="12,2 22,9 12,16 2,9" fill="#2e5a8a"/></svg>
+      MP <span class="val">40/50</span>
+    </div>
+
+    <!-- SP lightning -->
+    <div class="icon-cell">
+      <svg class="s-ico s-sp" viewBox="0 0 24 24"><polygon points="13,2 3,13 10,13 8,22 18,9 11,9" fill="#3a6a3a"/></svg>
+      SP <span class="val">60/100</span>
+    </div>
+
+    <!-- buff arrow up -->
+    <div class="icon-cell">
+      <svg class="s-ico s-buff" viewBox="0 0 24 24"><path d="M12 4L4 14H10V20H14V14H20L12 4Z" fill="#3a6a3a"/></svg>
+      攻击力提升
+    </div>
+
+    <!-- debuff arrow down -->
+    <div class="icon-cell">
+      <svg class="s-ico s-debuff" viewBox="0 0 24 24"><path d="M12 20L4 10H10V4H14V10H20L12 20Z" fill="#a03030"/></svg>
+      毒素侵蚀
+    </div>
+
+    <!-- 攻击力 sword -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><path d="M5 20L14 11L7 4L5 6L3 4L2 5L4 7L2 9L7 14L5 20Z" fill="none" stroke="#8b4513" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      攻击力
+    </div>
+
+    <!-- 防御力 shield -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" fill="none" stroke="#8b4513" stroke-width="1.5"/></svg>
+      防御力
+    </div>
+
+    <!-- 速度 wind/wing -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><path d="M3 12H15C16.5 12 18 10.5 18 9C18 7.5 16.5 6 15 6M3 16H13C16 16 18 14 18 12M3 8H11" fill="none" stroke="#8b4513" stroke-width="1.5" stroke-linecap="round"/></svg>
+      速度
+    </div>
+
+    <!-- 魔力 star/crystal -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill="none" stroke="#8b4513" stroke-width="1.5"/></svg>
+      魔力
+    </div>
+
+    <!-- 意志 flame -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><path d="M12 21C16 21 18 18 18 14C18 9 13 4 12 2C11 4 6 9 6 14C6 18 8 21 12 21Z" fill="none" stroke="#8b4513" stroke-width="1.5"/></svg>
+      意志
+    </div>
+
+    <!-- 幸运 four leaf -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><circle cx="9" cy="9" r="5" fill="none" stroke="#8b4513" stroke-width="1"/><circle cx="15" cy="9" r="5" fill="none" stroke="#8b4513" stroke-width="1"/><circle cx="9" cy="15" r="5" fill="none" stroke="#8b4513" stroke-width="1"/><circle cx="15" cy="15" r="5" fill="none" stroke="#8b4513" stroke-width="1"/></svg>
+      幸运
+    </div>
+
+    <!-- 金币 coin -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#8b4513" stroke-width="1.5"/><rect x="10" y="6" width="4" height="12" rx="1" fill="none" stroke="#8b4513" stroke-width="1"/></svg>
+      金币
+    </div>
+
+    <!-- 经验值 star outline -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill="none" stroke="#8b4513" stroke-width="1"/></svg>
+      经验值
+    </div>
+
+    <!-- 攻击 -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><path d="M5 12H19M12 5L19 12L12 19" fill="none" stroke="#8b4513" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      攻击
+    </div>
+
+    <!-- 技能 scroll -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="16" rx="2" fill="none" stroke="#8b4513" stroke-width="1.5"/><line x1="9" y1="7" x2="15" y2="7" stroke="#8b4513" stroke-width="1"/><line x1="9" y1="10" x2="15" y2="10" stroke="#8b4513" stroke-width="1"/><line x1="9" y1="13" x2="12" y2="13" stroke="#8b4513" stroke-width="1"/><circle cx="6" cy="3" r="2" fill="none" stroke="#8b4513" stroke-width="1"/><circle cx="6" cy="19" r="2" fill="none" stroke="#8b4513" stroke-width="1"/></svg>
+      技能
+    </div>
+
+    <!-- 任务 flag -->
+    <div class="icon-cell">
+      <svg class="s-ico" viewBox="0 0 24 24"><line x1="5" y1="3" x2="5" y2="21" stroke="#8b4513" stroke-width="1.5"/><polygon points="5,4 16,8 5,12" fill="none" stroke="#8b4513" stroke-width="1"/></svg>
+      任务
+    </div>
+
+  </div>
+  <div class="divider"></div>
+  <div class="legend">
+    <span>优点：</span>矢量无限缩放，细腻度和复杂形状远超CSS；每种图标可独特设计<br>
+    <span>缺点：</span>代码体积较大；内联HTML中略显冗长；需手动设计每个SVG路径
+  </div>
+</div>
+
+</body>
+</html>

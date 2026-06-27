@@ -1,0 +1,177 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+
+if (phase === '创角阶段') return;
+
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+
+const isPrepared = _.get(stat, '地下城攻略状态.是否准备完毕', false);
+const isResting = _.get(stat, '地下城攻略状态.是否休整中', false);
+const isSettling = _.get(stat, '地下城攻略状态.是否攻略结算中', false);
+const isDefeated = _.get(stat, '地下城攻略状态.是否攻略败北中', false);
+const isInCombat = _.get(stat, '战斗状态.是否战斗中', false);
+const isCombatSettling = _.get(stat, '战斗状态.是否战斗结算中', false);
+
+const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
+const currentFloor = _.get(stat, '地下城攻略状态.当前所在层数', 0);
+const floorProgress = _.get(stat, '地下城攻略状态.本层进度', 0);
+
+const dungeonData = _.get(stat, `地下城信息.${dungeonName}`, {});
+const dungeonType = _.get(dungeonData, '类型', '');
+
+const teammates = _.get(stat, '队友信息', {});
+const hasTeammates = Object.keys(teammates).length > 0;
+
+const currentYear = _.get(stat, '进程.当前年份', '?');
+const currentMonth = _.get(stat, '进程.当前月份', 1);
+const currentDay = _.get(stat, '进程.当前日份', 1);
+const timeSlot = _.get(stat, '进程.当前时间段', '早');
+const currentTurn = parseInt(_.get(stat, '进程.当前回合数', 0)) || 0;
+let season = '';
+if (currentMonth >= 3 && currentMonth <= 5) season = '春季';
+else if (currentMonth >= 6 && currentMonth <= 8) season = '夏季';
+else if (currentMonth >= 9 && currentMonth <= 11) season = '秋季';
+else season = '冬季';
+const timeSlotMap = { '早': '清晨', '午': '正午', '晚': '傍晚', '夜': '深夜' };
+const timeSlotText = timeSlotMap[timeSlot] || timeSlot;
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '未知');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '未知');
+const currentLocation = _.get(stat, '主角.当前状态.当前地点', '未知');
+
+const largeEventActive = _.get(stat, '大型事件.进行中', false);
+const largeEventName = _.get(stat, '大型事件.名称', '');
+const largeEventRevealed = _.get(stat, '大型事件.真相揭露', false);
+const largeEventTurn = parseInt(_.get(stat, '大型事件.开始回合', 0)) || 0;
+const largeElapsed = currentTurn - largeEventTurn;
+
+const worldDynamics = _.get(stat, '大陆动态', {});
+const curCountryDynamics = worldDynamics[currentCountry] || [];
+const latestEntry = curCountryDynamics.length > 0 ? curCountryDynamics[curCountryDynamics.length - 1] : null;
+const curDynText = latestEntry ? latestEntry.年月 + '：' + (latestEntry.大事 || []).join('；') : '';
+
+const travelEvent = _.get(stat, '系统状态.待处理事件.前往外地事件', null);
+let travelDynText = '';
+if (travelEvent && travelEvent.目标国家) {
+    const td = worldDynamics[travelEvent.目标国家] || [];
+    const tLatest = td.length > 0 ? td[td.length - 1] : null;
+    if (tLatest) travelDynText = ' | ' + travelEvent.目标国家 + '：' + (tLatest.大事 || []).join('；');
+}
+_%>
+# 【全局阶段广播】
+
+<%= currentYear %>年<%= currentMonth %>月<%= currentDay %>日 | 季节：<%= season %> | 时间：<%= timeSlotText %> | 位置：<%= currentCountry %> / <%= currentCity %> | 地点：<%= currentLocation %><% if (phase === '地下城攻略阶段' && dungeonName) { %> | 攻略：【<%= dungeonName %>】第<%= currentFloor %>层<% } %><% if (largeEventActive) { %> | 事件：【<%= largeEventName %>】<%= largeEventRevealed ? '（终章）' : '' %><% } %>
+<%_ if (curDynText || travelDynText) { _%>
+大陆动态：<%= curDynText %><%= travelDynText %>
+<%_ } _%>
+
+<%_ if (phase === '日常阶段') { _%>
+当前阶段：日常阶段
+
+叙事重点：
+  - 主角身处城镇或安全区域。可前往冒险者公会接取任务、选购装备、与NPC互动、旅店休息恢复。
+  - 日常叙事基调轻松平和，以城镇生活、人际交往和冒险间隙的闲暇时光为主，为下一次地下城挑战积蓄情绪张力。
+<%_ if (curDynText) { _%>
+  - 主角可通过街头议论、公会通告、酒馆闲谈等自然途径感知到<%= currentCountry %>的本月动态。其余国家的大陆动态仅作为世界背景存在，不主动进入叙事。
+<%_ } _%>
+
+叙事约束:
+  - 暂无紧迫事件时，可主动推进时间线（数小时至数天）。
+  - 主角仅通过自身观察获取信息，严禁全知视角。
+<%_ if (largeEventActive) { _%>
+  - 大型事件【<%= largeEventName %>】正在进行中（已持续<%= largeElapsed %>回合）。主角在城镇日常中可能被事件的相关线索或人物牵扯。
+<%_ } _%>
+
+<%_ const eventNamesDaily = Object.keys(pendingEvents);
+if (eventNamesDaily.length > 0) { _%>
+> **【高优先级】** 当前存在待处理事件：<%= eventNamesDaily.join('、') %>。除非玩家正进行重要行动，否则请收束当前叙事，自然地切入该事件的开端。
+<%_ } _%>
+
+<%_ } else if (phase === '地下城攻略阶段') { _%>
+
+<%_ if (!isPrepared) { _%>
+当前子阶段：地下城攻略准备阶段
+
+叙事重点：
+  - 主角已选定地下城【<%= dungeonName || '未指定' %>】，正在做出发前的最后准备——购买药水、修理装备、整理背包、确认补给。
+  - 描写主角根据自身情况决定独自前往或前往公会/酒馆寻找、招募队友组建攻略队伍的过程。
+
+<%_ } else if (isInCombat) { _%>
+当前子阶段：地下城战斗阶段
+
+叙事重点：
+  - 严格遵循战斗系统的回合制叙事结构。详细描述攻防交锋、技能释放、HP/MP/SP消耗。
+  - 战斗叙事需有节奏感——描写紧张交锋后给予喘息空间，让玩家决定下一步行动。
+  <%_ if (hasTeammates) { _%>
+  - 队友配合主角行动，或根据自身判断自主采取行为，带来战场局势的实时变化。描写队友的技能释放、位置掩护、或对敌人弱点的判断与提示。
+  <%_ } _%>
+
+视角约束:
+  - 以主角的视角和感知为中心。敌人的状态只能通过可观察的外部线索推测（动作变慢、伤口增多、喘息加剧），禁止数值直出。
+
+<%_ } else if (isCombatSettling) { _%>
+当前子阶段：战斗结算阶段
+
+叙事重点：
+  - 战斗结束后的短暂结算。描写战斗的胜负结果、战利品的获得、以及原地短暂休整的状态恢复。
+
+<%_ } else if (isResting) { _%>
+当前子阶段：地下城休整阶段
+
+叙事重点：
+  - 在地下城的安全区域自由进行休整——饮食、睡眠或者放松，实现状态的彻底恢复。
+  - 描写在危机四伏的地下城中这片刻安宁的珍贵与紧绷神经逐渐松弛的氛围。
+  <%_ if (hasTeammates) { _%>
+  - 休整时队友间的互动——包扎彼此伤口、分享干粮与饮水、复盘之前的战斗配合、或闲谈中流露的个人背景与心事。
+  <%_ } _%>
+
+叙事约束:
+  - 禁止在本阶段引入任何意外的战斗或危险情况。此阶段为纯粹的安全休整时间。
+
+<%_ const eventNamesRest = Object.keys(pendingEvents);
+if (eventNamesRest.length > 0) { _%>
+> **【高优先级】** 当前存在待处理事件：<%= eventNamesRest.join('、') %>。除非玩家正进行重要行动，否则请收束当前叙事，自然地切入该事件的开端。
+<%_ } _%>
+
+<%_ } else if (isSettling) { _%>
+当前子阶段：地下城攻略结算阶段
+
+叙事重点：
+  - 主角从地下城返回城镇，前往冒险者公会进行本次攻略的汇报。
+  - 公会根据本次攻略的表现给予主角对应的报酬——金币发放、素材鉴定、公会评价更新与知名度提升。
+
+<%_ } else if (isDefeated) { _%>
+当前子阶段：地下城攻略败北阶段
+
+叙事重点：
+<%_ if (dungeonType === '魅惑型') { _%>
+  - 主角在力竭后被地下城中的色情陷阱或魔物捕获，被/享受了一番榨取后丢出地下城外。
+<%_ } else { _%>
+  - 主角在地下城中力竭倒下，被冒险者公会救援队救回城镇。在公会医务室中醒来，身上缠着绷带。
+<%_ } _%>
+  - 描写醒来后的迷茫、对失败的反思、以及重新振作的决心。
+
+<%_ } else { _%>
+当前子阶段：地下城攻略阶段
+
+当前攻略：【<%= dungeonName || '未知地下城' %>】 第 <%= currentFloor %> 层 | 进度 <%= floorProgress %>%
+
+叙事重点：
+  - 根据当前地下城的区域类型、区域描述和危险等级，描写对应的环境，体现其独有的地下城生态。
+  - 进度推进时自然触发遭遇事件。进度越高，事件的密集度和紧张感越强。
+  <%_ if (hasTeammates) { _%>
+  - 队友之间的互动——对前方岔路的判断分歧、发现陷阱时的互相提醒、或面对怪物时各自请战的态度。队友可自主采取行为。
+  <%_ } _%>
+
+视角约束:
+  - 严格保持主角第一视角或紧密第三人称视角。
+  - 地下城外部的世界动态不得入侵当前的探索叙事。
+
+<%_ const eventNamesDungeon = Object.keys(pendingEvents);
+if (eventNamesDungeon.length > 0) { _%>
+> **【高优先级】** 当前存在待处理事件：<%= eventNamesDungeon.join('、') %>。除非玩家正进行重要行动，否则请收束当前叙事，自然地切入该事件的开端。
+<%_ } _%>
+
+<%_ } _%>
+
+<%_ } } _%>

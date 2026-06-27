@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案1：暗黑地牢哥特风 | Darkest Dungeon Gothic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0a;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', 'Cinzel', serif;
+  }
+
+  /* ── 全局纹理叠加 ── */
+  .app {
+    width: 100%;
+    max-width: 660px;
+    position: relative;
+    color: #c9b99a;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .app::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.03;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 4px);
+  }
+
+  /* ── 标题栏 ── */
+  .title-bar {
+    background: linear-gradient(180deg, #1a0f0f 0%, #0d0707 100%);
+    border: 2px solid #5c3a2e;
+    border-bottom: 3px solid #8b2525;
+    padding: 14px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .title-bar::before {
+    content: '⚔';
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 22px;
+    color: #8b2525;
+  }
+  .title-bar::after {
+    content: '⚔';
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%) scaleX(-1);
+    font-size: 22px;
+    color: #8b2525;
+  }
+  .title-bar h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #c9a96e;
+    text-shadow: 0 0 10px rgba(139,37,37,0.6), 0 2px 4px rgba(0,0,0,0.8);
+  }
+  .title-bar .subtitle {
+    font-size: 11px;
+    color: #7a5c4c;
+    letter-spacing: 5px;
+    margin-top: 2px;
+  }
+
+  /* ── 暗黑分隔线 ── */
+  .divider {
+    height: 6px;
+    background: linear-gradient(90deg, transparent, #8b2525, #c9a96e, #8b2525, transparent);
+    margin: 0;
+  }
+
+  /* ── 面板通用 ── */
+  .panel {
+    background: linear-gradient(180deg, #120a08 0%, #0d0705 100%);
+    border: 1px solid #3a2218;
+    border-top: 2px solid #5c3a2e;
+    padding: 16px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(139,37,37,0.4), transparent);
+  }
+  .panel-label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #8b2525;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, #8b2525, transparent);
+  }
+
+  /* ── 状态网格 ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stat-icon {
+    width: 32px;
+    height: 32px;
+    background: #1a0f0f;
+    border: 1px solid #5c3a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #c9a96e;
+    flex-shrink: 0;
+  }
+  .stat-info { flex: 1; min-width: 0; }
+  .stat-name {
+    font-size: 10px;
+    color: #7a5c4c;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .stat-bar-bg {
+    height: 6px;
+    background: #1a0a0a;
+    border: 1px solid #3a2218;
+    margin: 3px 0;
+    position: relative;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    transition: width 0.3s;
+  }
+  .stat-bar-fill.hp { background: linear-gradient(90deg, #6b1a1a, #c0392b); }
+  .stat-bar-fill.mp { background: linear-gradient(90deg, #1a3a6b, #2980b9); }
+  .stat-bar-fill.sp { background: linear-gradient(90deg, #5c4a1a, #c9a020); }
+  .stat-val {
+    font-size: 10px;
+    color: #8b7a6c;
+    text-align: right;
+  }
+
+  /* ── 角色属性行 ── */
+  .attrs-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .attr-chip {
+    background: #1a0f0f;
+    border: 1px solid #3a2218;
+    padding: 5px 12px;
+    font-size: 11px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .attr-chip .attr-key { color: #7a5c4c; }
+  .attr-chip .attr-value { color: #c9a96e; font-weight: 600; }
+
+  /* ── 正文区 ── */
+  .narrative {
+    padding: 18px 20px;
+    background: linear-gradient(180deg, #0f0806 0%, #0a0504 100%);
+    border-left: 3px solid #5c3a2e;
+    border-right: 3px solid #5c3a2e;
+  }
+  .narrative p {
+    margin-bottom: 12px;
+    text-indent: 2em;
+  }
+  .narrative p:last-child { margin-bottom: 0; }
+  .narrative .highlight { color: #c9a96e; }
+  .narrative .danger { color: #c0392b; }
+
+  /* ── 行动选项 ── */
+  .actions {
+    padding: 14px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .action-btn {
+    background: linear-gradient(180deg, #1a0f0f, #120808);
+    border: 1px solid #5c3a2e;
+    color: #c9b99a;
+    padding: 8px 18px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    letter-spacing: 1px;
+  }
+  .action-btn:hover {
+    border-color: #8b2525;
+    color: #c9a96e;
+    text-shadow: 0 0 6px rgba(139,37,37,0.4);
+  }
+  .action-btn.primary {
+    border-color: #8b2525;
+    color: #e0c080;
+  }
+  .action-btn.primary::before {
+    content: '▸ ';
+    color: #8b2525;
+  }
+
+  /* ── 装备面板 ── */
+  .equip-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .equip-slot {
+    background: #0f0806;
+    border: 1px solid #2a1810;
+    padding: 8px 12px;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .equip-slot .slot-name { color: #7a5c4c; font-size: 10px; letter-spacing: 1px; }
+  .equip-slot .slot-item { color: #c9b99a; }
+  .equip-slot .slot-item.empty { color: #4a3830; font-style: italic; }
+
+  /* ── 特殊装备标签 ── */
+  .special-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .special-tag {
+    background: #1a0808;
+    border: 1px solid #5c2020;
+    color: #c0392b;
+    padding: 3px 10px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .special-tag.active {
+    background: #2a1010;
+    border-color: #8b2525;
+    color: #e07070;
+  }
+
+  /* ── 底部状态栏 ── */
+  .status-bar {
+    background: #0d0707;
+    border: 1px solid #3a2218;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #5c4a3c;
+    letter-spacing: 2px;
+  }
+  .torch-icon {
+    display: inline-block;
+    animation: flicker 2s infinite;
+  }
+  @keyframes flicker {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.6; }
+    52% { opacity: 0.9; }
+    54% { opacity: 0.5; }
+    56% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 标题栏 -->
+  <div class="title-bar">
+    <h1>异世界地下城</h1>
+    <div class="subtitle">I S E K A I · D U N G E O N</div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- 角色状态面板 -->
+  <div class="panel">
+    <div class="panel-label">✦ 冒险者状态</div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-icon">❤</div>
+        <div class="stat-info">
+          <div class="stat-name">生命值 HP</div>
+          <div class="stat-bar-bg"><div class="stat-bar-fill hp" style="width:78%"></div></div>
+          <div class="stat-val">78 / 100</div>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">✦</div>
+        <div class="stat-info">
+          <div class="stat-name">魔力值 MP</div>
+          <div class="stat-bar-bg"><div class="stat-bar-fill mp" style="width:54%"></div></div>
+          <div class="stat-val">54 / 100</div>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">⚔</div>
+        <div class="stat-info">
+          <div class="stat-name">体力值 SP</div>
+          <div class="stat-bar-bg"><div class="stat-bar-fill sp" style="width:90%"></div></div>
+          <div class="stat-val">90 / 100</div>
+        </div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon">⏣</div>
+        <div class="stat-info">
+          <div class="stat-name">经验值 EXP</div>
+          <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:35%;background:linear-gradient(90deg,#3a5c2a,#8bc34a)"></div></div>
+          <div class="stat-val">350 / 1000</div>
+        </div>
+      </div>
+    </div>
+    <div class="attrs-row" style="margin-top:10px;">
+      <div class="attr-chip"><span class="attr-key">ATK</span><span class="attr-value">42</span></div>
+      <div class="attr-chip"><span class="attr-key">DEF</span><span class="attr-value">28</span></div>
+      <div class="attr-chip"><span class="attr-key">AGI</span><span class="attr-value">35</span></div>
+      <div class="attr-chip"><span class="attr-key">INT</span><span class="attr-value">30</span></div>
+      <div class="attr-chip"><span class="attr-key">LCK</span><span class="attr-value">18</span></div>
+      <div class="attr-chip"><span class="attr-key">💰</span><span class="attr-value">1,250G</span></div>
+    </div>
+  </div>
+
+  <!-- 正文区 -->
+  <div class="narrative">
+    <p>
+      你推开沉重的石门，腐朽的空气中弥漫着<span class="highlight">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="danger">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+    </p>
+    <p>
+      你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="danger">不寻常的红光</span>。
+    </p>
+    <p>
+      甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="highlight">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+    </p>
+  </div>
+
+  <!-- 行动选项 -->
+  <div class="actions">
+    <button class="action-btn primary">挥剑斩向哥布林头领</button>
+    <button class="action-btn">释放火球术灼烧敌群</button>
+    <button class="action-btn">防御姿态，观察敌人弱点</button>
+    <button class="action-btn">尝试魅惑其中一只哥布林</button>
+  </div>
+
+  <!-- 装备面板 -->
+  <div class="panel">
+    <div class="panel-label">✦ 装备与持有物</div>
+    <div class="equip-grid">
+      <div class="equip-slot">
+        <span class="slot-name">武器</span>
+        <span class="slot-item">铁质长剑 Lv.3</span>
+      </div>
+      <div class="equip-slot">
+        <span class="slot-name">防具</span>
+        <span class="slot-item">皮甲 Lv.2</span>
+      </div>
+      <div class="equip-slot">
+        <span class="slot-name">饰品</span>
+        <span class="slot-item">冒险者徽章</span>
+      </div>
+      <div class="equip-slot">
+        <span class="slot-name">消耗品</span>
+        <span class="slot-item">回复药水 ×3</span>
+      </div>
+    </div>
+    <div class="special-tags">
+      <span class="special-tag active">触手紧身衣·共生期</span>
+      <span class="special-tag active">蜕生项圈·中期</span>
+      <span class="special-tag">影子分身·无心智</span>
+      <span class="special-tag">淫欲晶核·关闭</span>
+    </div>
+  </div>
+
+  <!-- 底部状态栏 -->
+  <div class="status-bar">
+    <span><span class="torch-icon">🕯</span> 地下城第3层 · 阿斯特大陆</span>
+    <span>384年10月15日 · 傍晚</span>
+    <span>回合 #12</span>
+  </div>
+
+</div>
+</body>
+</html>

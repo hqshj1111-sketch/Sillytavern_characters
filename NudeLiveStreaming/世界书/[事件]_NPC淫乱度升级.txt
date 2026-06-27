@@ -1,0 +1,66 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['NPC淫乱度升级事件'] && currentPhase === '日常阶段' && !isSexActive) {
+    const npcNames = events['NPC淫乱度升级事件'];
+    const npcData = _.get(stat, 'NPC数据', {});
+    
+    // 确保为数组
+    const targetNames = Array.isArray(npcNames) ? npcNames : [npcNames];
+    const targetsInfo = [];
+    
+    targetNames.forEach(name => {
+      const npc = npcData[name];
+      if (npc) {
+        const currentLewdness = parseInt(npc.淫乱度) || 0;
+        const stageKey = currentLewdness >= 75 ? '阶段4' : (currentLewdness >= 50 ? '阶段3' : (currentLewdness >= 25 ? '阶段2' : '阶段1'));
+        const currentStageText = _.get(npc, `淫乱度阶段.${stageKey}`, '未知');
+        
+        // 逆推前一阶段
+        let prevKey = '阶段1';
+        if (stageKey === '阶段4') prevKey = '阶段3';
+        else if (stageKey === '阶段3') prevKey = '阶段2';
+        else if (stageKey === '阶段2') prevKey = '阶段1';
+        else prevKey = '阶段1';
+        
+        const prevStageText = _.get(npc, `淫乱度阶段.${prevKey}`, '未知');
+        
+        targetsInfo.push({
+          name: name,
+          lewdness: currentLewdness,
+          prevStage: prevStageText,
+          currentStage: currentStageText
+        });
+      }
+    });
+    
+    if (targetsInfo.length > 0) {
+_%>
+# 事件：NPC淫乱度蜕变
+npc_lewdness_evolution:
+  event_name: "NPC淫乱度蜕变"
+  affected_npcs: "<%- targetNames.join('、') %>"
+  
+  narrative_guidance:
+    <%_ targetsInfo.forEach(info => { _%>
+    - "【<%= info.name %>】(淫乱度 <%= info.lewdness %>)：从「<%= info.prevStage %>」蜕变为「<%= info.currentStage %>」。请在叙事中展现其行为或言辞上更放荡、更主动索取快感的微妙变化。"
+    <%_ }); _%>
+    - "这些转变是累积性的——NPC不会突然变成另一个人，而是在某个瞬间让主角察觉到他们比以往更不加掩饰的欲望。"
+
+  mandatory_data_sync:
+    instruction: "当蜕变已在叙事中体现后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/NPC淫乱度升级事件" }
+      ]
+
+<%_
+    }
+  }
+}
+_%>

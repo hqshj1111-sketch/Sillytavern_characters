@@ -1,0 +1,39 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+const isShopping = _.get(stat, '商城信息.是否购物中', false);
+if (phase !== '日常阶段' || isShopping) return;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const geoData = _.get(stat, '地理信息', {});
+const countryData = geoData[currentCountry] || {};
+const cityData = _.get(countryData, `城市列表.${currentCity}`, {});
+const currentMonth = parseInt(_.get(stat, '进程.当前月份', 1)) || 1;
+let seasonChar = '冬';
+if (currentMonth >= 3 && currentMonth <= 5) seasonChar = '春';
+else if (currentMonth >= 6 && currentMonth <= 8) seasonChar = '夏';
+else if (currentMonth >= 9 && currentMonth <= 11) seasonChar = '秋';
+const vibeObj = cityData.整体氛围 || {};
+const vibeStr = _.isArray(vibeObj) ? vibeObj.join('、') : (vibeObj[seasonChar] || Object.values(vibeObj).filter(v => v).join('、'));
+_%>
+# 系统指令：前往购物
+
+  narrative_guidance:
+    - "主角决定前往购物。根据<%= currentCity || '当前城镇' %>（<%= currentCountry || '当前国家' %>）的特色——<%= cityData.自然环境||'' %>、<%= vibeStr %>——选择一个符合当地风貌的商店（武器铺、药水店、魔法道具店、防具店或杂货铺等）。"
+    - "描写主角推开店的场景、老板或店员抬头招呼主角的态度。"
+    - "商家展示了10件商品，涵盖消耗品、素材、装备等类型，种类和品质体现该国/城市的特色和经济发展水平。商品属性与对应增幅可为空。"
+    - "在结尾为玩家留出自由选择空间——询价、查看某件商品详情、要求看更多同类商品、或离开。"
+
+  mandatory_data_sync:
+    instruction: "进入购物状态，生成10件商品："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/商城信息/是否购物中", "value": true },
+        { "op": "replace", "path": "/商城信息/商品列表", "value": [
+           { "商品名称": "[AI创作的商品名称]", "商品类型": "[消耗品/素材/武器/护甲/饰品]", "商品描述": "[体现当地特色的商品描述]", "商品属性": ["攻击力", "意志"]（举例，可为空）, "商品对应增幅": ["+5", "*1.2"]（举例，与属性对应）, "商品价格": [合理价格] },
+           { "商品名称": "...", "商品类型": "...", "商品描述": "...", "商品属性": ["攻击力"], "商品对应增幅": ["+3"], "商品价格": 0 },
+          // ... 共10件
+        ]}
+      ]
+<%_ } _%>

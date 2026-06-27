@@ -1,0 +1,61 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const isDefeated = _.get(stat, '地下城攻略状态.是否攻略败北中', false);
+if (!isDefeated) return;
+
+const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
+const dungeonData = _.get(stat, `地下城信息.${dungeonName}`, {});
+const dungeonType = dungeonData.类型 || '';
+
+const currentYear = _.get(stat, '进程.当前年份', '?');
+const currentMonth = _.get(stat, '进程.当前月份', 1);
+const currentDay = _.get(stat, '进程.当前日份', 1);
+const timeSlot = _.get(stat, '进程.当前时间段', '早');
+
+const enemyName = _.get(stat, '战斗状态.敌方名称', '');
+const enemyRace = _.get(stat, '战斗状态.敌方种族', '');
+const enemyCount = _.get(stat, '战斗状态.敌方数量', 1);
+
+const currentFloor = _.get(stat, '地下城攻略状态.当前所在层数', 0);
+const totalFloors = dungeonData.总层数 || 0;
+const isFinalFloor = currentFloor >= totalFloors;
+
+const teammates = _.get(stat, '队友信息', {});
+const hasTeammates = Object.keys(teammates).length > 0;
+_%>
+# 系统指令：攻略败北
+
+  narrative_guidance:
+<%_ if (dungeonType === '魅惑型') { _%>
+<%_ if (enemyName) { _%>
+<%_ if (isFinalFloor) { _%>
+    - "主角被关底BOSS——<%= dungeonData.boss名称 || enemyName %>（<%= dungeonData.boss描述 || enemyRace %>）击败。描写主角<%= hasTeammates ? '和队友' : '' %>在BOSS压倒性的力量面前溃败，被其俘虏带回巢穴深处。"
+    - "在接下来的数日里，主角<%= hasTeammates ? '们' : '' %>成为BOSS的玩物——被日夜侵犯、调教，在一次次强制的高潮与短暂的恢复中循环，逐渐适应甚至渴求BOSS的触碰。地下城深处的黑暗巢穴成了临时的囚笼与欲望的温床。"
+    - "直到某一天——机缘巧合下，主角<%= hasTeammates ? '们' : '' %>终于抓住机会挣脱束缚，赤身裸体地在地道中跌跌撞撞地逃向出口的光亮。"
+    - "被救出（或逃出）的瞬间，重见天日的光刺痛了眼睛。身体上还残留着被蹂躏的痕迹，但内心深处却有一丝微妙的不舍——那黑暗巢穴中的日日夜夜，将永远成为无法与人言说的秘密回忆。"
+<%_ } else { _%>
+    - "主角被【<%= enemyName %>】（<%= enemyRace %>，<%= enemyCount %>只）击败。描写主角<%= hasTeammates ? '和队友' : '' %>在与敌方的交战中逐渐力竭，最终被压制、束缚、侵犯的过程，在无法抵抗的快感浪潮中被推向耻辱的高潮，意识在极度疲惫与快感的交织中逐渐模糊。"
+<%_ } _%>
+<%_ } else { _%>
+    - "主角陷入了魅惑型地下城中的色情陷阱或装置。描写主角<%= hasTeammates ? '和队友' : '' %>如何触发机关——触手从墙壁缝隙涌出、地面上浮现的催情魔法阵、喷洒的媚药迷雾——身体被层层缠绕、衣物被溶解、敏感带被反复攻击，在无法挣脱的束缚中被持续刺激到极致的高潮，意识在快感与疲惫中飘散。"
+<%_ } _%>
+    - "禁止过度描写主角<%= hasTeammates ? '们的' : '的' %>羞耻、自责或绝望等负面情绪。可以描写虽然失败了，但身体似乎记住了某种从未体验过的快感，潜意识中对这种被支配的感觉隐约有些回味和隐秘的期待。败北并非纯粹的屈辱，而是一种带着禁忌甜美的体验。"
+    - "主角<%= hasTeammates ? '和队友' : '' %>在被榨取至力竭后失去意识。恢复神志时，发现自己已经躺在迷宫外了——是被冒险者公会救援队发现并带回的，还是被魔物享用后丢弃的，无从得知。"
+
+<%_ } else { _%>
+    - "主角在【<%= dungeonName %>】中力尽倒下。描写意识模糊前的最后画面——视野边缘的黑暗逐渐吞噬一切、武器从无力松开的手指中滑落、膝盖不受控制地砸向地面的震动——然后是无尽的虚无。"
+    - "不知过了多久，主角在冒险者公会医务室中醒来。身上缠着绷带，装备散落在床头柜上。公会救援队在主角战败倒下后将其救回城镇。"
+    - "描写醒来后的迷茫与对失败的淡淡不甘，但不过度渲染负面情绪。重要的是——还活着，还能再战。"
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "完成败北处理，记录失败次数，返回日常阶段："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/地下城攻略状态/是否攻略败北中", "value": false },
+        { "op": "replace", "path": "/地下城攻略状态/是否准备完毕", "value": false },
+        { "op": "delta", "path": "/地下城信息/<%= dungeonName %>/被主角攻略失败次数", "value": 1 },
+        { "op": "replace", "path": "/地下城攻略状态/本次攻略结束日期", "value": "<%= currentYear %>年<%= currentMonth %>月<%= currentDay %>日-<%= timeSlot %>" },
+        { "op": "replace", "path": "/进程/阶段", "value": "日常阶段" }
+      ]
+<%_ } _%>

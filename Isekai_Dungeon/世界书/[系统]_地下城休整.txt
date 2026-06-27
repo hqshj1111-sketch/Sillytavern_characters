@@ -1,0 +1,111 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const isResting = _.get(stat, '地下城攻略状态.是否休整中', false);
+if (!isResting) return;
+
+const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
+const currentFloor = _.get(stat, '地下城攻略状态.当前所在层数', 0);
+const dungeonData = _.get(stat, `地下城信息.${dungeonName}`, {});
+const floorIndex = currentFloor - 1;
+const floorTypes = dungeonData.每层区域类型 || [];
+const floorDescs = dungeonData.每层区域描述 || [];
+const currentFloorType = (floorTypes[floorIndex] || '未知区域');
+const currentFloorDesc = (floorDescs[floorIndex] || '未知环境');
+
+const teammates = _.get(stat, '队友信息', {});
+const hasTeammates = Object.keys(teammates).length > 0;
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const restEroEvent = pendingEvents['休整情色事件'] || '';
+const hasRestEro = !!restEroEvent;
+
+let rollEro = false;
+if (!hasRestEro && currentFloorType === '休整层') {
+  rollEro = Math.random() < 0.3;
+}
+_%>
+# 系统指令：地下城休整
+
+<%_ if (currentFloorType === '休整层') { _%>
+<%_ if (hasRestEro) { _%>
+  rest_ero_ongoing:
+    narrative_guidance:
+      - "休整中的情色事件仍在继续——<%= restEroEvent %>。根据玩家上一回合的选择，描写事件的进展。"
+      - "体现地下城攻略中轻松的另一面——在这片安全的休整层中，欲望与放松交织，没有危险只有欢愉。"
+      - "必须在叙述末尾为玩家留出充分的自由选择空间——继续欢愉、换个方式、或是结束这场插曲回归休整。"
+
+    mandatory_data_sync:
+      instruction: "仅当玩家明确表示结束或事件自然收束时，移除事件标记："
+      patch_code: |
+        [
+          { "op": "remove", "path": "/系统状态/待处理事件/休整情色事件" }
+        ]
+
+<%_ } else if (rollEro) { _%>
+<%_ if (hasTeammates) { _%>
+  rest_ero_team:
+    narrative_guidance:
+      - "正当主角在休整层的宁静中放松身心时，一个意外的插曲悄然展开——主角要么撞见某两个队友在隐秘的角落里偷偷亲热、要么某个（或某几个）队友因休整时积蓄的欲望，主动走向主角，眼神中带着不加掩饰的暗示与邀请。"
+      - "描写这个意外的情色插曲的开端。气氛从休整的松弛悄然转为微妙的燥热。"
+      - "本回合仅是事件的开端。必须在叙述末尾为玩家留出充分的自由选择空间——接受、婉拒、调侃、或是以特定方式回应。"
+<%_ } else { _%>
+  rest_ero_solo:
+    narrative_guidance:
+      - "正当主角独自享受着休整层的宁静时，一只落单的、看起来毫无恶意的发情魔物怯生生地靠近了主角。它体型小巧，眼神中满是期待而非攻击性，用笨拙的肢体语言向主角发出欢愉的邀请。"
+      - "这只魔物显然是休整层的常客——无害、孤独、渴望陪伴。它的存在让主角意识到，就连地下城中的生物也有渴望温存的时刻。"
+      - "本回合仅是事件的开端。必须在叙述末尾为玩家留出充分的自由选择空间——接受、驱赶、好奇地观察、或是其他反应。"
+<%_ } _%>
+
+    mandatory_data_sync:
+      instruction: "插入情色事件标记："
+      patch_code: |
+        [
+          { "op": "insert", "path": "/系统状态/待处理事件/休整情色事件", "value": "<%= hasTeammates ? '队友之间的暧昧插曲' : '偶遇发情魔物的邀请' %>" }
+        ]
+
+<%_ } else { _%>
+  rest_floor:
+    narrative_guidance:
+      - "本层为休整层——<%= currentFloorDesc %>。主角在此享受难得的安宁。描写安全区域的环境细节。"
+      - "主角可在此自由休整，饮食、睡眠、放松、与队友交流。禁止任何危险情况的发生——没有怪物突袭、没有陷阱、没有紧急事件。这里是纯粹的安全休整时间。"
+      - "仅当玩家明确表示要结束休整、前往下一层时，描写主角收拾行装、检查装备、与队友确认状态，准备踏入通往下一层的通道。"
+
+    mandatory_data_sync:
+      instruction: "离开休整层，前往下一层："
+      patch_code: |
+        [
+          { "op": "replace", "path": "/地下城攻略状态/是否休整中", "value": true },
+          { "op": "delta", "path": "/地下城攻略状态/当前所在层数", "value": 1 },
+          { "op": "replace", "path": "/地下城攻略状态/本层进度", "value": 0 }
+        ]
+<%_ } _%>
+
+<%_ } else if (currentFloorType === 'BOSS层') { _%>
+  boss_floor_rest:
+    narrative_guidance:
+      - "主角身处BOSS层——<%= dungeonData.boss名称 || '未知BOSS' %>的领域边缘，在还未直面最终敌人的这段时间里抓紧原地休整。"
+      - "描写主角背靠石壁坐下，调整呼吸，检查装备上每一道刻痕。远处若隐若现的压迫气息提醒着不久后的决战，但此刻——先养精蓄锐。"
+      - "本回合禁止发生任何危险情况。"
+
+    mandatory_data_sync:
+      instruction: "原地休整完毕："
+      patch_code: |
+        [
+          { "op": "replace", "path": "/地下城攻略状态/是否休整中", "value": false }
+        ]
+
+<%_ } else { _%>
+  normal_rest:
+    narrative_guidance:
+      - "主角趁着安全的间隙在原地进行简短的休整。"
+      - "耳边可能仍有远处怪物微弱的回响，但此刻这片角落是安全的。"
+      - "本回合禁止发生任何危险情况。"
+
+    mandatory_data_sync:
+      instruction: "原地休整完毕，继续探索："
+      patch_code: |
+        [
+          { "op": "replace", "path": "/地下城攻略状态/是否休整中", "value": false }
+        ]
+
+<%_ } _%>
+<%_ } _%>

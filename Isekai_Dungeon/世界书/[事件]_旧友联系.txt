@@ -1,0 +1,58 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const eventVal = pendingEvents['旧友联系事件'];
+if (!eventVal) return;
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '日常阶段') return;
+
+const npcName = String(eventVal);
+const keyNpc = _.get(stat, `重要NPC信息.${npcName}`, null);
+const commonNpc = _.get(stat, `一般NPC信息.${npcName}`, null);
+const npc = keyNpc || commonNpc;
+if (!npc) return;
+
+const npcCountry = _.get(npc, '所在国家', '未知国度');
+const npcCity = _.get(npc, '所在城市', '未知城镇');
+const lastInteractDate = _.get(npc, '最近互动日期', '许久之前');
+const lastInteractLocation = _.get(npc, '最近互动地点', '某处');
+const lastInteractContent = _.get(npc, '最近互动事项', '一次难忘的经历');
+const affection = parseInt(_.get(npc, '好感度', 50)) || 50;
+const isKey = !!keyNpc;
+
+const mcName = _.get(stat, '主角.基本信息.姓名', '主角');
+const mcCountry = _.get(stat, '主角.当前状态.当前国家', '未知');
+const mcCity = _.get(stat, '主角.当前状态.当前城市', '未知');
+_%>
+# 事件：旧友联系
+event_initiator:
+  event_name: "旧友联系"
+  character: "<%= npcName %>"
+  location: "通信到达——主角当前所在地【<%= mcCountry %> / <%= mcCity %>】"
+  time: "不限时段"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速收束当前叙事，自然地推进至本事件开端。"
+    - "描写通信抵达的方式，这是来自旧友的消息。"
+    - "通信中传达的核心信息：<%= npcName %>目前身处【<%= npcCountry %> / <%= npcCity %>】，诚挚邀请主角前往与之重逢，共赴一段新的冒险或重拾旧日时光。"
+    <%_ if (lastInteractContent && lastInteractContent !== '一次难忘的经历') { _%>
+    - "回忆插叙——主角的思绪不由自主地飘回了最后一次与<%= npcName %>相遇的场景：【<%= lastInteractLocation %>】，<%= lastInteractDate %>——<%= lastInteractContent %>。"
+    <%_ } _%>
+    <%_ if (isKey) { _%>
+    - "<%= npcName %>是主角生命中重要的存在。基于好感度（<%= affection %>），调整通信中的语气温度——好感度越高，字里行间越流露出对主角的思念和迫不及待的期盼；好感度较低时，措辞更偏向礼貌而克制的老友问候，却也藏不住那份想让主角来看看的期待。"
+    <%_ } _%>
+    - "结尾留给主角选择的空间：立即动身前往、暂时搁置但将此事记在心中、提笔回信约定时间、或在内心斟酌此行的意义。"
+
+  npc_summary:
+    npc_name: "<%= npcName %>"
+    current_location: "<%= npcCountry %> / <%= npcCity %>"
+    last_interaction: "<%= lastInteractDate %> | <%= lastInteractLocation %>"
+    last_interaction_content: "<%= lastInteractContent %>"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/旧友联系事件" }
+      ]
+<%_ } _%>

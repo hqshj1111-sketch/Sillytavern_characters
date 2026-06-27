@@ -1,0 +1,59 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const openingType = _.get(stat, '系统状态.待处理事件.大型事件开幕', '');
+if (!openingType) return;
+
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '日常阶段') return;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const mcLevel = _.get(stat, '主角.当前状态.等级', 1);
+const mcFame = _.get(stat, '主角.冒险者信息.知名度', 0);
+const mcRank = _.get(stat, '主角.冒险者信息.冒险者等级', 'F');
+let fameText = '默默无闻';
+if (mcFame >= 5000) fameText = '传说级';
+else if (mcFame >= 1500) fameText = '名震大陆';
+else if (mcFame >= 500) fameText = '声名远播';
+else if (mcFame >= 200) fameText = '崭露头角';
+else if (mcFame >= 50) fameText = '小有名气';
+const mcTitle = _.get(stat, '主角.冒险者信息.冒险者称号', '新人冒险者');
+const mcName = _.get(stat, '主角.基本信息.姓名', '主角');
+const currentTurn = _.get(stat, '进程.当前回合数', 0);
+_%>
+# 事件：大型事件开幕
+
+  开幕方式：<%= openingType %>
+  发生地：<%= currentCountry %> / <%= currentCity %>
+  主角状态：Lv.<%= mcLevel %> | <%= mcRank %>级冒险者 | <%= mcTitle %> | 知名度 <%= mcFame %>（<%= fameText %>）
+
+  narrative_guidance:
+<%_ if (openingType === '意外卷入') { _%>
+    - "主角在<%= currentCity %>的日常活动中，偶然目睹或卷入了一场不该看到的场景。描写主角无意间撞见的瞬间——可能是某条暗巷中的秘密交易、某个深夜在公会角落里听到的低声对话、或一次看似普通的委托背后隐藏的异常——当时主角并未意识到这只是一场更大阴谋的冰山一角。本回合以主角感受到事情并不简单的隐约不安收束，不揭露事件全貌。"
+<%_ } else if (openingType === '受人所托') { _%>
+    - "一位NPC（可以是已有NPC或事件专属的新面孔）找到了主角，神情严肃或慌张地请求帮助。描写对方找到主角的场景——在公会门前拦住、在酒馆角落低声开口、或在旅店敲门——对方简短说明了正面临某种困境或危险，但似乎有所保留，不愿意直接说出全部真相。主角可以选择答应或暂时搁置，但事件已经开了头。"
+<%_ } else if (openingType === '匿名密信') { _%>
+    - "主角在不知情的情况下收到了一封匿名密信——可能塞在房门缝隙、被人悄悄放在酒馆的酒杯下、或由一只陌生的信鸽送到肩头。密信内容简短而含糊——提及某个地点、某个人名、或某个日期——主角意识到写信者知道一些不该知道的事，而且有意将主角牵扯进来。本回合以主角握着信纸陷入沉思收束。"
+<%_ } else { _%>
+    - "主角在<%= currentCity %>的街巷中目击了一起异常事件——不是直接的暴力犯罪，而是某种不合常理的怪异场景。可能是一群穿着统一暗色斗篷的人从同一扇门鱼贯而出、公会的任务板上有人悄悄贴上了一张特殊的通告随即离去、或城镇的某个地点出现了不寻常的戒严或骚动。事件本身尚未揭示全貌，但已经足以让主角意识到有什么大事正在酝酿。"
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "AI在后台（变量中）设计本次大型事件的真相和初始线索，正式激活事件："
+    设计原则:
+      - "事件规模与主角当前等级（Lv.<%= mcLevel %>）和知名度（<%= mcFame %>）相匹配"
+      - "事件应与<%= currentCountry %> / <%= currentCity %>的地域特色和当前政局相关"
+      - "真相必须是一条完整的阴谋描述（如'霜境王国冬炉议会第三席正在秘密走私魔晶矿石给金沙帝国以换取对王位继承的支持'）"
+      - "已知线索仅设置1-2条不完整的碎片信息，不足以推断出真相"
+      - "以上设计仅写入变量，禁止在叙事中让主角知晓（已知线索除外）"
+    patch_code: |
+      [
+        { "op": "replace", "path": "/大型事件/名称", "value": "[AI设计的事件名称，8-15字，如'冬炉议会的秘约']" },
+        { "op": "replace", "path": "/大型事件/真相", "value": "[AI设计的完整真相描述]" },
+        { "op": "replace", "path": "/大型事件/已知线索", "value": ["[线索1：模糊碎片]", "[线索2：模糊碎片]"] },
+        { "op": "replace", "path": "/大型事件/进行中", "value": true },
+        { "op": "replace", "path": "/大型事件/开始回合", "value": <%= currentTurn %> },
+        { "op": "replace", "path": "/大型事件/真相揭露", "value": false },
+        { "op": "remove", "path": "/系统状态/待处理事件/大型事件开幕" }
+      ]
+<%_ } _%>

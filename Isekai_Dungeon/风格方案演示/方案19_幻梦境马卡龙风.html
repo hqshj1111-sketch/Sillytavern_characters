@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案19：幻梦境马卡龙风 | Dreamy Pastel Macaron</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #14101a;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Sans SC', 'Quicksand', sans-serif;
+    color: #c0b0d0;
+    font-size: 14px;
+    line-height: 1.7;
+    background-image:
+      radial-gradient(ellipse at 30% 30%, rgba(255,180,200,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 70%, rgba(180,200,255,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(200,255,200,0.04) 0%, transparent 60%);
+  }
+
+  .app { width: 100%; max-width: 660px; }
+
+  .dream-frame {
+    background: linear-gradient(180deg, rgba(30,22,40,0.85), rgba(20,14,30,0.9));
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(200,160,220,0.15);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(160,100,200,0.1);
+  }
+  .dream-frame::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    pointer-events: none;
+    z-index: 2;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,150,200,0.08) 0%, transparent 30%),
+      radial-gradient(circle at 80% 20%, rgba(150,200,255,0.06) 0%, transparent 30%),
+      radial-gradient(circle at 40% 70%, rgba(200,255,200,0.05) 0%, transparent 30%),
+      radial-gradient(circle at 60% 80%, rgba(255,200,150,0.06) 0%, transparent 30%);
+    animation: dream-shift 20s ease infinite;
+  }
+  @keyframes dream-shift {
+    0%,100% { transform: translate(0, 0); }
+    25% { transform: translate(2%, -1%); }
+    50% { transform: translate(-1%, 2%); }
+    75% { transform: translate(-2%, -2%); }
+  }
+
+  .dream-header {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    padding: 20px 20px 8px;
+  }
+  .dream-header .cloud-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 18px;
+  }
+  .dream-header .cloud { opacity: 0.4; }
+  .dream-header .cloud:nth-child(1) { color: #ffb0d0; animation: float 3s ease infinite; }
+  .dream-header .cloud:nth-child(2) { color: #b0d0ff; animation: float 3.5s ease 0.3s infinite; }
+  .dream-header .cloud:nth-child(3) { color: #d0ffb0; animation: float 3.2s ease 0.6s infinite; }
+  .dream-header .cloud:nth-child(4) { color: #ffd0b0; animation: float 3.8s ease 0.9s infinite; }
+  .dream-header .cloud:nth-child(5) { color: #d0b0ff; animation: float 3.4s ease 1.2s infinite; }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .dream-header h1 {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    color: #e0c8f0;
+    text-shadow: 0 0 30px rgba(200,160,220,0.3);
+  }
+  .dream-header .lullaby {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 10px;
+    color: #9070a0;
+    letter-spacing: 5px;
+    margin-top: 2px;
+  }
+
+  .candy-divider {
+    height: 10px;
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .candy-divider .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+  .candy-divider .dot:nth-child(1) { background: #ffb0d0; }
+  .candy-divider .dot:nth-child(2) { background: #b0d0ff; }
+  .candy-divider .dot:nth-child(3) { background: #d0ffb0; }
+  .candy-divider .dot:nth-child(4) { background: #ffd0b0; }
+  .candy-divider .dot:nth-child(5) { background: #d0b0ff; }
+
+  .marshmallow-panel {
+    position: relative;
+    z-index: 3;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(40,30,55,0.3);
+    border: 1px solid rgba(200,160,220,0.12);
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+  }
+  .marshmallow-panel .panel-label {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: #d0b0e8;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label .kiss {
+    font-size: 14px;
+    opacity: 0.7;
+  }
+
+  .candy-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .candy-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(50,40,65,0.25);
+    border: 1px solid rgba(200,160,220,0.08);
+    border-radius: 10px;
+  }
+  .candy-stat .heart {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .heart.hp { background: rgba(255,150,180,0.15); color: #ffa0c0; }
+  .heart.mp { background: rgba(150,180,255,0.15); color: #a0c0ff; }
+  .heart.sp { background: rgba(255,210,150,0.15); color: #ffd0a0; }
+  .heart.exp { background: rgba(150,255,180,0.15); color: #a0ffc0; }
+  .candy-stat .body { flex: 1; min-width: 0; }
+  .candy-stat .head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-bottom: 3px;
+  }
+  .head .tag { color: #9070a0; font-family: 'Quicksand', sans-serif; }
+  .head .val { color: #c0b0d0; font-weight: 500; }
+  .sweet-bar {
+    height: 6px;
+    background: rgba(30,20,40,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .sweet-fill { height: 100%; border-radius: 3px; }
+  .sweet-fill.hp { background: linear-gradient(90deg, #ff90b0, #ffb0d0); }
+  .sweet-fill.mp { background: linear-gradient(90deg, #90b0ff, #b0d0ff); }
+  .sweet-fill.sp { background: linear-gradient(90deg, #ffc090, #ffd8b0); }
+  .sweet-fill.exp { background: linear-gradient(90deg, #90ffb0, #b0ffd0); }
+
+  .candy-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .candy-attr {
+    text-align: center;
+    min-width: 48px;
+    padding: 6px 4px;
+    background: rgba(50,40,65,0.2);
+    border: 1px solid rgba(200,160,220,0.08);
+    border-radius: 8px;
+  }
+  .candy-attr .icon { font-size: 14px; opacity: 0.7; display: block; }
+  .candy-attr .val {
+    font-size: 14px;
+    color: #d0c0e0;
+    font-weight: 600;
+    font-family: 'Quicksand', sans-serif;
+  }
+  .candy-attr .key {
+    font-size: 7px;
+    color: #806090;
+    letter-spacing: 2px;
+    font-family: 'Quicksand', sans-serif;
+  }
+
+  .dream-text {
+    margin: 6px 14px;
+    padding: 18px 22px;
+    background: rgba(40,30,55,0.2);
+    border: 1px solid rgba(200,160,220,0.08);
+    border-radius: 12px;
+    border-left: 3px solid rgba(255,150,200,0.3);
+    position: relative;
+    z-index: 3;
+  }
+  .dream-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #9080a0;
+    font-weight: 300;
+  }
+  .dream-text p:last-child { margin-bottom: 0; }
+  .dream-text .pink { color: #e0a0c0; }
+  .dream-text .blue { color: #a0c0e0; }
+
+  .fluffy-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .fluffy-btn {
+    font-family: 'Noto Sans SC', 'Quicksand', sans-serif;
+    font-size: 12px;
+    background: rgba(50,40,65,0.25);
+    border: 1px solid rgba(200,160,220,0.1);
+    color: #a090b0;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 8px;
+    font-weight: 400;
+  }
+  .fluffy-btn:hover {
+    background: rgba(60,50,75,0.3);
+    border-color: rgba(200,160,220,0.3);
+    color: #d0c0e0;
+  }
+  .fluffy-btn.primary {
+    border-color: rgba(200,160,220,0.3);
+    color: #d0c0e0;
+  }
+
+  .pouch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .pouch-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(50,40,65,0.15);
+    border: 1px solid rgba(200,160,220,0.06);
+    border-radius: 8px;
+    font-size: 11px;
+  }
+  .pouch-item .type { color: #806090; font-size: 9px; font-family: 'Quicksand', sans-serif; }
+  .pouch-item .name { color: #b0a0c0; }
+
+  .ribbon-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .ribbon {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(200,160,220,0.06);
+    border: 1px solid rgba(200,160,220,0.08);
+    color: #806090;
+    border-radius: 6px;
+    font-family: 'Quicksand', sans-serif;
+  }
+  .ribbon.tied {
+    background: rgba(200,160,220,0.12);
+    border-color: rgba(200,160,220,0.2);
+    color: #b090c0;
+  }
+
+  .dream-footer {
+    position: relative;
+    z-index: 3;
+    padding: 10px 20px 16px;
+    text-align: center;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 10px;
+    color: #705080;
+    letter-spacing: 3px;
+  }
+  .dream-footer .stars {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 3px;
+    font-size: 10px;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="dream-frame">
+
+    <div class="dream-header">
+      <div class="cloud-row">
+        <span class="cloud">☁</span><span class="cloud">☁</span><span class="cloud">☁</span><span class="cloud">☁</span><span class="cloud">☁</span>
+      </div>
+      <h1>异 世 界 地 下 城</h1>
+      <div class="lullaby">Isekai Dungeon · Reverie</div>
+    </div>
+
+    <div class="candy-divider">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </div>
+
+    <div class="marshmallow-panel">
+      <div class="panel-label"><span class="kiss">💖</span> 甜 梦 状 态</div>
+      <div class="candy-stats">
+        <div class="candy-stat">
+          <div class="heart hp">♥</div>
+          <div class="body">
+            <div class="head"><span class="tag">生命</span><span class="val">78 / 100</span></div>
+            <div class="sweet-bar"><div class="sweet-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="candy-stat">
+          <div class="heart mp">✦</div>
+          <div class="body">
+            <div class="head"><span class="tag">魔力</span><span class="val">54 / 100</span></div>
+            <div class="sweet-bar"><div class="sweet-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="candy-stat">
+          <div class="heart sp">⚔</div>
+          <div class="body">
+            <div class="head"><span class="tag">体力</span><span class="val">90 / 100</span></div>
+            <div class="sweet-bar"><div class="sweet-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="candy-stat">
+          <div class="heart exp">⏫</div>
+          <div class="body">
+            <div class="head"><span class="tag">经验</span><span class="val">350 / 1000</span></div>
+            <div class="sweet-bar"><div class="sweet-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="candy-attrs">
+        <div class="candy-attr"><span class="icon">⚔</span><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="candy-attr"><span class="icon">🛡</span><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="candy-attr"><span class="icon">⚡</span><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="candy-attr"><span class="icon">✧</span><div class="val">30</div><div class="key">INT</div></div>
+        <div class="candy-attr"><span class="icon">☘</span><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="candy-attr"><span class="icon">◎</span><div class="val">1250</div><div class="key">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="dream-text">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="pink">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="pink">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="blue">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="pink">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="marshmallow-panel">
+      <div class="panel-label"><span class="kiss">💖</span> 幻 梦 抉 择</div>
+      <div class="fluffy-actions">
+        <button class="fluffy-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="fluffy-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="fluffy-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="fluffy-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="marshmallow-panel">
+      <div class="panel-label"><span class="kiss">💖</span> 梦 境 行 囊</div>
+      <div class="pouch-grid">
+        <div class="pouch-item"><span class="type">武器</span><span class="name">铁质长剑 Lv.3</span></div>
+        <div class="pouch-item"><span class="type">防具</span><span class="name">皮甲 Lv.2</span></div>
+        <div class="pouch-item"><span class="type">饰品</span><span class="name">冒险者徽章</span></div>
+        <div class="pouch-item"><span class="type">消耗</span><span class="name">回复药水 ×3</span></div>
+      </div>
+      <div class="ribbon-tags">
+        <span class="ribbon tied">触手紧身衣·共生期</span>
+        <span class="ribbon tied">蜕生项圈·中期</span>
+        <span class="ribbon">影子分身·无心智</span>
+        <span class="ribbon">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="dream-footer">
+      <div class="stars">✦ · ❀ · ✦ · ❀ · ✦</div>
+      <div>梦幻地下城第三层 · 阿斯特大陆 · 黄昏 · 第十二梦</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

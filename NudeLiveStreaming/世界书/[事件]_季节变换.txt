@@ -1,0 +1,37 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+
+  if (events['季节变换事件'] && currentPhase === '日常阶段') {
+    const seasonChange = events['季节变换事件'];
+    const seasonMap = {
+      '冬到春': { from: '冬', to: '春', desc: '残雪消融，枝头冒出嫩绿的新芽。空气褪去刺骨的寒意，裹着泥土与花苞的清甜悄然涌入世界。', vibe: '万物复苏，空气中弥漫着暧昧的萌动。' },
+      '春到夏': { from: '春', to: '夏', desc: '蝉鸣初响，阳光变得炽烈而持久。热浪将空气蒸得粘稠，肌肤渗出细密的汗珠。', vibe: '温度与欲望一同飙升，裸露的冲动在燥热中滋长。' },
+      '夏到秋': { from: '夏', to: '秋', desc: '蝉鸣渐息，风里夹杂了第一丝凉意。天空变得高远，黄昏比往日来得更早。', vibe: '燥热沉淀为慵懒的暧昧，凉意反而让肌肤更渴望触碰。' },
+      '秋到冬': { from: '秋', to: '冬', desc: '寒风凛冽，枯叶被卷起又零落。天空灰蒙蒙的，呼吸都化作白雾。', vibe: '严寒让裸露变成一种大胆的挑逗，每一次暴露都是对温度的挑衅。' }
+    };
+    const seasonInfo = seasonMap[seasonChange] || { from: '上季', to: '下季', desc: '季节无声轮转，世界披上新的色彩。', vibe: '时间流逝，不变的是身体对快感的渴求。' };
+    const isStreamer = _.get(stat, '主角.主播信息.直播总次数', 0) > 0;
+_%>
+# 事件：季节变换
+season_change:
+  event_name: "季节变换 - <%= seasonInfo.from %>入<%= seasonInfo.to %>"
+  from_season: "<%= seasonInfo.from %>"
+  to_season: "<%= seasonInfo.to %>"
+  environment_change: "<%= seasonInfo.desc %>"
+  season_vibe: "<%= seasonInfo.vibe %>"
+
+  narrative_guidance:
+    - "季节从<%= seasonInfo.from %>迈入<%= seasonInfo.to %>，世界的风景悄然换上新装。<%= seasonInfo.desc %>"
+    - "描写主角感知季节更迭的瞬间——切换着装时的新衣触感、窗外光线的变化、空气中陌生的气味。"
+
+  mandatory_data_sync:
+    instruction: "季节变迁展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/季节变换事件" }
+      ]
+
+<%_ } } _%>

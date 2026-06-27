@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>方案37：二之国吉卜力风 | Ni no Kuni Ghibli</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  body{background:#0e1016;display:flex;justify-content:center;align-items:flex-start;padding:12px;font-family:'Noto Serif SC',serif;color:#4a3020;font-size:16px}
+
+  /* ═══ 书本外套：容纳书本 + 溢出的丝带 ═══ */
+  .book-sleeve{width:100%;max-width:720px;position:relative;aspect-ratio:3/3.2}
+
+  .ghibli-book{
+    background:rgba(255,252,242,.92);border-radius:20px;
+    padding:22px 36px 18px 32px;
+    position:absolute;inset:0;overflow:hidden;
+    box-shadow:0 10px 50px rgba(0,0,0,.15),0 2px 12px rgba(0,0,0,.06);
+    display:flex;flex-direction:column;
+  }
+  .ghibli-book::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 85% 10%,rgba(255,220,150,.2) 0%,transparent 45%),radial-gradient(ellipse at 15% 80%,rgba(150,200,220,.16) 0%,transparent 45%),radial-gradient(ellipse at 50% 50%,rgba(220,240,200,.12) 0%,transparent 55%)}
+  .ghibli-book::after{content:'';position:absolute;inset:12px;pointer-events:none;z-index:0;border:2px solid rgba(180,140,80,.18);border-radius:12px}
+  .content{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;min-height:0}
+
+  /* ═══ 标题 ═══ */
+  .ghibli-header{text-align:center;margin-bottom:6px;flex-shrink:0}
+  .ghibli-header .star-dust{display:flex;justify-content:center;gap:8px;margin-bottom:4px;font-size:13px}
+  .ghibli-header .star-dust span{opacity:.45}
+  .ghibli-header .star-dust span:nth-child(1){color:#e0b860;animation:float-star 3s ease infinite}
+  .ghibli-header .star-dust span:nth-child(2){color:#80b8d0;animation:float-star 3.5s ease .3s infinite}
+  .ghibli-header .star-dust span:nth-child(3){color:#b8d888;animation:float-star 3.2s ease .6s infinite}
+  .ghibli-header .star-dust span:nth-child(4){color:#e0a0c0;animation:float-star 3.8s ease .9s infinite}
+  .ghibli-header .star-dust span:nth-child(5){color:#d0b870;animation:float-star 3.1s ease 1.2s infinite}
+  @keyframes float-star{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-5px) rotate(8deg)}}
+  .ghibli-header h1{font-size:26px;font-weight:600;letter-spacing:5px;color:#5a3820;display:inline}
+  .ghibli-header .sub{font-size:11px;color:#8a7060;letter-spacing:3px;font-style:italic;margin-left:10px}
+
+  .hand-drawn-divider{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 10px;flex-shrink:0}
+  .hand-drawn-divider .wiggle-line{flex:0 1 70px;height:1px;background:linear-gradient(90deg,transparent,rgba(180,140,80,.25),transparent)}
+  .hand-drawn-divider .spark{font-size:11px;color:rgba(180,140,80,.5)}
+
+  /* ═══ HUD 条 ═══ */
+  .hud-strip{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding:8px 0;border-top:1px solid rgba(180,140,80,.12);border-bottom:1px solid rgba(180,140,80,.12);flex-shrink:0}
+  .hud-bars{display:flex;gap:12px;flex:1}
+  .hud-bar{flex:1;min-width:0}
+  .hud-bar .hb-head{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+  .hud-bar .hb-head .tag{color:#7a5a3a}
+  .hud-bar .hb-head .val{color:#5a3a20;font-weight:600;font-size:12px}
+  .hud-bar .hb-track{height:5px;background:rgba(200,170,130,.12);border-radius:2px;overflow:hidden}
+  .hb-fill{height:100%;border-radius:2px}
+  .hb-fill.hp{background:linear-gradient(90deg,#e0a090,#f0c0b0)}
+  .hb-fill.mp{background:linear-gradient(90deg,#90b0e0,#b0c8f0)}
+  .hb-fill.sp{background:linear-gradient(90deg,#c0d090,#d8e8b0)}
+  .hb-fill.exp{background:linear-gradient(90deg,#e0d090,#f0e0b0)}
+  .hud-attrs{display:flex;gap:6px;flex-shrink:0}
+  .hud-attrs span{font-size:12px;color:#8a7060;white-space:nowrap}
+  .hud-attrs span b{color:#5a3a20;font-size:13px;margin:0 3px}
+
+  /* ═══ 正文滚动区（各页面共享） ═══ */
+  .ghibli-text{
+    background:rgba(255,250,238,.45);border:1px solid rgba(180,140,80,.1);
+    border-radius:12px;padding:0;margin-bottom:12px;
+    flex:1;overflow-y:auto;min-height:0;position:relative;
+    scrollbar-width:thin;scrollbar-color:rgba(180,140,80,.25) transparent;
+  }
+  .ghibli-text::-webkit-scrollbar{width:6px}
+  .ghibli-text::-webkit-scrollbar-track{background:transparent}
+  .ghibli-text::-webkit-scrollbar-thumb{background:rgba(180,140,80,.2);border-radius:3px}
+
+  /* ═══ 各页面面板 ═══ */
+  .page-panel{display:none;padding:18px 24px;flex-direction:column;gap:10px;
+    animation:fadeIn .4s ease}
+  .page-panel p{margin-bottom:12px;font-size:16px;line-height:1.95;color:#4a3828;text-indent:2em;text-align:justify}
+  .page-panel p:last-child{margin-bottom:0}
+  .page-panel .gold{color:#a07030;font-weight:500}
+  .page-panel .warm{color:#b86040;font-weight:500}
+  .page-panel .sep{text-align:center;margin:8px 0 10px;text-indent:0;font-size:12px;color:rgba(180,140,80,.4);letter-spacing:3px}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* 地图页专用 */
+  .map-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .map-card{background:rgba(255,250,240,.6);border:1px solid rgba(180,140,80,.12);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.8}
+  .map-card .card-tag{font-size:9px;color:#8a7060;letter-spacing:2px;margin-bottom:4px;border-bottom:1px dotted rgba(180,140,80,.15);padding-bottom:3px}
+  .map-card .card-val{color:#4a3828}
+  /* 档案页 */
+  .archive-table{font-size:13px;line-height:2;color:#4a3828}
+  .archive-table .ar-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted rgba(180,140,80,.08)}
+  .archive-table .ar-row .ar-tag{color:#8a7060;font-size:11px}
+  /* 战斗页 */
+  .combat-enemy{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(220,180,160,.15);border:1px solid rgba(200,120,80,.15);border-radius:10px;margin-bottom:10px}
+  .combat-enemy .enemy-avatar{width:44px;height:44px;border-radius:50%;background:rgba(180,100,60,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .combat-enemy .enemy-info{flex:1;font-size:12px;line-height:1.7}
+  .combat-enemy .enemy-info .enemy-name{font-weight:600;color:#6b3a20}
+  .combat-log{font-size:12px;line-height:1.9;color:#5a4a38;padding:8px 0}
+  .combat-log .log-entry{padding:2px 0;border-bottom:1px dotted rgba(180,140,80,.06)}
+  .combat-log .log-entry .log-dmg{color:#b85050;font-weight:500}
+
+  /* ═══ 行动（每页面不同） ═══ */
+  .ghibli-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;flex-shrink:0}
+  .ghibli-act{font-family:inherit;font-size:13px;background:rgba(255,250,240,.5);border:1px solid rgba(180,140,80,.16);border-radius:10px;color:#5a3a20;padding:11px 16px;cursor:pointer;transition:.2s;text-align:left}
+  .ghibli-act:hover{background:rgba(255,240,220,.65);border-color:rgba(180,130,60,.28);box-shadow:0 2px 12px rgba(180,140,80,.06)}
+  .ghibli-act.primary{background:rgba(255,240,218,.65);border-color:rgba(180,130,60,.28)}
+  /* 各页面行动区：未选中时隐藏 */
+  .action-set{display:none}
+
+  /* ═══ 装备 ═══ */
+  .ghibli-equip{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0}
+  .ge-items{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .ge-items span{font-size:11px;padding:3px 10px;background:rgba(255,250,238,.45);border:1px solid rgba(180,140,80,.1);border-radius:6px;color:#8a7060}
+  .ge-items span.ge-name{color:#5a3a20}
+  .ghibli-tags{display:flex;gap:5px;flex-wrap:wrap}
+  .ghibli-tags span{font-size:10px;padding:3px 9px;border:1px solid rgba(180,140,80,.14);border-radius:5px;color:#8a7060;background:rgba(255,248,235,.4)}
+  .ghibli-tags span.on{border-color:rgba(200,100,60,.2);color:#a06040;background:rgba(255,240,228,.5)}
+
+  .ghibli-footer{display:flex;justify-content:space-between;padding:5px 0 0;border-top:1px solid rgba(180,140,80,.08);font-size:10px;color:#8a7060;font-style:italic;letter-spacing:1px;flex-shrink:0}
+
+  /* ═══════════════════════════════════════════
+     侧边丝带标签
+     ═══════════════════════════════════════════ */
+  .ribbon-set{position:absolute;top:0;bottom:0;right:0;width:0;z-index:10}
+  .ribbon-tab{
+    position:absolute;right:-20px;
+    width:54px;height:38px;
+    cursor:pointer;transition:right .3s ease,filter .3s ease;
+    display:flex;align-items:center;justify-content:center;
+    clip-path:polygon(0 0,100% 0,100% 100%,40% 80%,0 100%);
+    box-shadow:-2px 2px 6px rgba(0,0,0,.12);
+  }
+  .ribbon-tab:hover{right:-28px;filter:brightness(1.1)}
+  .ribbon-tab .rib-text{
+    font-size:8px;color:#fff;letter-spacing:2px;font-weight:600;
+    writing-mode:vertical-rl;padding-right:8px;
+    text-shadow:0 1px 1px rgba(0,0,0,.2);
+  }
+  /* 四条丝带颜色 */
+  .ribbon-tab.r-narrative{top:16%;background:linear-gradient(180deg,#c89840,#a87830);}
+  .ribbon-tab.r-map{top:34%;background:linear-gradient(180deg,#7098b8,#507888);}
+  .ribbon-tab.r-archive{top:52%;background:linear-gradient(180deg,#7a9a60,#5a7a40);}
+  .ribbon-tab.r-combat{top:70%;background:linear-gradient(180deg,#b85050,#983838);}
+  /* 选中状态：拉出更多 + 微光 */
+  #pg-narrative:checked ~ .ribbon-set .r-narrative,
+  #pg-map:checked ~ .ribbon-set .r-map,
+  #pg-archive:checked ~ .ribbon-set .r-archive,
+  #pg-combat:checked ~ .ribbon-set .r-combat{
+    right:-32px;filter:brightness(1.15) drop-shadow(0 0 6px rgba(180,140,80,.3));
+  }
+
+  /* ═══════════════════════════════════════════
+     CSS 页面切换
+     ═══════════════════════════════════════════ */
+  #pg-narrative:checked ~ .ghibli-book .content .ghibli-text .narrative-page,
+  #pg-map:checked ~ .ghibli-book .content .ghibli-text .map-page,
+  #pg-archive:checked ~ .ghibli-book .content .ghibli-text .archive-page,
+  #pg-combat:checked ~ .ghibli-book .content .ghibli-text .combat-page{
+    display:flex;
+  }
+  #pg-narrative:checked ~ .ghibli-book .content .actions-叙事,
+  #pg-map:checked ~ .ghibli-book .content .actions-地图,
+  #pg-archive:checked ~ .ghibli-book .content .actions-档案,
+  #pg-combat:checked ~ .ghibli-book .content .actions-战斗{
+    display:grid;
+  }
+
+  /* 标题根据页面变色 */
+  #pg-narrative:checked ~ .ghibli-book .content .ghibli-header h1{color:#5a3820}
+  #pg-map:checked ~ .ghibli-book .content .ghibli-header h1{color:#3a5060}
+  #pg-archive:checked ~ .ghibli-book .content .ghibli-header h1{color:#3a5020}
+  #pg-combat:checked ~ .ghibli-book .content .ghibli-header h1{color:#602020}
+  .ghibli-header h1{transition:color .4s ease}
+</style>
+</head>
+<body>
+
+<!-- ═══ 页面选择 radio（隐藏） ═══ -->
+<input type="radio" name="page" id="pg-narrative" checked style="display:none">
+<input type="radio" name="page" id="pg-map" style="display:none">
+<input type="radio" name="page" id="pg-archive" style="display:none">
+<input type="radio" name="page" id="pg-combat" style="display:none">
+
+<div class="book-sleeve">
+
+  <!-- ═══ 丝带标签 ═══ -->
+  <div class="ribbon-set">
+    <label class="ribbon-tab r-narrative" for="pg-narrative"><span class="rib-text">📜叙事</span></label>
+    <label class="ribbon-tab r-map" for="pg-map"><span class="rib-text">🗺地图</span></label>
+    <label class="ribbon-tab r-archive" for="pg-archive"><span class="rib-text">📋档案</span></label>
+    <label class="ribbon-tab r-combat" for="pg-combat"><span class="rib-text">⚔战斗</span></label>
+  </div>
+
+  <div class="ghibli-book"><div class="content">
+
+      <div class="ghibli-header">
+        <div class="star-dust"><span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span></div>
+        <h1>异 世 界 地 下 城</h1><span class="sub">~ Isekai Dungeon ~</span>
+      </div>
+
+      <div class="hand-drawn-divider">
+        <span class="wiggle-line"></span><span class="spark">✦</span><span class="wiggle-line"></span>
+        <span class="spark">✧</span>
+        <span class="wiggle-line"></span><span class="spark">✦</span><span class="wiggle-line"></span>
+      </div>
+
+      <div class="hud-strip">
+        <div class="hud-bars">
+          <div class="hud-bar"><div class="hb-head"><span class="tag">生命</span><span class="val">78/100</span></div><div class="hb-track"><div class="hb-fill hp" style="width:78%"></div></div></div>
+          <div class="hud-bar"><div class="hb-head"><span class="tag">魔力</span><span class="val">54/100</span></div><div class="hb-track"><div class="hb-fill mp" style="width:54%"></div></div></div>
+          <div class="hud-bar"><div class="hb-head"><span class="tag">体力</span><span class="val">90/100</span></div><div class="hb-track"><div class="hb-fill sp" style="width:90%"></div></div></div>
+          <div class="hud-bar"><div class="hb-head"><span class="tag">经验</span><span class="val">35%</span></div><div class="hb-track"><div class="hb-fill exp" style="width:35%"></div></div></div>
+        </div>
+        <div class="hud-attrs">
+          <span>⚔<b>42</b></span> <span>🛡<b>28</b></span> <span>⚡<b>35</b></span> <span>✧<b>30</b></span> <span>☘<b>18</b></span> <span>◎<b>1250</b></span>
+        </div>
+      </div>
+
+      <div class="ghibli-text">
+
+        <!-- ═══ 叙事页 ═══ -->
+        <div class="page-panel narrative-page">
+          <p>你推开沉重的<span class="gold">石门</span>，一股陈旧而潮湿的气息扑面而来。腐朽的甬道中悬浮着星星点点的<span class="gold">魔素</span>微光——那是地下城深处溢出的魔力残留，像萤火虫一样在黑暗中缓缓飘动。微光映照出两侧石壁上斑驳的青苔与古老的凿痕，静谧得几乎能听见自己心跳的回声。</p>
+          <p>你向前迈出几步，脚下的石板微微凹陷，传来沉闷的回响。就在此时——甬道深处爆出一阵尖锐的<span class="warm">嘶吼</span>，打破了令人窒息的沉默。三道矮小的黑影从前方石柱后窜出，锈迹斑斑的短刀在魔素的微光中闪烁着冷酷的寒芒。<span class="warm">三只哥布林</span>——皮肤粗糙泛灰，尖耳紧贴着头颅两侧，猩红的眼珠在昏暗中格外醒目。</p>
+          <div class="sep">❦</div>
+          <p>你本能地握紧了手中的<span class="gold">铁质长剑</span>，剑柄传来的熟悉触感让呼吸沉稳了几分。脚下魔力纹路微微亮起——那是你体内魔素与四周环境产生共鸣的标记，一圈圈淡蓝色的光纹沿着靴底向外扩散。</p>
+          <p>左侧那只体型稍大的头领模样的家伙从喉咙里发出低沉的呜咽声，它的眼中闪烁着<span class="warm">不寻常的红光</span>——不是单纯的敌意，而是被高浓度魔素侵蚀后产生的异变。它脚下的石板已爬满了扭曲的青黑色<span class="gold">魔纹</span>，说明这片区域可能曾是某个高阶魔物的领地——或者说，封印之地。</p>
+          <div class="sep">❦</div>
+          <p>甬道两侧的浮雕在魔素微光中若隐若现。那些古老而精细的石刻描绘着<span class="gold">魅魔女王</span>被层层锁链封印于深渊的场景——双翼展开遮蔽了整片穹顶，长发如活蛇般在肩头游移。浮雕下方铭刻着一行古语：</p>
+          <p>「沉沦于此者，终将直面镜中真我。」</p>
+          <p>随着你越深入这座地下城，甬道中弥漫的那种<span class="warm">若有若无的甜香</span>便越发浓郁。它不同于花卉或香料的芬芳，更像是一种能够穿透衣物、直接浸润皮肤的热度。你的身体深处某根弦被轻轻拨动——轻微的悸动沿着脊背蔓延，迫使你在每一步间都要刻意稳住呼吸。</p>
+          <p>哥布林们没有给你继续思索的时间。头领发出一声刺耳的尖叫，三只怪物同时发起了冲锋。战斗的钟声，在这座沉默千年的地下城中，终于被敲响了。</p>
+        </div>
+
+        <!-- ═══ 地图页 ═══ -->
+        <div class="page-panel map-page">
+          <p style="text-indent:0;font-size:14px;margin-bottom:8px;color:#8a7060">你摊开冒险者公会发放的羊皮地图。泛黄的纸面上，墨水绘制的线条勾勒出这座地下城的已知区域。</p>
+          <div class="map-row">
+            <div class="map-card">
+              <div class="card-tag">当前楼层</div>
+              <div class="card-val"><b>第三层</b> · 封印回廊</div>
+            </div>
+            <div class="map-card">
+              <div class="card-tag">所在地区</div>
+              <div class="card-val">阿斯特大陆 · <b>龙脊联邦</b></div>
+            </div>
+            <div class="map-card">
+              <div class="card-tag">楼层主题</div>
+              <div class="card-val">远古神殿遗迹 · 魔素高浓度区</div>
+            </div>
+            <div class="map-card">
+              <div class="card-tag">已探索</div>
+              <div class="card-val">入口 → 前庭 → 回廊西翼 ★</div>
+            </div>
+            <div class="map-card">
+              <div class="card-tag">前方路径</div>
+              <div class="card-val">回廊东翼 · <span style="color:#b85050">魔纹密集区</span></div>
+            </div>
+            <div class="map-card">
+              <div class="card-tag">未探索标记</div>
+              <div class="card-val">❓ 祭坛大厅 · ❓ 封印之扉</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ 档案页 ═══ -->
+        <div class="page-panel archive-page">
+          <p style="text-indent:0;font-size:14px;margin-bottom:8px;color:#8a7060">冒险者公会档案 · 编号 #384</p>
+          <div class="archive-table">
+            <div class="ar-row"><span class="ar-tag">冒险者等级</span><span>C · 小有名气</span></div>
+            <div class="ar-row"><span class="ar-tag">累计攻略</span><span>12 座地下城</span></div>
+            <div class="ar-row"><span class="ar-tag">总击杀数</span><span>247</span></div>
+            <div class="ar-row"><span class="ar-tag">持有金币</span><span>1,250 G</span></div>
+            <div class="ar-row"><span class="ar-tag">武器</span><span>铁质长剑 Lv.3</span></div>
+            <div class="ar-row"><span class="ar-tag">防具</span><span>皮甲 Lv.2</span></div>
+            <div class="ar-row"><span class="ar-tag">消耗品</span><span>回复药水 ×3</span></div>
+          </div>
+          <div class="sep">❦</div>
+          <p style="font-size:14px;color:#8a7060;text-indent:0;margin-bottom:4px">特殊装备</p>
+          <div class="archive-table">
+            <div class="ar-row"><span class="ar-tag">触手紧身衣</span><span>共生期 · 已觉醒</span></div>
+            <div class="ar-row"><span class="ar-tag">蜕生项圈</span><span>中期 · 成长中</span></div>
+            <div class="ar-row"><span class="ar-tag">影子分身</span><span>无心智 · 待命名</span></div>
+            <div class="ar-row"><span class="ar-tag">淫欲晶核</span><span>关闭</span></div>
+            <div class="ar-row"><span class="ar-tag">认知扭曲目镜</span><span>未持有</span></div>
+            <div class="ar-row"><span class="ar-tag">人格同化面具</span><span>未持有</span></div>
+          </div>
+        </div>
+
+        <!-- ═══ 战斗页 ═══ -->
+        <div class="page-panel combat-page">
+          <p style="text-indent:0;font-size:14px;margin-bottom:8px;color:#8a7060">当前遭遇</p>
+          <div class="combat-enemy">
+            <div class="enemy-avatar">👹</div>
+            <div class="enemy-info">
+              <div class="enemy-name">哥布林头领（魔素变异体）</div>
+              <div>Lv.8 · 攻击力 58 · 防御力 30</div>
+              <div style="font-size:10px;color:#8a7060">技能：狂乱劈斩 / 魔素咆哮</div>
+            </div>
+          </div>
+          <div class="combat-enemy">
+            <div class="enemy-avatar">👺</div>
+            <div class="enemy-info">
+              <div class="enemy-name">哥布林 ×2</div>
+              <div>Lv.4 · 攻击力 28 · 防御力 18</div>
+            </div>
+          </div>
+          <div class="sep">❦</div>
+          <p style="text-indent:0;font-size:14px;color:#8a7060;margin-bottom:4px">战斗记录</p>
+          <div class="combat-log">
+            <div class="log-entry">✦ <span class="log-dmg">-12 HP</span> 哥布林头领的狂乱劈斩击中你的左肩</div>
+            <div class="log-entry">✦ <span style="color:#b0a030">-5 SP</span> 你以防御姿态观察敌人行动</div>
+            <div class="log-entry">✦ <span style="color:#6080b0">-8 MP</span> 魔力共鸣触发——脚下魔纹扩展至半径 3 步</div>
+            <div class="log-entry">✦ <span style="color:#60b060">+10 HP</span> 蜕生项圈的再生效果微微发热</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══ 行动区（按页面） ═══ -->
+      <div class="action-set actions-叙事">
+        <div class="ghibli-actions">
+          <button class="ghibli-act primary">⚔ 挥剑斩向哥布林头领</button>
+          <button class="ghibli-act">🔥 释放火球术灼烧敌群</button>
+          <button class="ghibli-act">🛡 防御姿态，观察敌人弱点</button>
+          <button class="ghibli-act">💋 尝试魅惑其中一只哥布林</button>
+        </div>
+      </div>
+      <div class="action-set actions-地图">
+        <div class="ghibli-actions">
+          <button class="ghibli-act primary">🚶 继续向回廊东翼探索</button>
+          <button class="ghibli-act">🔍 仔细搜查祭坛大厅</button>
+          <button class="ghibli-act">📝 在地图上标注魔纹位置</button>
+          <button class="ghibli-act">🔙 退回前庭休整</button>
+        </div>
+      </div>
+      <div class="action-set actions-档案">
+        <div class="ghibli-actions">
+          <button class="ghibli-act primary">📖 翻阅冒险笔记</button>
+          <button class="ghibli-act">⚗ 检查特殊装备状态</button>
+          <button class="ghibli-act">🔧 整理背包道具</button>
+          <button class="ghibli-act">📯 查看公会任务</button>
+        </div>
+      </div>
+      <div class="action-set actions-战斗">
+        <div class="ghibli-actions">
+          <button class="ghibli-act primary">⚔ 全力攻击头领</button>
+          <button class="ghibli-act">🔥 释放火球术</button>
+          <button class="ghibli-act">🛡 防御 + 回复</button>
+          <button class="ghibli-act">🏃 尝试撤退</button>
+        </div>
+      </div>
+
+      <div class="ghibli-equip">
+        <div class="ge-items">
+          <span>武器</span><span class="ge-name">铁质长剑 Lv.3</span>
+          <span>防具</span><span class="ge-name">皮甲 Lv.2</span>
+          <span>饰品</span><span class="ge-name">冒险者徽章</span>
+          <span>消耗品</span><span class="ge-name">回复药水 ×3</span>
+        </div>
+        <div class="ghibli-tags">
+          <span class="on">触手紧身衣·共生期</span>
+          <span class="on">蜕生项圈·中期</span>
+          <span>影子分身·无心智</span>
+          <span>淫欲晶核·关闭</span>
+        </div>
+      </div>
+
+      <div class="ghibli-footer"><span>地下城 第三层</span><span>阿斯特大陆 · 龙脊联邦 · 黄昏时分</span><span>第十二回合</span></div>
+  </div></div>
+
+</div>
+</body>
+</html>

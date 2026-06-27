@@ -1,0 +1,42 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['老师温泉邀请事件'] && isDaily && !isSexActive ) {
+    const saya = _.get(stat, 'NPC数据.冰室纱耶', {});
+    const affection = parseInt(_.get(saya, '好感度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.老师温泉邀请事件', 0)) || 0;
+    const sexCount = parseInt(_.get(saya, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：温泉邀请
+event_initiator:
+  event_name: "温泉邀请"
+  character: "冰室纱耶"
+  location: "远郊 - 温泉度假村"
+  time: "9:00-12:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "纱耶发来消息，说她又在远郊温泉度假村订好了私汤。这次用的理由比上次更敷衍了——她说上次泡完皮肤变好了，想再去一次。"
+    - "主角当然知道这只是借口。上次说是泡温泉，结果大部分时间都是在房间里度过的。纱耶显然也懒得装，紧跟着又发了一条：还是上次那个房间，她已经带好了几种不同度数的酒。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整她的语气——次数越多她越直白，会直接发温泉池边脱光衣服的照片，或者说上次在温泉里那个姿势这次还想试。她已经不再费心假装这是一次普通的师生出游了。"
+    - "结尾留给主角选择：收拾东西出发、回复她说得看他时间、或调侃她说以后办温泉年卡算了。"
+    <%_ } else { _%>
+    - "纱耶发来消息，说她订好了远郊温泉度假村的房间，邀请主角一起去泡温泉并过夜。她特别强调是私汤，还说已经带上了几瓶好酒。结合好感度(<%= affection %>)，语气从轻松的师生出游到暗示性更强的私密邀约。"
+    - "结尾留给主角选择：接受邀请一同前往、先问清楚再决定、或婉拒。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/老师温泉邀请事件" }
+      ]
+
+<%_ } } _%>

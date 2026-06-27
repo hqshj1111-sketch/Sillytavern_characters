@@ -1,0 +1,71 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['羞耻度升级事件'] && currentPhase === '日常阶段' && !isSexActive) {
+    const currentShame = parseInt(_.get(stat, '主角.当前状态.羞耻度', 100)) || 100;
+
+    // 合并后的阶段获取函数，返回完整阶段信息
+    const getShameStage = (val) => {
+      if (val >= 75) return { level: 4, name: '极易羞耻', text: '任何裸露或被注视都会让他脸红心跳、手足无措，恨不得找个地缝钻进。' };
+      if (val >= 50) return { level: 3, name: '仍有羞耻', text: '已经经历了一些，但底线尚在，面对过分的要求时仍会犹豫退缩。' };
+      if (val >= 25) return { level: 2, name: '羞耻渐褪', text: '曾经让他面红耳赤的事情变得平常，内心防线正一点点消融。' };
+      return { level: 1, name: '不知羞耻', text: '羞耻心几乎荡然无存，展露身体如呼吸般自然，甚至以挑战禁忌为乐。' };
+    };
+
+    const current = getShameStage(currentShame);
+    // 羞耻度下降代表防线瓦解，前一阶段 level 为 current.level + 1，最高为4
+    const prevLevel = Math.min(4, current.level + 1);
+    const getPrevStage = (level) => {
+      if (level >= 4) return getShameStage(100); // 极易羞耻
+      if (level >= 3) return getShameStage(60); // 仍有羞耻
+      if (level >= 2) return getShameStage(35); // 羞耻渐褪
+      return getShameStage(10);                  // 不知羞耻
+    };
+    const previous = getPrevStage(prevLevel);
+
+    const getOutfitTendency = (level) => {
+        if (level === 4) return '保守着装，全身上下包裹严实，无任何裸露。';
+        if (level === 3) return '着装开始放松，偶尔选择稍短的裤装或低领上衣，但整体仍正常。';
+        if (level === 2) return '日常着装偏大胆，常穿贴身或透视材质，偶尔会不穿内衣出门。';
+        return '极度暴露，在家通常全裸，外出时常内里真空或仅披一件外套，丢垃圾等短距离活动甚至直接全裸。';
+    };
+    const previousOutfit = getOutfitTendency(prevLevel);
+    const currentOutfit = getOutfitTendency(current.level);
+
+    // 判断当前阶段
+    const isLive = _.get(stat, '直播状态.是否正在直播', false);
+    const phaseHint = isLive
+      ? "直播的镜头如同催化剂，这场蜕变的种子正是在众目睽睽之下悄然滋长。"
+      : "在日常的静谧中，主角的内心防线自顾自地崩塌，一种陌生的坦然正在心头萌生。";
+_%>
+# 事件：羞耻度蜕化
+shame_evolution:
+  event_name: "羞耻度蜕化"
+  current_shame_value: <%= currentShame %>
+  prior_stage: "<%= previous.name %>"
+  new_stage: "<%= current.name %>"
+  prior_stage_text: "<%= previous.text %>"
+  new_stage_text: "<%= current.text %>"
+  focus: "内心的羞耻阈值正发生迁移，对暴露的容忍度在不知不觉中改变。"
+  
+  narrative_guidance:
+    - "主角刚刚经历了一次羞耻度的蜕变。他的羞耻阶段已从【<%= previous.name %>】转变为【<%= current.name %>】。"
+    - "【变化前】：<%= previous.text %>"
+    - "【变化后】：<%= current.text %>"
+    - "<%= phaseHint %>"
+    - "请在叙事中自然地展现这种心态的转变和对言行的影响。"
+    - “请展现蜕化前后着装倾向的转变——升级前（<%= previous.name %>）倾向为「<%= previousOutfit %>」，升级后（<%= current.name %>）倾向变为「<%= currentOutfit %>」。并在叙事中自然地展现这种着装暴露程度的变化。”
+
+  mandatory_data_sync:
+    instruction: "若羞耻度蜕化已在叙事中体现，在 <JSONPatch> 块中移除本事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/羞耻度升级事件" }
+      ]
+
+<%_ } } _%>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案20：上古石碑遗迹风 | Ancient Stone Relic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a08;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', serif;
+    color: #b0a890;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(ellipse at 40% 20%, rgba(120,100,60,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(100,80,50,0.04) 0%, transparent 50%);
+  }
+
+  .app { width: 100%; max-width: 660px; }
+
+  .relic-frame {
+    background: linear-gradient(180deg, #12100c 0%, #0c0a08 100%);
+    border: 3px solid #3a3028;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 4px 30px rgba(0,0,0,0.6),
+      inset 0 0 60px rgba(40,30,20,0.2);
+  }
+  /* 石头风化纹理 */
+  .relic-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(100,80,50,0.05) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 30%, rgba(80,60,40,0.04) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% 80%, rgba(90,70,45,0.05) 0%, transparent 40%);
+  }
+  /* 凿痕边 */
+  .relic-frame::after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(100,80,50,0.12);
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  .stele-header {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 18px 20px 8px;
+  }
+  .stele-header .chisel-marks {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #5a4a30;
+    letter-spacing: 4px;
+  }
+  .stele-header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: #c0a870;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+  .stele-header .era {
+    font-size: 9px;
+    color: #5a4a30;
+    letter-spacing: 6px;
+    margin-top: 4px;
+  }
+
+  .crack-divider {
+    height: 8px;
+    position: relative;
+    z-index: 5;
+    background: linear-gradient(90deg, transparent 10%, #4a3820 20%, #3a2a18 50%, #4a3820 80%, transparent 90%);
+    opacity: 0.4;
+    margin: 2px 0;
+  }
+
+  .stele-panel {
+    position: relative;
+    z-index: 5;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(18,14,10,0.5);
+    border: 1px solid rgba(60,45,30,0.3);
+    box-shadow: inset 0 0 20px rgba(30,20,10,0.2);
+  }
+  .stele-panel .panel-label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #a08860;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+  }
+  .panel-label .rune-stone {
+    width: 14px; height: 14px;
+    background: rgba(120,90,40,0.3);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+    border: 1px solid rgba(140,110,60,0.3);
+  }
+
+  .carved-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .carved-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(14,10,8,0.4);
+    border: 1px solid rgba(40,30,20,0.4);
+  }
+  .carved-stat .glyph {
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    border: 2px solid rgba(100,70,40,0.3);
+    flex-shrink: 0;
+  }
+  .carved-stat .body { flex: 1; min-width: 0; }
+  .carved-stat .head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .head .tag { color: #6a5a3a; letter-spacing: 2px; font-family: 'Cinzel', serif; }
+  .head .val { color: #b0a080; font-weight: 600; }
+  .stone-bar {
+    height: 5px;
+    background: #0a0806;
+    border: 1px solid #2a1a10;
+  }
+  .stone-fill { height: 100%; }
+  .stone-fill.hp { background: linear-gradient(90deg, #6b3a2a, #b06040); }
+  .stone-fill.mp { background: linear-gradient(90deg, #2a3a5b, #4050a0); }
+  .stone-fill.sp { background: linear-gradient(90deg, #5b4a2a, #a09040); }
+  .stone-fill.exp { background: linear-gradient(90deg, #2a4b3a, #408050); }
+
+  .cuneiform-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .cuneiform {
+    text-align: center;
+    min-width: 48px;
+    padding: 6px 4px;
+    background: rgba(14,10,8,0.3);
+    border: 1px solid rgba(40,30,20,0.3);
+    font-family: 'Cinzel', serif;
+  }
+  .cuneiform .symbol { font-size: 16px; color: #a08860; display: block; }
+  .cuneiform .val { font-size: 14px; color: #c0b090; font-weight: 600; }
+  .cuneiform .key { font-size: 7px; color: #5a4a30; letter-spacing: 2px; }
+
+  .epitaph-text {
+    margin: 6px 14px;
+    padding: 18px 22px;
+    background: rgba(12,10,6,0.5);
+    border: 1px solid rgba(40,30,20,0.3);
+    border-left: 3px solid rgba(140,110,60,0.3);
+    position: relative;
+    z-index: 5;
+  }
+  .epitaph-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #908060;
+  }
+  .epitaph-text p:last-child { margin-bottom: 0; }
+  .epitaph-text .ochre { color: #c0a060; }
+  .epitaph-text .rust { color: #b05030; }
+
+  .tablet-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .tablet-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: rgba(18,14,10,0.5);
+    border: 1px solid rgba(60,45,30,0.3);
+    color: #908060;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tablet-btn:hover {
+    border-color: #a08860;
+    color: #b0a080;
+    background: rgba(24,18,12,0.5);
+  }
+  .tablet-btn.primary { border-color: #a08860; color: #c0b090; }
+  .tablet-btn.primary::before { content: '▸ '; }
+
+  .artifact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .artifact-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(14,10,8,0.3);
+    border: 1px solid rgba(40,30,20,0.3);
+    font-size: 11px;
+  }
+  .artifact-item .type { color: #5a4a30; font-size: 9px; letter-spacing: 1px; font-family: 'Cinzel', serif; }
+  .artifact-item .name { color: #908060; }
+
+  .relic-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .relic-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(100,70,40,0.06);
+    border: 1px solid rgba(100,70,40,0.12);
+    color: #6a5a3a;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 1px;
+  }
+  .relic-tag.unearthed {
+    background: rgba(100,70,40,0.12);
+    border-color: rgba(140,110,60,0.3);
+    color: #a08860;
+  }
+
+  .excavation-footer {
+    position: relative;
+    z-index: 5;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    color: #5a4a30;
+    letter-spacing: 3px;
+    border-top: 1px solid rgba(40,30,20,0.2);
+    margin: 0 14px;
+  }
+  .excavation-footer .dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="relic-frame">
+
+    <div class="stele-header">
+      <div class="chisel-marks">◈ ⋗ ⋖ ◈</div>
+      <h1>异 世 界 地 下 城</h1>
+      <div class="era">ISEKAI DUNGEON · RELIQUIAE</div>
+    </div>
+
+    <div class="crack-divider"></div>
+
+    <div class="stele-panel">
+      <div class="panel-label"><span class="rune-stone"></span> 铭 文 纪 录</div>
+      <div class="carved-stats">
+        <div class="carved-stat">
+          <div class="glyph">♥</div>
+          <div class="body">
+            <div class="head"><span class="tag">VITALIS</span><span class="val">78/100</span></div>
+            <div class="stone-bar"><div class="stone-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="carved-stat">
+          <div class="glyph">✦</div>
+          <div class="body">
+            <div class="head"><span class="tag">ARCANUM</span><span class="val">54/100</span></div>
+            <div class="stone-bar"><div class="stone-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="carved-stat">
+          <div class="glyph">⚔</div>
+          <div class="body">
+            <div class="head"><span class="tag">ROBUR</span><span class="val">90/100</span></div>
+            <div class="stone-bar"><div class="stone-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="carved-stat">
+          <div class="glyph">⏫</div>
+          <div class="body">
+            <div class="head"><span class="tag">GNOSIS</span><span class="val">35%</span></div>
+            <div class="stone-bar"><div class="stone-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="cuneiform-attrs">
+        <div class="cuneiform"><span class="symbol">⚔</span><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="cuneiform"><span class="symbol">🛡</span><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="cuneiform"><span class="symbol">⚡</span><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="cuneiform"><span class="symbol">✧</span><div class="val">30</div><div class="key">INT</div></div>
+        <div class="cuneiform"><span class="symbol">☘</span><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="cuneiform"><span class="symbol">◎</span><div class="val">1250</div><div class="key">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="epitaph-text">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="ochre">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="rust">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="rust">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="ochre">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="stele-panel">
+      <div class="panel-label"><span class="rune-stone"></span> 抉 择 之 石</div>
+      <div class="tablet-actions">
+        <button class="tablet-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="tablet-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="tablet-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="tablet-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="stele-panel">
+      <div class="panel-label"><span class="rune-stone"></span> 出 土 遗 物</div>
+      <div class="artifact-grid">
+        <div class="artifact-item"><span class="type">武器</span><span class="name">铁质长剑 Lv.3</span></div>
+        <div class="artifact-item"><span class="type">防具</span><span class="name">皮甲 Lv.2</span></div>
+        <div class="artifact-item"><span class="type">饰品</span><span class="name">冒险者徽章</span></div>
+        <div class="artifact-item"><span class="type">消耗</span><span class="name">回复药水 ×3</span></div>
+      </div>
+      <div class="relic-tags">
+        <span class="relic-tag unearthed">触手紧身衣·共生期</span>
+        <span class="relic-tag unearthed">蜕生项圈·中期</span>
+        <span class="relic-tag">影子分身·无心智</span>
+        <span class="relic-tag">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="excavation-footer">
+      <div class="dots">· · · · · ·</div>
+      <div>遗迹第三层 · 阿斯特大陆 · 黄昏 · 第十二发掘层</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

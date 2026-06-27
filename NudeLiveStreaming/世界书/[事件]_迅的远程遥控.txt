@@ -1,0 +1,45 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const jin = _.get(stat, 'NPC数据.风见迅', {});
+  const jinDiscovered = _.get(jin, '秘密发现', false);
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['迅远程遥控事件'] && isDaily && jinDiscovered && !isSexActive ) {
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const jinLewdness = parseInt(_.get(jin, '淫乱度', 0)) || 0;
+
+    let deviceConfig = '';
+    if (jinLewdness < 50) {
+      deviceConfig = '一枚遥控跳蛋——塞进后穴里';
+    } else if (jinLewdness < 75) {
+      deviceConfig = '两枚遥控跳蛋——一枚塞进后穴，一枚用胶带固定在鸡巴上';
+    } else {
+      deviceConfig = '两枚遥控跳蛋加一对电击乳夹——后穴一枚，鸡巴上一枚，乳头上再夹一对';
+    }
+_%>
+# 事件：迅的远程遥控
+event_initiator:
+  event_name: "远程遥控"
+  character: "风见迅"
+  location: "住宅区 - 迅的房间"
+  time: "17:00-22:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "迅把主角拉进自己房间，塞给主角一部开了遥控APP的手机。他已经自己装好了<%= deviceConfig %>，说今天的直播想让主角在镜头外遥控他。"
+    - "迅用雄小鬼的口吻说主角别手抖，别让他直播出丑——但结合好感度(<%= affection %>)可以看出他其实对把控制权交给主角这件事带着信任和隐秘的兴奋。"
+    - "描写迅打开直播、摆好镜头后，主角手中的手机屏幕上亮起的遥控面板。结尾留给主角选择：下手轻点配合他直播、在他念弹幕时突然调高、或拒绝。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/迅远程遥控事件" }
+      ]
+
+<%_ } } _%>

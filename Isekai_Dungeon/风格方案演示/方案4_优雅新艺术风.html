@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案4：优雅新艺术风 | Art Nouveau Elegance</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0f16;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', 'EB Garamond', serif;
+    background-image:
+      radial-gradient(ellipse at 30% 20%, rgba(107,58,91,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 70%, rgba(45,90,61,0.05) 0%, transparent 50%);
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+  }
+
+  /* ── 主容器：彩色玻璃边框感 ── */
+  .art-nouveau-frame {
+    position: relative;
+    background: #13151e;
+    border: 1px solid #2a2d3a;
+    overflow: hidden;
+  }
+  /* 花卉藤蔓边角 */
+  .art-nouveau-frame::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    border: 2px solid transparent;
+    border-image: linear-gradient(135deg,
+      #6b3a5b 0%, #c9a96e 25%, #6b3a5b 50%, #c9a96e 75%, #6b3a5b 100%) 2;
+    opacity: 0.3;
+    z-index: 5;
+  }
+
+  /* ── 头部：新艺术拱券 ── */
+  .nouveau-header {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 24px 20px 10px;
+  }
+  .header-arch {
+    position: relative;
+    display: inline-block;
+    padding: 4px 40px 8px;
+  }
+  .header-arch::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10px; right: 10px;
+    height: 70%;
+    border: 1px solid rgba(201,169,110,0.25);
+    border-bottom: none;
+    border-radius: 80px 80px 0 0;
+  }
+  .nouveau-header h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 5px;
+    color: #d4c5a0;
+    text-shadow: 0 0 20px rgba(201,169,110,0.15);
+  }
+  .nouveau-header .ornament-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .nouveau-header .ornament-line .swirl {
+    font-size: 16px;
+    color: #6b3a5b;
+  }
+  .nouveau-header .ornament-line .dot {
+    width: 4px; height: 4px;
+    background: #c9a96e;
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+
+  /* ── 装饰分隔线 ── */
+  .floral-divider {
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .floral-divider .vine {
+    flex: 0 1 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #6b3a5b, transparent);
+  }
+  .floral-divider .flower {
+    color: #c9a96e;
+    font-size: 12px;
+    opacity: 0.6;
+  }
+
+  /* ── 面板：玻璃感 ── */
+  .nouveau-panel {
+    position: relative;
+    z-index: 1;
+    margin: 6px 14px;
+    padding: 16px 20px;
+    background: rgba(20,22,32,0.6);
+    border: 1px solid rgba(107,58,91,0.2);
+    border-radius: 1px;
+  }
+  .nouveau-label {
+    font-family: 'EB Garamond', serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: #c9a96e;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nouveau-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(107,58,91,0.4), transparent);
+  }
+
+  /* ── 状态：竖琴弦式 ── */
+  .stat-harp {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .stat-string {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stat-string .icon {
+    font-size: 14px;
+    width: 24px;
+    text-align: center;
+    color: #c9a96e;
+  }
+  .stat-string .name {
+    width: 28px;
+    font-size: 10px;
+    color: #8a7a8a;
+    letter-spacing: 2px;
+  }
+  .stat-string .bar-bg {
+    flex: 1;
+    height: 8px;
+    background: rgba(10,10,16,0.5);
+    border: 1px solid rgba(107,58,91,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-string .bar-fill {
+    height: 100%;
+    transition: width 0.4s;
+    position: relative;
+  }
+  .stat-string .bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 6px;
+    background: rgba(255,255,255,0.15);
+  }
+  .bar-fill.hp { background: linear-gradient(90deg, #6b2a3a, #c96070); }
+  .bar-fill.mp { background: linear-gradient(90deg, #2a3a6b, #6080c0); }
+  .bar-fill.sp { background: linear-gradient(90deg, #5a4a1a, #c9a040); }
+  .bar-fill.exp { background: linear-gradient(90deg, #2a4a3a, #509060); }
+  .stat-string .val {
+    width: 60px;
+    font-size: 11px;
+    color: #b4a590;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── 属性：花体标签 ── */
+  .attr-garden {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    justify-content: center;
+  }
+  .attr-flower {
+    text-align: center;
+    min-width: 50px;
+    padding: 6px 8px;
+    border: 1px solid rgba(107,58,91,0.15);
+    background: rgba(15,15,24,0.4);
+  }
+  .attr-flower .petal {
+    font-size: 14px;
+    color: #6b3a5b;
+    display: block;
+  }
+  .attr-flower .num {
+    font-size: 14px;
+    font-weight: 600;
+    color: #d4c5a0;
+  }
+  .attr-flower .label {
+    font-size: 8px;
+    color: #5a4a5a;
+    letter-spacing: 2px;
+  }
+
+  /* ── 正文：信笺效果 ── */
+  .missive {
+    margin: 8px 14px;
+    padding: 20px 24px;
+    background: linear-gradient(180deg,
+      rgba(25,22,28,0.7) 0%,
+      rgba(20,18,24,0.75) 100%);
+    border: 1px solid rgba(107,58,91,0.15);
+    border-left: 2px solid rgba(201,169,110,0.2);
+    position: relative;
+    z-index: 1;
+  }
+  .missive p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    line-height: 1.9;
+    color: #b4a8a0;
+    font-size: 13.5px;
+  }
+  .missive p:last-child { margin-bottom: 0; }
+  .missive .gilded { color: #d4b060; }
+  .missive .rose { color: #c97080; }
+  .missive .lilac { color: #a070b0; }
+
+  /* ── 行动勾选项 ── */
+  .action-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 14px;
+    position: relative;
+    z-index: 1;
+  }
+  .action-ivory {
+    background: rgba(25,22,30,0.5);
+    border: 1px solid rgba(107,58,91,0.2);
+    color: #b4a8a0;
+    padding: 9px 18px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .action-ivory:hover {
+    border-color: rgba(201,169,110,0.4);
+    color: #d4c5a0;
+    background: rgba(30,28,36,0.6);
+  }
+  .action-ivory.primary {
+    border-color: rgba(201,169,110,0.4);
+    color: #d4c5a0;
+  }
+  .action-ivory.primary::before {
+    content: '❧ ';
+    color: #c9a96e;
+    font-size: 14px;
+  }
+
+  /* ── 装备面板 ── */
+  .wardrobe {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .wardrobe-item {
+    background: rgba(15,15,24,0.4);
+    border: 1px solid rgba(107,58,91,0.12);
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .wardrobe-item .type {
+    font-size: 9px;
+    color: #6a5a6a;
+    letter-spacing: 2px;
+  }
+  .wardrobe-item .name {
+    font-size: 12px;
+    color: #b4a590;
+  }
+  .wardrobe-item .name.void { color: #3a2a3a; font-style: italic; }
+
+  .relic-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .relic-tag {
+    font-size: 10px;
+    background: rgba(107,58,91,0.1);
+    border: 1px solid rgba(107,58,91,0.15);
+    color: #9a6a8a;
+    padding: 4px 12px;
+    transition: all 0.2s;
+  }
+  .relic-tag.awakened {
+    background: rgba(107,58,91,0.18);
+    border-color: rgba(107,58,91,0.35);
+    color: #c9a0b0;
+  }
+
+  /* ── 底部 ── */
+  .nouveau-footer {
+    position: relative;
+    z-index: 1;
+    padding: 10px 20px 16px;
+    text-align: center;
+    font-size: 10px;
+    color: #5a4a5a;
+    letter-spacing: 3px;
+  }
+  .nouveau-footer .floral-end {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .nouveau-footer .floral-end .moon {
+    font-size: 16px;
+    color: #c9a96e;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="art-nouveau-frame">
+
+    <!-- 头部 -->
+    <div class="nouveau-header">
+      <div class="header-arch">
+        <h1>異世界地下城</h1>
+      </div>
+      <div class="ornament-line">
+        <span class="swirl">❦</span>
+        <span class="dot"></span>
+        <span>Isekai Dungeon</span>
+        <span class="dot"></span>
+        <span class="swirl">❦</span>
+      </div>
+    </div>
+
+    <div class="floral-divider">
+      <span class="vine"></span><span class="flower">✿</span><span class="vine"></span>
+      <span class="flower">⚜</span>
+      <span class="vine"></span><span class="flower">✿</span><span class="vine"></span>
+    </div>
+
+    <!-- 状态面板 -->
+    <div class="nouveau-panel">
+      <div class="nouveau-label">❧ 冒险者灵光</div>
+      <div class="stat-harp">
+        <div class="stat-string">
+          <span class="icon">♥</span>
+          <span class="name">HP</span>
+          <div class="bar-bg"><div class="bar-fill hp" style="width:78%"></div></div>
+          <span class="val">78 / 100</span>
+        </div>
+        <div class="stat-string">
+          <span class="icon">✦</span>
+          <span class="name">MP</span>
+          <div class="bar-bg"><div class="bar-fill mp" style="width:54%"></div></div>
+          <span class="val">54 / 100</span>
+        </div>
+        <div class="stat-string">
+          <span class="icon">⚔</span>
+          <span class="name">SP</span>
+          <div class="bar-bg"><div class="bar-fill sp" style="width:90%"></div></div>
+          <span class="val">90 / 100</span>
+        </div>
+        <div class="stat-string">
+          <span class="icon">⬩</span>
+          <span class="name">EXP</span>
+          <div class="bar-bg"><div class="bar-fill exp" style="width:35%"></div></div>
+          <span class="val">350 / 1000</span>
+        </div>
+      </div>
+      <div class="attr-garden">
+        <div class="attr-flower">
+          <span class="petal">⚔</span><div class="num">42</div><div class="label">ATK</div>
+        </div>
+        <div class="attr-flower">
+          <span class="petal">🛡</span><div class="num">28</div><div class="label">DEF</div>
+        </div>
+        <div class="attr-flower">
+          <span class="petal">⚡</span><div class="num">35</div><div class="label">AGI</div>
+        </div>
+        <div class="attr-flower">
+          <span class="petal">✧</span><div class="num">30</div><div class="label">INT</div>
+        </div>
+        <div class="attr-flower">
+          <span class="petal">☘</span><div class="num">18</div><div class="label">LCK</div>
+        </div>
+        <div class="attr-flower">
+          <span class="petal">◎</span><div class="num">1250</div><div class="label">GOLD</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 正文信笺 -->
+    <div class="missive">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="gilded">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="rose">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="rose">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="gilded">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层<span class="lilac">淫靡的气息</span>……
+      </p>
+    </div>
+
+    <!-- 行动选项 -->
+    <div class="action-gallery">
+      <button class="action-ivory primary">挥剑斩向哥布林头领</button>
+      <button class="action-ivory">释放火球术灼烧敌群</button>
+      <button class="action-ivory">防御姿态，观察敌人弱点</button>
+      <button class="action-ivory">尝试魅惑其中一只哥布林</button>
+    </div>
+
+    <!-- 装备面板 -->
+    <div class="nouveau-panel">
+      <div class="nouveau-label">❧ 持有物与装备</div>
+      <div class="wardrobe">
+        <div class="wardrobe-item">
+          <span class="type">武器</span>
+          <span class="name">铁质长剑 Lv.3</span>
+        </div>
+        <div class="wardrobe-item">
+          <span class="type">防具</span>
+          <span class="name">皮甲 Lv.2</span>
+        </div>
+        <div class="wardrobe-item">
+          <span class="type">饰品</span>
+          <span class="name">冒险者徽章</span>
+        </div>
+        <div class="wardrobe-item">
+          <span class="type">消耗品</span>
+          <span class="name">回复药水 ×3</span>
+        </div>
+      </div>
+      <div class="relic-tags">
+        <span class="relic-tag awakened">触手紧身衣·共生期</span>
+        <span class="relic-tag awakened">蜕生项圈·中期</span>
+        <span class="relic-tag">影子分身·无心智</span>
+        <span class="relic-tag">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="nouveau-footer">
+      <div class="floral-end">
+        <span class="moon">☾</span> 地下城第3层 · 阿斯特大陆 <span class="moon">☽</span>
+      </div>
+      <div>384年10月15日 · 黄昏 · 第12回合</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

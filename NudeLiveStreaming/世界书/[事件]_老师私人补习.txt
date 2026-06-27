@@ -1,0 +1,50 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentHour = parseInt(_.get(stat, '进程.当前小时', 12)) || 12;
+  const isDaily = _.get(stat, '进程.阶段', '日常阶段') === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['老师私人补习事件'] && isDaily && isSexActive) {
+    const saya = _.get(stat, 'NPC数据.冰室纱耶', {});
+    const affection = parseInt(_.get(saya, '好感度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.老师私人补习事件', 0)) || 0;
+    const sexCount = parseInt(_.get(saya, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：私人补习
+event_initiator:
+  event_name: "私人补习"
+  character: "冰室纱耶"
+  location: "湾区 - 高级公寓"
+  time: "白天"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "纱耶邀请主角到她家进行一对一的学业辅导。主角按响门铃。"
+    <%_ if (eventCount > 0) { _%>
+    - "门开了。纱耶站在玄关处，穿着和上次完全不同的装扮——一件薄透的情趣内衣，乳头在蕾丝下若隐若现，下身只有一条细带。她手里端着一杯红酒，说等主角好久了。"
+    - "主角已经见怪不怪，一边换鞋一边问她今天要补哪门子课。纱耶笑着抿了一口酒，牵起主角的手说要补生理卫生课，上次的内容需要温习一下。"
+    - "结合做爱次数(<%= sexCount %>)调整她的下一步——次数越多她越直接，可能已经把润滑剂和套子放在了茶几上。她问主角是先坐下喝一杯，还是直接进入正题。"
+    - "结尾留给主角选择：配合她说那就补生理课、把她拉过来让她坐下、或先喝一杯让她讲讲最近看了什么新书。"
+    <%_ } else { _%>
+    - "纱耶邀请主角到她家进行一对一的学业辅导。她穿着与课堂截然不同的随意居家服，领口大敞，走动间若隐若现。主角很快起了生理反应，试图掩饰但未能逃过纱耶的眼睛。"
+    <%_ if (affection < 25) { _%>
+    - "纱耶假装没看见，自然地递过一条毯子让主角盖在腿上，继续若无其事地讲解课题。"
+    <%_ } else if (affection < 50) { _%>
+    - "纱耶看到后了然一笑，调侃年轻人就是火力旺，然后身子往前凑了凑，盯着主角的眼睛轻声问需不需要老师帮忙解决。"
+    <%_ } else { _%>
+    - "纱耶看到后放下手中的书，直接贴了上来。她摸着主角的鸡巴，在耳边用下流的话问要不要在补课前先来一发，就当是课前运动。"
+    <%_ } _%>
+    - "结尾留给主角选择：强忍拒绝、顺势接受、或主动索取更多。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/老师私人补习事件" }
+      ]
+
+<%_ } } _%>

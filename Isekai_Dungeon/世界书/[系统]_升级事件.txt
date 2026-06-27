@@ -1,0 +1,55 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const levelGainVal = pendingEvents['升级事件'];
+if (!levelGainVal) return;
+const levelGain = Number(levelGainVal) || 1;
+
+const mcLevel = _.get(stat, '主角.当前状态.等级', 1);
+
+function pickN(arr, n) {
+  const pool = [...arr];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, n);
+}
+
+let bonusMag = 0, bonusWil = 0, bonusSpd = 0, bonusLuk = 0;
+for (let i = 0; i < levelGain; i++) {
+  const picks = pickN(['魔力','意志','速度','幸运'], 2);
+  if (picks.includes('魔力')) bonusMag += 2;
+  if (picks.includes('意志')) bonusWil += 2;
+  if (picks.includes('速度')) bonusSpd += 1;
+  if (picks.includes('幸运')) bonusLuk += 1;
+}
+
+const lastPicks = pickN(['魔力','意志','速度','幸运'], 2);
+_%>
+# 系统指令：升级事件
+
+  narrative_guidance:
+    - "主角感受到体内涌动的力量——等级提升至 Lv.<%= mcLevel + levelGain %>！描写升级瞬间的身体感受，以及对自己变强的真实喜悦。"
+    <%_ if (levelGain > 1) { _%>
+    - "一次跨越了 <%= levelGain %> 级的飞跃——这股澎湃的成长感让主角的每一寸筋骨都在欢欣雀跃。"
+    <%_ } _%>
+    - "最近一次升级增幅的属性为【<%= lastPicks.join('、') %>】——根据最终的成长方向描写对应的体感变化。"
+    - "升级结束后继续当前的故事进程，不额外拖延。"
+
+  mandatory_data_sync:
+    instruction: "完成升级属性增长，移除升级事件："
+    patch_code: |
+      [
+        { "op": "delta", "path": "/主角/战斗属性/最大HP", "value": <%= 20 * levelGain %> },
+        { "op": "delta", "path": "/主角/战斗属性/最大MP", "value": <%= 10 * levelGain %> },
+        { "op": "delta", "path": "/主角/战斗属性/最大SP", "value": <%= 10 * levelGain %> },
+        { "op": "delta", "path": "/主角/战斗属性/攻击力", "value": <%= 3 * levelGain %> },
+        { "op": "delta", "path": "/主角/战斗属性/防御力", "value": <%= 2 * levelGain %> },
+        { "op": "delta", "path": "/主角/战斗属性/魔力", "value": <%= bonusMag %> },
+        { "op": "delta", "path": "/主角/战斗属性/速度", "value": <%= bonusSpd %> },
+        { "op": "delta", "path": "/主角/战斗属性/意志", "value": <%= bonusWil %> },
+        { "op": "delta", "path": "/主角/战斗属性/幸运", "value": <%= bonusLuk %> },
+        { "op": "remove", "path": "/系统状态/待处理事件/升级事件" }
+      ]
+<%_ } _%>

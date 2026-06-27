@@ -1,0 +1,68 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const isActive = _.get(stat, '大型事件.进行中', false);
+if (!isActive) return;
+
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '日常阶段') return;
+
+const eventName = _.get(stat, '大型事件.名称', '未知事件');
+const truth = _.get(stat, '大型事件.真相', '');
+const clues = _.get(stat, '大型事件.已知线索', []);
+const revealed = _.get(stat, '大型事件.真相揭露', false);
+const startTurn = parseInt(_.get(stat, '大型事件.开始回合', 0)) || 0;
+const currentTurn = parseInt(_.get(stat, '进程.当前回合数', 0)) || 0;
+const turnsElapsed = currentTurn - startTurn;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+_%>
+# 系统指令：大型事件进行中
+
+  事件名称：<%= eventName %>
+  开始回合：<%= startTurn %> | 当前回合：<%= currentTurn %> | 已过 <%= turnsElapsed %> 回合
+  真相揭露：<%= revealed ? '◉ 已揭露' : '○ 未揭露' %>
+
+  ── 后台（禁止在叙事中直接告知主角）──
+  事件真相：<%= truth || '未设定' %>
+
+  已知线索（主角已发现的碎片）：
+  <%_ if (clues.length === 0) { _%>
+    （尚未发现任何线索）
+  <%_ } else { _%>
+    <%_ clues.forEach(function(c, i) { _%>
+    <%= i + 1 %>. <%= c %>
+    <%_ }); _%>
+  <%_ } _%>
+  ────────────────
+
+  narrative_guidance:
+<%_ if (revealed) { _%>
+    - "【终章阶段】主角已经识破了<%= eventName %>的真相：<%= truth %>。描写主角基于已知的所有线索，最终如何面对这个真相——是前往某个关键地点亲自终结这一切、召集相关NPC摊牌、还是向公会或官方揭发。事件的终章应有明确的对抗或抉择场景，不应留有悬念。"
+    - "当事件被确切解决时——无论主角选择武力冲突、外交斡旋、还是将证据交给他人——在叙事中清晰描述事件的了结结果。"
+<%_ } else if (turnsElapsed < 20) { _%>
+    - "【前期阶段】事件<%= eventName %>刚刚开始（仅<%= turnsElapsed %>回合）。主角尚在事件的边缘摸索。允许将确凿发现的新碎片加入已知线索列表，但禁止主角在现阶段接触到事件的核心层面或获得能指向真相的关键线索——叙事中获得的线索应为次要或边缘信息（如涉事人的外围关系、事发地的历史传闻、类似事件的零散目击记录等），这些线索有信息量但不直接指明真相。"
+<%_ } else { _%>
+    - "【深入阶段】事件<%= eventName %>已持续<%= turnsElapsed %>回合。主角已积累了一定的现场经验和人脉。叙事中可以自然地出现与已知线索相关的新发现。若AI判定主角在当前叙事中获得了确切有效、且与已有线索不重复的新信息，可在变量操作中将该新线索追加到已知线索列表中。"
+    - "当已知线索已经明确可以推断出事件真相时——即当前的<%= clues.length %>条线索拼在一起能合理指向唯一真相——叙事指导主角在某个瞬间将碎片串联起来，识明真相。此时设置真相揭露为true。"
+    - "当玩家输入的内容已经与<%= eventName %>的真相完全一致（或被AI判定为足够接近真相的核心）时，同样设置真相揭露为true，并在叙事中认可主角的推理。"
+<%_ } _%>
+
+  mandatory_data_sync:
+<%_ if (revealed) { _%>
+    instruction: "若事件被确切解决，关闭大型事件："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/大型事件/进行中", "value": false }
+      ]
+<%_ } else { _%>
+    instruction: "若本回合获得了新的有效线索，追加到已知线索列表；若已能推出真相，设置真相揭露："
+    patch_code: |
+      [
+        // 仅当获得有效新线索时执行：
+        // { "op": "insert", "path": "/大型事件/已知线索/-", "value": "[新线索描述]" }
+        // 仅当可以确凿推出真相时执行：
+        // { "op": "replace", "path": "/大型事件/真相揭露", "value": true }
+      ]
+<%_ } _%>
+<%_ } _%>

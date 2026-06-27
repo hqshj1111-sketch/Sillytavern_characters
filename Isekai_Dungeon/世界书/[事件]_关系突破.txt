@@ -1,0 +1,67 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const eventVal = pendingEvents['关系变化事件'];
+if (!eventVal) return;
+
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+const isResting = _.get(stat, '地下城攻略状态.是否休整中', false);
+const isValidDaily = phase === '日常阶段';
+const isValidDungeonRest = phase === '地下城攻略阶段' && isResting;
+if (!isValidDaily && !isValidDungeonRest) return;
+
+const npcName = String(eventVal.NPC名字 || eventVal);
+const affection = parseInt(eventVal.好感度) || 75;
+const npc = _.get(stat, `重要NPC信息.${npcName}`, null);
+if (!npc) return;
+
+const npcRace = _.get(npc, '种族', '?');
+const npcGender = _.get(npc, '性别', '?');
+const npcAge = _.get(npc, '年龄', '?');
+const npcAppearance = _.get(npc, '外观', '');
+const npcPersonality = _.get(npc, '性格', '');
+const npcBody = _.get(npc, '身材', '');
+const npcRelation = _.get(npc, '关系', '');
+const npcSummary = _.get(npc, '简述', '');
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const currentLocation = _.get(stat, '主角.当前状态.当前地点', '');
+
+const mcName = _.get(stat, '主角.基本信息.姓名', '主角');
+const mcGender = _.get(stat, '主角.基本信息.性别', '');
+_%>
+# 事件：关系突破
+event_initiator:
+  event_name: "关系突破"
+  character: "<%= npcName %>"
+  location: "<%= currentCountry %> / <%= currentCity %> / <%= currentLocation %>"
+  trigger: "好感度突破75"
+
+  角色速写：
+    <%= npcName %> | <%= npcRace %> / <%= npcGender %> / <%= npcAge %>岁
+    <%= npcAppearance ? '外观：' + npcAppearance : '' %>
+    <%= npcPersonality ? '性格：' + npcPersonality : '' %>
+    <%= npcBody ? '身材：' + npcBody : '' %>
+    <%= npcSummary ? '简述：' + npcSummary : '' %>
+
+  narrative_guidance:
+    - "【优先级】若其他事件或常规剧情在进行中，收束至一个自然的暂停点，然后切入本事件。本事件是<%= npcName %>与<%= mcName %>关系的重要里程碑，不可被跳过或轻描淡写。"
+<%_ if (isValidDungeonRest) { _%>
+    - "【地下城休整中的突破】主角与<%= npcName %>正在地下城的安全区域休整。经历了战斗的紧张与彼此掩护的默契之后，此刻的宁静成了情感爆发的契机。描写休整的篝火或临时营地的氛围——周围的危险暂时远去，二人之间的空间只剩下了彼此。此前共同战斗积累的信任与默契，在某个不经意的对视或触碰中突然质变。"
+<%_ } else { _%>
+    - "【日常中的突破】主角与<%= npcName %>在日常相处中，某种一直悬而未决的情感终于到了临界点。描写相遇的场景——可能是一次约定好的会面、偶然在街头的重逢、或旅馆深夜的一次长谈——两人之间的空气密度在这一刻突然变了。"
+<%_ } _%>
+    - "【情感升温】描写两人之间长久积累的好感在这一刻突破话语的屏障——可能是<%= npcName %>先开口说了什么平时不会说出口的话，也可能是主角的一个动作破开了那层薄纱。结合<%= npcName %>的性格，写出对方在这一刻特有的反应——傲娇的嘴硬到声音渐弱、寡言者的行动代替了言语、或直率之人的惊喜。对话与沉默的间隔中，情感的张力持续升温。"
+    - "【身体的交接】从情感的告白自然过渡到身体的接触。第一次亲吻或拥抱时的描写——两人终于卸下了之前所有的克制，皮肤相触的温度与颤抖。结合<%= npcName %>的种族（<%= npcRace %>）与身体特征（<%= npcBody || '由AI推演' %>）描写对方在亲密接触中独有的感官细节。"
+    - "【性爱描写 — 节制】正式进入性爱场景，但禁止在本回合内描写至结束。描写进入私密空间的过渡、衣物的褪去、第一次真正意义上的肌肤相亲。两具身体终于毫无保留地交付彼此——描写<%= npcName %>在这个过程中最真实的一面：可能是平时强势之人的脆弱、腼腆之人的主动、或清冷之人的炽热。以两人沉浸在高潮前的某个瞬间收束——呼吸的交织、</%= npcName %>在耳畔说出的话、或主角此刻内心涌起的念头。"
+    - "为下一回合留出自然的接续点，让玩家可以选择继续深入、切换节奏、或安静相拥。"
+
+  mandatory_data_sync:
+    instruction: "完成本回合的关系突破叙事后，更新<%= npcName %>的关系变量，并移除事件标记："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/重要NPC信息/<%= npcName %>/关系", "value": "[AI根据本回合的互动自然总结的二人新关系状态，如'从暗生情愫到坦诚相拥的恋人'、'跨越种族界限的伴侣'、'旅途中彼此交付的挚爱'等]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/关系变化事件" }
+      ]
+<%_ } _%>

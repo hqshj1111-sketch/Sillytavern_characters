@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案35：塞尔达BotW希卡石板风 | Sheikah Slate</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  body{
+    background:#e8e2d8;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px;
+    font-family:'Noto Sans SC',sans-serif;color:#3a3028;font-size:13px;
+    /* 石质纹理 */
+    background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.02) 3px,rgba(0,0,0,.02) 4px);
+  }
+  .app{width:100%;max-width:660px}
+  .slate-frame{background:rgba(245,240,232,.92);border-radius:12px;position:relative;overflow:hidden;padding:20px 22px;box-shadow:0 6px 30px rgba(0,0,0,.1);border:1px solid rgba(180,160,140,.2)}
+  /* 希卡蓝色发光粒子 */
+  .slate-frame::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      radial-gradient(1px 1px at 15% 20%,rgba(46,184,230,.4),transparent),
+      radial-gradient(2px 2px at 80% 15%,rgba(76,201,240,.3),transparent),
+      radial-gradient(1px 1px at 50% 60%,rgba(46,184,230,.35),transparent),
+      radial-gradient(2px 2px at 25% 80%,rgba(76,201,240,.25),transparent),
+      radial-gradient(1px 1px at 70% 75%,rgba(46,184,230,.3),transparent);
+  }
+  .content{position:relative;z-index:2}
+
+  /* 标题 */
+  .sheikah-header{text-align:center;margin-bottom:14px}
+  .sheikah-header .eye-symbol{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:4px}
+  .sheikah-header .eye-symbol .eye{width:24px;height:16px;border:1.5px solid #2eb8e6;border-radius:50%;position:relative}
+  .sheikah-header .eye-symbol .eye::after{content:'';position:absolute;inset:4px;background:#2eb8e6;border-radius:50%;opacity:.6}
+  .sheikah-header .eye-symbol .tear{width:2px;height:8px;background:#2eb8e6;border-radius:0 0 1px 1px;margin-top:-4px}
+  .sheikah-header h1{font-size:20px;font-weight:300;letter-spacing:6px;color:#2eb8e6;text-shadow:0 0 15px rgba(46,184,230,.15)}
+  .sheikah-header .sub{font-size:9px;color:#8a8070;letter-spacing:4px;margin-top:2px}
+
+  /* 分隔：发光线 */
+  .sheikah-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(46,184,230,.3),transparent);margin:8px 0 12px}
+
+  /* 状态：发光蓝圆环 */
+  .sheikah-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .s-stat{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,252,246,.7);border:1px solid rgba(46,184,230,.12);border-radius:10px}
+  .s-stat .ring{width:40px;height:40px;position:relative;flex-shrink:0}
+  .s-stat .ring svg{transform:rotate(-90deg)}
+  .s-stat .ring .r-bg{fill:none;stroke:rgba(46,184,230,.08);stroke-width:3}
+  .s-stat .ring .r-fill{fill:none;stroke:#4cc9f0;stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 3px rgba(76,201,240,.4))}
+  .s-stat .ring .r-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#2eb8e6}
+  .s-stat .s-body{flex:1;min-width:0}
+  .s-stat .s-head{display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px}
+  .s-stat .s-head .label{color:#8a8070}
+  .s-stat .s-head .val{color:#2eb8e6;font-weight:500}
+  .s-stat .s-bar{height:3px;background:rgba(46,184,230,.06);border-radius:2px;overflow:hidden}
+  .s-stat .s-fill{height:100%;background:#4cc9f0;border-radius:2px}
+
+  /* 属性：发光小圆点 */
+  .s-attrs{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+  .s-attr{text-align:center;min-width:40px}
+  .s-attr .s-dot{width:32px;height:32px;border-radius:50%;margin:0 auto 2px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(46,184,230,.2);background:rgba(46,184,230,.03)}
+  .s-attr .s-dot-inner{font-size:14px;opacity:.7}
+  .s-attr .s-val{font-size:11px;color:#2eb8e6;font-weight:600}
+  .s-attr .s-key{font-size:7px;color:#9a9080;letter-spacing:1px}
+
+  /* 正文 */
+  .s-narrative{background:rgba(255,252,246,.7);border:1px solid rgba(46,184,230,.1);border-radius:10px;padding:14px 18px;margin-bottom:10px}
+  .s-narrative p{font-size:12px;line-height:1.9;color:#5a5040;margin-bottom:4px}
+  .s-narrative p:last-child{margin-bottom:0}
+  .s-narrative .glow{color:#2eb8e6;font-weight:500}
+
+  /* 行动：轻触式 */
+  .s-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+  .s-act{font-family:inherit;font-size:11px;background:rgba(255,252,246,.8);border:1px solid rgba(46,184,230,.15);border-radius:8px;color:#3a3028;padding:10px 12px;cursor:pointer;transition:.2s;text-align:left}
+  .s-act:hover{border-color:#4cc9f0;box-shadow:0 0 12px rgba(76,201,240,.1);color:#2eb8e6}
+  .s-act.primary{border-color:#4cc9f0;box-shadow:0 0 8px rgba(76,201,240,.08)}
+
+  /* 装备 */
+  .s-equip{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px}
+  .s-item{display:flex;justify-content:space-between;padding:6px 10px;background:rgba(255,252,246,.6);border:1px solid rgba(46,184,230,.08);border-radius:6px;font-size:10px}
+  .s-item .s-t{color:#9a9080}.s-item .s-n{color:#3a3028}
+  .s-tags{display:flex;flex-wrap:wrap;gap:3px}
+  .s-tags span{font-size:8px;padding:3px 8px;border:1px solid rgba(46,184,230,.1);border-radius:4px;color:#7a7060}
+  .s-tags span.on{border-color:rgba(46,184,230,.3);color:#2eb8e6;background:rgba(46,184,230,.04)}
+
+  .s-footer{display:flex;justify-content:space-between;padding:6px 0 0;border-top:1px solid rgba(46,184,230,.08);font-size:9px;color:#9a9080;letter-spacing:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="slate-frame">
+    <div class="content">
+
+      <div class="sheikah-header">
+        <div class="eye-symbol">
+          <span class="tear"></span><span class="eye"></span>
+          <span class="eye" style="transform:scaleX(-1)"></span><span class="tear"></span>
+        </div>
+        <h1>异 世 界 地 下 城</h1>
+        <div class="sub">SHEIKAH SLATE · ISEKAI DUNGEON</div>
+      </div>
+
+      <div class="sheikah-divider"></div>
+
+      <div class="sheikah-stats">
+        <div class="s-stat">
+          <div class="ring">
+            <svg width="40" height="40" viewBox="0 0 40 40"><circle class="r-bg" cx="20" cy="20" r="16"/><circle class="r-fill" cx="20" cy="20" r="16" stroke-dasharray="100.53" stroke-dashoffset="22.1"/></svg>
+            <div class="r-num">78</div>
+          </div>
+          <div class="s-body"><div class="s-head"><span class="label">♥ 生命</span><span class="val">78/100</span></div><div class="s-bar"><div class="s-fill" style="width:78%"></div></div></div>
+        </div>
+        <div class="s-stat">
+          <div class="ring">
+            <svg width="40" height="40" viewBox="0 0 40 40"><circle class="r-bg" cx="20" cy="20" r="16"/><circle class="r-fill" cx="20" cy="20" r="16" stroke-dasharray="100.53" stroke-dashoffset="46.2"/></svg>
+            <div class="r-num">54</div>
+          </div>
+          <div class="s-body"><div class="s-head"><span class="label">✦ 魔力</span><span class="val">54/100</span></div><div class="s-bar"><div class="s-fill" style="width:54%"></div></div></div>
+        </div>
+        <div class="s-stat">
+          <div class="ring">
+            <svg width="40" height="40" viewBox="0 0 40 40"><circle class="r-bg" cx="20" cy="20" r="16"/><circle class="r-fill" cx="20" cy="20" r="16" stroke-dasharray="100.53" stroke-dashoffset="10.1"/></svg>
+            <div class="r-num">90</div>
+          </div>
+          <div class="s-body"><div class="s-head"><span class="label">⚡ 体力</span><span class="val">90/100</span></div><div class="s-bar"><div class="s-fill" style="width:90%"></div></div></div>
+        </div>
+        <div class="s-stat">
+          <div class="ring">
+            <svg width="40" height="40" viewBox="0 0 40 40"><circle class="r-bg" cx="20" cy="20" r="16"/><circle class="r-fill" cx="20" cy="20" r="16" stroke-dasharray="100.53" stroke-dashoffset="65.4"/></svg>
+            <div class="r-num">35</div>
+          </div>
+          <div class="s-body"><div class="s-head"><span class="label">▲ 经验</span><span class="val">35%</span></div><div class="s-bar"><div class="s-fill" style="width:35%"></div></div></div>
+        </div>
+      </div>
+
+      <div class="s-attrs">
+        <div class="s-attr"><div class="s-dot"><span class="s-dot-inner">⚔</span></div><div class="s-val">42</div><div class="s-key">ATK</div></div>
+        <div class="s-attr"><div class="s-dot"><span class="s-dot-inner">🛡</span></div><div class="s-val">28</div><div class="s-key">DEF</div></div>
+        <div class="s-attr"><div class="s-dot"><span class="s-dot-inner">⚡</span></div><div class="s-val">35</div><div class="s-key">SPD</div></div>
+        <div class="s-attr"><div class="s-dot"><span class="s-dot-inner">✧</span></div><div class="s-val">30</div><div class="s-key">INT</div></div>
+        <div class="s-attr"><div class="s-dot"><span class="s-dot-inner">☘</span></div><div class="s-val">18</div><div class="s-key">LCK</div></div>
+        <div class="s-attr"><div class="s-dot" style="border-color:rgba(200,180,100,.3);background:rgba(200,180,100,.04)"><span class="s-dot-inner">◎</span></div><div class="s-val" style="color:#c0a040">1250</div><div class="s-key">RUPEE</div></div>
+      </div>
+
+      <div class="s-narrative">
+        <p>你推开沉重的石门，腐朽的空气中弥漫着<span class="glow">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="glow">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。</p>
+        <p>左侧那只头领模样的家伙眼中闪烁着<span class="glow">不寻常的红光</span>。甬道两侧石壁上，古老浮雕描绘着被封印在此的<span class="glow">魅魔女王</span>……</p>
+      </div>
+
+      <div class="s-actions">
+        <button class="s-act primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="s-act">🔥 释放火球术灼烧敌群</button>
+        <button class="s-act">🛡 防御姿态观察敌人弱点</button>
+        <button class="s-act">💋 尝试魅惑哥布林</button>
+      </div>
+
+      <div class="s-equip">
+        <div class="s-item"><span class="s-t">武器</span><span class="s-n">铁质长剑 Lv.3</span></div>
+        <div class="s-item"><span class="s-t">防具</span><span class="s-n">皮甲 Lv.2</span></div>
+        <div class="s-item"><span class="s-t">饰品</span><span class="s-n">冒险者徽章</span></div>
+        <div class="s-item"><span class="s-t">道具</span><span class="s-n">回复药水 ×3</span></div>
+      </div>
+      <div class="s-tags">
+        <span class="on">触手紧身衣·共生期</span><span class="on">蜕生项圈·中期</span><span>影子分身·无心智</span><span>淫欲晶核·关闭</span>
+      </div>
+
+      <div class="s-footer"><span>B3F 地下城</span><span>阿斯特大陆</span><span>TURN 12</span></div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

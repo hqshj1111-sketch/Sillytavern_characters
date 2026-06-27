@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>外部图标库方案对比 — Lucide / Phosphor / Tabler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css">
+
+<!-- Lucide -->
+<script src="https://unpkg.com/lucide@latest" defer onload="initLucide()"></script>
+<!-- Phosphor -->
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js" type="module" defer></script>
+
+<style>
+  :root {
+    --bg: #f4ecd8; --bg2: #e8ddc4;
+    --text: #3d2b1a; --text2: #6b5540; --text3: #9b8468;
+    --border: #c4a882; --border2: #8b6914; --accent: #8b4513;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #1a1410;
+    display:flex; flex-direction:column; align-items:center;
+    padding:18px; gap:22px;
+    font-family: 'Noto Serif SC', serif;
+    color: var(--text);
+  }
+  h2 {
+    color: #e8d5b7; font-size: 17px; margin-bottom: 2px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 3px;
+    background: var(--bg2); color: var(--accent);
+    border: 1px solid var(--border);
+  }
+  .card {
+    width: 540px;
+    background: var(--bg);
+    border: 2px solid var(--border2);
+    padding: 18px 24px;
+    box-shadow: 3px 3px 0 rgba(139,105,20,0.3), 0 6px 20px rgba(0,0,0,0.4);
+    position:relative;
+  }
+  .card::before { content:''; position:absolute; inset:4px; border:1px solid var(--border); pointer-events:none; }
+  .card h3 {
+    font-family: 'Noto Serif SC', serif; font-weight: 900;
+    font-size: 15px; border-bottom: 2px solid var(--border2);
+    padding-bottom: 5px; margin-bottom: 10px; letter-spacing: 2px;
+  }
+  .card .sub { font-size: 10px; color:var(--text3); margin-bottom: 10px; }
+
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .icon-cell {
+    display:flex; align-items:center; gap:6px;
+    font-size: 12px; padding: 3px 6px;
+    border-bottom: 1px dotted var(--border);
+    font-family: 'LXGW WenKai', 'KaiTi', serif;
+  }
+  .icon-cell .name { flex:1; }
+  .icon-cell .val { color: var(--text3); font-size: 10px; }
+
+  .ico { width: 18px; height: 18px; flex-shrink: 0; }
+  .ico-hp { color: #b05048; }
+  .ico-mp { color: #3a6a9a; }
+  .ico-sp { color: #4a8a4a; }
+  .ico-buff { color: #4a8a4a; }
+  .ico-debuff { color: #b05048; }
+  .ico-normal { color: var(--accent); }
+
+  .divider {
+    height:1px;
+    background: linear-gradient(to right, transparent, var(--border2), transparent);
+    margin: 10px 0;
+  }
+  .legend {
+    font-family: 'LXGW WenKai', 'KaiTi', serif;
+    font-size: 10px; color:var(--text3); line-height: 1.8;
+  }
+  .legend b { color: var(--accent); }
+</style>
+
+<script>
+  // Lucide icon mapping
+  const lucideIcons = {
+    hp:     { el: null, name: 'heart' },
+    mp:     { el: null, name: 'diamond' },
+    sp:     { el: null, name: 'zap' },
+    buff:   { el: null, name: 'arrow-up' },
+    debuff: { el: null, name: 'arrow-down' },
+    atk:    { el: null, name: 'sword' },
+    def:    { el: null, name: 'shield' },
+    spd:    { el: null, name: 'wind' },
+    mag:    { el: null, name: 'sparkles' },
+    will:   { el: null, name: 'flame' },
+    luck:   { el: null, name: 'clover' },
+    gold:   { el: null, name: 'coins' },
+    exp:    { el: null, name: 'star' },
+    skill:  { el: null, name: 'scroll-text' },
+    quest:  { el: null, name: 'flag-triangle-right' },
+    bag:    { el: null, name: 'backpack' },
+    map:    { el: null, name: 'map' },
+    shop:   { el: null, name: 'store' },
+    anvil:  { el: null, name: 'hammer' },
+    time:   { el: null, name: 'clock' },
+    note:   { el: null, name: 'file-text' },
+    eye:    { el: null, name: 'search' },
+  };
+
+  function initLucide() {
+    const container = document.getElementById('lucide-grid');
+    // create icons via lucide API
+    Object.entries(lucideIcons).forEach(([key, info]) => {
+      const cell = document.getElementById('lucide-' + key);
+      if (!cell) return;
+      const icon = lucide.createLucideIcon(info.name, { strokeWidth: 2.5, class: 'ico' });
+      icon.classList.add('lucide-icon');
+      // check class
+      const cls = key === 'hp' ? 'ico-hp' : key === 'mp' ? 'ico-mp' : key === 'sp' ? 'ico-sp' : key === 'buff' ? 'ico-buff' : key === 'debuff' ? 'ico-debuff' : 'ico-normal';
+      icon.className.baseVal = icon.className.baseVal + ' ' + cls;
+      cell.prepend(icon);
+    });
+    // also create the supplementary icons
+    const extraIcons = [
+      { id: 'lucide-bag', name: 'backpack' },
+      { id: 'lucide-map', name: 'map' },
+      { id: 'lucide-shop', name: 'store' },
+      { id: 'lucide-anvil', name: 'hammer' },
+      { id: 'lucide-journey', name: 'compass' },
+      { id: 'lucide-train', name: 'dumbbell' },
+      { id: 'lucide-team', name: 'users' },
+      { id: 'lucide-time', name: 'clock' },
+      { id: 'lucide-note', name: 'file-text' },
+      { id: 'lucide-search', name: 'search' },
+    ];
+    extraIcons.forEach(x => {
+      const cell = document.getElementById(x.id);
+      if (!cell) return;
+      const icon = lucide.createLucideIcon(x.name, { strokeWidth: 2.5, class: 'ico ico-normal' });
+      cell.prepend(icon);
+    });
+  }
+</script>
+</head>
+<body>
+
+<!-- ====== LUCIDE ====== -->
+<h2>方案 A — Lucide <span class="badge">ISC License · 1743 icons</span></h2>
+<div class="card">
+  <h3>✦ 干净现代线条风，RPG 属性对应全面</h3>
+  <div class="sub">来源: lucide.dev · ISC 许可 · SVG 矢量 · stroke 可调 · Tree-shakable</div>
+  <div class="icon-grid" id="lucide-grid">
+    <div class="icon-cell" id="lucide-hp"><span class="name">HP</span><span class="val">85/100</span></div>
+    <div class="icon-cell" id="lucide-mp"><span class="name">MP</span><span class="val">40/50</span></div>
+    <div class="icon-cell" id="lucide-sp"><span class="name">SP</span><span class="val">60/100</span></div>
+    <div class="icon-cell" id="lucide-buff"><span class="name">攻击力+</span></div>
+    <div class="icon-cell" id="lucide-debuff"><span class="name">中毒</span></div>
+    <div class="icon-cell" id="lucide-atk"><span class="name">攻击力</span></div>
+    <div class="icon-cell" id="lucide-def"><span class="name">防御力</span></div>
+    <div class="icon-cell" id="lucide-spd"><span class="name">速度</span></div>
+    <div class="icon-cell" id="lucide-mag"><span class="name">魔力</span></div>
+    <div class="icon-cell" id="lucide-will"><span class="name">意志</span></div>
+    <div class="icon-cell" id="lucide-luck"><span class="name">幸运</span></div>
+    <div class="icon-cell" id="lucide-gold"><span class="name">金币</span></div>
+    <div class="icon-cell" id="lucide-exp"><span class="name">经验值</span></div>
+    <div class="icon-cell" id="lucide-skill"><span class="name">技能</span></div>
+    <div class="icon-cell" id="lucide-quest"><span class="name">任务</span></div>
+    <div class="icon-cell" id="lucide-eye"><span class="name">摘要</span></div>
+  </div>
+  <div class="divider"></div>
+  <div style="display:flex; flex-wrap:wrap; gap:6px;">
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-bag"><span class="name">道具</span></div>
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-map"><span class="name">地图</span></div>
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-shop"><span class="name">商城</span></div>
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-anvil"><span class="name">打造</span></div>
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-journey"><span class="name">外出</span></div>
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-train"><span class="name">训练</span></div>
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-team"><span class="name">队友</span></div>
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-time"><span class="name">阶段</span></div>
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-note"><span class="name">记录</span></div>
+    <div class="icon-cell" style="border:none; padding:2px 6px;" id="lucide-search"><span class="name">线索</span></div>
+  </div>
+  <div class="divider"></div>
+  <div class="legend">
+    <b>优点：</b>1743图标 · 统一线条风格 · 极强定制性(color/stroke/size) · ISC宽松许可 · 活跃社区 · Tree-shakable<br>
+    <b>注意：</b>线条风现代感强，羊皮卷适配需调整 color + strokeWidth
+  </div>
+</div>
+
+
+<!-- ====== TABLER ICONS ====== -->
+<h2>方案 B — Tabler Icons <span class="badge">MIT License · 5000+ icons</span></h2>
+<div class="card">
+  <h3>✦ 数量最多，风格与 Lucide 相近，填充/线框双变体</h3>
+  <div class="sub">来源: tabler-icons.io · MIT 许可 · 5000+ 图标 · filled + outline 双模式</div>
+  <div class="icon-grid" id="tabler-grid">
+  </div>
+  <div class="divider"></div>
+  <div class="legend">
+    <b>加载方式：</b>CDN 加载 JS 后调用 `tablerIcon.create('heart', {size:18, strokeWidth:2})`<br>
+    <b>优点：</b>5000+ 图标 · MIT 许可 · Filled + Outline 双形态 · 覆盖最全面<br>
+    <b>注意：</b>部分图标偏 Web UI 风格，RPG 属性的匹配度需逐个挑选
+  </div>
+</div>
+
+<!-- ====== SVG Repo (Collection) ====== -->
+<h2>方案 C — SVG Repo <span class="badge">多集合 · 海量选择</span></h2>
+<div class="card">
+  <h3>✦ 汇聚数百个图标集的搜索引擎，按需下载单个 SVG</h3>
+  <div class="sub">来源: svgrepo.com · 搜索后逐个下载 SVG 文件嵌入项目</div>
+  <div class="icon-grid">
+    <div class="icon-cell"><span class="ico ico-hp" style="font-size:16px;">♥</span><span class="name">HP</span><span class="val">来自任意集合</span></div>
+    <div class="icon-cell"><span class="ico ico-mp" style="font-size:16px;">◆</span><span class="name">MP</span></div>
+    <div class="icon-cell"><span class="ico ico-sp" style="font-size:16px;">⚡</span><span class="name">SP</span></div>
+    <div class="icon-cell"><span class="ico ico-buff" style="font-size:16px;">↑</span><span class="name">Buff</span></div>
+    <div class="icon-cell"><span class="ico ico-debuff" style="font-size:16px;">↓</span><span class="name">Debuff</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">⚔</span><span class="name">攻击力</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">🛡</span><span class="name">防御力</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">👟</span><span class="name">速度</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">★</span><span class="name">魔力</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">🔥</span><span class="name">意志</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">🍀</span><span class="name">幸运</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">💰</span><span class="name">金币</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">⭐</span><span class="name">经验值</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">📜</span><span class="name">技能</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">🚩</span><span class="name">任务</span></div>
+    <div class="icon-cell"><span class="ico ico-normal" style="font-size:16px;">📃</span><span class="name">摘要</span></div>
+  </div>
+  <div class="divider"></div>
+  <div class="legend">
+    <b>工作流：</b>在 svgrepo.com 搜索关键属性词 → 选择一个统一风格集合 → 逐个下载对应 SVG → 嵌入项目<br>
+    <b>优点：</b>完全自由的选品，可从一个集合中挑选最 RPG 感的图标<br>
+    <b>缺点：</b>需手动逐个挑选下载，非 CDN 一键引入
+  </div>
+</div>
+
+<p style="color:#c8b896;font-size:11px;text-align:center;">Lucide 图标通过 CDN 动态渲染（需联网），其他方案展示其概念和加载方式。</p>
+
+</body>
+</html>

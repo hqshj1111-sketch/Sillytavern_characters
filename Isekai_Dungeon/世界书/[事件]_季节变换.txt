@@ -1,0 +1,50 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const eventVal = _.get(stat, '系统状态.待处理事件.季节变换事件', '');
+if (!eventVal) return;
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '日常阶段') return;
+
+const newSeason = String(eventVal);
+const seasonNames = ['春季', '夏季', '秋季', '冬季'];
+const prevIdx = (seasonNames.indexOf(newSeason) + 3) % 4;
+const prevSeason = seasonNames[prevIdx];
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const geoData = _.get(stat, '地理信息', {});
+const countryData = geoData[currentCountry] || {};
+const cityData = (countryData.城市列表 || {})[currentCity] || {};
+const vibeObj = cityData.整体氛围 || {};
+const oldVibe = vibeObj[prevSeason.charAt(0)] || '';
+const newVibe = vibeObj[newSeason.charAt(0)] || '';
+
+const currentYear = _.get(stat, '进程.当前年份', '?');
+const currentMonth = _.get(stat, '进程.当前月份', 1);
+const currentDay = _.get(stat, '进程.当前日份', 1);
+_%>
+# 事件：季节变换
+event_initiator:
+  event_name: "季节变换"
+  transition: "<%= prevSeason %> → <%= newSeason %>"
+  location: "<%= currentCountry %> / <%= currentCity %>"
+  time: "<%= currentYear %>年<%= currentMonth %>月<%= currentDay %>日"
+
+  前季景象（<%= prevSeason %>）：<%= oldVibe || '未知' %>
+  今季景象（<%= newSeason %>）：<%= newVibe || '未知' %>
+
+  narrative_guidance:
+    - "【优先级】若其他事件在进行中，收束至一个自然的暂停点，然后切入本事件。"
+    - "季节正式从<%= prevSeason %>进入<%= newSeason %>。这是<%= currentCity %>面貌更迭的节点——描写城市从【<%= prevSeason %>】的<%= oldVibe || '旧日氛围' %>，转向【<%= newSeason %>】的<%= newVibe || '新的气息' %>的过渡瞬间。"
+    - "选取1~2个季节更迭的标志性细节来承载这个时刻——第一片秋叶落在公会门前的石阶上、街道尽头第一次升起热气蒸腾的薄雾、窗外风声突然染上凉意或暖意。通过主角的感知（皮肤感受到的温度变化、呼吸中闻到的空气气味变化、远眺时天际线的颜色变化）来自然地展现季节的更迭。"
+    - "若当前城市有该季节特有的自然现象或社会活动（如上方的整体氛围所述），在这些细节中埋下伏笔——这会在接下来的日子里成为城镇生活的背景板。"
+    - "季节变化带来了新的冒险可能性——某些仅在该季节出没的魔物开始活跃、只在特定季节开放的地下城入口重新显现、或城镇因季节变化而迎来新的外来访客。以一两句话暗示这些可能性，但不直接进入相关叙事。"
+    - "结尾留给主角思考和感受的空间——是站在窗边或街头凝视变化中的城市，还是在日常行动中默默体会季节的更替。"
+
+  mandatory_data_sync:
+    instruction: "季节变换事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/季节变换事件" }
+      ]
+<%_ } _%>

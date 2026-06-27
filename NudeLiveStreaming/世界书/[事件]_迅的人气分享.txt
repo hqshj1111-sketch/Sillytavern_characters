@@ -1,0 +1,58 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const isDaily = _.get(stat, '进程.阶段', '日常阶段') === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['人气分享事件'] && isDaily && !isSexActive) {
+    const milestoneFans = events['人气分享事件'];
+    const jin = _.get(stat, 'NPC数据.风见迅', {});
+    const jinSuspicion = parseInt(jin.秘密察觉程度) || 0;
+    const jinKnows = jinSuspicion >= 100;
+
+    // 迅的主播信息
+    const jinStreamerName = '银犬';
+    const jinCurrentFans = parseInt(jin.主播信息?.粉丝数) || 0;
+    
+    // 判断突破的知名度阶段
+    const getPopularity = (fans) => {
+      if (fans < 100) return { stage: '新人主播', desc: '默默无闻的新人，偶尔有路人点进又离开。' };
+      if (fans < 500) return { stage: '小透明', desc: '开始拥有零星固定观众，弹幕偶尔飘过几条。' };
+      if (fans < 2000) return { stage: '崭露头角', desc: '圈内小有讨论，每次开播都有熟面孔蹲守。' };
+      if (fans < 10000) return { stage: '小有名气', desc: '露出系红人，粉丝群活跃，二创切片开始出现。' };
+      if (fans < 100000) return { stage: '人气新星', desc: '平台头部主播之一，一举一动都引发热议。' };
+      if (fans < 1000000) return { stage: '现象级主播', desc: '全网皆知的露出传奇，弹幕与打赏如潮水般涌来。' };
+      return { stage: 'TOP1', desc: '色情直播界的绝对王者，他的名字就是流量与欲望的代名词。' };
+    };
+    const prevFans = milestoneFans <= 100 ? 0 : (milestoneFans <= 500 ? 100 : (milestoneFans <= 2000 ? 500 : (milestoneFans <= 10000 ? 2000 : 100000)));
+    const prevPop = getPopularity(prevFans);
+    const currentPop = getPopularity(milestoneFans);
+_%>
+# 事件：迅的人气分享
+popularity_share:
+  event_name: "银犬突破<%= milestoneFans %>粉丝"
+  character: "风见迅（银犬）"
+  milestone: <%= milestoneFans %>
+  prior_popularity: "<%= prevPop %>"
+  new_popularity: "<%= currentPop %>"
+
+  narrative_guidance:
+    - "风见迅的露出主播账号「银犬」粉丝数突破了<%= milestoneFans %>，知名度从「<%= prevPop.stage %>」（<%= prevPop.desc %>）跃升至「<%= currentPop.stage %>」（<%= currentPop.desc %>）。他难掩兴奋，主动向主角分享了这个好消息。"
+    - "描写迅炫耀成绩时的得意神态，以及他绘声绘色地讲述最近一次直播中如何用雄小鬼的挑衅嘴脸惹怒观众、然后被弹幕指令或者现实路人惩罚得狼狈不堪却爽到飞起的全过程。"
+    <%_ if (!jinKnows) { _%>
+    - "迅并不知道主角也在做露出直播。他只是单纯把主角当作可以炫耀的朋友，分享自己的直播成就时毫无戒心，无意间将露出直播的刺激与快感赤裸地展现在主角面前。"
+    <%_ } else { _%>
+    - "迅知道主角也是露出主播同行。他的分享带着攀比与交流的意味——炫耀自己的涨粉速度，但也好奇主角的数据，可能半开玩笑地提出PK或联动。这是两个同行之间的专业对话，混杂着暗自较劲与惺惺相惜。"
+    <%_ } _%>
+    - "结尾留给主角选择回应的空间。"
+
+  mandatory_data_sync:
+    instruction: "迅分享完后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/人气分享事件" }
+      ]
+
+<%_ } } _%>

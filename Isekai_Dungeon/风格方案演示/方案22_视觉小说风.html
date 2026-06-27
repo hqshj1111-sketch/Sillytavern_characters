@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案22：视觉小说风 | Visual Novel Dialogue</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #000;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 0;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+
+  .vn-frame {
+    width: 100%; max-width: 660px;
+    height: 700px;
+    background: #0a0a10;
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    border: 2px solid #1a1a2a;
+  }
+
+  /* ====== 场景画面区（占 60% 高度）====== */
+  .scene-area {
+    flex: 3;
+    position: relative; overflow: hidden;
+    background: linear-gradient(180deg, #0a0608, #060408 30%, #080408 60%, #0a0408 100%);
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  /* 简单场景暗示：石壁纹理 */
+  .scene-area::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      linear-gradient(90deg, #0a0404, transparent 5%, transparent 95%, #0a0404),
+      linear-gradient(0deg, rgba(0,0,0,0.6), transparent 30%, transparent 70%, rgba(0,0,0,0.8));
+  }
+  .scene-area .stone-pillar {
+    position: absolute; bottom: 0; width: 30px;
+    background: linear-gradient(180deg, #1a1018, #0a0608);
+    border: 1px solid #1a1018; border-bottom: none;
+    opacity: 0.4;
+  }
+  .scene-area .stone-pillar.left { left: 40px; height: 80%; }
+  .scene-area .stone-pillar.right { right: 40px; height: 70%; }
+  .scene-area .torch-light {
+    position: absolute; top: 30%; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(255,140,40,0.15) 0%, transparent 70%);
+    animation: torch-flicker 2s ease infinite; pointer-events: none;
+  }
+  @keyframes torch-flicker {
+    0%,100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.5; transform: translateX(-50%) scale(1.1); }
+    30% { opacity: 0.9; }
+    70% { opacity: 0.4; }
+  }
+  /* HUD 元素覆盖在场景上 */
+  .hud-top {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 8px 12px; z-index: 10;
+    font-size: 10px; color: rgba(255,255,255,0.6);
+    background: linear-gradient(180deg, rgba(0,0,0,0.5), transparent);
+  }
+  .hud-top .hud-stats {
+    display: flex; gap: 10px;
+    font-family: monospace; font-size: 9px;
+  }
+  .hud-top .hud-stats span { display: flex; align-items: center; gap: 3px; }
+  .hud-top .hud-stats .hp-bar {
+    display: inline-block; width: 40px; height: 4px;
+    background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;
+  }
+  .hud-top .hud-stats .hp-bar .fill { height: 100%; }
+  .hud-top .hud-stats .hp-bar .fill.hp { background: #e04040; }
+  .hud-top .hud-stats .hp-bar .fill.mp { background: #4080e0; }
+  .hud-top .hud-stats .hp-bar .fill.sp { background: #e0b040; }
+  .hud-date {
+    text-align: right; font-size: 9px; line-height: 1.4;
+    color: rgba(255,255,255,0.5);
+  }
+  .hud-attrs {
+    position: absolute; bottom: 12px; left: 12px; right: 12px;
+    display: flex; gap: 6px; justify-content: center; z-index: 10;
+  }
+  .hud-attrs .attr {
+    font-size: 8px; color: rgba(255,255,255,0.35);
+    background: rgba(0,0,0,0.4); padding: 2px 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 2px;
+  }
+  .hud-attrs .attr .n { color: rgba(255,255,255,0.5); font-weight: 600; margin-left: 2px; }
+
+  /* ====== 对话框区（占 40% 高度）====== */
+  .dialogue-area {
+    flex: 2;
+    background: linear-gradient(180deg, rgba(10,8,16,0.95), rgba(6,4,10,0.98));
+    border-top: 2px solid rgba(255,255,255,0.08);
+    display: flex; flex-direction: column;
+    padding: 12px 16px 8px;
+    position: relative;
+  }
+  /* 说话者姓名框 */
+  .speaker-tag {
+    display: inline-block;
+    background: rgba(60,30,80,0.4);
+    border: 1px solid rgba(100,60,120,0.3);
+    color: #c0a0d0;
+    padding: 4px 14px; font-size: 12px;
+    letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .dialogue-text {
+    flex: 1;
+    color: #c0b8c8; font-size: 14px; line-height: 2;
+    font-family: 'Noto Serif SC', serif;
+    overflow-y: auto;
+  }
+  .dialogue-text p { margin-bottom: 8px; text-indent: 2em; }
+  .dialogue-text .color1 { color: #d0b060; }
+  .dialogue-text .color2 { color: #e06060; }
+
+  /* ====== 选项区 ====== */
+  .choices-area {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    padding: 8px 0 0;
+  }
+  .choice-btn {
+    font-family: 'Noto Sans SC', sans-serif; font-size: 12px;
+    background: rgba(30,20,50,0.5); color: #a098b0;
+    border: 1px solid rgba(100,80,140,0.2); padding: 8px 12px;
+    cursor: pointer; transition: all 0.2s; text-align: left;
+    border-radius: 2px;
+  }
+  .choice-btn:hover { background: rgba(60,40,80,0.4); color: #d0c0e8; border-color: rgba(140,100,200,0.4); }
+  .choice-btn.primary { border-color: rgba(140,100,200,0.4); color: #d0c0e8; }
+
+  /* 装备抽屉 */
+  .equip-drawer {
+    display: none;
+  }
+  .equip-toggle {
+    position: absolute; top: 6px; right: 12px;
+    font-size: 9px; color: rgba(255,255,255,0.3); cursor: pointer;
+    z-index: 11; background: none; border: none;
+  }
+</style>
+</head>
+<body>
+<div class="vn-frame">
+
+  <!-- ====== 场景画面区 ====== -->
+  <div class="scene-area">
+    <div class="stone-pillar left"></div>
+    <div class="stone-pillar right"></div>
+    <div class="torch-light"></div>
+
+    <!-- 顶部HUD -->
+    <div class="hud-top">
+      <div class="hud-stats">
+        <span>♥<span class="hp-bar"><span class="fill hp" style="width:78%"></span></span>78</span>
+        <span>✦<span class="hp-bar"><span class="fill mp" style="width:54%"></span></span>54</span>
+        <span>⚔<span class="hp-bar"><span class="fill sp" style="width:90%"></span></span>90</span>
+      </div>
+      <div class="hud-date">384年10月15日<br>黄昏</div>
+    </div>
+
+    <!-- 底部属性浮标 -->
+    <div class="hud-attrs">
+      <span class="attr">ATK <span class="n">42</span></span>
+      <span class="attr">DEF <span class="n">28</span></span>
+      <span class="attr">AGI <span class="n">35</span></span>
+      <span class="attr">INT <span class="n">30</span></span>
+      <span class="attr">LCK <span class="n">18</span></span>
+      <span class="attr">G <span class="n">1250</span></span>
+    </div>
+  </div>
+
+  <!-- ====== 对话框区 ====== -->
+  <div class="dialogue-area">
+    <div class="speaker-tag">旁 白</div>
+    <div class="dialogue-text">
+      <p>你推开沉重的石门，腐朽的空气中弥漫着<span class="color1">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="color2">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。</p>
+      <p>你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="color2">不寻常的红光</span>。</p>
+      <p>甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="color1">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……</p>
+    </div>
+
+    <!-- 选项 -->
+    <div class="choices-area">
+      <button class="choice-btn primary">▶ 挥剑斩向哥布林头领</button>
+      <button class="choice-btn">▶ 释放火球术灼烧敌群</button>
+      <button class="choice-btn">▶ 防御姿态，观察敌人弱点</button>
+      <button class="choice-btn">▶ 尝试魅惑其中一只哥布林</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

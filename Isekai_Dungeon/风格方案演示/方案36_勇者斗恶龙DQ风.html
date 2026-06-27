@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案36：勇者斗恶龙DQ风 | Dragon Quest</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  body{
+    background:#87ceeb;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px;
+    font-family:'Noto Sans SC',sans-serif;color:#2a2a3a;font-size:13px;
+  }
+  .app{width:100%;max-width:660px;border:3px solid #b8960c;border-radius:8px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.15)}
+
+  /* 蓝底金边经典DQ框 */
+  .dq-frame{background:linear-gradient(180deg,#4a80b8,#306098);padding:16px 20px}
+
+  /* 白色内容框 */
+  .dq-content{background:#fff;border:3px solid #b8960c;border-radius:4px;overflow:hidden;box-shadow:inset 0 0 0 3px #e0d0a0}
+
+  /* 标题栏：深蓝底+金边 */
+  .dq-header{background:linear-gradient(180deg,#285898,#1a3878);padding:10px 18px;color:#fff;text-align:center;border-bottom:3px solid #b8960c}
+  .dq-header h1{font-size:18px;font-weight:700;letter-spacing:4px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+  .dq-header .sub{font-size:9px;color:#a0c0e0;letter-spacing:3px;margin-top:2px}
+
+  .dq-body{padding:14px 18px}
+
+  /* 状态：白框蓝条 */
+  .dq-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .dq-stat{background:#f8faff;border:2px solid #c0c8d8;border-radius:4px;padding:8px 12px}
+  .dq-stat .dq-head{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;font-weight:500}
+  .dq-stat .dq-head .tag{color:#285898}
+  .dq-stat .dq-head .val{color:#2a2a3a}
+  .dq-bar{height:8px;background:#e8ecf0;border:1px solid #b0b8c0;border-radius:2px;overflow:hidden}
+  .dq-fill{height:100%;border-radius:1px}
+  .dq-fill.hp{background:linear-gradient(90deg,#d84040,#f06060)}
+  .dq-fill.mp{background:linear-gradient(90deg,#3060b8,#5080e0)}
+  .dq-fill.sp{background:linear-gradient(90deg,#b09030,#d0b840)}
+  .dq-fill.exp{background:linear-gradient(90deg,#309050,#50b870)}
+
+  /* 属性：蓝边小框 */
+  .dq-attrs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+  .dq-attr{text-align:center;min-width:42px;padding:6px 4px;background:#f8faff;border:2px solid #b0c0d8;border-radius:4px}
+  .dq-attr .dq-a-icon{font-size:16px;display:block}
+  .dq-attr .dq-a-val{font-size:12px;font-weight:700;color:#285898}
+  .dq-attr .dq-a-key{font-size:7px;color:#687888;letter-spacing:1px}
+
+  /* 对话：经典DQ白框 */
+  .dq-dialogue{background:#fff;border:2px solid #b0b8c8;border-radius:4px;padding:12px 16px;margin-bottom:10px;position:relative}
+  .dq-dialogue::before{content:'';position:absolute;bottom:-8px;left:20px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid #b0b8c8}
+  .dq-dialogue::after{content:'';position:absolute;bottom:-6px;left:22px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #fff}
+  .dq-dialogue p{font-size:12px;line-height:1.8;color:#3a3a4a;margin-bottom:4px}
+  .dq-dialogue p:last-child{margin-bottom:0}
+  .dq-dialogue .blue{color:#285898;font-weight:500}
+  .dq-dialogue .red{color:#d84040}
+
+  /* 命令式按钮 */
+  .dq-commands{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+  .dq-cmd{font-family:inherit;font-size:11px;background:#f8faff;border:2px solid #b0c0d8;border-radius:4px;color:#2a2a3a;padding:10px 12px;cursor:pointer;transition:.15s;text-align:left}
+  .dq-cmd:hover{background:#e8f0f8;border-color:#6090c0}
+  .dq-cmd.primary{background:#e8f0f8;border-color:#6090c0;color:#285898}
+
+  /* 装备 */
+  .dq-equip{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px}
+  .dq-item{display:flex;justify-content:space-between;padding:6px 10px;background:#f8faff;border:1px solid #c0c8d8;border-radius:3px;font-size:10px}
+  .dq-item .dq-t{color:#687888}.dq-item .dq-n{color:#2a2a3a}
+  .dq-tags{display:flex;flex-wrap:wrap;gap:3px}
+  .dq-tags span{font-size:8px;padding:3px 8px;border:1px solid #c0c8d8;border-radius:3px;color:#687888;background:#f8faff}
+  .dq-tags span.on{border-color:#6090c0;color:#285898;background:#e8f0f8}
+
+  .dq-footer{display:flex;justify-content:space-between;padding:6px 0 0;border-top:1px solid #d0d8e0;font-size:9px;color:#687888;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="dq-frame">
+    <div class="dq-content">
+
+      <div class="dq-header">
+        <h1>异 世 界 地 下 城</h1>
+        <div class="sub">ISEKAI DUNGEON</div>
+      </div>
+
+      <div class="dq-body">
+
+        <div class="dq-stats">
+          <div class="dq-stat">
+            <div class="dq-head"><span class="tag">♥ HP</span><span class="val">78 / 100</span></div>
+            <div class="dq-bar"><div class="dq-fill hp" style="width:78%"></div></div>
+          </div>
+          <div class="dq-stat">
+            <div class="dq-head"><span class="tag">✦ MP</span><span class="val">54 / 100</span></div>
+            <div class="dq-bar"><div class="dq-fill mp" style="width:54%"></div></div>
+          </div>
+          <div class="dq-stat">
+            <div class="dq-head"><span class="tag">⚔ SP</span><span class="val">90 / 100</span></div>
+            <div class="dq-bar"><div class="dq-fill sp" style="width:90%"></div></div>
+          </div>
+          <div class="dq-stat">
+            <div class="dq-head"><span class="tag">★ EXP</span><span class="val">35%</span></div>
+            <div class="dq-bar"><div class="dq-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+
+        <div class="dq-attrs">
+          <div class="dq-attr"><span class="dq-a-icon">⚔</span><div class="dq-a-val">42</div><div class="dq-a-key">ATK</div></div>
+          <div class="dq-attr"><span class="dq-a-icon">🛡</span><div class="dq-a-val">28</div><div class="dq-a-key">DEF</div></div>
+          <div class="dq-attr"><span class="dq-a-icon">⚡</span><div class="dq-a-val">35</div><div class="dq-a-key">SPD</div></div>
+          <div class="dq-attr"><span class="dq-a-icon">✧</span><div class="dq-a-val">30</div><div class="dq-a-key">INT</div></div>
+          <div class="dq-attr"><span class="dq-a-icon">☘</span><div class="dq-a-val">18</div><div class="dq-a-key">LCK</div></div>
+          <div class="dq-attr" style="border-color:#b8960c"><span class="dq-a-icon">◎</span><div class="dq-a-val" style="color:#b8960c">1250</div><div class="dq-a-key">GOLD</div></div>
+        </div>
+
+        <div class="dq-dialogue">
+          <p>你推开沉重的<span class="blue">石门</span>，腐朽的空气中弥漫着<span class="blue">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="red">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来！</p>
+          <p>左侧那只头领模样的家伙眼中闪烁着<span class="red">不寻常的红光</span>。石壁上的古老浮雕描绘着被封印在此的<span class="blue">魅魔女王</span>……</p>
+        </div>
+
+        <div class="dq-commands">
+          <button class="dq-cmd primary">⚔ 挥剑斩向哥布林头领</button>
+          <button class="dq-cmd">🔥 释放火球术灼烧敌群</button>
+          <button class="dq-cmd">🛡 防御姿态观察敌人弱点</button>
+          <button class="dq-cmd">💋 尝试魅惑哥布林</button>
+        </div>
+
+        <div class="dq-equip">
+          <div class="dq-item"><span class="dq-t">武器</span><span class="dq-n">铁质长剑 Lv.3</span></div>
+          <div class="dq-item"><span class="dq-t">防具</span><span class="dq-n">皮甲 Lv.2</span></div>
+          <div class="dq-item"><span class="dq-t">饰品</span><span class="dq-n">冒险者徽章</span></div>
+          <div class="dq-item"><span class="dq-t">道具</span><span class="dq-n">回复药水 ×3</span></div>
+        </div>
+        <div class="dq-tags">
+          <span class="on">触手紧身衣·共生期</span><span class="on">蜕生项圈·中期</span><span>影子分身·无心智</span><span>淫欲晶核·关闭</span>
+        </div>
+
+        <div class="dq-footer">
+          <span>地下城 B3F</span><span>阿斯特大陆</span><span>第 12 回合</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

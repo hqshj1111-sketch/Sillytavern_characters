@@ -1,0 +1,43 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+const isShopping = _.get(stat, '商城信息.是否购物中', false);
+if (phase !== '日常阶段' || !isShopping) return;
+
+const shopItems = _.get(stat, '商城信息.商品列表', []);
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+_%>
+# 系统指令：购物系统
+
+  当前店铺：<%= currentCountry %>·<%= currentCity %>
+
+  商品列表：
+<%_ if (shopItems.length > 0) {
+  shopItems.forEach((item, i) => { _%>
+  <%= i + 1 %>. <%= item.商品名称||'?' %>(<%= item.商品类型||'?' %>) - <%= item.商品价格||0 %>金<% if ((item.商品属性||[]).length > 0) { %> | 属性:<%= item.商品属性.join('/') %><% } %><% if ((item.商品对应增幅||[]).length > 0) { %> | 增幅:<%= item.商品对应增幅.join('/') %><% } %>
+     <%= item.商品描述||'' %>
+<%_ }); } else { _%>
+  (暂无商品)
+<%_ } _%>
+
+  narrative_guidance:
+    - "主角正在购物中。当前已有 <%= shopItems.length %> 件商品展示。描写主角与店主的互动——询价、试穿/试用、讨价还价——以及主角对某件商品的犹豫或心动。"
+    - "若玩家明确表示要看看更多的商品，根据玩家的输入（如'多来点武器'或'有没有更好的药水'），展示对应的商品。"
+    - "若玩家明确表示结束购物离开，描写主角携带（或不携带）收获离开店铺的场景。"
+
+  mandatory_data_sync:
+    add_items:
+      instruction: "若玩家明确表示，追加新商品至列表，可用多条insert语句追加多个商品："
+      patch_code: |
+        [
+          { "op": "insert", "path": "/商城信息/商品列表/-", "value": { "商品名称": "[新商品]", "商品类型": "[类型]", "商品描述": "[描述]", "商品属性": ["攻击力", "意志"]（举例，可为空）, "商品对应增幅": ["+5", "*1.2"]（举例，与属性对应）, "商品价格": [合理价格] } }
+        ]
+
+    leave_shop:
+      instruction: "若玩家明确表示，结束购物离开店铺："
+      patch_code: |
+        [
+          { "op": "replace", "path": "/商城信息/是否购物中", "value": false }
+        ]
+<%_ } _%>

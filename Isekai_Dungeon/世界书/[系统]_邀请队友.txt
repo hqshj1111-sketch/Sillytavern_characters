@@ -1,0 +1,94 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '日常阶段') return;
+
+const inviteEvent = _.get(stat, '系统状态.待处理事件.队友邀请事件', null);
+if (!inviteEvent || !inviteEvent.邀请名单) return;
+const inviteNames = inviteEvent.邀请名单.filter(n => n);
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+
+const importantNPCs = _.get(stat, '重要NPC信息', {});
+const normalNPCs = _.get(stat, '一般NPC信息', {});
+
+const DISTANCE_MATRIX = {
+    '龙脊联邦': { '霜境王国': 1, '密林双廷': 1, '原野同盟': 1, '金沙帝国': 2, '潮汐联邦': 3 },
+    '霜境王国': { '龙脊联邦': 1, '密林双廷': 1, '原野同盟': 1, '金沙帝国': 2, '潮汐联邦': 3 },
+    '密林双廷': { '龙脊联邦': 1, '霜境王国': 1, '原野同盟': 2, '金沙帝国': 1, '潮汐联邦': 2 },
+    '原野同盟': { '龙脊联邦': 1, '霜境王国': 1, '密林双廷': 2, '金沙帝国': 1, '潮汐联邦': 2 },
+    '金沙帝国': { '龙脊联邦': 2, '霜境王国': 2, '密林双廷': 1, '原野同盟': 1, '潮汐联邦': 1 },
+    '潮汐联邦': { '龙脊联邦': 3, '霜境王国': 3, '密林双廷': 2, '原野同盟': 2, '金沙帝国': 1 },
+};
+
+const invitees = inviteNames.map(name => {
+  const npc = importantNPCs[name] || normalNPCs[name] || null;
+  if (!npc) return { name, found: false };
+  const npcCountry = npc.所在国家 || '';
+  const npcCity = npc.所在城市 || '';
+  const isLocal = npcCountry === currentCountry && npcCity === currentCity;
+  let travelDays = 0, travelDesc = '';
+  if (!isLocal) {
+    const isSameCountry = npcCountry === currentCountry;
+    let level = 0;
+    if (!isSameCountry) {
+      const row = DISTANCE_MATRIX[currentCountry] || {};
+      level = row[npcCountry] || 2;
+    }
+    if (isSameCountry) { travelDays = '1~2'; travelDesc = '国内短途'; }
+    else if (level === 1) { travelDays = '3~5'; travelDesc = '邻国陆路'; }
+    else if (level === 2) { travelDays = '7~10'; travelDesc = '远国长途'; }
+    else { travelDays = '10~14'; travelDesc = '跨海远洋'; }
+  }
+  return {
+    name,
+    found: true,
+    race: npc.种族 || '?',
+    gender: npc.性别 || '?',
+    age: npc.年龄 || '?',
+    occupation: npc.职业 || npc.身份 || npc.简述 || '当地居民',
+    country: npcCountry,
+    city: npcCity,
+    isLocal,
+    travelDays,
+    travelDesc,
+  };
+});
+const foundList = invitees.filter(i => i.found);
+const notFoundList = invitees.filter(i => !i.found);
+const localList = invitees.filter(i => i.found && i.isLocal);
+const remoteList = invitees.filter(i => i.found && !i.isLocal);
+_%>
+# 系统指令：邀请队友
+
+  邀请人：<%= inviteNames.join('、') %>
+  当前所在地：<%= currentCountry %> / <%= currentCity %>
+
+<%_ if (notFoundList.length > 0) { _%>
+  ⚠ 未找到的NPC：<%= notFoundList.map(i => i.name).join('、') %> — 无任何记录，直接忽略。
+<%_ } _%>
+
+  受邀者信息：
+<%_ foundList.forEach(i => { _%>
+    【<%= i.name %>】<%= i.race %> / <%= i.gender %> / <%= i.age %>岁 | <%= i.occupation %> | <%= i.isLocal ? '当前同在【' + currentCity + '】' : '位于【' + i.country + ' / ' + i.city + '】需' + i.travelDays + '日（' + i.travelDesc + '）赶来' %>
+<%_ }); _%>
+
+  narrative_guidance:
+    - "主角决定邀请上述人来组建本次攻略地下城的队伍。先描写主角在<%= currentCity %>中如何依次或以其他方式联系到这些人——登门拜访、在公会或酒馆碰面、或通过魔法通信传讯。"
+<%_ if (localList.length > 0) { _%>
+    - "同在<%= currentCity %>的<%= localList.map(i => i.name).join('、') %>——描写主角当面发出邀请时的场景，对方的表情反应。由AI根据该NPC的性格和与主角的关系（好感度、最近互动）判定其是否接受邀请——好感度高或性格热心的NPC大概率接受，性格冷淡或有要事在身的可能婉拒。"
+<%_ } _%>
+<%_ if (remoteList.length > 0) { _%>
+    - "不在当前城市的<%= remoteList.map(i => i.name).join('、') %>——主角通过书信或魔法通信传讯邀请。由AI判定对方是否接受，若接受则需额外等待其从【各自所在地】赶来的路程汇合时间（见上方的旅途天数），并描写传讯发出后等待的日夜、以及对方抵达时的见面场景。"
+<%_ } _%>
+    - "最终汇总——描写所有接受邀请的队友在<%= currentCity %>集合后的场景。集合地点可以是公会门前、酒馆的方桌、或约定的街头。互相之间的介绍和寒暄——若有互不相识的队友，由主角简要介绍彼此。出发前的最后确认——装备、药水、补给、以及本次要攻略的目标地下城。"
+    - "本回合以队伍在<%= currentCity %>内集结完毕、气氛从最初碰面过渡到即将出发的昂扬作为收束。不推进至地下城门口——为下一回合的「出发」留出空间。"
+
+  mandatory_data_sync:
+    instruction: "完成邀约叙事后，移除队友邀请事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/队友邀请事件" }
+      ]
+<%_ } _%>

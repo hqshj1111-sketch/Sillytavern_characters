@@ -1,0 +1,87 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+if (stat && _.get(stat, '进程.阶段') !== '创角阶段') {
+
+    const physState = _.get(stat, '主角.当前状态.当前生理状态', '未知');
+    const outfit = _.get(stat, '主角.当前状态.当前着装', '未知');
+    const specialEquips = _.get(stat, '主角.特殊装备', []);
+    const level = _.get(stat, '主角.当前状态.等级', 1);
+    const exp = _.get(stat, '主角.当前状态.经验值', 0);
+    const gold = _.get(stat, '主角.当前状态.金币', 0);
+    const expToNext = level * 100 + 50;
+
+    const isInDungeon = _.get(stat, '进程.阶段') === '地下城攻略阶段';
+    const isInCombat = _.get(stat, '战斗状态.是否战斗中', false);
+    const currentHP = _.get(stat, '主角.当前状态.当前HP', 100);
+    const maxHP = _.get(stat, '主角.战斗属性.最大HP', 100);
+    const currentMP = _.get(stat, '主角.当前状态.当前MP', 50);
+    const maxMP = _.get(stat, '主角.战斗属性.最大MP', 50);
+    const currentSP = _.get(stat, '主角.当前状态.当前SP', 100);
+    const maxSP = _.get(stat, '主角.战斗属性.最大SP', 100);
+
+    const buffs = _.get(stat, '主角.当前状态.当前buff', {});
+    const debuffs = _.get(stat, '主角.当前状态.当前debuff', {});
+    const buffNames = Object.keys(buffs);
+    const debuffNames = Object.keys(debuffs);
+
+    const raidKills = _.get(stat, '地下城攻略状态.本次攻略击杀数', 0);
+    const raidGold = _.get(stat, '地下城攻略状态.本次攻略获得金币', 0);
+    const materials = _.get(stat, '地下城攻略状态.本次攻略获得素材', {});
+
+    const teammates = _.get(stat, '队友信息', {});
+    const teammateNames = Object.keys(teammates);
+
+    const inventory = _.get(stat, '主角.道具栏', {});
+    const invList = Object.entries(inventory).map(([k,v]) => `${k}×${v.数量||1}(${v.类型||'?'}): ${v.描述||''}`).join(' | ');
+
+    const questActive = _.get(stat, '任务状态.是否任务进行中', false);
+    const quests = _.get(stat, '任务状态.任务列表', {});
+    const questList = Object.entries(quests).map(([k,q]) => {
+      const marker = q.是否完成 ? '✓' : '○';
+      return `${marker} ${k}: ${q.任务内容||'?'} | 奖励:${q.任务奖励||'?'}`;
+    }).join('\n- ');
+_%>
+# 主角实时档案
+
+- 生理状态：<%= physState %>
+- 当前着装：<%= outfit %>
+<%_ if (specialEquips.length > 0) { _%>
+- 特殊装备：<%= specialEquips.join('、') %>
+<%_ } _%>
+- Lv.<%= level %> | 经验值：<%= exp %>/<%= expToNext %> | 金币：<%= gold %>
+<%_ if (isInDungeon && !isInCombat) { _%>
+- HP：<%= currentHP %>/<%= maxHP %> | MP：<%= currentMP %>/<%= maxMP %> | SP：<%= currentSP %>/<%= maxSP %>
+<%_ } _%>
+<%_ if (!isInCombat && buffNames.length > 0) { _%>
+- 增益：<%= buffNames.join('、') %>
+<%_ } _%>
+<%_ if (!isInCombat && debuffNames.length > 0) { _%>
+- 减益：<%= debuffNames.join('、') %>
+<%_ } _%>
+
+<%_ if (invList) { _%>
+- 道具：<%= invList %>
+<%_ } _%>
+<%_ if (questActive && questList) { _%>
+- 任务：
+  - <%= questList %>
+<%_ } _%>
+
+<%_ if (isInDungeon) { _%>
+## 当前攻略状态
+- 本次击杀：<%= raidKills %> | 本次金币：<%= raidGold %>
+- 获得素材：<%= Object.keys(materials).length > 0 ? Object.entries(materials).map(([k,v]) => `${k}×${v}`).join('、') : '无' %>
+<%_ if (teammateNames.length > 0) { _%>
+## 队友状态
+<%_ teammateNames.forEach(name => {
+  const t = teammates[name];
+  const tbuffs = Object.keys(t.当前buff || {});
+  const tdebuffs = Object.keys(t.当前debuff || {});
+  const tequip = t.装备 || {};
+_%>
+- <%= name %>：HP<%= t.当前HP||0 %>/<%= t.最大HP||100 %> MP<%= t.当前MP||0 %>/<%= t.最大MP||50 %> SP<%= t.当前SP||0 %>/<%= t.最大SP||100 %><% if (tbuffs.length > 0) { %> | 增益：<%= tbuffs.join('、') %><% } %><% if (tdebuffs.length > 0) { %> | 减益：<%= tdebuffs.join('、') %><% } %> | 武器：<%= tequip.武器||'无' %> 护甲：<%= tequip.护甲||'无' %> 饰品：<%= tequip.饰品||'无' %>
+<%_ }); _%>
+<%_ } _%>
+<%_ } _%>
+
+<%_ } } _%>

@@ -1,0 +1,198 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+if (stat && stat.进程 && _.get(stat, '进程.阶段') !== '创角阶段') {
+
+    const currentYear = _.get(stat, '进程.当前年份');
+    const currentMonth = _.get(stat, '进程.当前月份');
+    const currentDay = _.get(stat, '进程.当前日份');
+    const currentHour = _.get(stat, '进程.当前小时');
+    const currentMinute = _.get(stat, '进程.当前分钟');
+    
+    const timeStr = `${String(currentHour).padStart(2,'0')}:${String(currentMinute).padStart(2,'0')}`;
+    const dateStr = `${currentYear}年${currentMonth}月${currentDay}日`;
+    
+    let season = '';
+    if (currentMonth >= 3 && currentMonth <= 5) season = '春季';
+    else if (currentMonth >= 6 && currentMonth <= 8) season = '夏季';
+    else if (currentMonth >= 9 && currentMonth <= 11) season = '秋季';
+    else season = '冬季';
+    
+    const weather = _.get(stat, '进程.当前天气', '晴');
+    const holiday = _.get(stat, '进程.当前假期', '否');
+    const dayOfWeek = parseInt(_.get(stat, '进程.当前周几', 3)) || 3;
+    const weekNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    const weekName = weekNames[dayOfWeek - 1] || '周三';
+    
+    let scheduleText = '';
+    if (holiday === '暑假') {
+        scheduleText = '暑假期间，不用上课';
+    } else if (holiday === '寒假') {
+        scheduleText = '寒假期间，不用上课';
+    } else if (dayOfWeek === 6 || dayOfWeek === 7) {
+        scheduleText = weekName + '，周末不用上课';
+    } else {
+        scheduleText = weekName + '，需要上课';
+    }
+
+    // ========== 直播状态 ==========
+    const isStreaming = _.get(stat, '直播状态.是否正在直播', false);
+    const viewerCount = _.get(stat, '直播状态.当前直播间人数', 0);
+    const heat = _.get(stat, '直播状态.当前直播间热度', 0);
+    const climaxThisStream = _.get(stat, '直播状态.当次直播高潮次数', 0);
+
+    // ========== 主角当前状态 ==========
+    const physState = _.get(stat, '主角.当前状态.当前生理状态', '未知');
+    const outfit = _.get(stat, '主角.当前状态.当前着装', '未知');
+    const equipped = _.get(stat, '主角.当前状态.当前佩戴', {});
+    const pleasure = parseInt(_.get(stat, '主角.当前状态.快感值', 0));
+    const desire = parseInt(_.get(stat, '主角.当前状态.性欲值', 0));
+    const shame = parseInt(_.get(stat, '主角.当前状态.羞耻度', 100));
+    const lewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0));
+
+    // ========== 主播信息 ==========
+    const streamerName = _.get(stat, '主角.主播信息.主播名字', '待设定');
+    const points = _.get(stat, '主角.主播信息.直播点数', 0);
+    const fans = _.get(stat, '主角.主播信息.粉丝数', 0);
+    const attitude = _.get(stat, '主角.主播信息.主播态度', '未知');
+    const items = _.get(stat, '主角.道具栏.已购道具列表', []);
+    const totalStreams = parseInt(_.get(stat, '主角.主播信息.直播总次数', 0)) || 0;
+
+    // ========== 快感值阶段 ==========
+    let pleasureStage = '';
+    let pleasureText = '';
+    if (pleasure < 20) { pleasureStage = '平静'; pleasureText = '身体放松，呼吸平稳，没有任何不适或冲动。'; }
+    else if (pleasure < 40) { pleasureStage = '微热'; pleasureText = '身体深处泛起一丝不易察觉的酥麻，体温微微上升。'; }
+    else if (pleasure < 60) { pleasureStage = '兴奋'; pleasureText = '快感逐渐累积，呼吸略微加快，身体开始不自觉地回应刺激。'; }
+    else if (pleasure < 80) { pleasureStage = '亢奋'; pleasureText = '全身被快感裹挟，难以保持静止，思维开始模糊。'; }
+    else { pleasureStage = '临界'; pleasureText = '濒临高潮边缘，身体紧绷到极点，随时可能决堤。'; }
+
+    // ========== 性欲值阶段 ==========
+    let desireStage = '';
+    let desireText = '';
+    if (desire < 20) { desireStage = '心如止水'; desireText = '脑中清明，没有特别的绮念，注意力放在日常之事上。'; }
+    else if (desire < 40) { desireStage = '心猿意马'; desireText = '视线偶尔掠过某些画面时停顿，一些模糊的念头在脑海边缘徘徊。'; }
+    else if (desire < 60) { desireStage = '想入非非'; desireText = '脑海闪过香艳画面或妄想，对肢体接触的渴望悄然滋长。'; }
+    else if (desire < 80) { desireStage = '春心荡漾'; desireText = '妄想在脑中挥之不去，对身边的一切都异常敏感，心跳暗自加速。'; }
+    else { desireStage = '欲火中烧'; desireText = '满脑子都是色情的念头，理智与本能在激烈拉扯。'; }
+
+    // ========== 羞耻度阶段 ==========
+    let shameStage = '';
+    let shameText = '';
+    if (shame >= 75) { shameStage = '极易羞耻'; shameText = '任何裸露或被注视都会让他脸红心跳、手足无措，恨不得找个地缝钻进。'; }
+    else if (shame >= 50) { shameStage = '仍有羞耻'; shameText = '已经经历了一些，但底线尚在，面对过分的要求时仍会犹豫退缩。'; }
+    else if (shame >= 25) { shameStage = '羞耻渐褪'; shameText = '曾经让他面红耳赤的事情变得平常，享受那些异样的目光。'; }
+    else { shameStage = '不知羞耻'; shameText = '羞耻心几乎荡然无存，展露身体如呼吸般自然，甚至以挑战禁忌为乐。'; }
+
+    let outfitTendency = '';
+    if (shame >= 75) outfitTendency = '保守着装，全身上下包裹严实，无任何裸露。';
+    else if (shame >= 50) outfitTendency = '着装开始放松，偶尔选择稍短的裤装或低领上衣，但整体仍正常。';
+    else if (shame >= 25) outfitTendency = '在家习惯只穿内裤，日常着装偏大胆，常穿柔顺贴身或透视材质，偶尔会不穿内衣出门。';
+    else outfitTendency = '极度暴露，在家通常全裸，外出时常内里真空或仅披一件外套，丢垃圾等短距离活动甚至直接全裸。';
+
+    // ========== 淫乱度阶段 ==========
+    let lewdStage = '';
+    let lewdText = '';
+    if (lewdness < 25) { lewdStage = '青涩'; lewdText = '对性事陌生而懵懂，任何亲密接触都带着笨拙和犹豫。'; }
+    else if (lewdness < 50) { lewdStage = '入门'; lewdText = '开始习惯身体接触，偶尔会主动尝试，但技巧生疏。'; }
+    else if (lewdness < 75) { lewdStage = '淫乱'; lewdText = '熟练运用身体取悦自己和他人，享受性爱，大胆追求刺激。'; }
+    else { lewdStage = '极度淫乱'; lewdText = '沉沦于肉欲的深渊，身体与心灵都已彻底放开，追寻更极致的快感。'; }
+
+    let speechStyle = '';
+    if (lewdness < 25) speechStyle = '青涩拘谨，说话支支吾吾，涉及色情话题时会脸红语塞。';
+    else if (lewdness < 50) speechStyle = '逐渐放开，能接住黄腔但回应仍显生硬，偶尔会说漏嘴蹦出下流词。';
+    else if (lewdness < 75) speechStyle = '大胆直白，主动使用色情词汇，毫不避讳描述自己的身体与欲望。';
+    else speechStyle = '满嘴污言秽语，用词极其下流露骨，已无任何羞耻修饰。';
+
+    // ========== 主播成长阶段 ==========
+    let identityStage = '';
+    if (totalStreams <= 3) {
+        identityStage = '割裂：两个世界截然分开，日常中的他与镜头前的他判若两人。';
+    } else if (totalStreams <= 6) {
+        identityStage = '渗透：镜头前的放荡开始偶尔闪回日常，独处时恍惚觉得被注视。';
+    } else if (totalStreams <= 10) {
+        identityStage = '模糊：日常与直播的边界消融，面对熟人时也偶尔忘记收起主播的姿态。';
+    } else {
+        identityStage = '融合：已分不清哪个才是真实的自己，镜头内外彻底合一。';
+    }
+    let skillStage = '';
+    if (totalStreams <= 3) {
+        skillStage = '新人：镜头前仍显笨拙羞涩，每个大胆举动都伴随心跳加速和犹豫。';
+    } else if (totalStreams <= 6) {
+        skillStage = '熟练：开始掌握互动节奏，羞涩感减退，表演欲上升。';
+    } else if (totalStreams <= 10) {
+        skillStage = '老手：开播即入状态，能用肢体和话术精准煽动热度。';
+    } else {
+        skillStage = '沉沦：镜头是唯一归宿，弹幕是饥渴燃料，表演成为本能。';
+    }
+
+    let popStage = '';
+    let popDesc = '';
+    if (fans < 100) { popStage = '新人主播'; popDesc = '默默无闻的新人，偶尔有路人点进又离开。'; }
+    else if (fans < 500) { popStage = '小透明'; popDesc = '开始拥有零星固定观众，弹幕偶尔飘过几条。'; }
+    else if (fans < 2000) { popStage = '崭露头角'; popDesc = '圈内小有讨论，每次开播都有熟面孔蹲守。'; }
+    else if (fans < 10000) { popStage = '小有名气'; popDesc = '露出系红人，粉丝群活跃，二创切片开始出现。'; }
+    else if (fans < 100000) { popStage = '人气新星'; popDesc = '平台头部主播之一，一举一动都引发热议。'; }
+    else if (fans < 1000000) { popStage = '现象级主播'; popDesc = '全网皆知的露出传奇，弹幕与打赏如潮水般涌来。'; }
+    else { popStage = 'TOP1'; popDesc = '色情直播界的绝对王者，他的名字就是流量与欲望的代名词。'; }
+
+    const currentRegion = _.get(stat, '主角.当前状态.当前区域', '');
+    const npcs = _.get(stat, 'NPC数据', {});
+    const nearbyNpcs = [];
+    Object.entries(npcs).forEach(([name, data]) => {
+        const zones = data.活跃区域 || [];
+        if (currentRegion && zones.includes(currentRegion)) {
+            nearbyNpcs.push(name);
+        }
+    });
+_%>
+# 全局动态档案
+
+## 当前环境
+
+- 当前日期：<%= dateStr %> | 天气：<%= weather %> | <%= scheduleText %>
+- 当前时间：<%= timeStr %>
+- 当前季节：<%= season %>
+- 当前区域：<%= _.get(stat, '主角.当前状态.当前区域', '未知') %>
+- 当前地点：<%= _.get(stat, '主角.当前状态.当前地点', '未知') %>
+- 可偶遇NPC：<%= nearbyNpcs.length > 0 ? nearbyNpcs.join('、') : '无特定熟人活跃于此区域' %>
+
+<%_ { } _%>
+# 主角动态档案
+
+## 生理与着装
+- 生理状态：<%= physState %>
+- 当前着装：<%= outfit %>
+<%_ const equippedKeys = Object.keys(equipped); _%>
+<%_ if (equippedKeys.length > 0) { _%>
+- 当前佩戴：<% equippedKeys.forEach((k, i) => { %>【<%= k %>】<%= equipped[k].描述 || '' %><%= i < equippedKeys.length - 1 ? '、' : '' %><% }); %>
+<%_ } else { _%>
+- 当前佩戴：无
+<%_ } _%>
+
+## 实时状态
+- 快感值：<%= pleasure %>/100【<%= pleasureStage %>】- <%= pleasureText %>
+- 性欲值：<%= desire %>/100【<%= desireStage %>】- <%= desireText %>
+
+## 堕落程度
+- 羞耻度：<%= shame %>/100【<%= shameStage %>】- <%= shameText %>
+- 着装倾向：<%= outfitTendency %>
+- 淫乱度：<%= lewdness %>/100【<%= lewdStage %>】- <%= lewdText %>
+- 说话方式：<%= speechStyle %>
+
+## 主播成长阶段
+- 身份平衡：<%= identityStage %>
+- 主播熟练度：<%= skillStage %>
+
+## 主播事业
+- 主播名字：<%= streamerName %>
+- 粉丝数：<%= fans %>（<%= popStage %>——<%= popDesc %>）
+- 直播点数：<%= points %>
+- 主播态度：<%= attitude %>
+- 直播总次数：<%= totalStreams %>
+<%_ if (items.length > 0) { _%>
+- 已购道具：<%= items.join('、') %>
+<%_ } else { _%>
+- 已购道具：无
+<%_ } _%>
+
+<%_ } } _%>

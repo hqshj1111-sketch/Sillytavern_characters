@@ -1,0 +1,46 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const jin = _.get(stat, 'NPC数据.风见迅', {});
+  const jinDiscovered = _.get(jin, '秘密发现', false);
+  const jinSuspicion = parseInt(_.get(jin, '秘密察觉程度', 0)) || 0;
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['迅直播配合事件'] && isDaily && jinDiscovered && jinSuspicion >= 100 && !isSexActive) {
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.迅直播配合事件', 0)) || 0;
+    const sexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：直播配合
+event_initiator:
+  event_name: "直播配合"
+  character: "风见迅"
+  location: "远郊或海滨区等偏僻地点"
+  time: "17:00-23:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "主角的手机急促震动，迅又发来一连串消息。这次连解释都省了——直接发了个定位，附言：老地方，没人，救命。"
+    - "主角已经熟悉这个流程了。迅又在某个人烟稀少的地方开播，等了半天没有路人经过，弹幕开始掉热度。他第一时间想到的就是主角。"
+    - "迅用雄小鬼的口吻说快点过来，别磨蹭。他还说上次主角假装路人那次效果超好，弹幕刷疯了，粉丝涨了一大波。他在消息末尾补充说这次想尝试点不一样的——结合做爱次数(<%= sexCount %>)调整他的建议，次数越多他越直接地描述想让主角在现场对他做什么。"
+    - "结尾留给主角选择：立刻赶去配合、在路上发消息调戏他说每次都这样是不是故意的、或告诉他换个地方而不是每次出事就找他。"
+    <%_ } else { _%>
+    - "主角的手机急促震动，迅发来一连串消息——他在某个人烟稀少的地方开播，等了半天没有路人经过，弹幕已经在刷无聊了，热度在往下掉。"
+    - "他让主角立刻过来，假装是误入镜头的路人。迅用雄小鬼的口吻说别磨蹭，什么都可以做——不管是辱骂他还是当场操他，只要能救直播效果就行。"
+    - "结合好感度(<%= affection %>)调整迅的坦诚度——好感度低时嘴上逞强说这是给主角一个出镜的机会，好感度高时会带着恳求和信赖。"
+    - "结尾留给主角选择：立刻赶去配合演出、先调戏他几句再出发、或找理由拒绝。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/迅直播配合事件" }
+      ]
+
+<%_ } } _%>

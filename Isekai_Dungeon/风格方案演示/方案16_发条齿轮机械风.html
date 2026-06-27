@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案16：发条齿轮机械风 | Clockwork Mechanical</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #080c0e;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Sans SC', sans-serif;
+    color: #a0a8b0;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .app { width: 100%; max-width: 660px; }
+
+  .clockwork-frame {
+    background: linear-gradient(180deg, #0e1014 0%, #080a0e 100%);
+    border: 2px solid #2a3038;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+  }
+  /* 齿轮背景图案 */
+  .clockwork-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.03;
+    background:
+      radial-gradient(circle at 50px 50px, transparent 18px, #fff 19px, transparent 20px) 0 0 / 60px 60px,
+      radial-gradient(circle at 0 0, transparent 14px, #fff 15px, transparent 16px) 0 0 / 60px 60px;
+  }
+
+  .gear-header {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    padding: 14px 20px 8px;
+    border-bottom: 2px solid #3a4048;
+    background: linear-gradient(180deg, #1a1c22, #101216);
+  }
+  .gear-header .gear-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .gear-header .cog {
+    display: inline-block;
+    width: 24px; height: 24px;
+    border: 3px dashed #6a7078;
+    border-radius: 50%;
+    animation: spin 8s linear infinite;
+    position: relative;
+  }
+  .gear-header .cog::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border: 1px dashed #4a5058;
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .gear-header h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: #c0c8d0;
+    text-shadow: 0 0 10px rgba(150,160,180,0.2);
+  }
+  .gear-header .serial {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: #505860;
+    letter-spacing: 4px;
+    margin-top: 2px;
+  }
+
+  .rivet-divider {
+    height: 10px;
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 4px 0;
+  }
+  .rivet-divider .rivet {
+    width: 6px; height: 6px;
+    background: radial-gradient(circle at 35% 35%, #a0a8b0, #404850);
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  .rivet-divider .plate-line {
+    flex: 0 1 30px;
+    height: 1px;
+    background: #3a4048;
+  }
+
+  .mech-panel {
+    position: relative;
+    z-index: 3;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(16,18,22,0.6);
+    border: 1px solid #2a3038;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+  }
+  .mech-panel .panel-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #808890;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+  }
+  .panel-label .indicator {
+    width: 8px; height: 8px;
+    background: #60c060;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(96,192,96,0.4);
+    animation: pulse 2s ease infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .mech-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .mech-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(8,10,14,0.4);
+    border: 1px solid #1a2028;
+  }
+  .mech-stat .sensor {
+    width: 28px; height: 28px;
+    border: 2px solid #3a4048;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-family: 'Share Tech Mono', monospace;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.3);
+  }
+  .sensor.hp { border-color: #a04040; color: #e06060; }
+  .sensor.mp { border-color: #4060a0; color: #6080e0; }
+  .sensor.sp { border-color: #a09040; color: #e0c060; }
+  .sensor.exp { border-color: #40a060; color: #60e080; }
+  .mech-stat .body { flex: 1; min-width: 0; }
+  .mech-stat .head {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .head .tag { color: #505860; }
+  .head .val { color: #8090a0; }
+  .pipe-bar {
+    height: 6px;
+    background: #0a0c10;
+    border: 1px solid #1a2028;
+    position: relative;
+  }
+  .pipe-fill { height: 100%; position: relative; }
+  .pipe-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: -2px; bottom: -2px;
+    width: 3px;
+    background: rgba(255,255,255,0.15);
+  }
+  .pipe-fill.hp { background: repeating-linear-gradient(90deg, #a04040 0px, #a04040 4px, #802020 4px, #802020 8px); }
+  .pipe-fill.mp { background: repeating-linear-gradient(90deg, #4060a0 0px, #4060a0 4px, #204080 4px, #204080 8px); }
+  .pipe-fill.sp { background: repeating-linear-gradient(90deg, #a09040 0px, #a09040 4px, #807020 4px, #807020 8px); }
+  .pipe-fill.exp { background: repeating-linear-gradient(90deg, #40a060 0px, #40a060 4px, #208040 4px, #208040 8px); }
+
+  .gauge-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .gauge {
+    text-align: center;
+    min-width: 48px;
+    padding: 6px 4px;
+    background: rgba(8,10,14,0.3);
+    border: 1px solid #1a2028;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .gauge .icon { font-size: 14px; color: #808890; display: block; }
+  .gauge .val {
+    font-size: 14px;
+    color: #b0b8c0;
+    font-weight: 600;
+  }
+  .gauge .key {
+    font-size: 7px;
+    color: #404850;
+    letter-spacing: 1px;
+  }
+
+  .log-text {
+    margin: 6px 14px;
+    padding: 16px 20px;
+    background: rgba(8,10,14,0.5);
+    border: 1px solid #1a2028;
+    border-left: 3px solid #606870;
+    position: relative;
+    z-index: 3;
+  }
+  .log-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #788088;
+    font-size: 13px;
+  }
+  .log-text p:last-child { margin-bottom: 0; }
+  .log-text .data { color: #a0b8d0; }
+  .log-text .warn { color: #d08060; }
+
+  .switch-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .switch-btn {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    background: linear-gradient(180deg, #1a1c22, #0e1014);
+    border: 1px solid #2a3038;
+    color: #788088;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .switch-btn:hover {
+    border-color: #606870;
+    color: #a0b0c0;
+    background: linear-gradient(180deg, #22242a, #14161a);
+  }
+  .switch-btn.primary {
+    border-color: #606870;
+    color: #b0c0d0;
+  }
+
+  .module-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .module-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(8,10,14,0.3);
+    border: 1px solid #1a2028;
+    font-size: 11px;
+  }
+  .module-item .port { color: #505860; font-size: 9px; letter-spacing: 1px; font-family: 'Share Tech Mono', monospace; }
+  .module-item .component { color: #9098a0; }
+
+  .slot-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .slot {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(80,90,100,0.06);
+    border: 1px solid rgba(80,90,100,0.12);
+    color: #586068;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+  }
+  .slot.active {
+    background: rgba(80,90,100,0.12);
+    border-color: rgba(100,110,120,0.3);
+    color: #808890;
+  }
+
+  .machine-footer {
+    position: relative;
+    z-index: 3;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: #404850;
+    letter-spacing: 2px;
+    border-top: 1px solid #1a2028;
+    margin: 0 14px;
+  }
+  .machine-footer .tick {
+    display: inline-block;
+    animation: pulse 2s infinite;
+    color: #60c060;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="clockwork-frame">
+
+    <div class="gear-header">
+      <div class="gear-row">
+        <span class="cog"></span>
+        <span class="cog" style="width:18px;height:18px;animation-direction:reverse;animation-duration:6s;"></span>
+      </div>
+      <h1>异 世 界 地 下 城</h1>
+      <div class="serial">ISEKAI DUNGEON SYS v3.84</div>
+    </div>
+
+    <div class="rivet-divider">
+      <span class="rivet"></span><span class="plate-line"></span><span class="rivet"></span>
+      <span class="rivet"></span><span class="plate-line"></span><span class="rivet"></span>
+    </div>
+
+    <div class="mech-panel">
+      <div class="panel-label"><span class="indicator"></span> SYSTEM STATUS</div>
+      <div class="mech-stats">
+        <div class="mech-stat">
+          <div class="sensor hp">♥</div>
+          <div class="body">
+            <div class="head"><span class="tag">HYDRAULIC</span><span class="val">78/100</span></div>
+            <div class="pipe-bar"><div class="pipe-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="mech-stat">
+          <div class="sensor mp">✦</div>
+          <div class="body">
+            <div class="head"><span class="tag">AETHER</span><span class="val">54/100</span></div>
+            <div class="pipe-bar"><div class="pipe-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="mech-stat">
+          <div class="sensor sp">⚔</div>
+          <div class="body">
+            <div class="head"><span class="tag">STEAM</span><span class="val">90/100</span></div>
+            <div class="pipe-bar"><div class="pipe-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="mech-stat">
+          <div class="sensor exp">⏫</div>
+          <div class="body">
+            <div class="head"><span class="tag">SYNC</span><span class="val">35%</span></div>
+            <div class="pipe-bar"><div class="pipe-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="gauge-attrs">
+        <div class="gauge"><span class="icon">⚔</span><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="gauge"><span class="icon">🛡</span><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="gauge"><span class="icon">⚡</span><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="gauge"><span class="icon">✧</span><div class="val">30</div><div class="key">INT</div></div>
+        <div class="gauge"><span class="icon">☘</span><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="gauge"><span class="icon">◎</span><div class="val">1250</div><div class="key">CRD</div></div>
+      </div>
+    </div>
+
+    <div class="log-text">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="data">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="warn">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="warn">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="data">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="mech-panel">
+      <div class="panel-label"><span class="indicator" style="background:#c06040;"></span> COMMANDS</div>
+      <div class="switch-actions">
+        <button class="switch-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="switch-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="switch-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="switch-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="mech-panel">
+      <div class="panel-label"><span class="indicator" style="background:#c0a040;"></span> MODULES</div>
+      <div class="module-grid">
+        <div class="module-item"><span class="port">WPN-01</span><span class="component">铁质长剑 Lv.3</span></div>
+        <div class="module-item"><span class="port">ARM-01</span><span class="component">皮甲 Lv.2</span></div>
+        <div class="module-item"><span class="port">ACC-01</span><span class="component">冒险者徽章</span></div>
+        <div class="module-item"><span class="port">ITM-01</span><span class="component">回复药水 ×3</span></div>
+      </div>
+      <div class="slot-tags">
+        <span class="slot active">触手紧身衣·共生期</span>
+        <span class="slot active">蜕生项圈·中期</span>
+        <span class="slot">影子分身·无心智</span>
+        <span class="slot">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="machine-footer">
+      <span class="tick">■</span> B3F · ASTOR · 384-10-15 · DUSK · CYCLE 12
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

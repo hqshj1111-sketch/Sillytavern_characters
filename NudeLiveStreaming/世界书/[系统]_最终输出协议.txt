@@ -1,0 +1,73 @@
+<%_
+{
+const stat = getvar('stat_data') || {};
+const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const activeEvents = Object.keys(pendingEvents).filter(k => k !== '观众任务事件' && k !== '外人闯入事件');
+const hasActiveEvents = activeEvents.length > 0;
+const isStreaming = _.get(stat, '直播状态.是否正在直播', false);
+_%>
+# 最终输出协议
+master_protocol: "你已阅读上方的【当前阶段】和各类【事件指令】。现在，请将所有分散的逻辑汇总，并严格按照以下结构顺序输出：1. 故事正文，2. <UpdateVariable> 块。"
+
+  story:
+    instruction: "根据当前的阶段氛围、角色关系与所处场景，进行生动的故事演绎。"
+    stream_rules: "<%= isStreaming ? '直播进行中，描写直播间实况——在线人数、弹幕滚动、观众互动。每轮直播互动都可能引起热度波动。' : '日常阶段，以生活场景和人际互动为主。' %>"
+
+  UpdateVariable_block:
+    instruction: "基于本次最新的故事输出，使用 JSON Patch (RFC 6902) 标准更新系统变量。"
+    strict_rules:
+      - context_isolation: "仅根据你【刚刚输出的这一段最新剧情】进行变量更新。"
+      - no_meta: "变量更新块的内容应该完全包裹在 <UpdateVariable> 中，严禁在正文中出现代码、系统数据。"
+      - boolean_rule: "布尔值必须使用 true/false，严禁加引号。"
+
+    structure_protocol: |-
+      你的 <UpdateVariable> 块必须严格包含以下两部分，且顺序不可颠倒：
+      
+      1. <Analysis> 块 (思考过程):
+      - 强制指令检查：上文中是否明确提供了 `mandatory_patch` 或 `patch_code`？（如果有，且根据对应指示需要添加，你必须直接复制它们，并跳过对这些字段的手动计算）。
+      - 时间流逝：评估本回合实际流逝的分钟数。叙事篇幅不代表时间流逝。
+      - 主角状态：检查主角的当前区域、地点、着装、生理状态是否发生变化。评估快感值和性欲值的增减。
+      <%_ if (isStreaming) { _%>
+      - 直播间动态：根据直播互动内容评估热度变化。
+      <%_ } _%>
+      - NPC好感度与淫乱度：根据互动内容决定增减。
+<%_ const npcDataCheck = _.get(stat, 'NPC数据', {});
+          const hasSuspicionUnder100 = Object.values(npcDataCheck).some(n => (parseInt(n.秘密察觉程度) || 0) < 100);
+      if (hasSuspicionUnder100) { _%>
+      - 秘密暴露评估：检查本回合剧情中，主角是否在任何 NPC 面前表现出意外虚弱、可疑行为、破绽或蛛丝马迹，无需评估是否被NPC发现。
+      <%_ } _%>
+      <%_ if (!isSexActive) { _%>
+      - 性行为判定：[判断本段剧情中主角是否开始与人发生性行为。若是进行对应更新]
+      <%_ } else { _%>
+      - 性行为监控与双端结算：[主角正在进行性行为。判断本段剧情中行为是否已经结束。若结束，准备结算主角对应经验与部位开发度，重置当前性行为，若有新行为则继续添加]
+      <%_ }_%>
+      <%_ if (hasActiveEvents) { _%>
+      - 事件处理：检查待处理事件列表中的事件是否已在叙事中体现，判断是否应该移除事件标记。
+      <%_ } _%>
+
+      2. <JSONPatch> 块 (执行区):
+      一个标准的 JSON 数组。
+
+  final_checks:
+    - |-
+      最终回复格式范例：[故事正文...]
+      <UpdateVariable>
+        <Analysis>
+          - 时间：本回合海斗和主角交流谈心，共流逝5分钟。
+          - 主角：生理状态更新。
+          - NPC：主角与海斗亲密互动，海斗好感度+3。
+          - 秘密暴露评估：主角在海斗面前出现了不寻常的行为。
+          - 性行为：无性行为进行中或要开始。
+        </Analysis>
+        <JSONPatch>[
+          { "op": "delta", "path": "/进程/当前时间戳", "value": 5 },
+          { "op": "replace", "path": "/主角/当前状态/当前生理状态", "value": "靠着海斗，心跳有些不稳" },
+          { "op": "delta", "path": "/NPC数据/黑崎海斗/好感度", "value": 3 },
+          { "op": "delta", "path": "/NPC数据/黑崎海斗/秘密觉察程度", "value": 5 }
+        ]
+        </JSONPatch>
+      </UpdateVariable>
+<%_ } _%>

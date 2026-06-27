@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案8：炼金工房蒸汽风 | Alchemy Workshop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:wght@400&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0b08;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', 'IM Fell English', serif;
+    color: #c4b490;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(ellipse at 30% 40%, rgba(180,140,60,0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(100,140,80,0.03) 0%, transparent 50%);
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+  }
+
+  .workshop-frame {
+    border: 2px solid #2a2210;
+    background: linear-gradient(180deg, #12100a 0%, #0c0a06 100%);
+    position: relative;
+    box-shadow: inset 0 0 60px rgba(40,30,10,0.15);
+  }
+
+  /* ── 标题：黄铜铭牌 ── */
+  .brass-header {
+    text-align: center;
+    padding: 16px 20px 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .brass-header .rivets {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+    margin-bottom: 6px;
+  }
+  .brass-header .rivet {
+    width: 8px; height: 8px;
+    background: radial-gradient(circle at 40% 40%, #c9a040, #5c4010);
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  .brass-header h1 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    color: #c9a040;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    padding: 6px 0;
+    border-top: 1px solid rgba(180,140,60,0.2);
+    border-bottom: 1px solid rgba(180,140,60,0.2);
+  }
+  .brass-header .sub {
+    font-size: 10px;
+    color: #6a5a2a;
+    letter-spacing: 6px;
+    margin-top: 6px;
+  }
+
+  /* ── 面板：木纹铜边 ── */
+  .workbench-panel {
+    position: relative;
+    z-index: 1;
+    margin: 6px 14px;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, rgba(18,14,8,0.7), rgba(12,8,4,0.8));
+    border: 1px solid #3a2a10;
+    box-shadow: inset 0 0 20px rgba(30,20,8,0.3);
+  }
+  .workbench-panel .label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: #b08040;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dotted rgba(180,140,60,0.15);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .label .gear {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(180,140,60,0.4);
+    border-radius: 50%;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .label .gear::after {
+    content: '';
+    position: absolute;
+    top: 4px; left: 2px; right: 2px;
+    height: 2px;
+    background: rgba(180,140,60,0.4);
+  }
+
+  /* ── 状态：气压表 ── */
+  .gauge-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .gauge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(10,8,4,0.5);
+    border: 1px solid #2a1a08;
+  }
+  .gauge .vial {
+    width: 28px; height: 28px;
+    border: 1px solid #3a2a10;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: rgba(0,0,0,0.3);
+    flex-shrink: 0;
+  }
+  .gauge .vial.hp { color: #c05040; }
+  .gauge .vial.mp { color: #4080c0; }
+  .gauge .vial.sp { color: #b09030; }
+  .gauge .vial.exp { color: #509060; }
+  .gauge .body { flex: 1; min-width: 0; }
+  .gauge .head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .gauge .head .tag { color: #5c4a20; letter-spacing: 2px; }
+  .gauge .head .reading {
+    font-family: 'IM Fell English SC', serif;
+    color: #c9a040;
+    font-size: 10px;
+  }
+  .gauge-pipe {
+    height: 4px;
+    background: #0a0804;
+    border: 1px solid #1a1206;
+    position: relative;
+  }
+  .gauge-fill {
+    height: 100%;
+  }
+  .gauge-fill.hp { background: linear-gradient(90deg, #5c1a1a, #b04040); }
+  .gauge-fill.mp { background: linear-gradient(90deg, #1a2a5c, #4060b0); }
+  .gauge-fill.sp { background: linear-gradient(90deg, #4a3a1a, #b08030); }
+  .gauge-fill.exp { background: linear-gradient(90deg, #1a4a2a, #408050); }
+
+  /* ── 属性刻度 ── */
+  .vernier-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .vernier {
+    text-align: center;
+    min-width: 50px;
+    padding: 4px 6px;
+    border: 1px solid #2a1a08;
+    background: rgba(10,8,4,0.4);
+  }
+  .vernier .needle {
+    font-size: 16px;
+    color: #b08040;
+  }
+  .vernier .num {
+    font-size: 13px;
+    font-weight: 600;
+    color: #c4b490;
+  }
+  .vernier .unit {
+    font-size: 8px;
+    color: #4a3a10;
+    letter-spacing: 2px;
+  }
+
+  /* ── 正文：羊皮纸实验记录 ── */
+  .logbook {
+    margin: 8px 14px;
+    padding: 18px 20px;
+    background: linear-gradient(180deg, rgba(30,24,14,0.5), rgba(20,16,8,0.6));
+    border: 1px solid #2a1a10;
+    position: relative;
+    z-index: 1;
+  }
+  .logbook::before {
+    content: '';
+    position: absolute;
+    left: 12px; top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(180,140,60,0.1);
+  }
+  .logbook p {
+    margin-bottom: 8px;
+    text-indent: 2em;
+    color: #a49880;
+  }
+  .logbook p:last-child { margin-bottom: 0; }
+  .logbook .gold { color: #d4b060; }
+  .logbook .red { color: #d06050; }
+  .logbook .amber { color: #b09040; }
+
+  /* ── 操作杆 ── */
+  .lever-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .lever-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: linear-gradient(180deg, rgba(30,20,8,0.5), rgba(15,10,4,0.6));
+    border: 1px solid #3a2a10;
+    color: #a49880;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+  .lever-btn:hover {
+    border-color: #8a6a30;
+    color: #d4b890;
+  }
+  .lever-btn.main {
+    border-color: #8a6a30;
+    color: #d4b890;
+  }
+  .lever-btn.main::before { content: '▶ '; color: #b08040; }
+
+  /* ── 储物柜 ── */
+  .cabinet-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .cabinet-item {
+    padding: 8px 10px;
+    background: rgba(10,8,4,0.4);
+    border: 1px solid #1a1206;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cabinet-item .drawer {
+    font-size: 9px;
+    color: #5c4a20;
+    letter-spacing: 2px;
+  }
+  .cabinet-item .content {
+    font-size: 11px;
+    color: #c4b490;
+  }
+  .cabinet-item .content.nulla { color: #2a1a08; font-style: italic; }
+
+  .elixir-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .elixir-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+    border: 1px solid #2a1a08;
+    color: #5c4a20;
+    background: rgba(10,8,4,0.3);
+    border-radius: 2px;
+  }
+  .elixir-tag.brewing {
+    border-color: rgba(180,140,60,0.3);
+    color: #b08040;
+    background: rgba(20,14,6,0.4);
+  }
+
+  /* ── 底部 ── */
+  .workshop-footer {
+    padding: 8px 16px 12px;
+    font-size: 10px;
+    color: #4a3a10;
+    letter-spacing: 3px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid rgba(180,140,60,0.08);
+  }
+  .workshop-footer .chain {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 3px;
+  }
+  .workshop-footer .chain .link { color: #3a2a10; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="workshop-frame">
+
+    <div class="brass-header">
+      <div class="rivets">
+        <span class="rivet"></span><span class="rivet"></span><span class="rivet"></span><span class="rivet"></span>
+      </div>
+      <h1>異 世 界 地 下 城</h1>
+      <div class="sub">THE ISEKAI DUNGEON WORKSHOP</div>
+    </div>
+
+    <div class="workbench-panel">
+      <div class="label"><span class="gear"></span> ADVENTURER VITALS</div>
+      <div class="gauge-grid">
+        <div class="gauge">
+          <div class="vial hp">♥</div>
+          <div class="body">
+            <div class="head"><span class="tag">VITAL</span><span class="reading">78/100</span></div>
+            <div class="gauge-pipe"><div class="gauge-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="gauge">
+          <div class="vial mp">✦</div>
+          <div class="body">
+            <div class="head"><span class="tag">AETHER</span><span class="reading">54/100</span></div>
+            <div class="gauge-pipe"><div class="gauge-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="gauge">
+          <div class="vial sp">⚔</div>
+          <div class="body">
+            <div class="head"><span class="tag">VIGOR</span><span class="reading">90/100</span></div>
+            <div class="gauge-pipe"><div class="gauge-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="gauge">
+          <div class="vial exp">▲</div>
+          <div class="body">
+            <div class="head"><span class="tag">MASTERY</span><span class="reading">35%</span></div>
+            <div class="gauge-pipe"><div class="gauge-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="vernier-attrs">
+        <div class="vernier"><div class="needle">⚔</div><div class="num">42</div><div class="unit">ATK</div></div>
+        <div class="vernier"><div class="needle">🛡</div><div class="num">28</div><div class="unit">DEF</div></div>
+        <div class="vernier"><div class="needle">⚡</div><div class="num">35</div><div class="unit">AGI</div></div>
+        <div class="vernier"><div class="needle">✧</div><div class="num">30</div><div class="unit">INT</div></div>
+        <div class="vernier"><div class="needle">☘</div><div class="num">18</div><div class="unit">LCK</div></div>
+        <div class="vernier"><div class="needle">⊙</div><div class="num">1250</div><div class="unit">GLD</div></div>
+      </div>
+    </div>
+
+    <div class="logbook">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="gold">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="red">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="red">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="gold">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层<span class="amber">淫靡的气息</span>……
+      </p>
+    </div>
+
+    <div class="workbench-panel">
+      <div class="label"><span class="gear"></span> MECHANISMS</div>
+      <div class="lever-actions">
+        <button class="lever-btn main">⚔ 挥剑斩向哥布林头领</button>
+        <button class="lever-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="lever-btn">🛡 防御姿态，观察敌人弱点</button>
+        <button class="lever-btn">💋 尝试魅惑其中一只哥布林</button>
+      </div>
+    </div>
+
+    <div class="workbench-panel">
+      <div class="label"><span class="gear"></span> CABINET & APPARATUS</div>
+      <div class="cabinet-grid">
+        <div class="cabinet-item"><span class="drawer">WEAPON</span><span class="content">铁质长剑 Lv.3</span></div>
+        <div class="cabinet-item"><span class="drawer">ARMOUR</span><span class="content">皮甲 Lv.2</span></div>
+        <div class="cabinet-item"><span class="drawer">TRINKET</span><span class="content">冒险者徽章</span></div>
+        <div class="cabinet-item"><span class="drawer">TONIC</span><span class="content">回复药水 ×3</span></div>
+      </div>
+      <div class="elixir-tags">
+        <span class="elixir-tag brewing">触手紧身衣·共生期</span>
+        <span class="elixir-tag brewing">蜕生项圈·中期</span>
+        <span class="elixir-tag">影子分身·无心智</span>
+        <span class="elixir-tag">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="workshop-footer">
+      <div class="chain"><span class="link">⛓</span><span class="link">⛭</span><span class="link">⛓</span></div>
+      <div>DUNGEON B3 · ASTOR · YEAR 384 / 10 / 15 · DUSK · TURN 12</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

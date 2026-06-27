@@ -1,0 +1,45 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+  
+  if (events['忠实粉丝事件'] && currentPhase === '日常阶段' && !isSexActive) {
+    const shame = parseInt(_.get(stat, '主角.当前状态.羞耻度', 100)) || 100;
+    const lewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+    const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.忠实粉丝事件', 0)) || 0;
+    const sexCount = parseInt(_.get(stat, '主角.主播信息.直播总次数', 0)) || 0;
+_%>
+# 事件：忠实粉丝邂逅
+event_initiator:
+  event_name: "忠实粉丝邂逅"
+  character: "一名认出主角的忠实观众"
+  shame: <%= shame %>
+  lewdness: <%= lewdness %>
+  time: "12:00-20:00"
+  
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "又一名观众认出了主角——这次是在不同的地点，不同的面孔，但同样激动地压低声音喊出了主播名。主角已经习惯了这种偶遇，不再是第一次被认出时的手足无措。"
+    - "主角熟练地和粉丝打招呼，自然地引导对话节奏，甚至在对方措辞紧张时主动开了个玩笑缓解气氛。结合直播总次数(<%= sexCount %>)调整粉丝的崇拜程度和具体用词。"
+    - "粉丝被主角从容的态度感染，原本紧张的声音逐渐变得大胆，再次提出了一个挑战主角底线的性要求——<%= lewdness < 25 ? '触摸亲密部位' : (lewdness < 50 ? '提供非插入性服务' : (lewdness < 75 ? '进行隐蔽性爱' : '进行露出性爱')) %>。主角对此已经见怪不怪，开始思考这次是接受还是婉拒。"
+    - "结尾留给主角选择：答应并找个方便的地方、给他签个名或合影作为替代、或婉拒并提醒他不要把偶遇地点说出去。"
+    <%_ } else { _%>
+    - "在日常场景中，一名观众认出了主角就是主播「<%= streamerName %>」，激动地上前表达喜爱与崇拜。"
+    - "描写粉丝的热情搭讪，以及主角被认出的错愕、紧张或暗喜。"
+    - "粉丝在短暂的交流后，害羞地提出一个根据主角当前羞耻度和淫乱度不会超出太多的性要求——<%= lewdness < 25 ? '触摸亲密部位' : (lewdness < 50 ? '提供非插入性服务' : (lewdness < 75 ? '进行隐蔽性爱' : '进行露出性爱')) %>。"
+    - "结尾停留在粉丝期待的眼神与主角的内心抉择，留给玩家选择接受或拒绝的空间。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "粉丝确切提出要求后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/忠实粉丝事件" }
+      ]
+
+<%_ } } _%>

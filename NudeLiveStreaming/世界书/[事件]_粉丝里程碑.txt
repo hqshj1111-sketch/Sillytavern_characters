@@ -1,0 +1,69 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['粉丝里程碑事件'] && currentPhase === '日常阶段' && !isSexActive) {
+    const milestoneValue = events['粉丝里程碑事件'];
+    const currentFans = _.get(stat, '主角.主播信息.粉丝数', 0);
+    const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
+
+    // 知名度判断函数
+    const getPopularity = (fans) => {
+      if (fans < 100) return { stage: '新人主播', desc: '默默无闻的新人，偶尔有路人点进又离开。' };
+      if (fans < 500) return { stage: '小透明', desc: '开始拥有零星固定观众，弹幕偶尔飘过几条。' };
+      if (fans < 2000) return { stage: '崭露头角', desc: '圈内小有讨论，每次开播都有熟面孔蹲守。' };
+      if (fans < 10000) return { stage: '小有名气', desc: '露出系红人，粉丝群活跃，二创切片开始出现。' };
+      if (fans < 100000) return { stage: '人气新星', desc: '平台头部主播之一，一举一动都引发热议。' };
+      if (fans < 1000000) return { stage: '现象级主播', desc: '全网皆知的露出传奇，弹幕与打赏如潮水般涌来。' };
+      return { stage: 'TOP1', desc: '色情直播界的绝对王者，他的名字就是流量与欲望的代名词。' };
+    };
+
+    // 根据里程碑值逆推突破前粉丝数
+    const thresholds = [100, 500, 2000, 10000, 100000, 1000000];
+    let prevFans = 0;
+    for (const t of thresholds) {
+      if (milestoneValue <= t) break;
+      prevFans = t;
+    }
+
+    const currentPop = getPopularity(currentFans);
+    const previousPop = getPopularity(prevFans);
+
+    // 里程碑类型简写
+    let milestoneType = '';
+    if (milestoneValue <= 500) milestoneType = '初露锋芒';
+    else if (milestoneValue <= 2000) milestoneType = '稳步上升';
+    else if (milestoneValue <= 10000) milestoneType = '声名鹊起';
+    else if (milestoneValue <= 100000) milestoneType = '人气爆发';
+    else if (milestoneValue <= 1000000) milestoneType = '登峰造极';
+    else milestoneType = '君临天下';
+_%>
+# 事件：粉丝里程碑
+fan_milestone:
+  event_name: "粉丝里程碑 - <%= milestoneType %>"
+  streamer_name: "<%= streamerName %>"
+  current_fans: <%= currentFans %>
+  milestone_threshold: <%= milestoneValue %>
+  prior_popularity: "<%= previousPop.stage %>"
+  new_popularity: "<%= currentPop.stage %>"
+  prior_popularity_desc: "<%= previousPop.desc %>"
+  new_popularity_desc: "<%= currentPop.desc %>"
+
+  narrative_guidance:
+    - "主角的粉丝数突破了<%= milestoneValue %>大关，知名度从【<%= previousPop.stage %>】跃升至【<%= currentPop.stage %>】。"
+    - "【突破前】：<%= previousPop.desc %>"
+    - "【突破后】：<%= currentPop.desc %>"
+    - "描写主角查看数据时的反应，融入平台祝贺、粉丝群狂欢或社交媒体上关于「<%= streamerName %>」的讨论升温，侧面烘托其影响力的蜕变。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/粉丝里程碑事件" }
+      ]
+
+<%_ } } _%>

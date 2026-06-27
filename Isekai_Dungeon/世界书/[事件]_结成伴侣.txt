@@ -1,0 +1,61 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const event = _.get(stat, '系统状态.待处理事件.结成伴侣事件', null);
+if (!event || !event.伴侣对象 || !event.目标国家 || !event.目标城市) return;
+
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '日常阶段') return;
+
+const partnerName = event.伴侣对象;
+const targetCountry = event.目标国家;
+const targetCity = event.目标城市;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const mcName = _.get(stat, '主角.基本信息.姓名', '主角');
+const mcGender = _.get(stat, '主角.基本信息.性别', '');
+
+const importantNPCs = _.get(stat, '重要NPC信息', {});
+const normalNPCs = _.get(stat, '一般NPC信息', {});
+const npc = importantNPCs[partnerName] || normalNPCs[partnerName] || null;
+
+const geoData = _.get(stat, '地理信息', {});
+const targetCountryData = geoData[targetCountry] || {};
+const targetCityData = _.get(targetCountryData, '城市列表.' + targetCity, {});
+const vibeObj = targetCityData.整体氛围 || {};
+const currentMonth = parseInt(_.get(stat, '进程.当前月份', 1)) || 1;
+let seasonChar = '冬';
+if (currentMonth >= 3 && currentMonth <= 5) seasonChar = '春';
+else if (currentMonth >= 6 && currentMonth <= 8) seasonChar = '夏';
+else if (currentMonth >= 9 && currentMonth <= 11) seasonChar = '秋';
+const vibeStr = _.isArray(vibeObj) ? vibeObj.join('、') : (vibeObj[seasonChar] || Object.values(vibeObj).filter(v => v).join('、')) || '?';
+_%>
+# 事件：结成伴侣
+
+  求婚人：<%= mcName %>（<%= mcGender %>）
+  对象：<%= partnerName %><% if (npc) { %> | <%= npc.种族||'?' %> / <%= npc.性别||'?' %> / <%= npc.年龄||'?' %>岁<% } %>
+  仪式地点：<%= targetCountry %> / <%= targetCity %><% if (targetCityData.城市规模) { %> | 规模：<%= targetCityData.城市规模 %><% } %>
+<%_ if (targetCityData.种族构成) { _%>
+  当地种族：<%= targetCityData.种族构成 %>
+<%_ } _%>
+  当地氛围（<%= seasonChar %>季）：<%= vibeStr %>
+
+<%_ if (!npc) { _%>
+  ⚠ 警告：当前没有名为「<%= partnerName %>」的NPC记录。请描写主角尝试寻找此人但未能找到。
+<%_ } _%>
+
+  narrative_guidance:
+    - "主角主动找到<%= partnerName %>，向其表达希望缔结正式伴侣关系的意愿。描写主角向对方表白求婚的场景——选择的地点、表白时的语气和措辞（应符合主角的性格）、以及说出那句话后等待回应的寂静时刻。"
+    <%_ if (npc) { _%>
+    - "根据<%= partnerName %>的性格（<%= npc.性格||'?' %>）和与主角的关系（<%= npc.关系||'?' %>，好感度 <%= npc.好感度||'?' %>），个性化地表现对方的反应。若对方拒绝或犹豫，请勿强行推进——以两人的情感真实为优先，留给主角后续再努力的空间。"
+    <%_ } _%>
+    - "若对方同意——二人共同前往<%= targetCountry %>·<%= targetCity %>，在那个地方的当地文化背景下，以当地特有的方式举行伴侣缔结仪式。仪式形式应体现<%= targetCity %>的种族和文化特色（结合上方的种族构成和氛围）。仪式的描写以温馨和庄重为主调，可穿插当地围观者的祝福和欢呼。"
+    - "仪式完成后，以二人第一次以正式伴侣的身份对视或牵手的瞬间收束——一个安静的、属于两人的时刻。"
+
+  mandatory_data_sync:
+    instruction: "若对方不同意结成伴侣，或同意结成伴侣且完成伴侣仪式，则移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/结成伴侣事件" }
+      ]
+<%_ } _%>

@@ -1,0 +1,29 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+
+  if (events['今日大雨事件'] && isDaily) {
+_%>
+# 事件：今日大雨
+event_initiator:
+  event_name: "今日大雨"
+  location: "全城"
+  time: "6:00-22:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "天色渐暗，乌云从海的方向压过来。第一滴雨落下后，暴雨倾盆而至。这场大雨将笼罩整座汐望市，持续数小时。"
+    - "描写雨幕中的城市——被打乱的出行计划、被雨水冲刷的街道、被困在室内或不得不在雨中奔跑的人们。这场雨将改变今天的节奏，让人不得不慢下来，或被迫与谁困在同一片屋檐下。"
+    - "结尾留给主角选择：待在室内打发时间、冲进雨中去某处、或联系某个人。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/今日大雨事件" }
+      ]
+
+<%_ } } _%>

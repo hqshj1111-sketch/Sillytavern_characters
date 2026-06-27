@@ -1,0 +1,47 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+if (!stat || _.get(stat, '进程.阶段') === '创角阶段') return;
+
+const base = _.get(stat, '主角.基本信息', {});
+const face = _.get(stat, '主角.相貌特征', {});
+const body = _.get(stat, '主角.身材细节', {});
+const sex = _.get(stat, '主角.性器官特征', {});
+const equip = _.get(stat, '主角.装备', {});
+const battle = _.get(stat, '主角.战斗属性', {});
+const adv = _.get(stat, '主角.冒险者信息', {});
+const skills = _.get(stat, '主角.技能列表', []);
+const weapon = equip.武器 || {};
+const armor = equip.护甲 || {};
+const acc = equip.饰品 || {};
+
+const skillStrs = skills.length > 0
+  ? skills.map(s => {
+      const eff = (s.技能属性 && s.技能增幅) ? `${s.技能属性}${s.技能增幅}` : (s.技能属性 || s.技能增幅 || '');
+      const effPart = eff ? `(${eff})` : '';
+      return `${s.技能名称}(${s.技能类型},×${s.技能倍率})${effPart}·${s.技能描述 || ''}`;
+    }).join(' | ')
+  : '无';
+
+const weaponStr = weapon.名称 && weapon.名称 !== '待设定'
+  ? `${weapon.名称}(${(weapon.属性||[]).map((a,i) => a + ((weapon.对应增幅||[])[i]||'')).join(',')})·${weapon.描述||''}`
+  : '无装备';
+const armorStr = armor.名称 && armor.名称 !== '待设定'
+  ? `${armor.名称}(${(armor.属性||[]).map((a,i) => a + ((armor.对应增幅||[])[i]||'')).join(',')})·${armor.描述||''}`
+  : '无装备';
+const accStr = acc.名称 && acc.名称 !== '待设定'
+  ? `${acc.名称}(${(acc.属性||[]).map((a,i) => a + ((acc.对应增幅||[])[i]||'')).join(',')})·${acc.描述||''}`
+  : '无装备';
+const mcProperties = _.get(stat, '主角.房产', {});
+const propList = Object.entries(mcProperties);
+_%>
+# 主角静态档案
+[基本信息]: <%= base.姓名 || '?' %> | <%= base.年龄 || '?' %>岁 | <%= base.种族 || '?' %> | <%= base.性别 || '?' %> | <%= base.职业 || '?' %> | <%= base.性格 || '?' %> | 故乡:<%= base.故乡国家 || '?' %>·<%= base.故乡城市 || '?' %>
+[相貌特征]: <%= face.脸型 || '?' %> | <%= face.五官 || '?' %> | <%= face.发型与发色 || '?' %> | <%= face.眼睛颜色 || '?' %> | 记号:<%= face.特殊记号 || '无' %>
+[身材细节]: 身高<%= body.身高 || '?' %> | 三围<%= body.三围 || '?' %> | <%= body.体态 || '?' %> | 皮肤<%= body.皮肤状态 || '?' %> | 肌肉<%= body.肌肉线条 || '?' %> | 体毛<%= body.体毛状况 || '?' %>
+[性征]: 后穴<%= sex.后穴形态 || '?' %> | 小穴<%= sex.小穴形态 || '?' %> | 胸部<%= sex.胸部形态 || '?' %> | 乳头<%= sex.乳头形态 || '?' %> | 阴茎<%= sex.阴茎形态 || '?' %>
+[装备]: 武器:<%= weaponStr %> / 护甲:<%= armorStr %> / 饰品:<%= accStr %>
+[战斗属性]: HP<%= battle.最大HP || 0 %> MP<%= battle.最大MP || 0 %> SP<%= battle.最大SP || 0 %> | 攻<%= battle.攻击力 || 0 %> 防<%= battle.防御力 || 0 %> 速<%= battle.速度 || 0 %> 魔<%= battle.魔力 || 0 %> 意志<%= battle.意志 || 0 %> 幸运<%= battle.幸运 || 0 %>
+[冒险者]: Lv.<%= adv.冒险者等级 || 'F' %> <%= adv.冒险者称号 || '新人' %> | <%= adv.所属公会 || '无属公会' %> | 知名度:<%= adv.知名度||0 %>
+[房产]: <%_ const ps = Object.entries(mcProperties); if (ps.length === 0) { %>无<%_ } else { ps.forEach(function ([name, p], i) { _%><%= name %>（<%= p.所在国家 || '?' %>·<%= p.所在城市 || '?' %>：<%= p.简述 || '' %>）<%= i < ps.length - 1 ? ' | ' : '' %><%_ }); } _%>
+[技能]: <%= skillStrs %>
+<%_ } _%>

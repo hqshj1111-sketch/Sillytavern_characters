@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案3：像素复古冒险风 | Retro Pixel RPG</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a12;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Sans SC', sans-serif;
+    image-rendering: pixelated;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+  }
+
+  /* ── 像素边框工具类 ── */
+  .pixel-border {
+    border: 4px solid;
+    border-image: repeating-linear-gradient(0deg, #3a3050, #3a3050 2px, #1a1030 2px, #1a1030 4px) 4;
+    box-shadow:
+      inset -3px -3px 0 #0a0510,
+      inset 3px 3px 0 #4a4070;
+  }
+  .pixel-border-top {
+    border-top: 4px solid #5a4a80;
+    box-shadow: inset 0 2px 0 #8a70b0;
+  }
+  .pixel-border-bottom {
+    border-bottom: 4px solid #2a1a40;
+    box-shadow: inset 0 -2px 0 #1a0a30;
+  }
+
+  /* ── 像素标题栏 ── */
+  .pixel-header {
+    background: #0f0a1a;
+    padding: 16px 20px;
+    text-align: center;
+    position: relative;
+    border: 4px solid #3a3050;
+    box-shadow:
+      inset -2px -2px 0 #0a0510,
+      inset 2px 2px 0 #4a4070;
+  }
+  .pixel-header::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0; right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(90deg,
+      #ffd700 0px, #ffd700 8px,
+      #0f0a1a 8px, #0f0a1a 16px);
+  }
+  .pixel-header h1 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    color: #ffd700;
+    text-shadow:
+      2px 2px 0 #8b6914,
+      0 0 8px rgba(255,215,0,0.3);
+    letter-spacing: 2px;
+    line-height: 1.8;
+  }
+  .pixel-header .stars {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .pixel-header .star {
+    width: 8px; height: 8px;
+    background: #ffd700;
+    clip-path: polygon(50% 0%, 63% 38%, 100% 38%, 69% 59%, 82% 100%, 50% 75%, 18% 100%, 31% 59%, 0% 38%, 38% 38%);
+  }
+
+  /* ── 像素面板 ── */
+  .pixel-panel {
+    margin-top: 6px;
+    background: #0f0a1a;
+    border: 4px solid #3a3050;
+    box-shadow:
+      inset -2px -2px 0 #0a0510,
+      inset 2px 2px 0 #4a4070;
+    padding: 14px 16px;
+  }
+  .pixel-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 9px;
+    color: #ffd700;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #2a1a40;
+  }
+  .pixel-label .blink {
+    animation: pixel-blink 1s steps(2) infinite;
+    display: inline-block;
+  }
+  @keyframes pixel-blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ── 像素状态条 ── */
+  .pixel-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .pixel-stat-icon {
+    font-size: 14px;
+    width: 24px;
+    text-align: center;
+  }
+  .pixel-stat-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 7px;
+    color: #7b6b9f;
+    width: 36px;
+    text-align: right;
+  }
+  .pixel-bar-outer {
+    flex: 1;
+    height: 14px;
+    background: #0a0510;
+    border: 3px solid #2a1a40;
+    position: relative;
+  }
+  .pixel-bar-inner {
+    height: 100%;
+    position: relative;
+  }
+  .pixel-bar-inner::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,0,0,0.3) 3px, rgba(0,0,0,0.3) 6px);
+  }
+  .pixel-bar-inner.hp { background: #c03030; }
+  .pixel-bar-inner.mp { background: #3060c0; }
+  .pixel-bar-inner.sp { background: #c0a030; }
+  .pixel-bar-inner.exp { background: #30a050; }
+  .pixel-stat-num {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 7px;
+    color: #c4b595;
+    width: 72px;
+    text-align: left;
+  }
+
+  /* ── 属性面板 ── */
+  .pixel-attrs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 10px;
+  }
+  .pixel-attr {
+    background: #0a0510;
+    border: 2px solid #2a1a40;
+    padding: 6px 8px;
+    text-align: center;
+  }
+  .pixel-attr .attr-key {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 6px;
+    color: #5a4a70;
+  }
+  .pixel-attr .attr-val {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 11px;
+    color: #ffd700;
+    margin-top: 2px;
+  }
+
+  /* ── 对话框式正文 ── */
+  .pixel-dialog {
+    background: #0a0a1a;
+    border: 4px solid #5a4070;
+    box-shadow:
+      inset -2px -2px 0 #0a0510,
+      inset 2px 2px 0 #6a5080;
+    padding: 16px 18px;
+    margin-top: 6px;
+    position: relative;
+  }
+  .pixel-dialog::before {
+    content: '';
+    position: absolute;
+    bottom: 4px; right: 10px;
+    width: 14px; height: 14px;
+    border: 2px solid #5a4a70;
+    background: transparent;
+    animation: pixel-blink 1s steps(2) infinite;
+  }
+  .pixel-dialog p {
+    font-size: 13px;
+    color: #d4c5b9;
+    line-height: 1.8;
+    margin-bottom: 10px;
+  }
+  .pixel-dialog p:last-child { margin-bottom: 0; }
+  .pixel-dialog .gold { color: #ffd700; }
+  .pixel-dialog .red { color: #ff6060; }
+
+  /* ── 像素行动按钮 ── */
+  .pixel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .pixel-btn {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    background: #1a0a30;
+    color: #c4b595;
+    border: 3px solid #3a3050;
+    padding: 8px 14px;
+    cursor: pointer;
+    box-shadow: inset -2px -2px 0 #0a0510, inset 2px 2px 0 #4a4070;
+    position: relative;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pixel-btn:hover {
+    background: #2a1a50;
+    border-color: #ffd700;
+    color: #ffd700;
+  }
+  .pixel-btn:active {
+    box-shadow: inset 2px 2px 0 #0a0510, inset -2px -2px 0 #4a4070;
+  }
+  .pixel-btn.primary {
+    background: #2a1a00;
+    border-color: #b8960c;
+    color: #ffd700;
+  }
+  .pixel-btn .btn-triangle {
+    color: #ffd700;
+    font-size: 10px;
+  }
+
+  /* ── 装备网格 ── */
+  .pixel-equip-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .pixel-equip {
+    background: #0a0510;
+    border: 2px solid #2a1a40;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .pixel-equip .eq-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 6px;
+    color: #5a4a70;
+  }
+  .pixel-equip .eq-name {
+    font-size: 11px;
+    color: #c4b595;
+  }
+  .pixel-equip .eq-name.empty { color: #3a2a50; font-style: italic; }
+
+  .pixel-special-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .pixel-special-tag {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 6px;
+    background: #1a0a20;
+    border: 2px solid #5a2060;
+    color: #b070c0;
+    padding: 4px 8px;
+  }
+  .pixel-special-tag.on {
+    background: #2a1030;
+    border-color: #a040b0;
+    color: #e0a0f0;
+  }
+
+  /* ── 底部状态 ── */
+  .pixel-footer {
+    margin-top: 6px;
+    background: #0f0a1a;
+    border: 4px solid #3a3050;
+    box-shadow: inset -2px -2px 0 #0a0510, inset 2px 2px 0 #4a4070;
+    padding: 8px 14px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 6px;
+    color: #5a4a70;
+    align-items: center;
+  }
+  .pixel-footer .arrow {
+    display: inline-block;
+    animation: pixel-blink 1s steps(2) infinite;
+    color: #ffd700;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 像素标题栏 -->
+  <div class="pixel-header">
+    <h1>★ 異世界地下城 ★</h1>
+    <div class="stars">
+      <div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div>
+    </div>
+  </div>
+
+  <!-- 状态面板 -->
+  <div class="pixel-panel">
+    <div class="pixel-label">▶ STATS <span class="blink">_</span></div>
+    <div class="pixel-stat-row">
+      <span class="pixel-stat-icon">❤</span>
+      <span class="pixel-stat-label">HP</span>
+      <div class="pixel-bar-outer"><div class="pixel-bar-inner hp" style="width:78%"></div></div>
+      <span class="pixel-stat-num">78/100</span>
+    </div>
+    <div class="pixel-stat-row">
+      <span class="pixel-stat-icon">★</span>
+      <span class="pixel-stat-label">MP</span>
+      <div class="pixel-bar-outer"><div class="pixel-bar-inner mp" style="width:54%"></div></div>
+      <span class="pixel-stat-num">54/100</span>
+    </div>
+    <div class="pixel-stat-row">
+      <span class="pixel-stat-icon">⚔</span>
+      <span class="pixel-stat-label">SP</span>
+      <div class="pixel-bar-outer"><div class="pixel-bar-inner sp" style="width:90%"></div></div>
+      <span class="pixel-stat-num">90/100</span>
+    </div>
+    <div class="pixel-stat-row">
+      <span class="pixel-stat-icon">⏫</span>
+      <span class="pixel-stat-label">EXP</span>
+      <div class="pixel-bar-outer"><div class="pixel-bar-inner exp" style="width:35%"></div></div>
+      <span class="pixel-stat-num">350/1000</span>
+    </div>
+    <div class="pixel-attrs">
+      <div class="pixel-attr"><div class="attr-key">ATK</div><div class="attr-val">42</div></div>
+      <div class="pixel-attr"><div class="attr-key">DEF</div><div class="attr-val">28</div></div>
+      <div class="pixel-attr"><div class="attr-key">AGI</div><div class="attr-val">35</div></div>
+      <div class="pixel-attr"><div class="attr-key">INT</div><div class="attr-val">30</div></div>
+      <div class="pixel-attr"><div class="attr-key">LCK</div><div class="attr-val">18</div></div>
+      <div class="pixel-attr"><div class="attr-key">GOLD</div><div class="attr-val">1250</div></div>
+    </div>
+  </div>
+
+  <!-- 对话式正文 -->
+  <div class="pixel-dialog">
+    <p>
+      你推开沉重的石门，腐朽的空气中弥漫着<span class="gold">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="red">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+    </p>
+    <p>
+      你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="red">不寻常的红光</span>。
+    </p>
+    <p>
+      甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="gold">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+    </p>
+  </div>
+
+  <!-- 行动选项 -->
+  <div class="pixel-actions">
+    <button class="pixel-btn primary"><span class="btn-triangle">▶</span> 挥剑斩向哥布林头领</button>
+    <button class="pixel-btn"><span class="btn-triangle">▷</span> 释放火球术灼烧敌群</button>
+    <button class="pixel-btn"><span class="btn-triangle">▷</span> 防御姿态，观察弱点</button>
+    <button class="pixel-btn"><span class="btn-triangle">▷</span> 尝试魅惑哥布林</button>
+  </div>
+
+  <!-- 装备面板 -->
+  <div class="pixel-panel">
+    <div class="pixel-label">▶ EQUIP <span class="blink">_</span></div>
+    <div class="pixel-equip-grid">
+      <div class="pixel-equip">
+        <span class="eq-label">WEAPON</span>
+        <span class="eq-name">铁质长剑 Lv.3</span>
+      </div>
+      <div class="pixel-equip">
+        <span class="eq-label">ARMOR</span>
+        <span class="eq-name">皮甲 Lv.2</span>
+      </div>
+      <div class="pixel-equip">
+        <span class="eq-label">ACCESSORY</span>
+        <span class="eq-name">冒险者徽章</span>
+      </div>
+      <div class="pixel-equip">
+        <span class="eq-label">ITEMS</span>
+        <span class="eq-name">回复药水 ×3</span>
+      </div>
+    </div>
+    <div class="pixel-special-tags">
+      <span class="pixel-special-tag on">触手紧身衣·共生期</span>
+      <span class="pixel-special-tag on">蜕生项圈·中期</span>
+      <span class="pixel-special-tag">影子分身·无心智</span>
+      <span class="pixel-special-tag">淫欲晶核·关闭</span>
+    </div>
+  </div>
+
+  <!-- 底部 -->
+  <div class="pixel-footer">
+    <span>B3F 地下城</span>
+    <span>384/10/15 <span class="arrow">▼</span></span>
+    <span>12 TURN</span>
+  </div>
+
+</div>
+</body>
+</html>

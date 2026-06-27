@@ -1,0 +1,50 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+  const discovered = _.get(makoto, '秘密发现', false);
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹影院隐奸事件'] && isDaily && discovered && !isSexActive) {
+    const affection = parseInt(_.get(makoto, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.妹妹影院隐奸事件', 0)) || 0;
+    const sexCount = parseInt(_.get(makoto, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：影院隐奸
+event_initiator:
+  event_name: "影院隐奸"
+  character: "汐见真帆"
+  location: "商业区 - 多屏电影院"
+  time: "19:00-23:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "电影院内，银幕上放映着一部长片。观众席稀稀落落坐了些人，主角和真帆选了后排靠角落的位置。"
+    <%_ if (eventCount > 0) { _%>
+    - "电影刚开始不久，真帆的手已经自然地从座椅扶手上滑下来，覆上了主角的腿间。她的眼睛盯着银幕，表情若无其事，手上的动作却精准而熟练。当主角看向她时，她侧过头露出一抹难掩的笑意，悄声说这次她提前查过了——这部电影够长，前排没人。她已经期待了一整个星期，甚至连裙子都没穿内裤。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整她的动作——好感度和次数越高，她越自然地释放掌控欲，可能直接跨坐上来或转过身去，同时轻声提起上次在影院里的经历。结合淫乱度(<%= lewdness %>)调整她在黑暗中说话的尺度与喘息声的大小。"
+    - "结尾留给主角选择：让她主导一切、按住她的头或腰配合节奏、或在她耳边说回家再继续。"
+    <%_ } else { _%>
+    - "电影进行到中段，剧情正沉闷。主角感觉到大腿上传来轻柔的触感——真帆的手已经悄悄覆了上来，隔着裤子按压了几下。她侧过头看了主角一眼，借着银幕的微光能看到她嘴角压不住的得意弧度。"
+    <%_ if (lewdness < 50) { _%>
+    - "真帆没有进一步动作，只是用手隔着裤子反复揉搓。她假装专注地盯着银幕，手上的动作却越来越大胆。"
+    <%_ } else { _%>
+    - "真帆直接解开安全带，把身子探了过来，头埋到主角腿上。她的手熟练地拉开裤链，完全不给主角反应的时间。前排的观众距离只有几排座位，银幕上突然爆发的音效刚好掩盖了细微的声响。"
+    <%_ } _%>
+    - "结合好感度(<%= affection %>)调整她的动作节奏——好感度越高动作越缠绵，好感度偏低则更偏向恶作剧式的挑衅。"
+    - "结尾留给主角选择：抓住她的手制止、默许并配合、或低声说回家再收拾她。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹影院隐奸事件" }
+      ]
+
+<%_ } } _%>

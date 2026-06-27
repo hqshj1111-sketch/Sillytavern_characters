@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角贴图效果演示 — angle1.png</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --parch: #f4ecd8; --parch2: #e8ddc4;
+  --text: #3d2b1a; --text2: #6b5540; --text3: #9b8468;
+  --border: #c4a882; --border2: #8b6914; --accent: #8b4513;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0a0908; min-height:100vh; padding:20px;
+  font-family:'Noto Serif SC',serif; color:#e8d5b7;
+  display:flex; flex-direction:column; align-items:center; gap:20px;
+}
+h1{font-size:18px;margin-bottom:2px}
+.sub{font-size:11px;color:#999;margin-bottom:16px;text-align:center}
+
+/* 控制栏 */
+.controls{
+  display:flex;gap:20px;align-items:center;
+  background:rgba(0,0,0,0.6);padding:8px 16px;border-radius:8px;
+  font-size:12px;color:#ccc;
+}
+.controls input[type=range]{width:160px;accent-color:#9040b0;}
+.controls .val{min-width:20px;text-align:center;font-weight:700;color:#d090e0}
+.controls label{cursor:pointer;display:flex;align-items:center;gap:4px;font-size:11px}
+.controls input[type=checkbox]{accent-color:#9040b0}
+
+/* 卡片容器 */
+.cards-row{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+
+.card-tall{
+  width:200px;height:280px;
+  background:var(--parch);border:2px solid var(--border2);
+  padding:14px 16px;position:relative;
+  box-shadow:3px 3px 0 rgba(139,105,20,.3);
+  font-size:11px;line-height:1.7;color:var(--text2);
+}
+.card-tall h4{font-size:13px;color:var(--accent);margin-bottom:6px;position:relative;z-index:3}
+.card-tall p{position:relative;z-index:3}
+
+.card-wide{
+  width:320px;height:220px;
+  background:var(--parch);border:2px solid var(--border2);
+  padding:14px 16px;position:relative;
+  box-shadow:3px 3px 0 rgba(139,105,20,.3);
+  font-size:11px;line-height:1.7;color:var(--text2);
+}
+.card-wide h4{font-size:13px;color:var(--accent);margin-bottom:6px;position:relative;z-index:3}
+.card-wide p{position:relative;z-index:3}
+
+.card-square{
+  width:220px;aspect-ratio:1;
+  background:var(--parch);border:2px solid var(--border2);
+  padding:14px 16px;position:relative;
+  box-shadow:3px 3px 0 rgba(139,105,20,.3);
+  font-size:11px;line-height:1.7;color:var(--text2);
+}
+.card-square h4{font-size:13px;color:var(--accent);margin-bottom:6px;position:relative;z-index:3}
+.card-square p{position:relative;z-index:3}
+
+/* 角贴图层 — 放回框内侧 */
+.corner{
+  position:absolute;pointer-events:none;z-index:1;
+  width:40px;height:40px;
+  background-image:url('resources/angle1.png');
+  background-size:contain;background-repeat:no-repeat;
+  opacity:0;transition:opacity .4s;
+}
+.corner-tl{top:-2px;left:-2px;--r:0deg;transform:rotate(0deg)}
+.corner-tr{top:-2px;right:-2px;--r:90deg;transform:rotate(90deg)}
+.corner-br{bottom:-2px;right:-2px;--r:180deg;transform:rotate(180deg)}
+.corner-bl{bottom:-2px;left:-2px;--r:270deg;transform:rotate(270deg)}
+
+.corner-lg{width:55px;height:55px}
+.corner-full{width:70px;height:70px}
+
+/* 脉动 — 发光呼吸 */
+.pulse .corner{animation:cornerPulse 2s ease-in-out infinite}
+@keyframes cornerPulse{0%,100%{filter:drop-shadow(0 0 2px rgba(120,10,60,0.6))}50%{filter:drop-shadow(0 0 8px rgba(120,10,60,0.9))}}
+
+.label{font-size:10px;color:#888;margin-bottom:4px;text-align:center}
+.label b{color:var(--accent)}
+.hint{color:#666;font-size:10px;margin-top:8px;text-align:center}
+
+/* 全页面模拟 */
+.full-page{
+  width:440px;height:640px;
+  background:var(--parch);border:2px solid var(--border2);
+  position:relative;
+  box-shadow:0 0 0 6px #1a1410,0 0 0 8px #3a2a1a,0 8px 40px rgba(0,0,0,.6);
+  overflow:hidden;
+}
+.full-page .fp-title{
+  padding:8px 14px;font-weight:700;color:var(--accent);
+  border-bottom:2px solid var(--border2);position:relative;z-index:3;font-size:13px
+}
+.full-page .fp-body{
+  padding:14px 16px;position:relative;z-index:3;font-size:12px;line-height:1.8;color:var(--text2)
+}
+.full-page .corner-full{width:140px;height:140px}
+</style>
+</head>
+<body>
+
+<h1>角贴图效果演示 — angle1.png</h1>
+<div class="sub">252×252 PNG · 四角 CSS transform 旋转复用 · 滑块控制恶堕等级</div>
+
+<!-- 控制栏 -->
+<div class="controls">
+  <span>恶堕等级:</span>
+  <input type="range" min="0" max="10" value="0" id="level" step="1">
+  <span class="val" id="level-val">0</span>
+  <label><input type="checkbox" id="pulse-chk"> 高级脉动 (Lv.7+)</label>
+  <span style="font-size:10px;color:#888">提示：拖到 5+ 明显可见</span>
+</div>
+
+<!-- 竖卡 -->
+<div class="cards-row">
+  <div class="card-tall" id="card-tall">
+    <div class="corner corner-tl corner-lg"></div>
+    <div class="corner corner-tr corner-lg"></div>
+    <div class="corner corner-br corner-lg"></div>
+    <div class="corner corner-bl corner-lg"></div>
+    <h4>竖长卡片</h4>
+    <p>推开龙息公会厚重的黑曜石大门，温暖的火焰光芒迎面扑来。大厅穹顶上悬挂着先祖的骸骨吊灯，墙壁铭刻着历代英雄的名字。前台蜥蜴接待员用竖瞳瞥了你一眼。</p>
+  </div>
+
+  <div class="card-square" id="card-square">
+    <div class="corner corner-tl corner-lg"></div>
+    <div class="corner corner-tr corner-lg"></div>
+    <div class="corner corner-br corner-lg"></div>
+    <div class="corner corner-bl corner-lg"></div>
+    <h4>方形卡片</h4>
+    <p>推开龙息公会厚重的黑曜石大门，温暖的火焰光芒迎面扑来。大厅穹顶上悬挂着先祖的骸骨吊灯。</p>
+  </div>
+
+  <div class="card-wide" id="card-wide">
+    <div class="corner corner-tl corner-lg"></div>
+    <div class="corner corner-tr corner-lg"></div>
+    <div class="corner corner-br corner-lg"></div>
+    <div class="corner corner-bl corner-lg"></div>
+    <h4>横宽卡片</h4>
+    <p>推开龙息公会厚重的黑曜石大门，温暖的火焰光芒迎面扑来。大厅穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼。</p>
+  </div>
+</div>
+
+<!-- 全页面模拟 -->
+<div class="label">全页面模拟（酒馆竖长界面）</div>
+<div class="full-page" id="full-page">
+  <div class="corner corner-tl corner-full"></div>
+  <div class="corner corner-tr corner-full"></div>
+  <div class="corner corner-br corner-full"></div>
+  <div class="corner corner-bl corner-full"></div>
+  <div class="fp-title">日常阶段 · 384年10月15日 早 · 龙脊联邦·烬喉</div>
+  <div class="fp-body">
+    <p>推开龙息公会厚重的黑曜石大门，温暖的火焰光芒迎面扑来。</p>
+    <p>大厅内高挑的穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼，沙哑地说道："新人？任务板在右手边。别挡道。"</p>
+    <p>你走向镶嵌在黑曜石墙壁上的任务板，几张泛黄的委托书被图钉钉在软木板上。最上方的一张引起了你的注意——</p>
+    <p>"招募：需要两名冒险者协助调查硫磺谷深处的魔晶矿脉异常。报酬 300 金币，详情面谈。——委托人：矿工长 格鲁克"</p>
+    <p>公会大厅的另一侧，几位冒险者正围着壁炉喝酒交谈，偶尔传来粗犷的笑声和酒杯碰撞的叮当声。壁炉中的火焰跳动着，将整个大厅染成温暖的琥珀色。</p>
+  </div>
+</div>
+
+<script>
+var level=document.getElementById('level');
+var levelVal=document.getElementById('level-val');
+var pulseChk=document.getElementById('pulse-chk');
+var cards=[document.getElementById('card-tall'),
+           document.getElementById('card-square'),
+           document.getElementById('card-wide'),
+           document.getElementById('full-page')];
+
+function update(){
+  var v=parseInt(level.value);
+  levelVal.textContent=v;
+  var opacity=v*0.1;
+  cards.forEach(function(card){
+    var corners=card.querySelectorAll('.corner');
+    corners.forEach(function(c){c.style.opacity=opacity;});
+    card.classList.toggle('pulse',pulseChk.checked&&v>=7);
+  });
+}
+
+level.addEventListener('input',update);
+pulseChk.addEventListener('change',update);
+update();
+</script>
+</body>
+</html>

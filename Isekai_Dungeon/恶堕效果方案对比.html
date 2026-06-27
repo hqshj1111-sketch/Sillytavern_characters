@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恶堕效果方案对比</title>
+<style>
+:root {
+  --parch: #f4ecd8; --parch2: #e8ddc4;
+  --text: #3d2b1a; --text2: #6b5540; --text3: #9b8468;
+  --border: #c4a882; --border2: #8b6914; --accent: #8b4513;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0a0908;padding:20px;font-family:'Georgia','Noto Serif SC',serif;color:#e8d5b7;}
+h1{text-align:center;margin-bottom:4px;font-size:22px;}
+h1 sub{font-size:11px;color:#888;font-weight:400;}
+.subtitle{text-align:center;color:#999;font-size:12px;margin-bottom:24px;}
+
+.scheme-section{margin-bottom:40px;}
+.scheme-section h2{font-size:16px;margin-bottom:4px;color:var(--accent);}
+.scheme-section .desc{font-size:11px;color:#999;margin-bottom:14px;}
+
+.cards-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.card-wrapper{text-align:center;}
+.card-wrapper .label{font-size:10px;color:#888;margin-bottom:4px;}
+.card-wrapper .label span{color:var(--accent);font-weight:700;}
+
+.card{
+  width:140px;aspect-ratio:1;
+  background:var(--parch);border:2px solid var(--border2);
+  padding:10px 12px;position:relative;
+  box-shadow:3px 3px 0 rgba(139,105,20,0.3);
+  text-align:left;font-size:10px;line-height:1.6;color:var(--text2);
+  overflow:hidden;
+}
+.card::before{content:'';position:absolute;inset:4px;border:1px solid var(--border);pointer-events:none;z-index:2;}
+.card h4{font-size:11px;color:var(--accent);margin-bottom:3px;position:relative;z-index:3;}
+.card .txt{position:relative;z-index:3;}
+
+/* ── 方案 1：SVG feTurbulence 有机噪点腐蚀 ── */
+.s1-overlay{
+  position:absolute;inset:0;pointer-events:none;z-index:1;
+  opacity:0;transition:opacity .4s;
+}
+.s1-overlay.active{opacity:1;}
+.s1-l1 .s1-overlay{opacity:0.3;}
+.s1-l3 .s1-overlay{opacity:0.55;}
+.s1-l6 .s1-overlay{opacity:0.75;}
+.s1-l8 .s1-overlay{opacity:0.85;}
+.s1-l9 .s1-overlay{opacity:0.95;}
+
+/* ── 方案 2：多层动态渐变墨迹渗透 ── */
+.s2-ink{
+  position:absolute;inset:0;pointer-events:none;z-index:1;
+  opacity:0;transition:opacity .5s;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(80,10,40,0.9) 0%, rgba(50,5,25,0.5) 15%, transparent 30%),
+    radial-gradient(circle at 100% 0%, rgba(60,8,35,0.85) 0%, rgba(40,5,20,0.4) 12%, transparent 28%),
+    radial-gradient(circle at 20% 100%, rgba(100,15,50,0.8) 0%, rgba(60,8,30,0.45) 18%, transparent 35%),
+    radial-gradient(circle at 90% 100%, rgba(50,5,30,0.85) 0%, rgba(30,3,18,0.4) 14%, transparent 30%);
+}
+.s2-l1 .s2-ink{opacity:0.3;}
+.s2-l3 .s2-ink{opacity:0.5;}
+.s2-l6 .s2-ink{opacity:0.7;}
+.s2-l8 .s2-ink{opacity:0.85;}
+.s2-l9 .s2-ink{opacity:1;animation:inkPulse 3s ease-in-out infinite;}
+@keyframes inkPulse{0%,100%{opacity:0.92;}50%{opacity:1;}}
+
+/* ── 方案 3：Canvas 程序化腐蚀脉络 ── */
+.s3-canvas{
+  position:absolute;inset:0;pointer-events:none;z-index:1;
+  opacity:0;transition:opacity .4s;
+}
+.s3-l1 .s3-canvas{opacity:0.25;}
+.s3-l3 .s3-canvas{opacity:0.45;}
+.s3-l6 .s3-canvas{opacity:0.65;}
+.s3-l8 .s3-canvas{opacity:0.8;}
+.s3-l9 .s3-canvas{opacity:0.95;}
+
+/* ── 方案 4：毛玻璃回火纹样 + 边缘烧灼 ── */
+.s4-glass{
+  position:absolute;inset:0;pointer-events:none;z-index:1;
+  opacity:0;transition:opacity .5s;
+  backdrop-filter:blur(0px);
+  background:
+    /* 回火纹样 */
+    repeating-conic-gradient(rgba(40,5,20,0.12) 0% 2%,transparent 2% 4%) 0 0/40px 40px,
+    /* 边缘烧灼 */
+    radial-gradient(ellipse at center,transparent 50%,rgba(60,10,30,0.7) 100%),
+    radial-gradient(circle at 20% 20%,rgba(80,5,40,0.6) 0%,transparent 30%),
+    radial-gradient(circle at 80% 80%,rgba(70,8,35,0.55) 0%,transparent 25%);
+}
+.s4-l1 .s4-glass{opacity:0.3;}
+.s4-l3 .s4-glass{opacity:0.5;}
+.s4-l6 .s4-glass{opacity:0.7;}
+.s4-l8 .s4-glass{opacity:0.85;}
+.s4-l9 .s4-glass{opacity:1;animation:s4Shift 4s ease-in-out infinite;}
+@keyframes s4Shift{0%,100%{opacity:0.9;}50%{opacity:1;}}
+
+/* ── 方案 5：异空间裂痕 + 符文脉动 ── */
+.s5-rift{
+  position:absolute;inset:0;pointer-events:none;z-index:1;
+  opacity:0;transition:opacity .5s;
+  background:
+    /* 纵向裂痕 */
+    linear-gradient(90deg,transparent 30%,rgba(10,0,5,0.3) 30.5%,transparent 31%) 0 0/100% 100%,
+    linear-gradient(90deg,transparent 65%,rgba(10,0,5,0.25) 65.5%,transparent 66%) 0 0/100% 100%,
+    /* 斜向裂痕 */
+    linear-gradient(135deg,transparent 40%,rgba(60,5,30,0.25) 40.5%,transparent 41%) 0 0/100% 100%,
+    /* 符文环 */
+    radial-gradient(circle at 25% 25%,rgba(80,0,60,0.5) 0%,transparent 20%),
+    radial-gradient(circle at 75% 75%,rgba(60,0,50,0.45) 0%,transparent 18%),
+    /* 脉冲光点 */
+    radial-gradient(circle at 20% 30%,rgba(120,10,80,0.6) 0%,transparent 5%),
+    radial-gradient(circle at 70% 80%,rgba(100,5,70,0.5) 0%,transparent 4%);
+}
+.s5-l1 .s5-rift{opacity:0.25;}
+.s5-l3 .s5-rift{opacity:0.45;}
+.s5-l6 .s5-rift{opacity:0.65;}
+.s5-l8 .s5-rift{opacity:0.82;}
+.s5-l9 .s5-rift{opacity:1;animation:riftGlow 2s ease-in-out infinite;}
+@keyframes riftGlow{0%,100%{opacity:0.92;filter:brightness(1);}50%{opacity:1;filter:brightness(1.15);}}
+
+/* 通用卡片框体腐化效果 */
+.card.corrupt{border-color:rgba(120,20,60,0.8);}
+.card.corrupt::before{border-color:rgba(100,15,50,0.4);}
+
+.hint{color:#666;font-size:10px;margin-top:8px;text-align:center;font-style:italic;}
+</style>
+</head>
+<body>
+
+<h1>恶堕腐蚀效果 — 方案对比<sub>0/3/6/8/9 五档</sub></h1>
+<div class="subtitle">每个方案用同一张羊皮纸卡片展示腐蚀进度，不遮挡正文，仅改变纸面</div>
+
+<!-- ====== 方案 1：SVG 有机噪点 ====== -->
+<div class="scheme-section">
+<h2>方案 1 — SVG feTurbulence 有机噪点腐蚀</h2>
+<div class="desc">技术：内联 SVG 滤镜 ｜ 效果：如霉菌蔓延般的有机不规则腐蚀纹路，从四角向内生长</div>
+<div class="cards-row" id="s1-row"></div>
+<div class="hint">feTurbulence + feColorMatrix 生成独一无二的有机纹理</div>
+</div>
+
+<!-- ====== 方案 2：多层渐变墨迹 ====== -->
+<div class="scheme-section">
+<h2>方案 2 — 多层动态渐变墨迹渗透</h2>
+<div class="desc">技术：CSS radial-gradient 叠加 ｜ 效果：四角不规则暗紫墨迹晕染，9级加入呼吸脉动</div>
+<div class="cards-row" id="s2-row"></div>
+<div class="hint">纯 CSS 实现，最轻量，墨迹形状可通过调整圆心和透明度模拟不规则感</div>
+</div>
+
+<!-- ====== 方案 3：Canvas 程序化脉络 ====== -->
+<div class="scheme-section">
+<h2>方案 3 — Canvas 程序化腐蚀脉络</h2>
+<div class="desc">技术：Canvas 2D 绘制 ｜ 效果：从四角生长的不规则暗紫血管状脉络，有机随机</div>
+<div class="cards-row" id="s3-row"></div>
+<div class="hint">Canvas 可生成真正的随机分支结构，每次刷新图案略有不同</div>
+</div>
+
+<!-- ====== 方案 4：毛玻璃回火纹样 ====== -->
+<div class="scheme-section">
+<h2>方案 4 — 回火纹样 + 边缘烧灼</h2>
+<div class="desc">技术：repeating-conic-gradient + 径向渐变 ｜ 效果：仿羊皮纸被暗火烧灼的回火纹，边缘焦黑</div>
+<div class="cards-row" id="s4-row"></div>
+<div class="hint">conic-gradient 产生如火焰灼烧般的回旋纹路</div>
+</div>
+
+<!-- ====== 方案 5：异空间裂痕 + 符文 ====== -->
+<div class="scheme-section">
+<h2>方案 5 — 裂痕纹样 + 暗符文脉动</h2>
+<div class="desc">技术：linear-gradient 裂痕 + 径向光点 ｜ 效果：羊皮纸表面出现纵向和斜向裂痕，暗紫色光点闪烁</div>
+<div class="cards-row" id="s5-row"></div>
+<div class="hint">仿纸张被暗能量撕裂的质感，光点如异界符文在裂隙中发光</div>
+</div>
+
+<svg style="position:absolute;width:0;height:0;">
+  <defs>
+    <filter id="corruptNoise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" seed="5" result="noise"/>
+      <feColorMatrix type="matrix" values="
+        0.6 0 0 0 0.05
+        0 0.2 0 0 0
+        0 0 0.5 0 0.02
+        0 0 0 0.8 0" in="noise" result="colored"/>
+      <feComponentTransfer in="colored">
+        <feFuncA type="linear" slope="1.5" intercept="0"/>
+      </feComponentTransfer>
+    </filter>
+    <filter id="corruptNoise2">
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="5" seed="9" result="n"/>
+      <feColorMatrix type="matrix" values="
+        0.5 0 0 0 0.03
+        0 0.15 0 0 0
+        0 0 0.4 0 0.01
+        0 0 0 0.9 0" in="n" result="c"/>
+      <feComponentTransfer in="c"><feFuncA type="linear" slope="2" intercept="0"/></feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
+
+<script>
+// 通用卡片生成
+function makeCard(scheme,level,levelClass){
+  var levels=['纯净','Lv.3','Lv.6','Lv.8','Lv.9'];
+  return '<div class="card-wrapper"><div class="label">Lv.<span>'+level+'</span></div>'+
+    '<div class="card s'+scheme+'-l'+level+' '+(level>=6?'corrupt':'')+'">'+
+    (scheme==1?'<div class="s1-overlay"><svg style="position:absolute;inset:0;width:100%;height:100%;"><rect width="100%" height="100%" filter="url(#corruptNoise2)"/></svg></div>':'')+
+    (scheme==2?'<div class="s2-ink"></div>':'')+
+    (scheme==3?'<canvas class="s3-canvas" width="140" height="140"></canvas>':'')+
+    (scheme==4?'<div class="s4-glass"></div>':'')+
+    (scheme==5?'<div class="s5-rift"></div>':'')+
+    '<h4>冒险者手记</h4>'+
+    '<div class="txt">推开龙息公会厚重的黑曜石大门，温暖的火焰光芒迎面扑来。大厅穹顶上悬挂着先祖的骸骨吊灯。</div>'+
+    '</div></div>';
+}
+
+['1','2','3','4','5'].forEach(function(s){
+  [0,3,6,8,9].forEach(function(l){
+    document.getElementById('s'+s+'-row').innerHTML+=makeCard(s,l);
+  });
+});
+
+// 方案 3 Canvas 绘制腐蚀脉络
+document.querySelectorAll('.s3-canvas').forEach(function(cvs){
+  var ctx=cvs.getContext('2d'),w=cvs.width,h=cvs.height,level=parseInt(cvs.parentElement.className.match(/s3-l(\d)/)[1]);
+  if(level===0)return;
+  var density=level*2;
+  // 绘制暗紫背景层
+  ctx.fillStyle='rgba(30,3,15,'+(level*0.07)+')';
+  ctx.fillRect(0,0,w,h);
+  // 从四角生长脉络
+  var corners=[[0,0],[w,0],[0,h],[w,h]];
+  corners.forEach(function(c){
+    var cx=c[0],cy=c[1],branches=3+Math.floor(level*1.2);
+    for(var i=0;i<branches;i++){
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      var angle=(Math.atan2(cy-h/2,cx-w/2)+Math.PI)+ (Math.random()-0.5)*1.2;
+      var len=20+Math.random()*w*level*0.08;
+      var cpx=cx+Math.cos(angle)*len*0.5+(Math.random()-0.5)*20;
+      var cpy=cy+Math.sin(angle)*len*0.5+(Math.random()-0.5)*20;
+      var ex=cx+Math.cos(angle)*len;
+      var ey=cy+Math.sin(angle)*len;
+      ctx.quadraticCurveTo(cpx,cpy,ex,ey);
+      ctx.strokeStyle='rgba(70,5,35,'+(0.4+Math.random()*0.5)+')';
+      ctx.lineWidth=1+Math.random()*2.5;
+      ctx.stroke();
+      // 分支上再细分
+      if(level>=6){
+        for(var j=0;j<2;j++){
+          ctx.beginPath();
+          ctx.moveTo(cpx+(ex-cpx)*(0.3+Math.random()*0.4),cpy+(ey-cpy)*(0.3+Math.random()*0.4));
+          var subAngle=angle+(Math.random()-0.5)*1.5;
+          var subLen=len*0.3+Math.random()*len*0.2;
+          var subEx=cpx+Math.cos(subAngle)*subLen;
+          var subEy=cpy+Math.sin(subAngle)*subLen;
+          ctx.lineTo(subEx,subEy);
+          ctx.strokeStyle='rgba(50,3,25,'+(0.2+Math.random()*0.3)+')';
+          ctx.lineWidth=0.5+Math.random()*1;
+          ctx.stroke();
+        }
+      }
+    }
+  });
+  // 随机暗斑
+  for(var k=0;k<level*3;k++){
+    var x=Math.random()*w,y=Math.random()*h;
+    ctx.beginPath();ctx.arc(x,y,2+Math.random()*6,0,Math.PI*2);
+    ctx.fillStyle='rgba(40,3,20,'+(0.1+Math.random()*0.2)+')';
+    ctx.fill();
+  }
+});
+</script>
+</body>
+</html>

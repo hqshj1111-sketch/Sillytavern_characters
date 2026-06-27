@@ -1,0 +1,60 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentHour = parseInt(_.get(stat, '进程.当前小时', 12)) || 12;
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['快递错拿事件'] && isDaily && !isSexActive) {
+    const jin = _.get(stat, 'NPC数据.风见迅', {});
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const jinDiscovered = _.get(jin, '秘密发现', false);
+    const jinSuspicion = parseInt(_.get(jin, '秘密察觉程度', 0)) || 0;
+    const jinKnows = jinSuspicion >= 100;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.快递错拿事件', 0)) || 0;
+    const sexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：快递错拿
+event_initiator:
+  event_name: "快递错拿"
+  character: "风见迅"
+  location: "住宅区"
+  time: "10:00-18:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "主角又拆了迅的快递。这次不能说是不小心——快递盒上的收件人明明白白写着风见迅，但主角看到寄件人是某家成人用品店，就直接拆了。里面是比上次更出格的东西。"
+    - "迅不知道什么时候出现在身后，一把夺过快递，用雄小鬼的口吻说主角是不是对他的快递上瘾了，每次都拆。但他没有真的生气，反而当着主角的面把东西拆开检查，嘴上嘟囔着说这次买的应该比上次那个好用。"
+    <%_ if (!jinDiscovered) { _%>
+    - "他瞥了主角一眼，说你反正也拆了，想看就看吧。但他不解释用途，只说主角别多管闲事。语气里的嘴硬比上次少了几分，多了一丝微妙的炫耀。"
+    <%_ } else { _%>
+    - "他瞥了主角一眼，直接说这是下次直播要用的道具。然后用雄小鬼的口吻问主角有没有什么想看的，他可以大发慈悲让主角在直播间里当第一个观众——或者直接现在试给主角看。"
+    <%_ } _%>
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整迅的下一步——次数越多他越自然地提出让主角帮忙试用新玩具，嘴上的恶态只是装饰。"
+    - "结尾留给主角选择：问他又买了什么东西、让他试给自己看、或直接上手帮忙试用。"
+    <%_ } else { _%>
+    - "主角无意间拆开了一个快递包裹，里面是情趣玩具或暴露服装，随即发现收件人写的是风见迅。正错愕时，迅刚好出现，目睹了主角拿着他的快递。"
+    <%_ if (!jinDiscovered) { _%>
+    - "迅快步上前，一把夺过快递，用雄小鬼的口吻说这是他的东西，主角别管闲事。面对主角的疑惑视线，他嘴硬地不解释用途，只说主角多管闲事。"
+    <%_ } else { _%>
+      <%_ if (!jinKnows) { _%>
+    - "迅看出主角已经知道了些什么，索性大方承认自己就是露出主播银犬，这是直播用的道具。他恢复雄小鬼的口吻嘲讽主角说露出直播可比主角想象的专业多了，主角这种外行看不懂很正常，要看吗？"
+      <%_ } else { _%>
+    - "迅看出主角已经知道了，索性大方承认这是直播用的新道具。他用雄小鬼的口吻说主角既然是同行就别装了，问主角对这个道具有什么看法，还说要是主角感兴趣，下次可以借主角一个试试。"
+      <%_ } _%>
+    <%_ } _%>
+    - "结尾留给主角选择：主动追问细节、装作不感兴趣结束对话、或顺势表明自己也是同行。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/快递错拿事件" }
+      ]
+
+<%_ } } _%>

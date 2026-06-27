@@ -1,0 +1,45 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const isDaily = _.get(stat, '进程.阶段', '日常阶段') === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['梦中水仙事件'] && isDaily && !isSexActive) {
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.梦中水仙事件', 0)) || 0;
+    const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
+    const name = _.get(stat, '主角.基本信息.姓名', '主角');
+    const lewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+    const isContact = lewdness >= 50;
+    let roleHint = '';
+    if (eventCount === 0) {
+      roleHint = `主角在梦中见到另一个自己——「${streamerName}」，被对方下流地挑逗玩弄。`;
+    } else if (eventCount === 1) {
+      roleHint = `又一次梦见自己，主角化身为「${streamerName}」，对面是曾经纯洁的自己，由主角主动下流地玩弄对方。`;
+    } else {
+      roleHint = `又一次梦见自己，这一次，${name} 已经彻底接受与「${streamerName}」融为一体。现在，两个人既是${name} ，也是${streamerName}，彼此心意相通，动作同步，互相亲吻，挑逗玩弄。`;
+    }
+    const actHint = isContact
+      ? '进行插入性性行为（后穴性爱、后穴插入性爱等）'
+      : '进行非插入性性行为（抚摸、手交、口交、足交等）';
+_%>
+# 事件：梦中水仙
+dream_narcissus:
+  event_name: "梦中水仙"
+  streamer_name: "<%= streamerName %>"
+  phase: "<%= eventCount === 0 ? '第一梦｜他我引诱' : (eventCount === 1 ? '第二梦｜身份反转' : '融合之梦｜本我合一') %>"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "<%= roleHint %>"
+    - "根据淫乱度(<%= lewdness %>)选择行为类型：<%= actHint %>。"
+    - "全程发生于梦境，醒来后不留物理痕迹，但心理冲击强烈。请细致描写感官、对话与内心羞耻/兴奋的拉扯。"
+
+  mandatory_data_sync:
+    instruction: "梦境结束后，仅移除事件标记。"
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/梦中水仙事件" }
+      ]
+<%_ } } _%>

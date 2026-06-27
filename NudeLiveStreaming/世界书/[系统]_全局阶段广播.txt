@@ -1,0 +1,42 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const currentPhase = _.get(stat, '进程.阶段', '创角阶段');
+
+if (currentPhase === '日常阶段' || currentPhase === '直播阶段') {
+    const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+    const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+_%>
+# 【全局阶段广播】
+
+<%_ if (currentPhase === '日常阶段') { _%>
+当前阶段：日常阶段
+
+叙事重点：
+  - 主角以普通身份度过日常生活。故事聚焦于主角在现实世界中的活动，所见所闻及与他人的互动。
+  - 主角在日常生活中有时会不经意间流露出与直播相关的破绽，让身边人隐隐起疑。
+
+视角约束:
+  - 主角仅通过自身观察获取信息，严禁全知视角。
+
+<%_ } else if (currentPhase === '直播阶段') { _%>
+当前阶段：直播阶段
+
+叙事重点：
+  - 主角已开启直播APP，镜头正对向他。故事聚焦于直播间的互动、主角的表演行为与内心变化。
+
+视角约束:
+  - 严禁出现主角不可能知晓的外部事件或他人动向。
+
+<%_ } %>
+<%_ if (isSexActive) { _%>
+> **【⚠️ 核心叙事警告】**：检测到当前正在进行性行为！请**务必严格按照「动态性行为叙事协议」的标准**，结合角色的实际开发度与经验进行合理的感官描写！
+
+<%_ } %>
+<%_ if (!isSexActive && currentPhase === '日常阶段') {
+    const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+    const eventNames = Object.keys(pendingEvents);
+    if (eventNames.length > 0) { _%>
+> **【高优先级】当前日常阶段没有性行为，且存在待处理事件：<%= eventNames.join('、') %>。除非玩家表示开播或者剧情正在暧昧互动中，否则请立刻收束当前叙事，简要完成玩家指令，让时间快速流转，自然地直接切入该事件的开端。**
+
+<%_ } } _%>
+<%_ } } _%>

@@ -1,0 +1,39 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['秘密暴露事件']) {
+    const npcName = events['秘密暴露事件'];
+    const npc = _.get(stat, `NPC数据.${npcName}`, {});
+    const npcPersonality = npc.性格 || {};
+    const currentSuspicion = parseInt(npc.秘密察觉程度) || 0;
+    const relationship = npc.身份信息?.与主角关系 || '未知';
+    const isStreamer = _.get(stat, '主角.主播信息.直播总次数', 0) > 0;
+    const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
+_%>
+# 事件：秘密暴露
+secret_exposed:
+  event_name: "秘密暴露——<%= npcName %>"
+  exposed_to: "<%= npcName %>"
+  relationship: "<%= relationship %>"
+  prior_suspicion: <%= currentSuspicion %>
+  streamer_identity: "<%= isStreamer ? '露出主播 ' + streamerName : '有露出癖好的普通人' %>"
+  
+  narrative_guidance:
+    - "<%= npcName %>的怀疑终于化为确信——他/她已经知道了主角就是<%= isStreamer ? '镜头前那个放荡的「' + streamerName + '」' : '那个在暗处偷偷裸露的人' %>。"
+    - "根据他/她的性格（外在<%= npcPersonality.外在 || '未知' %>，内在<%= npcPersonality.内在 || '未知' %>）与二人之间的<%= relationship %>关系，描写这一刻被发现时的反应——是震惊、沉默、愤怒、失望、兴奋、还是意料之外的接纳？让<%= npcName %>的主导反应取决于人设，而非道德评判。"
+    - "根据该NPC的性格与淫乱度，将暴露的紧张直接导向肉欲冲突，让发现秘密成为肉体接触的导火索。"
+
+  mandatory_data_sync:
+    instruction: "事件推进到发现确认后，更新秘密察觉程度为100并移除事件标记："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/NPC数据/<%= npcName %>/秘密察觉程度", "value": 100 },
+        { "op": "remove", "path": "/系统状态/待处理事件/秘密暴露事件" }
+      ]
+
+<%_ } } _%>

@@ -1,0 +1,127 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '日常阶段') return;
+
+const event = _.get(stat, '系统状态.待处理事件.度假邀约事件', null);
+if (!event || !event.邀请名单 || !event.目标国家 || !event.目标城市) return;
+const inviteNames = event.邀请名单.filter(n => n);
+const targetCountry = event.目标国家;
+const targetCity = event.目标城市;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const mcName = _.get(stat, '主角.基本信息.姓名', '主角');
+
+const geoData = _.get(stat, '地理信息', {});
+const targetCountryData = geoData[targetCountry] || {};
+const targetCityData = _.get(targetCountryData, `城市列表.${targetCity}`, {});
+
+const importantNPCs = _.get(stat, '重要NPC信息', {});
+const normalNPCs = _.get(stat, '一般NPC信息', {});
+
+const DISTANCE_MATRIX = {
+    '龙脊联邦': { '霜境王国': 1, '密林双廷': 1, '原野同盟': 1, '金沙帝国': 2, '潮汐联邦': 3 },
+    '霜境王国': { '龙脊联邦': 1, '密林双廷': 1, '原野同盟': 1, '金沙帝国': 2, '潮汐联邦': 3 },
+    '密林双廷': { '龙脊联邦': 1, '霜境王国': 1, '原野同盟': 2, '金沙帝国': 1, '潮汐联邦': 2 },
+    '原野同盟': { '龙脊联邦': 1, '霜境王国': 1, '密林双廷': 2, '金沙帝国': 1, '潮汐联邦': 2 },
+    '金沙帝国': { '龙脊联邦': 2, '霜境王国': 2, '密林双廷': 1, '原野同盟': 1, '潮汐联邦': 1 },
+    '潮汐联邦': { '龙脊联邦': 3, '霜境王国': 3, '密林双廷': 2, '原野同盟': 2, '金沙帝国': 1 },
+};
+
+function calcTravel(fromCountry, fromCity, toCountry, toCity) {
+    if (fromCountry === toCountry && fromCity === toCity) return { days: 0, desc: '已在当地', minD: 0, maxD: 0 };
+    if (fromCountry === toCountry) return { days: '1~2', desc: '国内短途', minD: 1, maxD: 2 };
+    const row = DISTANCE_MATRIX[fromCountry] || {};
+    const level = row[toCountry] || 2;
+    if (level === 1) return { days: '3~5', desc: '邻国陆路', minD: 3, maxD: 5 };
+    if (level === 2) return { days: '7~10', desc: '远国长途', minD: 7, maxD: 10 };
+    return { days: '10~14', desc: '跨海远洋', minD: 10, maxD: 14 };
+}
+
+const mcTravel = calcTravel(currentCountry, currentCity, targetCountry, targetCity);
+let maxTravelDays = mcTravel.maxD;
+
+const invitees = inviteNames.map(name => {
+    const npc = importantNPCs[name] || normalNPCs[name] || null;
+    if (!npc) return { name, found: false };
+    const npcCountry = npc.所在国家 || '';
+    const npcCity = npc.所在城市 || '';
+    const travel = calcTravel(npcCountry, npcCity, targetCountry, targetCity);
+    if (travel.maxD > maxTravelDays) maxTravelDays = travel.maxD;
+    const sameOrigin = npcCountry === currentCountry && npcCity === currentCity;
+    return {
+        name, found: true,
+        race: npc.种族 || '?', gender: npc.性别 || '?', age: npc.年龄 || '?',
+        occupation: npc.职业 || npc.身份 || npc.简述 || '当地居民',
+        fromCountry: npcCountry, fromCity: npcCity,
+        travelDays: travel.days, travelDesc: travel.desc, maxD: travel.maxD,
+        sameOrigin,
+    };
+});
+
+const found = invitees.filter(i => i.found);
+const notFound = invitees.filter(i => !i.found);
+const sameOrigin = found.filter(i => i.sameOrigin);
+const diffOrigin = found.filter(i => !i.sameOrigin);
+
+const vibeObj = targetCityData.整体氛围 || {};
+const currentMonth = parseInt(_.get(stat, '进程.当前月份', 1)) || 1;
+let seasonChar = '冬';
+if (currentMonth >= 3 && currentMonth <= 5) seasonChar = '春';
+else if (currentMonth >= 6 && currentMonth <= 8) seasonChar = '夏';
+else if (currentMonth >= 9 && currentMonth <= 11) seasonChar = '秋';
+const vibeStr = _.isArray(vibeObj) ? vibeObj.join('、') : (vibeObj[seasonChar] || Object.values(vibeObj).filter(v => v).join('、')) || '?';
+const places = targetCityData.地点列表 || {};
+const placeNames = Object.keys(places);
+_%>
+# 系统指令：度假邀约
+
+  发起人：<%= mcName %>（<%= currentCountry %> / <%= currentCity %>）
+  目的地：<%= targetCountry %> / <%= targetCity %><% if (targetCityData.城市规模) { %> | 规模：<%= targetCityData.城市规模 %><% } %>
+  全程预计耗时：<%= maxTravelDays %> 日内全员抵达
+
+<%_ if (notFound.length > 0) { _%>
+  ⚠ 未找到的NPC：<%= notFound.map(i => i.name).join('、') %> — 无任何记录，直接忽略。
+<%_ } _%>
+
+  受邀者：
+<%_ found.forEach(i => { _%>
+    【<%= i.name %>】<%= i.race %> / <%= i.gender %> / <%= i.age %>岁 | <%= i.occupation %> | 出发地：<%= i.fromCountry %>·<%= i.fromCity %> | <%= i.travelDays %>日（<%= i.travelDesc %>）<%= i.sameOrigin ? '——与主角同行出发' : '——独立出发' %>
+<%_ }); %>
+
+  主角行程：<%= currentCountry %>·<%= currentCity %> → <%= targetCountry %>·<%= targetCity %> | <%= mcTravel.days %>日（<%= mcTravel.desc %>）
+
+  目的地风貌：
+    国家：<%= targetCountry %><%= targetCountryData.简述 ? ' | ' + targetCountryData.简述 : '' %>
+    城市：<%= targetCity %> | 种族构成：<%= targetCityData.种族构成 || targetCountryData.种族构成 || '?' %>
+    环境：<%= targetCityData.自然环境 || targetCountryData.自然环境 || '?' %>
+    氛围（<%= seasonChar %>季）：<%= vibeStr %>
+    <%_ if (placeNames.length > 0) { _%>
+    主要地点：<%= placeNames.map(p => places[p].简述 ? p + '（'+places[p].简述+'）' : p).join('、') %>
+    <%_ } _%>
+
+  narrative_guidance:
+    - "主角向上述受邀者发出度假邀约，目的地是【<%= targetCountry %> / <%= targetCity %>】。先描写主角如何联系到来的受邀者——当面邀请、书信或魔法通信。由AI根据每个受邀NPC的性格、与主角的好感度和关系判定其是否接受邀约。"
+<%_ if (sameOrigin.length > 0) { _%>
+    - "<%= sameOrigin.map(i => i.name).join('、') %>与主角同在<%= currentCity %>——接受后与主角一起整理行装、约定出发时辰、同行踏上旅途。描写一行人从<%= currentCity %>出发的场景——城门外的晨光、回头望一眼渐渐变小的城镇轮廓。<% if (sameOrigin.length > 1) { %>旅途中同伴之间的互动——前后行走的对话、休息时分享的干粮和饮水。<% } %>"
+<%_ } _%>
+<%_ if (diffOrigin.length > 0) { _%>
+    - "<%= diffOrigin.map(i => i.name).join('、') %>从各自的所在地独立出发——<%= diffOrigin.map(i => i.name + '从' + i.fromCountry + '·' + i.fromCity + '启程（' + i.travelDays + '日）').join('，') %>。以简练的平行蒙太奇手法穿插描写每个人旅途中的一个小片段——<%= diffOrigin.map(i => i.name + '在' + i.travelDesc + '中' + (['穿过边境关卡时回头望了一眼来路','在颠簸马车上靠着行囊打盹','船甲板上迎着海风眺望前方','在驿站借宿时与陌生旅人交换了食物'][Math.floor(Math.random()*4)])).join('、') %>。"
+<%_ } _%>
+    - "【全员抵达】——当最后一位成员也到达后，描写作为主角的视角：你已经在<%= targetCity %>等待（或刚刚抵达），看着受邀者们陆续出现在约定的集合点（如<%= placeNames[0] || '城门口' %>）。描写每个抵达者的神态——风尘仆仆但眼中带着对这座新城镇的好奇。<% if (found.length > 1) { %>互相之间的寒暄和打趣——'你也来了''路上如何'。<% } %>"
+    - "【城市第一印象】——当全员集齐后，以主角的视角来描绘<%= targetCity %>的整体面貌：<%= targetCityData.自然环境 ? targetCityData.自然环境 + '。' : '' %>街道上<%= targetCityData.种族构成 || '多种族' %>的身影交织。<%= vibeStr %>的空气包裹着每个人的感官。结合上方的主要地点暗示这座城市的叙事可能性。"
+    - "结尾留给众人自由选择——是先寻找旅店落脚、前往当地冒险者公会报到、还是分开各自在城里逛逛。为下一回合的自然展开留出空间。"
+
+  mandatory_data_sync:
+    instruction: "完成出行叙事后，更新主角所在地和时间，并移除事件标记："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/主角/当前状态/当前国家", "value": "<%= targetCountry %>" },
+        { "op": "replace", "path": "/主角/当前状态/当前城市", "value": "<%= targetCity %>" },
+        { "op": "replace", "path": "/主角/当前状态/当前地点", "value": "[从上方目的地地点列表中选择一个合理初始地点，如城门口或冒险者公会·大厅]" },
+        { "op": "replace", "path": "/进程/当前日份", "value": [当前日份 + <%= maxTravelDays %>] },
+        { "op": "replace", "path": "/进程/当前时间段", "value": "[早或午]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/度假邀约事件" }
+      ]
+<%_ } _%>

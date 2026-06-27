@@ -1,0 +1,51 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['海斗教室勃起事件'] && isDaily && !isSexActive) {
+    const kaido = _.get(stat, 'NPC数据.黑崎海斗', {});
+    const lewdness = parseInt(_.get(kaido, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.海斗教室勃起事件', 0)) || 0;
+    const sexCount = parseInt(_.get(kaido, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：教室勃起
+event_initiator:
+  event_name: "教室勃起"
+  character: "黑崎海斗"
+  location: "文教区 - 大学教室"
+  time: "9:00-16:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角和海斗并排坐在教室里上课。枯燥的讲授声中，主角注意到海斗的课桌下——运动短裤的布料被顶起一个显眼的弧度。海斗也察觉到主角的视线。"
+    <%_ if (eventCount > 0) { _%>
+    - "两人对视一眼，海斗咧嘴笑了一下。已经不是第一次在课上硬了——训练后那根鸡巴总是不分场合地抬头，而主角每次都能第一个发现。"
+    - "海斗没有遮掩，反而靠过来压低声音说训练完就是容易这样，问主角这次能不能帮帮他。结合淫乱度(<%= lewdness %>)和做爱次数(<%= sexCount %>)调整他的请求——次数越多他越直白地抓住主角的手往自己裤子里塞。"
+    <%_ if (sexCount > 3) { _%>
+    - "他甚至悄悄说上次在教室里被主角弄完之后，他回去想起那个画面又撸了一次。这次他想试试更大胆的，问主角敢不敢。"
+    <%_ } _%>
+    - "结尾留给主角选择：在课桌下帮他、拉他去厕所解决、或让他忍着下课再说。"
+    <%_ } else { _%>
+    <%_ if (lewdness < 25) { _%>
+    - "海斗微微侧过身，用手肘挡住腿间。他靠近主角耳边低声解释，昨晚训练太累直接睡着了，忘了来一发，所以现在憋得慌。语气里带着不自在的尴尬，耳根微微发红。"
+    <%_ } else if (lewdness < 50) { _%>
+    - "海斗靠过来，无所谓地说等下课去厕所打出来就好了。他的手随意地搭在腿间，隔着短裤把鸡巴拨到更舒服的位置，动作自然得仿佛只是在调整坐姿。"
+    <%_ } else { _%>
+    - "海斗靠近主角，手先伸进裤子里慢悠悠地撸了几下，然后侧过头低声问主角，要不要现在就帮他解决。他说反正坐在最后一排没人看得见，比厕所刺激多了。"
+    <%_ } _%>
+    - "结尾留给主角选择：假装没看到专心听课、在课桌下帮他、或让他等下课再说。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/海斗教室勃起事件" }
+      ]
+
+<%_ } } _%>

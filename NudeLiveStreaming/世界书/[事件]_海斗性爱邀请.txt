@@ -1,0 +1,44 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['海斗性爱邀请事件'] && isDaily && !isSexActive) {
+    const kaido = _.get(stat, 'NPC数据.黑崎海斗', {});
+    const affection = parseInt(_.get(kaido, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(kaido, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.海斗性爱邀请事件', 0)) || 0;
+    const sexCount = parseInt(_.get(kaido, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：海斗的性爱邀请
+event_initiator:
+  event_name: "海斗的性爱邀请"
+  character: "黑崎海斗"
+  location: "不限"
+  time: "19:00-23:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "海斗一见到主角就凑过来，这次连抱怨炮友的铺垫都省了。他直说想操主角，最近满脑子都是上次把主角操到失神的画面。"
+    - "他说那些炮友根本比不上——身体不够契合、节奏老对不上、叫得也不够好听。还是主角最好，他只想和主角做。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整他的语气——次数越多越用彼此熟悉的骚话描述具体想做什么，会提及上次在哪操得最爽、想重温哪个姿势。结合淫乱度(<%= lewdness %>)调整用词的下流程度。"
+    - "结尾留给主角选择：答应并配合、先调侃他是不是离了自己就没法满足了再开始、或暂时拒绝。"
+    <%_ } else { _%>
+    - "海斗像是憋了很久，一见到主角就开始抱怨最近的炮友不给力——节奏不对、不够配合、完全不是那个感觉。他说着说着语气开始下流，直言只有和主角做才最爽最合拍。"
+    - "他不再绕弯子，直接求主角让他再操一次。结合好感度(<%= affection %>)用骚话描述他对主角身体的渴望——好感度越高越夹杂告白式的独占欲。结合淫乱度(<%= lewdness %>)调整用词的下流程度——淫乱度越高越直白。"
+    - "结尾留给主角选择：答应并配合、先调侃他再答应、或暂时拒绝。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/海斗性爱邀请事件" }
+      ]
+
+<%_ } } _%>

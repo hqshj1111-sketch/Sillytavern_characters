@@ -1,0 +1,29 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+
+  if (events['今日大雪事件'] && isDaily) {
+_%>
+# 事件：今日大雪
+event_initiator:
+  event_name: "今日大雪"
+  location: "全城"
+  time: "6:00-22:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "天色阴沉，气温骤降。第一片雪花落下，随后漫天飞雪将城市包裹成一片素白。这场大雪将断断续续持续一整天，街道很快积起厚厚一层。"
+    - "描写雪中的城市——出门的人裹紧大衣步履匆匆、留在室内的人靠着窗边取暖、电车因为轨道积雪而延迟。这场雪让城市的节奏慢下来，冷空气反而让人更渴望肌肤的温度。"
+    - "结尾留给主角选择：待在有暖气的室内、走进雪中去某个地方、或邀某个人一起看雪。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/今日大雪事件" }
+      ]
+
+<%_ } } _%>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案11：中世纪羊皮卷风 | Medieval Parchment Scroll</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=EB+Garamond:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0b07;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', 'EB Garamond', serif;
+    color: #3a2a18;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(ellipse at 50% 30%, rgba(180,140,80,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 30% 70%, rgba(140,100,60,0.04) 0%, transparent 50%);
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+  }
+
+  /* ── 羊皮卷主容器 ── */
+  .parchment-scroll {
+    background: linear-gradient(180deg, #e8d5b0 0%, #dcc8a0 3%, #e0cba5 50%, #d4bc95 97%, #c8b088 100%);
+    border: 2px solid #8b6914;
+    box-shadow:
+      0 4px 30px rgba(0,0,0,0.5),
+      inset 0 0 40px rgba(180,140,80,0.15);
+    position: relative;
+    color: #3a2810;
+    overflow: hidden;
+  }
+  /* 羊皮纸老化纹理 */
+  .parchment-scroll::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(139,90,40,0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(100,60,30,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(160,120,60,0.04) 0%, transparent 70%);
+  }
+  /* 烧边效果 */
+  .parchment-scroll::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    border: 12px solid transparent;
+    border-image: linear-gradient(135deg,
+      rgba(80,40,10,0.3) 0%, rgba(100,60,20,0.4) 20%,
+      transparent 30%, transparent 70%,
+      rgba(80,40,10,0.3) 80%, rgba(60,30,10,0.4) 100%) 12;
+    opacity: 0.6;
+  }
+
+  /* ── 标题：手抄本首字 ── */
+  .manuscript-header {
+    position: relative;
+    z-index: 6;
+    text-align: center;
+    padding: 20px 20px 8px;
+  }
+  .manuscript-header .illuminated-letter {
+    display: inline-block;
+    font-family: 'UnifrakturMaguntia', cursive;
+    font-size: 48px;
+    color: #8b2020;
+    line-height: 1;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+    margin-bottom: -6px;
+  }
+  .manuscript-header h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: #3a2010;
+    border-top: 1px solid #8b6914;
+    border-bottom: 1px solid #8b6914;
+    display: inline-block;
+    padding: 6px 24px;
+    margin: 4px 0;
+  }
+  .manuscript-header .anno {
+    font-size: 10px;
+    color: #6b4a20;
+    letter-spacing: 4px;
+    font-style: italic;
+  }
+
+  /* ── 分隔装饰：卷轴绳结 ── */
+  .cord-divider {
+    height: 14px;
+    position: relative;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin: 4px 0;
+  }
+  .cord-divider .cord-line {
+    flex: 0 1 40px;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, #5a3810 0px, #5a3810 3px, transparent 3px, transparent 5px);
+  }
+  .cord-divider .knot {
+    width: 8px; height: 8px;
+    background: #6b3a10;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  /* ── 面板：蜡封印章 ── */
+  .scroll-panel {
+    position: relative;
+    z-index: 6;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(200,170,120,0.12);
+    border: 1px dashed #8b6914;
+    border-radius: 2px;
+  }
+  .scroll-panel .panel-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: #5a2810;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title .wax-seal {
+    width: 16px; height: 16px;
+    background: radial-gradient(circle at 40% 40%, #c04040, #6b1010);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+  }
+
+  /* ── 状态：墨迹条 ── */
+  .ink-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .ink-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(180,150,110,0.1);
+    border: 1px solid rgba(100,70,30,0.15);
+  }
+  .ink-stat .quill-mark {
+    font-size: 14px;
+    width: 24px;
+    text-align: center;
+    color: #5a2810;
+    flex-shrink: 0;
+  }
+  .ink-stat .ink-body { flex: 1; min-width: 0; }
+  .ink-stat .ink-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  .ink-head .label {
+    color: #5a3810;
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+  .ink-head .val {
+    color: #4a2010;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .ink-well {
+    height: 5px;
+    background: rgba(80,40,10,0.12);
+    border: 1px solid rgba(80,40,10,0.2);
+    position: relative;
+  }
+  .ink-fill { height: 100%; }
+  .ink-fill.vita { background: linear-gradient(90deg, #6b2020, #b04040); }
+  .ink-fill.mana { background: linear-gradient(90deg, #1a3060, #4050b0); }
+  .ink-fill.stam { background: linear-gradient(90deg, #4a3010, #a07030); }
+  .ink-fill.erud { background: linear-gradient(90deg, #1a4020, #408040); }
+
+  /* ── 属性行列 ── */
+  .attributum-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .attributum {
+    text-align: center;
+    min-width: 50px;
+    padding: 4px 6px;
+    border: 1px solid rgba(100,70,30,0.15);
+    background: rgba(180,150,110,0.08);
+  }
+  .attributum .sigil {
+    font-size: 16px;
+    color: #5a2810;
+    display: block;
+  }
+  .attributum .value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #3a2010;
+    font-family: 'EB Garamond', serif;
+  }
+  .attributum .virtus {
+    font-size: 8px;
+    color: #6b4a20;
+    letter-spacing: 2px;
+  }
+
+  /* ── 正文：手写体段落 ── */
+  .script-text {
+    margin: 6px 14px;
+    padding: 18px 22px;
+    background: rgba(200,170,120,0.08);
+    border-left: 3px solid #8b6914;
+    position: relative;
+    z-index: 6;
+  }
+  .script-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #3a2810;
+    font-size: 13.5px;
+  }
+  .script-text p:last-child { margin-bottom: 0; }
+  .script-text .rubric { color: #8b2020; font-weight: 500; }
+  .script-text .gilt { color: #7a5010; }
+
+  /* ── 行动：羊皮签条 ── */
+  .charter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .charter-btn {
+    font-family: 'EB Garamond', serif;
+    font-size: 13px;
+    background: rgba(200,170,120,0.12);
+    border: 1px solid #8b6914;
+    color: #3a2010;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .charter-btn:hover {
+    background: rgba(139,105,20,0.15);
+    border-color: #5a3810;
+    color: #5a2810;
+  }
+  .charter-btn.primary {
+    background: rgba(139,105,20,0.15);
+    border-color: #5a3810;
+    color: #5a2810;
+    font-weight: 600;
+  }
+
+  /* ── 装备：库存清单 ── */
+  .inventory-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .inventory-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(180,150,110,0.08);
+    border: 1px solid rgba(100,70,30,0.1);
+    font-size: 12px;
+  }
+  .inventory-item .classis { color: #6b4a20; font-size: 9px; letter-spacing: 1px; }
+  .inventory-item .res { color: #3a2010; }
+
+  .blessing-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .blessing {
+    font-size: 10px;
+    padding: 4px 10px;
+    border: 1px solid rgba(100,70,30,0.15);
+    color: #6b4a20;
+    background: rgba(180,150,110,0.06);
+    font-style: italic;
+  }
+  .blessing.active { border-color: #8b2020; color: #5a2010; background: rgba(200,150,100,0.1); }
+
+  /* ── 底部 ── */
+  .scroll-footer {
+    position: relative;
+    z-index: 6;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #6b4a20;
+    letter-spacing: 2px;
+    font-style: italic;
+    border-top: 1px dotted #8b6914;
+    margin: 0 14px;
+  }
+  .scroll-footer .colophon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="parchment-scroll">
+
+    <div class="manuscript-header">
+      <div class="illuminated-letter">D</div>
+      <h1>异世界地下城</h1>
+      <div class="anno">Anno Domini CCCLXXXIV · Mensis X · Dies XV</div>
+    </div>
+
+    <div class="cord-divider">
+      <span class="cord-line"></span><span class="knot"></span><span class="cord-line"></span>
+      <span class="knot"></span>
+      <span class="cord-line"></span><span class="knot"></span><span class="cord-line"></span>
+    </div>
+
+    <div class="scroll-panel">
+      <div class="panel-title"><span class="wax-seal"></span> 冒险者之状态</div>
+      <div class="ink-stats">
+        <div class="ink-stat">
+          <span class="quill-mark">❤</span>
+          <div class="ink-body">
+            <div class="ink-head"><span class="label">生命 Vita</span><span class="val">78 / 100</span></div>
+            <div class="ink-well"><div class="ink-fill vita" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="ink-stat">
+          <span class="quill-mark">✦</span>
+          <div class="ink-body">
+            <div class="ink-head"><span class="label">魔力 Mana</span><span class="val">54 / 100</span></div>
+            <div class="ink-well"><div class="ink-fill mana" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="ink-stat">
+          <span class="quill-mark">⚔</span>
+          <div class="ink-body">
+            <div class="ink-head"><span class="label">体力 Stamina</span><span class="val">90 / 100</span></div>
+            <div class="ink-well"><div class="ink-fill stam" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="ink-stat">
+          <span class="quill-mark">✎</span>
+          <div class="ink-body">
+            <div class="ink-head"><span class="label">经验 Eruditio</span><span class="val">350 / 1000</span></div>
+            <div class="ink-well"><div class="ink-fill erud" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="attributum-row">
+        <div class="attributum"><span class="sigil">⚔</span><div class="value">42</div><div class="virtus">ATK</div></div>
+        <div class="attributum"><span class="sigil">🛡</span><div class="value">28</div><div class="virtus">DEF</div></div>
+        <div class="attributum"><span class="sigil">⚡</span><div class="value">35</div><div class="virtus">AGI</div></div>
+        <div class="attributum"><span class="sigil">✧</span><div class="value">30</div><div class="virtus">INT</div></div>
+        <div class="attributum"><span class="sigil">☘</span><div class="value">18</div><div class="virtus">LCK</div></div>
+        <div class="attributum"><span class="sigil">◎</span><div class="value">1250</div><div class="virtus">AURUM</div></div>
+      </div>
+    </div>
+
+    <div class="script-text">
+      <p>
+        你推开沉重的<span class="rubric">石门</span>，腐朽的空气中弥漫着<span class="gilt">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="rubric">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只<span class="rubric">头领</span>模样的家伙才是真正的威胁——它的眼中闪烁着<span class="rubric">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="gilt">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="scroll-panel">
+      <div class="panel-title"><span class="wax-seal"></span> 抉择之签</div>
+      <div class="charter-actions">
+        <button class="charter-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="charter-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="charter-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="charter-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="scroll-panel">
+      <div class="panel-title"><span class="wax-seal"></span> 行囊与装备</div>
+      <div class="inventory-grid">
+        <div class="inventory-item"><span class="classis">武器</span><span class="res">铁质长剑 Lv.3</span></div>
+        <div class="inventory-item"><span class="classis">防具</span><span class="res">皮甲 Lv.2</span></div>
+        <div class="inventory-item"><span class="classis">饰品</span><span class="res">冒险者徽章</span></div>
+        <div class="inventory-item"><span class="classis">药剂</span><span class="res">回复药水 ×3</span></div>
+      </div>
+      <div class="blessing-tags">
+        <span class="blessing active">✠ 触手紧身衣·共生期</span>
+        <span class="blessing active">✠ 蜕生项圈·中期</span>
+        <span class="blessing">✠ 影子分身·无心智</span>
+        <span class="blessing">✠ 淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="scroll-footer">
+      <div class="colophon">✠ 地下城第三层 ✠ 阿斯特大陆 ✠ 黄昏 ✠ 第十二回合 ✠</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

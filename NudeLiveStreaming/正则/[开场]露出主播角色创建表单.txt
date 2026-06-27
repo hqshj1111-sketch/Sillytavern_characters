@@ -1,0 +1,338 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色创建表单</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-base:#16191f;--bg-card:#1c1f27;--bg-card-alt:#21242d;--bg-input:#242730;
+  --color-steel:#4a90d9;--color-steel-dim:rgba(74,144,217,0.15);--color-steel-glow:rgba(74,144,217,0.22);
+  --color-brass:#c4a24a;--color-brass-dim:rgba(196,162,74,0.15);
+  --color-teal:#3d9e8b;--color-teal-dim:rgba(61,158,139,0.15);
+  --color-copper:#e07040;--color-copper-dim:rgba(224,112,64,0.15);
+  --color-red:#e05555;--color-green:#4aab73;
+  --text-pri:#e2e4e8;--text-sec:#959aa3;--text-ter:#6b6f78;--text-mut:#4a4d55;
+  --border:rgba(255,255,255,0.06);--border-hvr:rgba(255,255,255,0.12);
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.3);--shadow-md:0 4px 16px rgba(0,0,0,0.4);
+  --space-xs:3px;--space-sm:6px;--space-md:12px;--space-lg:18px;--space-xl:24px;
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-full:9999px;
+  --font-cn:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-latin:'Inter',-apple-system,sans-serif;--font-mono:'JetBrains Mono','Fira Code',monospace;
+  --text-xs:12px;--text-sm:13.5px;--text-base:15px;--text-lg:17px;--text-xl:22px;
+  --ease-smooth:cubic-bezier(0.4,0,0.2,1);--t-fast:0.15s var(--ease-smooth);--t-norm:0.28s var(--ease-smooth);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:15px;-webkit-font-smoothing:antialiased;background:var(--bg-base);color:var(--text-pri);font-family:var(--font-cn);line-height:1.5}
+body{min-height:100vh;background:linear-gradient(180deg,#16191f 0%,#1a1d26 40%,#16191f 100%);display:flex;justify-content:center;padding:var(--space-lg)}
+.app-wrap{width:100%;max-width:600px;display:flex;flex-direction:column;gap:var(--space-md)}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:var(--radius-full)}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.06) transparent}
+
+.card{background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border);padding:var(--space-lg);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--color-steel-dim),transparent);opacity:0.6}
+.sec-title{font-size:var(--text-lg);font-weight:700;color:var(--color-steel);margin-bottom:4px;display:flex;align-items:center;gap:var(--space-sm)}
+.sec-title svg{width:18px;height:18px;color:var(--color-brass)}
+.sec-desc{font-size:var(--text-xs);color:var(--text-ter);margin-bottom:var(--space-lg)}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);margin-bottom:var(--space-lg)}
+.form-grid--full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group--wide{grid-column:1/-1}
+.form-label{font-size:10px;font-weight:600;color:var(--text-ter);text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-latin)}
+.form-input{width:100%;max-width:100%;padding:10px 14px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-base);color:var(--text-pri);transition:all var(--t-fast);outline:none;font-family:var(--font-cn)}
+.form-input:focus{border-color:var(--color-steel);box-shadow:0 0 0 3px var(--color-steel-dim)}
+.form-input::placeholder{color:var(--text-mut)}
+.form-textarea{width:100%;max-width:100%;padding:10px 14px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-base);color:var(--text-pri);transition:all var(--t-fast);outline:none;font-family:var(--font-cn);resize:vertical;min-height:80px;line-height:1.6}
+.form-textarea:focus{border-color:var(--color-steel);box-shadow:0 0 0 3px var(--color-steel-dim)}
+.form-textarea::placeholder{color:var(--text-mut)}
+
+.profile-bar{display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-md);background:var(--bg-card-alt);border-radius:var(--radius-md);border:1px solid var(--border);margin-bottom:var(--space-lg);flex-wrap:wrap}
+.profile-bar__label{font-size:10px;font-weight:600;color:var(--color-brass);text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-latin);flex-shrink:0}
+.profile-select{flex:1;min-width:140px;padding:8px 12px;background:var(--bg-input);border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:var(--text-sm);color:var(--text-pri);outline:none;cursor:pointer;font-family:var(--font-cn)}
+.profile-select:focus{border-color:var(--color-brass)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:600;letter-spacing:0.02em;transition:all var(--t-fast);cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn:active{transform:scale(0.96)}
+.btn--steel{background:var(--color-steel-dim);color:var(--color-steel);border:1px solid rgba(74,144,217,0.2)}
+.btn--steel:hover{background:var(--color-steel);color:#fff;border-color:var(--color-steel)}
+.btn--brass{background:var(--color-brass-dim);color:var(--color-brass);border:1px solid rgba(196,162,74,0.2)}
+.btn--brass:hover{background:var(--color-brass);color:#fff;border-color:var(--color-brass)}
+.btn--danger{background:rgba(224,85,85,0.1);color:var(--color-red);border:1px solid rgba(224,85,85,0.2)}
+.btn--danger:hover{background:var(--color-red);color:#fff}
+.btn--ghost{color:var(--text-ter);border:1px solid transparent}
+.btn--ghost:hover{color:var(--text-pri);background:var(--bg-input)}
+.btn--lg{padding:12px 32px;font-size:var(--text-base);font-weight:700}
+.btn--primary{background:linear-gradient(135deg,var(--color-steel),#3d7ec2);color:#fff;box-shadow:0 3px 14px var(--color-steel-glow)}
+.btn--primary:hover{box-shadow:0 5px 22px rgba(74,144,217,0.32);transform:translateY(-1px)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;filter:grayscale(0.4)}
+.btn:disabled:hover{transform:none;box-shadow:none}
+.btn svg{width:15px;height:15px;flex-shrink:0}
+
+.actions{display:flex;justify-content:center;gap:var(--space-md);flex-wrap:wrap;padding-top:var(--space-lg);border-top:1px solid var(--border)}
+.notification{text-align:center;font-size:var(--text-xs);color:var(--color-green);min-height:20px;transition:opacity 0.3s}
+
+@media(max-width:500px){.form-grid{grid-template-columns:1fr}.profile-bar{flex-direction:column;align-items:stretch}}
+</style>
+</head>
+<body>
+<div class="app-wrap">
+
+  <div class="card">
+    <div class="sec-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      角色创建表单
+    </div>
+    <div class="sec-desc">设定你的身份信息，踏上成为露出系主播的旅途。</div>
+
+    <!-- Profile Manager -->
+    <div class="profile-bar">
+      <span class="profile-bar__label">存档管理</span>
+      <select class="profile-select" id="profile-select"><option value="">-- 尚无已存方案 --</option></select>
+      <button class="btn btn--steel" id="load-btn" disabled>读取</button>
+      <button class="btn btn--brass" id="save-btn">保存</button>
+      <button class="btn btn--danger" id="delete-btn" disabled>删除</button>
+      <span style="width:1px;background:var(--border);align-self:stretch"></span>
+      <button class="btn btn--ghost" id="export-btn" disabled title="导出">导出</button>
+      <button class="btn btn--ghost" id="import-btn" title="导入">导入</button>
+      <input type="file" id="import-file" accept=".json" style="display:none">
+    </div>
+
+    <!-- Form -->
+    <form id="creator-form" onsubmit="return false;">
+
+      <div class="sec-title" style="font-size:var(--text-base);margin-bottom:var(--space-md)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        基本信息
+      </div>
+      <div class="form-grid">
+        <div class="form-group form-group--wide">
+          <label class="form-label">姓名 / 主播名 / 年龄</label>
+          <div style="display:flex; gap:8px">
+            <input class="form-input" type="text" id="char-name" placeholder="你的名字..." style="flex:1; min-width:0;">
+            <input class="form-input" type="text" id="streamer-name" placeholder="主播名..." style="flex:1; min-width:0;">
+            <input class="form-input" type="text" id="char-age" placeholder="18岁" style="flex:1; min-width:0;">
+          </div>
+        </div>
+        <div class="form-group form-group--wide">
+          <label class="form-label" for="char-personality">性格</label>
+          <input class="form-input" type="text" id="char-personality" placeholder="内向但对亲密之人放得开，在镜头前逐渐展露大胆一面">
+        </div>
+        <div class="form-group form-group--wide">
+          <label class="form-label" for="char-bg">背景</label>
+          <input class="form-input" type="text" id="char-bg" placeholder="汐望高中高三学生，独居于涩谷公寓">
+        </div>
+      </div>
+
+      <div class="sec-title" style="font-size:var(--text-base);margin-bottom:var(--space-md)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        外貌速写 <span style="font-size:10px;color:var(--text-mut);font-weight:400">(AI将基于此补全)</span>
+      </div>
+      <div class="form-grid form-grid--full">
+        <div class="form-group">
+          <label class="form-label" for="appearance-keywords">外貌与气质关键词</label>
+          <textarea class="form-textarea" id="appearance-keywords" placeholder="例如：清秀少年脸型、黑色短碎发、深棕色眼瞳、左耳小痣..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="body-keywords">身材与体质描述</label>
+          <textarea class="form-textarea" id="body-keywords" placeholder="例如：175cm、匀称偏瘦、白皙光滑、腹部浅层肌肉线条，或是更加私密的特征..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="genital-keywords">性器官特征描述</label>
+          <textarea class="form-textarea" id="genital-keywords" placeholder="例如：阴茎中等尺寸颜色偏浅、后穴未经开发紧致粉嫩..."></textarea>
+        </div>
+      </div>
+
+      <div class="sec-title" style="font-size:var(--text-base);margin-bottom:var(--space-md)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        页脚备注
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <textarea class="form-textarea" id="extra-notes" placeholder="其他特殊设定或要求..." style="min-height:60px"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn--primary btn--lg" id="generate-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="5 12 10 17 19 8"/></svg>
+          <span>提交创角档案</span>
+        </button>
+        <button class="btn btn--ghost" id="reset-btn" type="button">清空表单</button>
+      </div>
+      <div class="notification" id="notification"></div>
+    </form>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const form=document.getElementById('creator-form');
+  const generateBtn=document.getElementById('generate-btn');
+  const resetBtn=document.getElementById('reset-btn');
+  const notification=document.getElementById('notification');
+  const allInputs=Array.from(form.querySelectorAll('input[type=text], textarea'));
+  const profileSelect=document.getElementById('profile-select');
+  const loadBtn=document.getElementById('load-btn');
+  const saveBtn=document.getElementById('save-btn');
+  const deleteBtn=document.getElementById('delete-btn');
+  const exportBtn=document.getElementById('export-btn');
+  const importBtn=document.getElementById('import-btn');
+  const importFile=document.getElementById('import-file');
+  const initialBtnHTML=generateBtn.innerHTML;
+
+  const AUTOSAVE_KEY='nls_charCreate_autosave_v1';
+  const PROFILE_KEY='nls_charCreate_profiles_v1';
+  let saveTimeout;
+
+  const notify=(msg,color='#4aab73')=>{
+    notification.textContent=msg;notification.style.color=color;notification.style.opacity='1';
+    clearTimeout(notification._tid);notification._tid=setTimeout(()=>{notification.style.opacity='0';},3500);
+  };
+
+  const getFormData=()=>{
+    const data={};
+    allInputs.forEach(inp=>{if(inp.id)data[inp.id]=inp.value;});
+    return data;
+  };
+
+  const populateForm=(data)=>{
+    if(!data)return;
+    allInputs.forEach(inp=>{const key=inp.id;if(data[key]!==undefined)inp.value=data[key];else if(inp.tagName!=='SELECT')inp.value='';});
+  };
+
+  const autoSave=()=>localStorage.setItem(AUTOSAVE_KEY,JSON.stringify(getFormData()));
+  const debouncedSave=()=>{clearTimeout(saveTimeout);saveTimeout=setTimeout(autoSave,500);};
+
+  const getProfiles=()=>JSON.parse(localStorage.getItem(PROFILE_KEY))||{};
+  const saveProfiles=(p)=>localStorage.setItem(PROFILE_KEY,JSON.stringify(p));
+
+  const refreshDropdown=()=>{
+    const profiles=getProfiles();const names=Object.keys(profiles);
+    profileSelect.innerHTML='';
+    if(names.length===0){
+      profileSelect.innerHTML='<option value="">-- 尚无已存方案 --</option>';
+      loadBtn.disabled=true;deleteBtn.disabled=true;exportBtn.disabled=true;
+    }else{
+      profileSelect.innerHTML='<option value="">-- 选择方案 --</option>';
+      names.sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;profileSelect.appendChild(o);});
+      loadBtn.disabled=false;deleteBtn.disabled=false;exportBtn.disabled=false;
+    }
+  };
+
+  form.addEventListener('input',debouncedSave);
+
+  saveBtn.addEventListener('click',()=>{
+    const defName=document.getElementById('char-name').value||'未命名档案';
+    const name=prompt('为存档命名：',defName);
+    if(name&&name.trim()){
+      const profiles=getProfiles();profiles[name.trim()]=getFormData();
+      saveProfiles(profiles);refreshDropdown();profileSelect.value=name.trim();
+      notify('存档「'+name.trim()+'」已保存');
+    }
+  });
+
+  loadBtn.addEventListener('click',()=>{
+    const name=profileSelect.value;
+    if(name){const profiles=getProfiles();if(profiles[name]){populateForm(profiles[name]);debouncedSave();notify('已读取存档「'+name+'」');}}
+    else notify('请先选择存档','#e05555');
+  });
+
+  deleteBtn.addEventListener('click',()=>{
+    const name=profileSelect.value;
+    if(name&&confirm('确定删除存档「'+name+'」？此操作不可恢复。')){
+      const profiles=getProfiles();delete profiles[name];saveProfiles(profiles);refreshDropdown();notify('存档「'+name+'」已删除','#c4a24a');
+    }
+  });
+
+  exportBtn.addEventListener('click',()=>{
+    const profiles=getProfiles();if(Object.keys(profiles).length===0)return;
+    const blob=new Blob([JSON.stringify(profiles,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='nls-profiles-'+Date.now()+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);notify('存档已导出');
+  });
+
+  importBtn.addEventListener('click',()=>importFile.click());
+  importFile.addEventListener('change',(e)=>{
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      try{
+        const imported=JSON.parse(ev.target.result);
+        let curr=getProfiles(),added=0,skipped=0;
+        for(const n in imported){
+          if(curr[n]){if(confirm('已存在同名存档「'+n+'」，覆盖？')){curr[n]=imported[n];added++;}else skipped++;}
+          else{curr[n]=imported[n];added++;}
+        }
+        saveProfiles(curr);refreshDropdown();notify('导入 '+added+' 个，跳过 '+skipped+' 个');
+      }catch(err){notify('导入失败：文件格式无效','#e05555');}
+      importFile.value='';
+    };
+    reader.readAsText(file);
+  });
+
+  resetBtn.addEventListener('click',()=>{
+    if(confirm('确定清空所有填写内容？')){form.reset();debouncedSave();notify('表单已清空','#c4a24a');}
+  });
+
+  generateBtn.addEventListener('click',()=>{
+    autoSave();generateBtn.disabled=true;
+    generateBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px;animation:spin 1s linear infinite"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>提交中...</span>';
+    notification.style.opacity='0';
+
+    const data=getFormData();
+    const fmt=(v,placeholder='[未填写，请AI自由发挥补全]')=>{const t=(v||'').trim();return t?t:placeholder;};
+
+    const yaml=
+`<init_data>
+\`\`\`yaml
+# AI任务：解析以下创角档案，初始化所有变量并生成开场白。
+# 缺失信息请AI基于关键词进行富有想象力的扩写补全。
+
+创角档案:
+  基本信息:
+    姓名: "${fmt(data['char-name'],'未知 (请AI赋予日式姓名)')}"
+    年龄: "${fmt(data['char-age'],'18岁')}"
+    性格: "${fmt(data['char-personality'],'请AI根据背景自由发挥')}"
+    背景: "${fmt(data['char-bg'],'汐望高中学生，独居涩谷公寓')}"
+    主播名: \"${fmt(data['streamer-name'],'请AI自由发挥')}\"
+  外貌与身材:
+    外貌关键词: "${fmt(data['appearance-keywords'])}"
+    身体关键词: "${fmt(data['body-keywords'])}"
+    性器官关键词: \"${fmt(data['genital-keywords'])}\"
+  额外备注: "${fmt(data['extra-notes'],'无')}"
+\`\`\`
+</init_data>`;
+
+    setTimeout(()=>{
+      try{
+        const inputArea=window.parent.document.querySelector('#send_textarea');
+        const sendBtn=window.parent.document.querySelector('#send_but');
+        if(inputArea&&sendBtn){
+          inputArea.value=yaml;inputArea.dispatchEvent(new Event('input',{bubbles:true}));
+          sendBtn.click();notify('档案已提交！等待AI回应...');
+          generateBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:15px;height:15px"><polyline points="20 6 9 17 4 12"/></svg><span>已提交</span>';
+        }else throw new Error('UI not found');
+      }catch(err){
+        console.error(err);generateBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span>发送失败</span>';
+        navigator.clipboard.writeText(yaml).then(()=>{notify('自动发送失败！已复制到剪贴板，请手动粘贴发送。','#e05555');});
+      }
+      setTimeout(()=>{generateBtn.disabled=false;generateBtn.innerHTML=initialBtnHTML;},5000);
+    },500);
+  });
+
+  // Init
+  refreshDropdown();
+  const auto=localStorage.getItem(AUTOSAVE_KEY);
+  if(auto)populateForm(JSON.parse(auto));
+});
+</script>
+<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+</body>
+</html>
+```

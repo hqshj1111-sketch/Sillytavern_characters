@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案28：极乐迪斯科表现主义风 | Disco Elysium Expressionist</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Syne+Mono&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --de-bg: #1a1410;
+    --de-board: #221a14;
+    --de-mustard: #c49a2c;
+    --de-teal: #4a7878;
+    --de-rust: #9b5040;
+    --de-olive: #6b7a3a;
+    --de-concrete: #8a8278;
+    --de-cream: #d4c4a0;
+    --de-ash: #5a5248;
+    --de-intellect: #5080b0;
+    --de-psyche: #9060b0;
+    --de-physique: #c07050;
+    --de-motorics: #c0a030;
+  }
+
+  body {
+    background: #0c0a08;
+    display: flex; justify-content: center; align-items: flex-start;
+    min-height: 100vh; padding: 20px;
+    font-family: 'Noto Serif SC', serif;
+    color: #b0a898; font-size: 13px;
+    /* 油彩涂抹纹理背景 */
+    background-image:
+      radial-gradient(ellipse at 30% 20%, rgba(196,154,44,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(74,120,120,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(155,80,64,0.03) 0%, transparent 40%),
+      repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(255,255,255,0.005) 30px, rgba(255,255,255,0.005) 31px);
+    background-attachment: fixed;
+  }
+
+  /* ═══════════════════════════════════════════
+     主面板：褪色公告板
+     ═══════════════════════════════════════════ */
+  .disco-board {
+    width: 100%; max-width: 680px;
+    background: var(--de-board);
+    border: 8px solid transparent;
+    border-image: repeating-linear-gradient(
+      0deg,
+      #3a2a18 0px, #3a2a18 2px,
+      #2a1a10 2px, #2a1a10 4px,
+      #1a0e08 4px, #1a0e08 6px
+    ) 8;
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* 水渍霉斑纹理 */
+  .disco-board::before {
+    content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 20% 15%, rgba(180,140,60,0.08) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 30%, rgba(100,140,120,0.05) 0%, transparent 35%),
+      radial-gradient(ellipse at 40% 70%, rgba(140,80,60,0.06) 0%, transparent 40%),
+      radial-gradient(ellipse at 70% 85%, rgba(160,120,40,0.04) 0%, transparent 30%);
+  }
+  /* 边缘磨损 */
+  .disco-board::after {
+    content: ''; position: absolute; inset: 4px; z-index: 0; pointer-events: none;
+    border: 1px solid rgba(180,140,80,0.08);
+    border-radius: 1px;
+  }
+
+  .content { position: relative; z-index: 2; }
+
+  /* ═══════════════════════════════════════════
+     顶部标题：回形针钉住的公告
+     ═══════════════════════════════════════════ */
+  .board-header {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding-bottom: 12px; margin-bottom: 12px;
+    border-bottom: 2px solid rgba(138,130,120,0.2);
+    position: relative;
+  }
+  /* 回形针 */
+  .board-header .clip {
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    width: 20px; height: 8px; z-index: 5;
+    border: 2px solid #6a6050;
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+    opacity: 0.6;
+  }
+  .board-header .clip::after {
+    content: ''; position: absolute;
+    right: -4px; top: 50%; transform: translateY(-50%);
+    width: 12px; height: 2px;
+    background: #6a6050; opacity: 0.6;
+  }
+  .board-header h1 {
+    font-family: 'Syne Mono', 'Special Elite', monospace;
+    font-size: 24px; font-weight: 400; letter-spacing: 4px;
+    color: var(--de-cream);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    flex: 1;
+  }
+  .board-header .case-number {
+    font-family: 'Special Elite', monospace;
+    font-size: 10px; color: var(--de-mustard);
+    writing-mode: vertical-rl; letter-spacing: 2px;
+    background: rgba(196,154,44,0.06); padding: 6px 4px;
+    border-left: 1px solid rgba(196,154,44,0.2);
+  }
+
+  /* ═══════════════════════════════════════════
+     思绪球体（技能ORB）区
+     ═══════════════════════════════════════════ */
+  .thought-cabinet {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; padding: 8px 0;
+    border-bottom: 1px dashed rgba(138,130,120,0.2);
+    margin-bottom: 10px;
+  }
+  .thought-orb {
+    text-align: center; position: relative;
+  }
+  .thought-orb .orb {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 2px;
+    position: relative;
+    /* 油彩涂抹笔触 */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .thought-orb .orb::before {
+    content: ''; position: absolute;
+    inset: -4px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .thought-orb .orb::after {
+    content: ''; position: absolute;
+    inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.12) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .orb.vitalis { background: radial-gradient(circle at 40% 35%, #e08060, #802020); }
+  .orb.mana { background: radial-gradient(circle at 40% 35%, #80a0e0, #203060); }
+  .orb.vigor { background: radial-gradient(circle at 40% 35%, #e0c060, #805020); }
+  .orb.exp { background: radial-gradient(circle at 40% 35%, #80d090, #205030); }
+  .orb.atk { background: radial-gradient(circle at 40% 35%, #e0a0a0, #602020); }
+  .orb.def { background: radial-gradient(circle at 40% 35%, #a0c0c0, #304040); }
+  .orb.agi { background: radial-gradient(circle at 40% 35%, #c0e0a0, #406020); }
+  .orb.int { background: radial-gradient(circle at 40% 35%, #c0a0e0, #403060); }
+  .orb.lck { background: radial-gradient(circle at 40% 35%, #e0c0a0, #604020); }
+  .orb.aurum { background: radial-gradient(circle at 40% 35%, #e0d080, #806020); }
+
+  .thought-orb .orb .orb-inner {
+    font-weight: 700; font-size: 16px;
+    color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  .thought-orb .orb-label {
+    font-family: 'Special Elite', monospace;
+    font-size: 8px; color: var(--de-concrete);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .thought-orb .orb-sub {
+    font-size: 7px; color: var(--de-ash);
+  }
+
+  /* 状态条提示区 */
+  .condition-row {
+    display: flex; gap: 20px; justify-content: center;
+    padding: 6px 0 8px;
+    font-family: 'Special Elite', monospace;
+    font-size: 9px; color: var(--de-ash);
+    letter-spacing: 1px;
+  }
+  .condition-row .cond {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .condition-row .cond .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .condition-row .cond .dot.good { background: var(--de-olive); box-shadow: 0 0 4px rgba(107,122,58,0.4); }
+  .condition-row .cond .dot.warn { background: var(--de-mustard); box-shadow: 0 0 4px rgba(196,154,44,0.4); }
+  .condition-row .cond .dot.bad { background: var(--de-rust); box-shadow: 0 0 4px rgba(155,80,64,0.4); }
+
+  /* ═══════════════════════════════════════════
+     正文：打字机对话区
+     ═══════════════════════════════════════════ */
+  .dialogue-area {
+    position: relative;
+    padding: 16px 20px; margin: 8px 0;
+    background: rgba(20,16,12,0.6);
+    border: 1px solid rgba(138,130,120,0.15);
+    border-left: 3px solid var(--de-mustard);
+  }
+  /* 对话标签 - 迪斯科标志性的彩色标签 */
+  .dl-label {
+    display: inline-block;
+    font-family: 'Special Elite', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    padding: 3px 12px; margin-bottom: 8px;
+    color: var(--de-board);
+  }
+  .dl-label.narration { background: var(--de-concrete); }
+  .dl-label.perception { background: var(--de-mustard); }
+  .dl-label.volition { background: #8060b0; color: #e0d0f0; }
+  .dl-label.composure { background: var(--de-intellect); color: #d0e0f0; }
+  .dl-label.endurance { background: var(--de-rust); color: #f0d0c0; }
+
+  .dl-text {
+    font-size: 13px; line-height: 1.9; color: #a09888;
+    font-family: 'Noto Serif SC', serif;
+  }
+  .dl-text p { margin-bottom: 8px; }
+  .dl-text p:last-child { margin-bottom: 0; }
+  .dl-text .emphasis { color: var(--de-cream); font-weight: 500; }
+  .dl-text .intrusive {
+    color: #8060b0; font-family: 'Special Elite', monospace;
+    font-size: 10px; margin: 4px 0 8px; padding-left: 8px;
+    border-left: 1px solid rgba(128,96,176,0.4);
+    font-style: italic;
+  }
+  .dl-text .warn { color: var(--de-rust); }
+
+  /* ═══════════════════════════════════════════
+     技能检定式行动选项
+     ═══════════════════════════════════════════ */
+  .skill-checks {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6px; padding: 4px 0;
+  }
+  .skill-check {
+    display: flex; flex-direction: column;
+    background: rgba(20,16,12,0.6);
+    border: 1px solid rgba(138,130,120,0.2);
+    padding: 10px 14px; cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .skill-check:hover {
+    background: rgba(30,24,18,0.6);
+    border-color: rgba(196,154,44,0.3);
+  }
+  .skill-check.primary { border-color: rgba(196,154,44,0.3); }
+  .skill-check .check-header {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'Special Elite', monospace;
+    font-size: 9px; color: var(--de-concrete);
+    letter-spacing: 1px;
+  }
+  .skill-check .check-header .difficulty {
+    color: var(--de-mustard);
+  }
+  .skill-check .check-action {
+    font-size: 14px; color: var(--de-cream);
+    font-weight: 600; margin-top: 2px;
+  }
+  /* 技能色块 */
+  .skill-check .check-skill-tag {
+    display: inline-block;
+    font-family: 'Special Elite', monospace;
+    font-size: 8px; padding: 1px 6px;
+    margin-top: 2px;
+  }
+  .check-skill-tag.red { background: rgba(155,80,64,0.3); color: var(--de-rust); }
+  .check-skill-tag.blue { background: rgba(80,128,176,0.3); color: var(--de-intellect); }
+  .check-skill-tag.yellow { background: rgba(196,154,44,0.3); color: var(--de-mustard); }
+  .check-skill-tag.purple { background: rgba(128,96,176,0.3); color: #8060b0; }
+
+  /* ═══════════════════════════════════════════
+     物品栏：褪色相片式
+     ═══════════════════════════════════════════ */
+  .inventory-strip {
+    display: flex; gap: 6px; padding: 8px 0;
+    flex-wrap: wrap;
+  }
+  .inv-item {
+    background: rgba(20,16,12,0.5);
+    border: 1px solid rgba(138,130,120,0.15);
+    padding: 6px 10px;
+    font-family: 'Special Elite', monospace;
+    font-size: 9px; letter-spacing: 1px;
+    color: var(--de-concrete);
+  }
+  .inv-item .inv-name { color: var(--de-cream); display: block; font-size: 10px; }
+  .inv-item.featured { border-color: rgba(196,154,44,0.2); border-left: 2px solid var(--de-mustard); }
+
+  .thought-tags {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
+  }
+  .thought-tag {
+    font-family: 'Special Elite', monospace;
+    font-size: 8px; padding: 3px 8px;
+    background: rgba(30,24,18,0.5);
+    border: 1px solid rgba(138,130,120,0.12);
+    color: var(--de-ash);
+    letter-spacing: 0.5px;
+  }
+  .thought-tag.internalized {
+    border-color: rgba(196,154,44,0.25);
+    color: var(--de-mustard);
+    background: rgba(196,154,44,0.06);
+  }
+
+  /* ═══════════════════════════════════════════
+     底部签名
+     ═══════════════════════════════════════════ */
+  .board-footer {
+    margin-top: 12px; padding-top: 10px;
+    border-top: 1px dashed rgba(138,130,120,0.15);
+    display: flex; justify-content: space-between;
+    font-family: 'Special Elite', monospace;
+    font-size: 8px; color: var(--de-ash);
+    letter-spacing: 2px;
+  }
+  .board-footer .stamp {
+    width: 60px; height: 14px;
+    border: 1px solid rgba(155,80,64,0.4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transform: rotate(-15deg);
+    color: rgba(155,80,64,0.6);
+    font-size: 7px;
+  }
+</style>
+</head>
+<body>
+
+<div class="disco-board">
+  <div class="content">
+
+    <!-- ═══ 标题 ═══ -->
+    <div class="board-header">
+      <div class="clip"></div>
+      <h1>異 世 界 地 下 城</h1>
+      <div class="case-number">CASE № 384-10-15</div>
+    </div>
+
+    <!-- ═══ 思绪球体 ═══ -->
+    <div class="thought-cabinet">
+      <div class="thought-orb">
+        <div class="orb vitalis"><span class="orb-inner">78</span></div>
+        <div class="orb-label">VITALIS</div><div class="orb-sub">HP 78/100</div>
+      </div>
+      <div class="thought-orb">
+        <div class="orb mana"><span class="orb-inner">54</span></div>
+        <div class="orb-label">MANA</div><div class="orb-sub">MP 54/100</div>
+      </div>
+      <div class="thought-orb">
+        <div class="orb vigor"><span class="orb-inner">90</span></div>
+        <div class="orb-label">VIGOR</div><div class="orb-sub">SP 90/100</div>
+      </div>
+      <div class="thought-orb">
+        <div class="orb exp"><span class="orb-inner">35</span></div>
+        <div class="orb-label">VOLIT.</div><div class="orb-sub">EXP 35%</div>
+      </div>
+      <div class="thought-orb">
+        <div class="orb atk"><span class="orb-inner">42</span></div>
+        <div class="orb-label">ATK</div><div class="orb-sub">&nbsp;</div>
+      </div>
+      <div class="thought-orb">
+        <div class="orb def"><span class="orb-inner">28</span></div>
+        <div class="orb-label">DEF</div><div class="orb-sub">&nbsp;</div>
+      </div>
+      <div class="thought-orb">
+        <div class="orb agi"><span class="orb-inner">35</span></div>
+        <div class="orb-label">AGI</div><div class="orb-sub">&nbsp;</div>
+      </div>
+      <div class="thought-orb">
+        <div class="orb int"><span class="orb-inner">30</span></div>
+        <div class="orb-label">INT</div><div class="orb-sub">&nbsp;</div>
+      </div>
+      <div class="thought-orb">
+        <div class="orb lck"><span class="orb-inner">18</span></div>
+        <div class="orb-label">LCK</div><div class="orb-sub">&nbsp;</div>
+      </div>
+      <div class="thought-orb">
+        <div class="orb aurum"><span class="orb-inner">1250</span></div>
+        <div class="orb-label">AURUM</div><div class="orb-sub">&nbsp;</div>
+      </div>
+    </div>
+
+    <div class="condition-row">
+      <span class="cond"><span class="dot good"></span> 全息状态：正常</span>
+      <span class="cond"><span class="dot warn"></span> 魔力水平：中等</span>
+      <span class="cond"><span class="dot bad"></span> 地下城深度：B3F</span>
+    </div>
+
+    <!-- ═══ 正文对话 ═══ -->
+    <div class="dialogue-area">
+      <div class="dl-label narration">HORRIFIC NECKTIE</div>
+      <div class="dl-text">
+        <p>
+          你推开沉重的<span class="emphasis">石门</span>，腐朽的空气中弥漫着<span class="emphasis">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="warn">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+        </p>
+        <div class="intrusive">
+          [ 感知 (视觉) — 成功 ] 你注意到左侧那只头领的眼睛闪着异样的红光。那是魔素侵蚀的痕迹——它的力量远超普通个体。
+        </div>
+        <p>
+          甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="emphasis">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层<span class="warn">淫靡的气息</span>……
+        </p>
+      </div>
+      <div class="dl-label composure" style="margin-top:8px;">COMPOSURE</div>
+      <div class="dl-text">
+        <p style="font-size:11px;color:#a0b0c0;">
+          保持冷静。你已经走过三层地下城。三只哥布林不是你见过的最糟情况——至少现在还没有。
+        </p>
+      </div>
+    </div>
+
+    <!-- ═══ 技能检定行动 ═══ -->
+    <div class="skill-checks">
+      <div class="skill-check primary">
+        <div class="check-header"><span>HAND/EYE COORDINATION</span><span class="difficulty">★☆☆</span></div>
+        <div class="check-action">⚔ 挥剑斩向哥布林头领</div>
+        <span class="check-skill-tag red">PHYSIQUE · 42</span>
+      </div>
+      <div class="skill-check">
+        <div class="check-header"><span>ARCANE KNOWLEDGE</span><span class="difficulty">★★☆</span></div>
+        <div class="check-action">🔥 释放火球术灼烧敌群</div>
+        <span class="check-skill-tag blue">INTELLECT · 30</span>
+      </div>
+      <div class="skill-check">
+        <div class="check-header"><span>ENDURANCE</span><span class="difficulty">★☆☆</span></div>
+        <div class="check-action">🛡 防御姿态观察敌人弱点</div>
+        <span class="check-skill-tag yellow">PHYSIQUE · 28</span>
+      </div>
+      <div class="skill-check">
+        <div class="check-header"><span>SUGGESTION</span><span class="difficulty">★★★</span></div>
+        <div class="check-action">💋 尝试魅惑其中一只哥布林</div>
+        <span class="check-skill-tag purple">PSYCHE · 18</span>
+      </div>
+    </div>
+
+    <!-- ═══ 物品 ═══ -->
+    <div class="inventory-strip">
+      <div class="inv-item featured">
+        <span class="inv-name">铁质长剑 Lv.3</span>WEAPON
+      </div>
+      <div class="inv-item">
+        <span class="inv-name">皮甲 Lv.2</span>ARMOUR
+      </div>
+      <div class="inv-item">
+        <span class="inv-name">冒险者徽章</span>TRINKET
+      </div>
+      <div class="inv-item">
+        <span class="inv-name">回复药水 ×3</span>TONIC
+      </div>
+    </div>
+    <div class="thought-tags">
+      <span class="thought-tag internalized">触手紧身衣·共生期</span>
+      <span class="thought-tag internalized">蜕生项圈·中期</span>
+      <span class="thought-tag">影子分身·无心智</span>
+      <span class="thought-tag">淫欲晶核·关闭</span>
+    </div>
+
+    <!-- ═══ 底部 ═══ -->
+    <div class="board-footer">
+      <span>地下城第三层 · 阿斯特大陆</span>
+      <div class="stamp">黄昏</div>
+      <span>TURN 12 · CCCLXXXIV年</span>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案13：地狱业火风 | Hellfire Infernal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Noto+Serif+SC:wght@400;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0404;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', serif;
+    color: #e0c0a0;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(ellipse at 50% 80%, rgba(255,80,20,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 0%, rgba(255,40,10,0.04) 0%, transparent 40%);
+  }
+
+  .app { width: 100%; max-width: 660px; }
+
+  .hellfire-frame {
+    background: linear-gradient(180deg, #0e0604 0%, #080202 100%);
+    border: 2px solid #4a1808;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(255,60,10,0.1);
+  }
+  /* 熔岩裂缝光效 */
+  .hellfire-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    background:
+      radial-gradient(ellipse at 30% 90%, rgba(255,80,20,0.08) 0%, transparent 40%),
+      radial-gradient(ellipse at 70% 90%, rgba(255,100,30,0.06) 0%, transparent 35%);
+  }
+  /* 裂缝线 */
+  .hellfire-frame::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 15%; right: 15%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #ff6020, #ffa040, #ff6020, transparent);
+    box-shadow: 0 0 20px rgba(255,80,20,0.5), 0 0 40px rgba(255,40,10,0.3);
+    z-index: 4;
+    opacity: 0.8;
+    animation: flicker 2s ease infinite;
+  }
+  @keyframes flicker {
+    0%,100% { opacity: 0.6; }
+    30% { opacity: 1; }
+    60% { opacity: 0.4; }
+    70% { opacity: 0.9; }
+  }
+
+  .infernal-header {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 16px 20px 8px;
+  }
+  .infernal-header .horns {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 4px;
+    font-size: 20px;
+    color: #8b2010;
+    text-shadow: 0 0 10px rgba(255,60,10,0.4);
+  }
+  .infernal-header h1 {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 26px;
+    letter-spacing: 4px;
+    color: #ff6030;
+    text-shadow: 0 0 20px rgba(255,60,20,0.5), 0 2px 4px rgba(0,0,0,0.8);
+  }
+  .infernal-header .brimstone {
+    font-size: 9px;
+    color: #6b2010;
+    letter-spacing: 6px;
+    margin-top: 2px;
+  }
+
+  .fire-divider {
+    height: 12px;
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 2px 0;
+  }
+  .fire-divider .flame-tip {
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 8px solid #ff6020;
+    opacity: 0.6;
+    animation: flame-dance 1s ease infinite alternate;
+  }
+  .fire-divider .flame-tip:nth-child(odd) { animation-delay: 0.3s; }
+  @keyframes flame-dance {
+    from { transform: scaleY(1); opacity: 0.5; }
+    to { transform: scaleY(0.7); opacity: 0.8; }
+  }
+
+  .brimstone-panel {
+    position: relative;
+    z-index: 5;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(20,8,4,0.6);
+    border: 1px solid #4a1808;
+    box-shadow: inset 0 0 20px rgba(80,20,4,0.2);
+  }
+  .brimstone-panel .panel-label {
+    font-family: 'MedievalSharp', cursive;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: #ff6030;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label .pyre { color: #ff4020; font-size: 14px; }
+
+  .soul-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .soul-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(30,8,4,0.4);
+    border: 1px solid #3a1008;
+  }
+  .soul-stat .rune {
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: rgba(255,60,10,0.08);
+    border: 1px solid rgba(255,60,10,0.2);
+    flex-shrink: 0;
+  }
+  .soul-stat .body { flex: 1; min-width: 0; }
+  .soul-stat .head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .head .tag { color: #8b3a20; letter-spacing: 2px; }
+  .head .num { color: #ff9060; font-weight: 600; }
+  .ember-bar {
+    height: 5px;
+    background: #1a0602;
+    border: 1px solid #3a1008;
+    position: relative;
+    overflow: hidden;
+  }
+  .ember-fill { height: 100%; }
+  .ember-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 0 1px 1px 0;
+  }
+  .ember-fill.flesh { background: linear-gradient(90deg, #8b2010, #ff4020, #ff8060); }
+  .ember-fill.spirit { background: linear-gradient(90deg, #602080, #a040d0, #d080f0); }
+  .ember-fill.will { background: linear-gradient(90deg, #8b6010, #d0a020, #f0c040); }
+  .ember-fill.essence { background: linear-gradient(90deg, #108b40, #30d060, #60f080); }
+
+  .rune-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .rune-sigil {
+    text-align: center;
+    min-width: 48px;
+    padding: 6px 4px;
+    background: rgba(30,8,4,0.3);
+    border: 1px solid #3a1008;
+  }
+  .rune-sigil .glyph {
+    font-size: 16px;
+    color: #ff6030;
+    display: block;
+    text-shadow: 0 0 6px rgba(255,60,10,0.4);
+  }
+  .rune-sigil .val {
+    font-size: 14px;
+    font-weight: 700;
+    color: #e0c0a0;
+    font-family: 'MedievalSharp', cursive;
+  }
+  .rune-sigil .key {
+    font-size: 7px;
+    color: #6b2a10;
+    letter-spacing: 2px;
+  }
+
+  .abyss-text {
+    margin: 6px 14px;
+    padding: 18px 22px;
+    background: rgba(15,6,2,0.5);
+    border: 1px solid #3a1008;
+    border-left: 3px solid #ff4020;
+    box-shadow: inset 0 0 15px rgba(80,20,4,0.15);
+    position: relative;
+    z-index: 5;
+  }
+  .abyss-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #c09880;
+  }
+  .abyss-text p:last-child { margin-bottom: 0; }
+  .abyss-text .blaze { color: #ff8060; }
+  .abyss-text .cinder { color: #b06040; }
+
+  .doom-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .doom-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: linear-gradient(180deg, rgba(40,10,4,0.6), rgba(20,5,2,0.7));
+    border: 1px solid #4a1808;
+    color: #c09070;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .doom-btn:hover {
+    border-color: #ff6020;
+    color: #ffb080;
+    box-shadow: 0 0 12px rgba(255,60,10,0.15);
+  }
+  .doom-btn.primary { border-color: #ff6020; color: #ffb080; }
+  .doom-btn.primary::before { content: '† '; color: #ff4020; }
+
+  .torture-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .torture-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(30,8,4,0.3);
+    border: 1px solid #3a1008;
+    font-size: 11px;
+  }
+  .torture-item .bind { color: #8b3a20; font-size: 9px; letter-spacing: 1px; }
+  .torture-item .name { color: #c09070; }
+
+  .curse-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .curse {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(255,60,10,0.04);
+    border: 1px solid rgba(255,60,10,0.12);
+    color: #8b4a30;
+  }
+  .curse.bound {
+    background: rgba(255,60,10,0.08);
+    border-color: rgba(255,60,10,0.3);
+    color: #ff9060;
+  }
+
+  .infernal-footer {
+    position: relative;
+    z-index: 5;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #6b2010;
+    letter-spacing: 3px;
+  }
+  .infernal-footer .pentagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hellfire-frame">
+
+    <div class="infernal-header">
+      <div class="horns">⛧ ⛧</div>
+      <h1>异 世 界 地 下 城</h1>
+      <div class="brimstone">ISEKAI DUNGEON · ABYSSUS</div>
+    </div>
+
+    <div class="fire-divider">
+      <span class="flame-tip"></span><span class="flame-tip"></span><span class="flame-tip"></span>
+      <span class="flame-tip"></span><span class="flame-tip"></span><span class="flame-tip"></span>
+      <span class="flame-tip"></span><span class="flame-tip"></span>
+    </div>
+
+    <div class="brimstone-panel">
+      <div class="panel-label"><span class="pyre">🔥</span> 受 诅 之 魂</div>
+      <div class="soul-stats">
+        <div class="soul-stat">
+          <div class="rune">♥</div>
+          <div class="body">
+            <div class="head"><span class="tag">FLESH</span><span class="num">78/100</span></div>
+            <div class="ember-bar"><div class="ember-fill flesh" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="soul-stat">
+          <div class="rune">✦</div>
+          <div class="body">
+            <div class="head"><span class="tag">SPIRIT</span><span class="num">54/100</span></div>
+            <div class="ember-bar"><div class="ember-fill spirit" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="soul-stat">
+          <div class="rune">⚔</div>
+          <div class="body">
+            <div class="head"><span class="tag">WILL</span><span class="num">90/100</span></div>
+            <div class="ember-bar"><div class="ember-fill will" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="soul-stat">
+          <div class="rune">⛤</div>
+          <div class="body">
+            <div class="head"><span class="tag">ESSENCE</span><span class="num">35%</span></div>
+            <div class="ember-bar"><div class="ember-fill essence" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="rune-attrs">
+        <div class="rune-sigil"><span class="glyph">⚔</span><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="rune-sigil"><span class="glyph">🛡</span><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="rune-sigil"><span class="glyph">⚡</span><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="rune-sigil"><span class="glyph">✧</span><div class="val">30</div><div class="key">INT</div></div>
+        <div class="rune-sigil"><span class="glyph">☘</span><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="rune-sigil"><span class="glyph">⛧</span><div class="val">1250</div><div class="key">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="abyss-text">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="blaze">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="blaze">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="blaze">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="cinder">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="brimstone-panel">
+      <div class="panel-label"><span class="pyre">🔥</span> 罪 孽 抉 择</div>
+      <div class="doom-actions">
+        <button class="doom-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="doom-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="doom-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="doom-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="brimstone-panel">
+      <div class="panel-label"><span class="pyre">🔥</span> 刑 具 与 禁 忌</div>
+      <div class="torture-grid">
+        <div class="torture-item"><span class="bind">刑具</span><span class="name">铁质长剑 Lv.3</span></div>
+        <div class="torture-item"><span class="bind">枷锁</span><span class="name">皮甲 Lv.2</span></div>
+        <div class="torture-item"><span class="bind">印记</span><span class="name">冒险者徽章</span></div>
+        <div class="torture-item"><span class="bind">苦酒</span><span class="name">回复药水 ×3</span></div>
+      </div>
+      <div class="curse-tags">
+        <span class="curse bound">触手紧身衣·共生期</span>
+        <span class="curse bound">蜕生项圈·中期</span>
+        <span class="curse">影子分身·无心智</span>
+        <span class="curse">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="infernal-footer">
+      <div class="pentagram">⛤ ⛧ ⛤</div>
+      <div>深渊第三层 · 阿斯特大陆火狱 · 黄昏 · 第十二次劫难</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase === '创角阶段') return;
+
+const isInDungeon = phase === '地下城攻略阶段';
+const isPrepared = _.get(stat, '地下城攻略状态.是否准备完毕', false);
+const inDungeonActive = isInDungeon && isPrepared;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+
+const normalNPCs = _.get(stat, '一般NPC信息', {});
+const importantNPCs = _.get(stat, '重要NPC信息', {});
+const teammates = _.get(stat, '队友信息', {});
+const partners = _.get(stat, '主角.伴侣列表', []);
+
+const sameCityNormal = {}, otherNormal = {};
+const sameCityImportant = {}, otherImportant = {};
+
+Object.entries(normalNPCs).forEach(([name, n]) => {
+  if (n.所在国家 === currentCountry && n.所在城市 === currentCity) { sameCityNormal[name] = n; }
+  else {
+    const loc = `${n.所在国家||'?'}·${n.所在城市||'?'}`;
+    if (!otherNormal[loc]) otherNormal[loc] = {};
+    otherNormal[loc][name] = n;
+  }
+});
+Object.entries(importantNPCs).forEach(([name, n]) => {
+  if (n.所在国家 === currentCountry && n.所在城市 === currentCity) { sameCityImportant[name] = n; }
+  else {
+    const loc = `${n.所在国家||'?'}·${n.所在城市||'?'}`;
+    if (!otherImportant[loc]) otherImportant[loc] = {};
+    otherImportant[loc][name] = n;
+  }
+});
+
+const hasAnyNPC = Object.keys(sameCityNormal).length > 0 || Object.keys(otherNormal).length > 0
+  || Object.keys(sameCityImportant).length > 0 || Object.keys(otherImportant).length > 0;
+_%>
+# NPC档案
+
+<%_ if (inDungeonActive) { _%>
+<%_ const tNames = Object.keys(teammates);
+if (tNames.length > 0) {
+  const hasTeamInfo = tNames.some(name => importantNPCs[name] || normalNPCs[name]); _%>
+[同行队友]:
+<%_ tNames.forEach(name => {
+  const imp = importantNPCs[name];
+  const nor = normalNPCs[name];
+  if (imp) { _%>
+  [重要] <%= name %><% if (partners.indexOf(name) !== -1) { %>【伴侣】<% } %><% if (imp.是否胶兽) { %>【胶兽眷属】<% } %>: <%= imp.种族||'?' %>/<%= imp.性别||'?' %>/<%= imp.年龄||'?' %> | 故:<%= imp.故乡国家||'?' %>·<%= imp.故乡城市||'?' %> | <%= imp.职业||'' %><%= imp.身份?'/'+imp.身份:'' %><% if (imp.所属公会) { %> | <%= imp.所属公会 %><% } %> | <%= imp.冒险者等级||'' %><% if (imp.冒险者称号) { %>·<%= imp.冒险者称号 %><% } %> | <%= imp.外观||'' %> | <%= imp.性格||'' %><% if (imp.关系) { %> | <%= imp.关系 %><% } %><% if (imp.好感度 !== undefined) { %> | 好感<%= imp.好感度 %><% } %>
+<%_ } else if (nor) { _%>
+  [一般] <%= name %><% if (partners.indexOf(name) !== -1) { %>【伴侣】<% } %><% if (nor.是否胶兽) { %>【胶兽眷属】<% } %>: <%= nor.种族||'?' %>/<%= nor.性别||'?' %>/<%= nor.年龄||'?' %> | 故:<%= nor.故乡国家||'?' %>·<%= nor.故乡城市||'?' %> | <%= nor.简述||'' %>
+<%_ } else { _%>
+  [未知] <%= name %>: 无详细资料
+<%_ } }); _%>
+<%_ } else { _%>
+[同行队友]: 无
+<%_ } _%>
+
+<%_ } else if (hasAnyNPC) { _%>
+<%_ const hasLocal = Object.keys(sameCityNormal).length > 0 || Object.keys(sameCityImportant).length > 0; _%>
+
+<%_ if (hasLocal) { _%>
+<%= currentCountry %>·<%= currentCity %>：
+<%_ Object.entries(sameCityImportant).forEach(([name, n]) => { _%>
+  [重要] <%= name %><% if (partners.indexOf(name) !== -1) { %>【伴侣】<% } %><% if (n.是否胶兽) { %>【胶兽眷属】<% } %>: <%= n.种族||'?' %>/<%= n.性别||'?' %>/<%= n.年龄||'?' %> | 故:<%= n.故乡国家||'?' %>·<%= n.故乡城市||'?' %> | <%= n.职业||'' %><%= n.身份?'/'+n.身份:'' %><% if (n.所属公会) { %> | <%= n.所属公会 %><% } %> | <%= n.冒险者等级||'' %><% if (n.冒险者称号) { %>·<%= n.冒险者称号 %><% } %> | <%= n.外观||'' %> | <%= n.性格||'' %><% if (n.关系) { %> | <%= n.关系 %><% } %><% if (n.好感度 !== undefined) { %> | 好感<%= n.好感度 %><% } %>
+<%_ }); _%>
+<%_ Object.entries(sameCityNormal).forEach(([name, n]) => { _%>
+  [一般] <%= name %><% if (partners.indexOf(name) !== -1) { %>【伴侣】<% } %><% if (n.是否胶兽) { %>【胶兽眷属】<% } %>: <%= n.种族||'?' %>/<%= n.性别||'?' %>/<%= n.年龄||'?' %> | 故:<%= n.故乡国家||'?' %>·<%= n.故乡城市||'?' %> | <%= n.简述||'' %>
+<%_ }); _%>
+<%_ } _%>
+
+<%_ Object.entries(otherImportant).forEach(([loc, npcs]) => { _%>
+<%= loc %>：
+<%_ Object.entries(npcs).forEach(([name, n]) => { _%>
+  [重要] <%= name %>: <%= n.简述||'' %>
+<%_ }); }); _%>
+<%_ Object.entries(otherNormal).forEach(([loc, npcs]) => { _%>
+<%= loc %>：
+<%_ Object.entries(npcs).forEach(([name, n]) => { _%>
+  [一般] <%= name %>: <%= n.简述||'' %>
+<%_ }); }); _%>
+<%_ } _%>
+<%_ } _%>

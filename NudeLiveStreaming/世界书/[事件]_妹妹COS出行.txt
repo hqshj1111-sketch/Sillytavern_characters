@@ -1,0 +1,57 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹漫展COS事件'] && isDaily && !isSexActive) {
+    const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+    const makotoLewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const mcLewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+    const mcShame = parseInt(_.get(stat, '主角.当前状态.羞耻度', 100)) || 100;
+
+    let makotoCos = '';
+    if (makotoLewdness < 25) {
+      makotoCos = '普通的热门动漫角色';
+    } else if (makotoLewdness < 50) {
+      makotoCos = '暴露度较高的动漫角色';
+    } else {
+      makotoCos = '近似情趣内衣的装扮';
+    }
+
+    let mcCos = '';
+    if (mcShame < 25 && mcLewdness >= 75) {
+      mcCos = '人体彩绘——全身仅靠彩绘图案遮挡关键部位';
+    } else if (mcLewdness < 25) {
+      mcCos = '普通的热门动漫角色';
+    } else if (mcLewdness < 50) {
+      mcCos = '暴露度较高的动漫角色';
+    } else {
+      mcCos = '近似情趣内衣的装扮';
+    }
+_%>
+# 事件：漫展COS出行
+event_initiator:
+  event_name: "漫展COS出行"
+  characters: "汐见真帆"
+  location: "湾区 - 国际会展中心"
+  time: "9:00-17:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "真帆兴奋地拉着主角去参加国际会展中心的大型漫展——她已经提前准备好两套COS服。真帆选择的是<%= makotoCos %>；她给主角准备的是<%= mcCos %>。"
+    - "描写两人装扮完成后互相打量对方的反应。真帆对主角的装扮进行点评——傲娇地夸赞或口是心非地找茬。结合真帆淫乱度(<%= makotoLewdness %>)调整她对自己暴露装扮的坦然度。结合主角当前羞耻度(<%= mcShame %>)和淫乱度(<%= mcLewdness %>)描写主角穿这身装扮时的心态。"
+    - "描写两人在漫展现场的互动——被路人认出角色、被摄影爱好者请求拍照、以及人群中偶尔投来的暧昧目光。"
+    - "结尾留给主角选择：享受漫展和妹妹的二人时光、借机在漫展现场做一些出格的露出尝试、或提前带妹妹回家。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹漫展COS事件" }
+      ]
+
+<%_ } } _%>

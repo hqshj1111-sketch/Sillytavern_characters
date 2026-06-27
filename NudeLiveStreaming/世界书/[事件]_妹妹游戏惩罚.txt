@@ -1,0 +1,44 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹游戏惩罚事件'] && isDaily && !isSexActive) {
+    const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+    const affection = parseInt(_.get(makoto, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.妹妹游戏惩罚事件', 0)) || 0;
+_%>
+# 事件：游戏惩罚
+event_initiator:
+  event_name: "游戏惩罚"
+  character: "汐见真帆"
+  location: "住宅区 - 客厅"
+  time: "14:00-22:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角和妹妹一起打游戏。一局结束，妹妹赢了。"
+    <%_ if (eventCount > 0) { _%>
+    - "还没等真帆开口，主角已经放下手柄，熟练地趴到她脚边。她的白丝小脚近在咫尺，主角的舌头已经凑了上去。"
+    - "真帆哼了一声，嘴角压不住得意的弧度。她说这次不用她说就知道该做什么了，看来以前的惩罚没白罚。她把脚趾在哥哥的舌头上蹭了蹭。"
+    - "结合好感度(<%= affection %>)调整她的语气——好感度越高奖励性的回应越多。结合淫乱度(<%= lewdness %>)调整她接下来的动作——淫乱度越高越不满足于只被舔脚。"
+    - "结尾留给主角选择：卖力地舔让她满意、从脚往上舔到大腿内侧、或突然抓住她脚踝换个姿势。"
+    <%_ } else { _%>
+    - "真帆把游戏手柄一扔，站起来居高临下地看着还坐在地上的哥哥。她伸出穿着白丝过膝袜的脚，说惩罚就是让哥哥趴下来舔她的脚。"
+    - "结合好感度(<%= affection %>)调整她的语气——好感度越高越藏不住期待，好感度偏低则更偏向命令式。结合淫乱度(<%= lewdness %>)调整用词——淫乱度越高越说得出下流的话来催促。"
+    - "结尾留给主角选择：乖乖趴下舔、提出换一种惩罚、或耍赖不认账。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹游戏惩罚事件" }
+      ]
+
+<%_ } } _%>

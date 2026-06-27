@@ -1,0 +1,61 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+if (phase !== '日常阶段' || !pendingEvents['打造进行中事件']) return;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const inventory = _.get(stat, '主角.道具栏', {});
+const materials = Object.entries(inventory).filter(([k,v]) => v.类型 === '素材');
+const matList = materials.map(([k,v]) => `${k}×${v.数量||1}`).join('、');
+
+const equip = _.get(stat, '主角.装备', {});
+const weapon = equip.武器 || {};
+const armor = equip.护甲 || {};
+const acc = equip.饰品 || {};
+
+const weaponStr = weapon.名称 && weapon.名称 !== '待设定'
+  ? `${weapon.名称}(${(weapon.属性||[]).map((a,i) => a + ((weapon.对应增幅||[])[i]||'')).join(',')})·${weapon.描述||''}`
+  : '无装备';
+const armorStr = armor.名称 && armor.名称 !== '待设定'
+  ? `${armor.名称}(${(armor.属性||[]).map((a,i) => a + ((armor.对应增幅||[])[i]||'')).join(',')})·${armor.描述||''}`
+  : '无装备';
+const accStr = acc.名称 && acc.名称 !== '待设定'
+  ? `${acc.名称}(${(acc.属性||[]).map((a,i) => a + ((acc.对应增幅||[])[i]||'')).join(',')})·${acc.描述||''}`
+  : '无装备';
+_%>
+# 系统指令：打造系统
+
+  当前铁匠铺：<%= currentCountry %>·<%= currentCity %>
+  持有素材：<%= matList || '无素材' %>
+
+  当前装备：
+  - 武器：<%= weaponStr %>
+  - 护甲：<%= armorStr %>
+  - 饰品：<%= accStr %>
+
+  narrative_guidance:
+    - "主角正在铁匠铺中与铁匠商议打造方案。描写铁匠根据主角持有的素材（<%= matList || '无素材' %>）重新确认打造细节——需要的素材组合、金币费用、以及成品的预期品质。"
+    - "若玩家明确表示进行打造，根据之前商议的方案推进到打造完成——最终将成品郑重地交到主角手中。描写主角接过新装备时的分量感与喜悦。若之前的方案是多件装备，则需要多次重复这样的描写。"
+    - "若玩家取消或离开，自然结束铁匠铺的对话，移除事件标记。"
+
+  mandatory_data_sync:
+    craft_done:
+      instruction: "仅当主角确切收到打造好的新装备并装备成功时，移除事件标记，替换对应装备："
+      patch_code: |
+        [
+          { "op": "replace", "path": "/主角/装备/武器", "value": { "名称": "[新武器名称]", "描述": "[描述]", "属性": ["攻击力", "魔力", "意志"], "对应增幅": ["+10", "+5", "*1.2"] } }
+          // 属性为字符串数组，可选值：攻击力/防御力/速度/魔力/意志/幸运；对应增幅与属性按索引一一配对
+          // 护甲替换：{ "op": "replace", "path": "/主角/装备/护甲", "value": { "名称":"...", "描述":"...", "属性": ["防御力"], "对应增幅": ["+8"] } }
+          // 饰品替换：{ "op": "replace", "path": "/主角/装备/饰品", "value": { "名称":"...", "描述":"...", "属性": ["魔力", "幸运"], "对应增幅": ["+3", "+1"] } }
+          { "op": "remove", "path": "/系统状态/待处理事件/打造进行中事件" }
+        ]
+
+    cancel:
+      instruction: "取消打造："
+      patch_code: |
+        [
+          { "op": "remove", "path": "/系统状态/待处理事件/打造进行中事件" }
+        ]
+<%_ } _%>

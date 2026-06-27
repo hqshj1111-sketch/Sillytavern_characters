@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案30：原神风 | Genshin Impact</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--pyro:#ef793a;--hydro:#4cc2f1;--anemo:#74c2a8;--electro:#b08fc2;--dendro:#a5c83b;--cryo:#9fd6e8;--geo:#fab632;--star:#ffe3b0}
+  body{background:#0d0f1a;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:16px;font-family:'Noto Sans SC',sans-serif;color:#d0d0e0;font-size:13px;
+    background-image:radial-gradient(ellipse at 50% 30%,rgba(255,220,150,.06) 0%,transparent 60%),radial-gradient(ellipse at 30% 70%,rgba(140,180,240,.04) 0%,transparent 50%);
+  }
+  .app{width:100%;max-width:660px}
+  .genshin-frame{background:linear-gradient(180deg,rgba(15,18,30,.92),rgba(10,12,22,.95));border:1px solid rgba(255,220,150,.12);border-radius:12px;overflow:hidden;position:relative;backdrop-filter:blur(8px)}
+  /* 浮动星尘粒子 */
+  .genshin-frame::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+    background:radial-gradient(1px 1px at 20% 15%,rgba(255,220,180,.5),transparent),
+              radial-gradient(1px 1px at 70% 25%,rgba(200,220,255,.4),transparent),
+              radial-gradient(2px 2px at 45% 60%,rgba(255,200,150,.3),transparent),
+              radial-gradient(1px 1px at 85% 70%,rgba(180,200,240,.4),transparent),
+              radial-gradient(1px 1px at 15% 80%,rgba(255,210,160,.5),transparent);
+  }
+
+  .content{position:relative;z-index:3;padding:18px 20px}
+
+  /* 标题：星穹 */
+  .star-header{text-align:center;margin-bottom:10px}
+  .star-header .constellation{display:flex;justify-content:center;gap:12px;margin-bottom:4px}
+  .star-header .constellation .star{width:4px;height:4px;border-radius:50%;background:var(--star);box-shadow:0 0 8px rgba(255,220,160,.5)}
+  .star-header .constellation .star:nth-child(odd){animation:twinkle 2s ease infinite}
+  .star-header .constellation .star:nth-child(even){animation:twinkle 2.5s ease .5s infinite}
+  @keyframes twinkle{0%,100%{opacity:.4}50%{opacity:1}}
+  .star-header h1{font-size:22px;font-weight:500;letter-spacing:4px;color:#ffe3b0;text-shadow:0 0 20px rgba(255,220,150,.25)}
+  .star-header .sub{font-size:9px;color:#7080a0;letter-spacing:4px}
+
+  /* 七元素分隔条 */
+  .element-bar{height:4px;display:flex;margin:4px 0 10px;border-radius:2px;overflow:hidden}
+  .element-bar span{flex:1}
+  .element-bar span:nth-child(1){background:var(--pyro)}.element-bar span:nth-child(2){background:var(--hydro)}
+  .element-bar span:nth-child(3){background:var(--anemo)}.element-bar span:nth-child(4){background:var(--electro)}
+  .element-bar span:nth-child(5){background:var(--dendro)}.element-bar span:nth-child(6){background:var(--cryo)}
+  .element-bar span:nth-child(7){background:var(--geo)}
+
+  /* 状态：圆角卡牌 */
+  .stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .stat-card{background:rgba(20,24,40,.6);border:1px solid rgba(255,220,150,.1);border-radius:10px;padding:10px 14px;position:relative;overflow:hidden}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px}
+  .stat-card:nth-child(1)::before{background:linear-gradient(90deg,var(--pyro),transparent)}
+  .stat-card:nth-child(2)::before{background:linear-gradient(90deg,var(--electro),transparent)}
+  .stat-card:nth-child(3)::before{background:linear-gradient(90deg,var(--anemo),transparent)}
+  .stat-card:nth-child(4)::before{background:linear-gradient(90deg,var(--dendro),transparent)}
+  .stat-card .card-head{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+  .stat-card .card-head .label{color:#7080a0}
+  .stat-card .card-head .val{color:#d0d0e0;font-weight:500}
+  .card-bar{height:5px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden}
+  .card-fill{height:100%;border-radius:3px}
+  .card-fill.hp{background:linear-gradient(90deg,#c06040,var(--pyro))}
+  .card-fill.mp{background:linear-gradient(90deg,#6040c0,var(--electro))}
+  .card-fill.sp{background:linear-gradient(90deg,#60a080,var(--anemo))}
+  .card-fill.exp{background:linear-gradient(90deg,#60a040,var(--dendro))}
+
+  /* 属性：元素徽章 */
+  .attr-badges{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
+  .attr-badge{width:48px;height:48px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+  .attr-badge:nth-child(1){background:radial-gradient(circle at 50% 50%,rgba(239,121,58,.15),transparent);border:1px solid rgba(239,121,58,.25)}
+  .attr-badge:nth-child(2){background:radial-gradient(circle at 50% 50%,rgba(250,182,50,.15),transparent);border:1px solid rgba(250,182,50,.25)}
+  .attr-badge:nth-child(3){background:radial-gradient(circle at 50% 50%,rgba(116,194,168,.15),transparent);border:1px solid rgba(116,194,168,.25)}
+  .attr-badge:nth-child(4){background:radial-gradient(circle at 50% 50%,rgba(176,143,194,.15),transparent);border:1px solid rgba(176,143,194,.25)}
+  .attr-badge:nth-child(5){background:radial-gradient(circle at 50% 50%,rgba(159,214,232,.15),transparent);border:1px solid rgba(159,214,232,.25)}
+  .attr-badge:nth-child(6){background:radial-gradient(circle at 50% 50%,rgba(255,227,176,.15),transparent);border:1px solid rgba(255,227,176,.25)}
+  .attr-badge .badge-icon{font-size:14px}
+  .attr-badge .badge-val{font-size:11px;font-weight:600;color:#d0d0e0}
+  .attr-badge .badge-key{font-size:6px;color:#606880;letter-spacing:1px}
+
+  /* 正文 */
+  .narrative{background:rgba(20,24,40,.5);border:1px solid rgba(255,220,150,.08);border-radius:10px;padding:14px 18px;margin-bottom:8px}
+  .narrative p{font-size:12px;line-height:1.8;color:#8890a8;margin-bottom:6px;text-indent:2em}
+  .narrative p:last-child{margin-bottom:0}
+  .narrative .gold{color:var(--geo)}
+  .narrative .warn{color:var(--pyro)}
+
+  /* 行动 */
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+  .action-btn{font-family:inherit;font-size:11px;background:rgba(20,24,40,.5);border:1px solid rgba(255,220,150,.1);border-radius:8px;color:#8890a8;padding:9px 12px;cursor:pointer;transition:.2s;text-align:left}
+  .action-btn:hover{background:rgba(30,38,56,.5);border-color:rgba(255,220,150,.25);color:#d0d0e0}
+  .action-btn.primary{border-color:rgba(255,220,150,.25);color:#ffe3b0}
+
+  /* 装备 */
+  .equip-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+  .equip-item{display:flex;justify-content:space-between;padding:7px 10px;background:rgba(20,24,40,.4);border:1px solid rgba(255,220,150,.06);border-radius:6px;font-size:10px}
+  .equip-item .e-type{color:#606880}.equip-item .e-name{color:#a0a8c0}
+  .artifact-tags{display:flex;flex-wrap:wrap;gap:3px}
+  .artifact-tags span{font-size:8px;padding:2px 8px;border-radius:4px;background:rgba(255,220,150,.04);border:1px solid rgba(255,220,150,.08);color:#606880}
+  .artifact-tags span.lit{background:rgba(255,220,150,.1);border-color:rgba(255,220,150,.2);color:var(--star)}
+
+  .footer{display:flex;justify-content:space-between;align-items:center;padding:6px 0 0;border-top:1px solid rgba(255,220,150,.06);font-size:9px;color:#506080;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="genshin-frame">
+    <div class="content">
+
+      <div class="star-header">
+        <div class="constellation">
+          <span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span><span class="star"></span>
+        </div>
+        <h1>异 世 界 地 下 城</h1>
+        <div class="sub">ISEKAI DUNGEON · 星穹之下</div>
+      </div>
+
+      <div class="element-bar"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="card-head"><span class="label">生命值</span><span class="val">78 / 100</span></div>
+          <div class="card-bar"><div class="card-fill hp" style="width:78%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="card-head"><span class="label">元素能量</span><span class="val">54 / 100</span></div>
+          <div class="card-bar"><div class="card-fill mp" style="width:54%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="card-head"><span class="label">体力</span><span class="val">90 / 100</span></div>
+          <div class="card-bar"><div class="card-fill sp" style="width:90%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="card-head"><span class="label">冒险阅历</span><span class="val">35%</span></div>
+          <div class="card-bar"><div class="card-fill exp" style="width:35%"></div></div>
+        </div>
+      </div>
+
+      <div class="attr-badges">
+        <div class="attr-badge"><span class="badge-icon">⚔</span><div class="badge-val">42</div><div class="badge-key">ATK</div></div>
+        <div class="attr-badge"><span class="badge-icon">🛡</span><div class="badge-val">28</div><div class="badge-key">DEF</div></div>
+        <div class="attr-badge"><span class="badge-icon">⚡</span><div class="badge-val">35</div><div class="badge-key">AGI</div></div>
+        <div class="attr-badge"><span class="badge-icon">✧</span><div class="badge-val">30</div><div class="badge-key">INT</div></div>
+        <div class="attr-badge"><span class="badge-icon">☘</span><div class="badge-val">18</div><div class="badge-key">LCK</div></div>
+        <div class="attr-badge"><span class="badge-icon">◎</span><div class="badge-val">1250</div><div class="badge-key">MORA</div></div>
+      </div>
+
+      <div class="narrative">
+        <p>你推开沉重的石门，腐朽的空气中弥漫着<span class="gold">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="warn">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。</p>
+        <p>左侧那只头领模样的家伙眼中闪烁着<span class="warn">不寻常的红光</span>。甬道两侧石壁上，古老的浮雕描绘着被封印在此的<span class="gold">魅魔女王</span>……</p>
+      </div>
+
+      <div class="actions">
+        <button class="action-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="action-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="action-btn">🛡 防御姿态，观察敌人弱点</button>
+        <button class="action-btn">💋 尝试魅惑其中一只哥布林</button>
+      </div>
+
+      <div class="equip-grid">
+        <div class="equip-item"><span class="e-type">武器</span><span class="e-name">铁质长剑 Lv.3</span></div>
+        <div class="equip-item"><span class="e-type">圣遗物</span><span class="e-name">皮甲 Lv.2</span></div>
+        <div class="equip-item"><span class="e-type">饰品</span><span class="e-name">冒险者徽章</span></div>
+        <div class="equip-item"><span class="e-type">道具</span><span class="e-name">回复药水 ×3</span></div>
+      </div>
+      <div class="artifact-tags">
+        <span class="lit">触手紧身衣·共生期</span><span class="lit">蜕生项圈·中期</span><span>影子分身·无心智</span><span>淫欲晶核·关闭</span>
+      </div>
+
+      <div class="footer">
+        <span>✦ 地下城第三层</span><span>阿斯特大陆 · 龙脊</span><span>第12次冒险</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

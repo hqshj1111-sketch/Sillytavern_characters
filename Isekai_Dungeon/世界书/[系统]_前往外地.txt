@@ -1,0 +1,106 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase !== '日常阶段') return;
+
+const travelEvent = _.get(stat, '系统状态.待处理事件.前往外地事件', null);
+if (!travelEvent || !travelEvent.目标国家 || !travelEvent.目标城市) return;
+
+const targetCountry = travelEvent.目标国家;
+const targetCity = travelEvent.目标城市;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const currentLocation = _.get(stat, '主角.当前状态.当前地点', '');
+
+const geoData = _.get(stat, '地理信息', {});
+const targetCountryData = geoData[targetCountry] || {};
+if (!targetCountryData.城市列表) return;
+const targetCityData = _.get(targetCountryData, `城市列表.${targetCity}`, {});
+if (!targetCityData.城市规模) return;
+
+const currentYear = _.get(stat, '进程.当前年份', '?');
+const currentMonth = parseInt(_.get(stat, '进程.当前月份', 1)) || 1;
+const currentDay = parseInt(_.get(stat, '进程.当前日份', 1)) || 1;
+const timeSlot = _.get(stat, '进程.当前时间段', '早');
+
+let season = '';
+if (currentMonth >= 3 && currentMonth <= 5) season = '春季';
+else if (currentMonth >= 6 && currentMonth <= 8) season = '夏季';
+else if (currentMonth >= 9 && currentMonth <= 11) season = '秋季';
+else season = '冬季';
+const seasonCharMap = { '春季':'春', '夏季':'夏', '秋季':'秋', '冬季':'冬' };
+const seasonChar = seasonCharMap[season] || '';
+
+const timeSlotMap = { '早': '清晨', '午': '正午', '晚': '傍晚', '夜': '深夜' };
+const timeSlotText = timeSlotMap[timeSlot] || timeSlot;
+
+const vibeObj = targetCityData.整体氛围 || {};
+const vibeStr = _.isArray(vibeObj) ? vibeObj.join('、') : (vibeObj[seasonChar] || Object.values(vibeObj).filter(v => v).join('、')) || '?';
+
+const places = targetCityData.地点列表 || {};
+const placeNames = Object.keys(places);
+
+// ---- 距离矩阵 & 旅途天数计算 ----
+const DISTANCE_MATRIX = {
+    '龙脊联邦': { '霜境王国': 1, '密林双廷': 1, '原野同盟': 1, '金沙帝国': 2, '潮汐联邦': 3 },
+    '霜境王国': { '龙脊联邦': 1, '密林双廷': 1, '原野同盟': 1, '金沙帝国': 2, '潮汐联邦': 3 },
+    '密林双廷': { '龙脊联邦': 1, '霜境王国': 1, '原野同盟': 2, '金沙帝国': 1, '潮汐联邦': 2 },
+    '原野同盟': { '龙脊联邦': 1, '霜境王国': 1, '密林双廷': 2, '金沙帝国': 1, '潮汐联邦': 2 },
+    '金沙帝国': { '龙脊联邦': 2, '霜境王国': 2, '密林双廷': 1, '原野同盟': 1, '潮汐联邦': 1 },
+    '潮汐联邦': { '龙脊联邦': 3, '霜境王国': 3, '密林双廷': 2, '原野同盟': 2, '金沙帝国': 1 },
+};
+
+const isSameCountry = currentCountry === targetCountry;
+let distanceLevel = 0;
+if (!isSameCountry) {
+    const row = DISTANCE_MATRIX[currentCountry] || {};
+    distanceLevel = row[targetCountry] || 2;
+}
+
+let travelDaysMin, travelDaysMax, travelTypeDesc;
+if (isSameCountry) {
+    travelDaysMin = 1; travelDaysMax = 2;
+    travelTypeDesc = '国内短途移动';
+} else if (distanceLevel === 1) {
+    travelDaysMin = 3; travelDaysMax = 5;
+    travelTypeDesc = '邻国陆路穿越';
+} else if (distanceLevel === 2) {
+    travelDaysMin = 7; travelDaysMax = 10;
+    travelTypeDesc = '远国长途跋涉';
+} else {
+    travelDaysMin = 10; travelDaysMax = 14;
+    travelTypeDesc = '跨海远洋航行';
+}
+_%>
+# 系统指令：前往外地
+
+  出发地：<%= currentCountry %> / <%= currentCity %> / <%= currentLocation %>
+  目的地：<%= targetCountry %> / <%= targetCity %>
+  当前时间：<%= currentYear %>年<%= currentMonth %>月<%= currentDay %>日 | <%= season %> | <%= timeSlotText %>
+  旅途类型：<%= travelTypeDesc %> | 预计耗时 <%= travelDaysMin %>~<%= travelDaysMax %> 日
+
+  目的地详情：
+    国家：<%= targetCountry %><%= targetCountryData.简述 ? ' | ' + targetCountryData.简述 : '' %>
+    城市：<%= targetCity %> | 规模：<%= targetCityData.城市规模 || '?' %> | 种族构成：<%= targetCityData.种族构成 || targetCountryData.种族构成 || '?' %>
+    环境：<%= targetCityData.自然环境 || targetCountryData.自然环境 || '?' %>
+    氛围：<%= vibeStr %>
+    <%_ if (placeNames.length > 0) { _%>
+    地点：<%= placeNames.map(p => places[p].简述 ? p + '（'+places[p].简述+'）' : p).join('、') %>
+    <%_ } _%>
+
+  narrative_guidance:
+    - "主角决定离开【<%= currentCountry %> / <%= currentCity %>】，前往【<%= targetCountry %> / <%= targetCity %>】。"
+    - "【行程时长】：根据距离计算，本次旅途预计耗时 <%= travelDaysMin %>~<%= travelDaysMax %> 日（<%= travelTypeDesc %>）。请根据此天数安排旅程节奏——通过马车/步行/乘船/远洋客轮等适合该路线的交通工具，简述主角奔波的路程。<% if (distanceLevel >= 3) { %>由于是跨海航线，需描写港口登船、海上航行、以及靠岸时的场景。<% } else if (isSameCountry) { %>由于是国境内移动，旅途相对轻松，途经本国不同城市之间的官道或乡间小路。<% } else { %>途经不同国家之间的边境关卡、沿途地貌（平原、森林、山脉、河川）的变幻。<% } %>不使用流水账，选取1~2个旅途中的小片段或见闻来勾勒整段行程的质感。"
+    - "在路程简述完成后，准确地描述时间跳跃后的日期和时间段。旅途结束时应为白天（早或午），便于主角到达后观察城市全貌。"
+    - "描写主角抵达<%= targetCity %>时的第一印象——从远处眺望城市的轮廓、走近时城门/入口的样貌、入城后主干道的景象。结合上方目的地详情中的规模、种族构成、自然环境和整体氛围来构建画面。"
+    - "调用视觉（建筑风格、街景、旗帜与招牌）、听觉（市井喧嚣、铁匠锤声、异族语言）、嗅觉（空气中飘荡的食物或香料气味）来营造抵达新城镇的沉浸感。"
+    - "结尾为玩家留出自由选择空间——寻找旅店落脚、前往冒险者公会报到、在街头漫步熟悉环境、或直奔某个已在心中盘算已久的地点。"
+
+  mandatory_data_sync:
+    instruction: "完成旅途叙事后，移除前往外地事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/前往外地事件" }
+      ]
+<%_ } _%>

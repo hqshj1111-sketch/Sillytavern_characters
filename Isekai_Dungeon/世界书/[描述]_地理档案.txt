@@ -1,0 +1,66 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+if (_.get(stat, '进程.阶段') === '创角阶段') return;
+
+const geoData = _.get(stat, '地理信息', {});
+if (Object.keys(geoData).length === 0) return;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const currentMonth = parseInt(_.get(stat, '进程.当前月份', 1)) || 1;
+let seasonChar = '冬';
+if (currentMonth >= 3 && currentMonth <= 5) seasonChar = '春';
+else if (currentMonth >= 6 && currentMonth <= 8) seasonChar = '夏';
+else if (currentMonth >= 9 && currentMonth <= 11) seasonChar = '秋';
+_%>
+# 地理档案
+
+## 世界概况
+阿斯特大陆是一块近似圆形的巨型陆块，中央耸立着纵贯南北的龙脊山脉，山顶终年积雪。大陆四周被无尽洋环绕，海岸线多样——东部为平缓沙滩，南部为岩岸与珊瑚礁，西部为断崖与密林接海，北部为冻土悬崖。龙脉河发源于龙脊山脉中段，自西向东横贯大陆东部，流经原野同盟全境后从东岸注入无尽洋，是大陆最长、水运价值最高的河流。大陆自然带沿中央山脉向外呈环状分布：中央为高山地带，向北过渡为丘陵与冰原，向东展开为温带草原，向南渐变为广袤沙漠，向西沉入原始巨木密林。大陆南端近海处散布着由火山活动形成的群岛链。全大陆共存在六个主要国家：龙脊联邦、霜境王国、密林双廷、原野同盟、金沙帝国、潮汐联邦。
+
+<%_ Object.entries(geoData).forEach(([country, cdata]) => {
+  const isCurrent = country === currentCountry; _%>
+## <%= country %><%= isCurrent ? ' （当前所在）' : '' %>
+  简述：<%= cdata.简述||'?' %>
+  环境：<%= cdata.自然环境||'?' %>
+  社会：<%= cdata.社会结构||'?' %>
+  种族：<%= cdata.种族构成||'?' %>
+  公会：<%= cdata.公会名称||'无' %><%= cdata.公会风格 ? '('+cdata.公会风格+')' : '' %>
+  <%_ if (isCurrent) {
+   const cities = cdata.城市列表 || {};
+   Object.entries(cities).forEach(([city, c]) => {
+     const isCurCity = city === currentCity;
+     if (isCurCity) {
+     const vibeObj = c.整体氛围 || {};
+     const vibeStr = _.isArray(vibeObj) ? vibeObj.join('、') : (vibeObj[seasonChar] || Object.values(vibeObj).filter(v => v).join('、')); _%>
+  【<%= city %>】:
+    规模：<%= c.城市规模||'?' %> | 种族：<%= c.种族构成||'?' %> | 环境：<%= c.自然环境||'?' %> | 氛围：<%= vibeStr||'?' %>
+     <%
+    const places = c.地点列表 || {};
+    const grouped = { 城内: {}, 城外: {} };
+    Object.entries(places).forEach(([place, p]) => {
+      const area = p.是否城内 ? '城内' : '城外';
+      const dir = p.方位 || '中';
+      if (!grouped[area][dir]) grouped[area][dir] = [];
+      grouped[area][dir].push(`${place}: ${p.简述||''}`);
+    });
+    const DIRS = ['东','南','西','北','中'];
+    ['城内','城外'].forEach(area => {
+      const areaData = grouped[area];
+      const hasAny = DIRS.some(d => areaData[d] && areaData[d].length > 0);
+      if (hasAny) { _%>
+    <%= area %>：
+    <%_ DIRS.forEach(dir => {
+      if (areaData[dir] && areaData[dir].length > 0) { _%>
+      <%= dir %>：<%= areaData[dir].join('，') %>
+    <%_ } }); } }); _%>
+    <%_ } else { _%>
+  [<%= city %>]：<%= c.简述||'' %>
+<%_ } }); } else { _%>
+[<%= country %>]：<%= cdata.简述||'' %>
+  <%_ const citiesB = cdata.城市列表 || {};
+  Object.keys(citiesB).forEach(city => { _%>
+  - <%= city %>
+  <%_ }); _%>
+<%_ } }); _%>
+<%_ } _%>

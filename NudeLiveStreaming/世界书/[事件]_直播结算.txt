@@ -1,0 +1,52 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+
+  if (events['直播结算事件']) {
+    // 读取结算所需数据
+    const peakViewers = _.get(stat, '直播状态.当前直播间人数', 0);
+    const currentFans = _.get(stat, '主角.主播信息.粉丝数', 0);
+    const streamCount = _.get(stat, '主角.主播信息.直播总次数', 0);
+    const attitude = _.get(stat, '主角.主播信息.主播态度', '');
+
+    // 涨粉计算
+    const baseConversion = 0.35 * (200 / (200 + currentFans)) + 0.04;
+    const randomFactor = 0.9 + Math.random() * 0.2;
+    const newFansGained = Math.floor(peakViewers * baseConversion * randomFactor);
+    const newTotalFans = currentFans + newFansGained;
+
+    // 直播点数计算：基础收益 + 观众流量转化
+    // 每1000名峰值观众提供约15-25点数（含随机波动），避免数值膨胀
+    const basePoints = 10;
+    const viewerBonus = Math.floor(peakViewers * (0.015 + Math.random() * 0.01));
+    const earnedPoints = basePoints + viewerBonus;
+    const totalPoints = (_.get(stat, '主角.主播信息.直播点数', 0) || 0) + earnedPoints;
+
+_%>
+# 后台事件：直播结算
+post_stream_analysis:
+  event_name: "直播结算"
+  results:
+    peak_viewers: "<%= peakViewers %>"
+    new_fans: "<%= newFansGained %>"
+    total_fans_after: "<%= newTotalFans %>"
+    current_stream_count: "<%= streamCount %>"
+    points_earned: "<%= earnedPoints %>"
+    total_points: "<%= totalPoints %>"
+
+  narrative_guidance:
+    - "直播结束了。主角查看本次直播的数据——最高在线人数<%= peakViewers %>，粉丝数增长了<%= newFansGained %>，总粉丝达到<%= newTotalFans %>。"
+    - "请描绘主角看着这些数字时的心情变化。是对于涨粉缓慢的微微沮丧，还是看到数据提升后的兴奋与满足？"
+    - "直播点数增加了<%= earnedPoints %>点，累计<%= totalPoints %>点。讲述主角看到收益到账时的满足感或对商城新道具的盘算。"
+
+  mandatory_data_sync:
+    instruction: "结算完成后，更新粉丝数据并移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/直播结算事件" },
+        { "op": "delta", "path": "/主角/主播信息/粉丝数", "value": <%= newFansGained %> },
+        { "op": "delta", "path": "/主角/主播信息/直播点数", "value": <%= earnedPoints %> }
+      ]
+
+<%_ } } _%>

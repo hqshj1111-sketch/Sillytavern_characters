@@ -1,0 +1,506 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地下城酒馆 - 前端原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css">
+<style>
+:root {
+  --bg: #f4ecd8; --bg2: #e8ddc4; --bg3: #faf3e6;
+  --text: #3d2b1a; --text2: #6b5540; --text3: #9b8468;
+  --border: #c4a882; --border2: #8b6914; --accent: #8b4513;
+  --hp-color: #c0392b; --mp-color: #2e6da3; --sp-color: #3e7a3e;
+  --buff-color: #3e7a3e; --debuff-color: #c0392b;
+  --good: #3e7a3e; --bad: #c0392b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0908; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:12px; font-family:'Noto Serif SC',serif; }
+.tavern-frame { width:100%; max-width:750px; aspect-ratio:1/1; max-height:100vh; display:flex; overflow:hidden; border:1px solid #3a2a1a; border-radius:4px; position:relative; background:var(--bg); box-shadow:0 0 0 6px #1a1410,0 0 0 8px #3a2a1a,0 8px 40px rgba(0,0,0,0.6); }
+.tavern-frame::before { content:''; position:absolute; inset:0; pointer-events:none; z-index:99; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E"); background-size:140px 140px; opacity:0.6; }
+.tavern-frame::after { content:''; position:absolute; inset:0; pointer-events:none; z-index:99; background:radial-gradient(ellipse at center,transparent 60%,rgba(139,105,20,0.06) 100%); }
+#tab-bar { width:44px; flex-shrink:0; background:var(--bg2); border-left:2px solid var(--border2); display:flex; flex-direction:column; padding:12px 4px; gap:3px; position:relative; z-index:10; box-shadow:inset 0 0 30px rgba(139,105,20,0.05); }
+.tab-item { writing-mode:vertical-rl; text-orientation:upright; padding:6px 4px; font-size:15px; color:var(--text3); letter-spacing:3px; cursor:pointer; border-right:2px solid transparent; transition:all .2s; user-select:none; font-weight:500; text-align:center; font-family:'Noto Serif SC',serif; }
+.tab-item:hover { color:var(--text2); background:rgba(139,69,19,0.04); }
+.tab-item.active { color:var(--accent); border-right-color:var(--accent); background:rgba(139,69,19,0.06); font-weight:700; }
+#battle-trigger { display:none; cursor:pointer; margin-top:6px; }
+#battle-trigger.show { display:block; }
+#battle-trigger:hover { color:var(--accent); background:rgba(139,69,19,0.04); }
+#main-area { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; z-index:5; }
+.page { display:none; flex-direction:column; flex:1; overflow-y:auto; overflow-x:hidden; }
+.page.active { display:flex; }
+#phase-row { padding:3px 10px; font-size:15px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); font-family:'Noto Serif SC',serif; background:rgba(139,69,19,0.04); min-height:28px; }
+#phase-row .phase-text { font-weight:700; color:var(--accent); letter-spacing:1px; }
+#phase-row .lv-stats { display:flex; gap:10px; align-items:center; white-space:nowrap; flex-shrink:0; }
+.lv-badge { border:1px solid var(--accent); padding:1px 6px; font-size:15px; font-weight:700; border-radius:2px; color:var(--accent); }
+.xp-mini { width:50px; height:5px; background:var(--bg2); border-radius:2px; overflow:hidden; }
+.xp-mini .fill { height:100%; width:35%; background:var(--accent); border-radius:2px; }
+#status-core { padding:5px 10px; display:flex; align-items:center; justify-content:space-between; font-size:15px; border-bottom:3px double var(--border2); background:linear-gradient(to bottom,var(--bg3),var(--bg)); box-shadow:inset 0 0 20px rgba(139,105,20,0.04); font-family:'Noto Serif SC',serif; min-height:32px; flex-shrink:0; }
+#status-core .left { color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#status-core .right { display:flex; gap:4px; font-size:15px; flex-shrink:0; margin-left:6px; }
+#detail-row { display:flex; padding:4px 8px; gap:6px; border-bottom:1px solid var(--border); background:rgba(250,243,230,0.4); min-height:68px; flex-shrink:0; }
+#detail-left { flex:1; font-size:15px; color:var(--text2); display:flex; flex-direction:column; gap:1px; justify-content:center; overflow:hidden; }
+#detail-left .dl-row { display:flex; gap:3px; align-items:baseline; white-space:nowrap; }
+#detail-left .dl-label { color:var(--text3); font-size:15px; letter-spacing:.5px; flex-shrink:0; }
+#detail-left .dl-value { color:var(--text); overflow:hidden; text-overflow:ellipsis; }
+#detail-left .dl-buff { color:var(--buff-color); }
+#detail-left .dl-debuff { color:var(--debuff-color); }
+#detail-right { width:180px; flex-shrink:0; background:var(--bg3); border:1px solid var(--border); padding:5px 8px; border-radius:2px; display:flex; flex-direction:column; gap:3px; justify-content:center; position:relative; box-shadow:inset 0 0 10px rgba(139,105,20,0.06); }
+@keyframes hpPulse { 0%,100%{ opacity:1; } 50%{ opacity:.85; } }
+.bar-line { display:flex; align-items:center; gap:6px; font-size:15px; }
+.bar-line .b-label { width:22px; color:var(--text3); flex-shrink:0; }
+.bar-line .b-bar { flex:1; height:7px; border-radius:3px; background:var(--bg2); overflow:hidden; }
+.bar-line .b-bar .b-fill { height:100%; border-radius:3px; animation:hpPulse 2.5s ease-in-out infinite; display:block; }
+.bar-line .b-stat { color:var(--text3); font-size:15px; flex-shrink:0; width:48px; text-align:right; }
+.b-hp .b-fill { background:var(--hp-color); }
+.b-mp .b-fill { background:var(--mp-color); }
+.b-sp .b-fill { background:var(--sp-color); }
+#story-area { flex:1; overflow-y:auto; padding:8px 14px; font-family:'LXGW WenKai','KaiTi',serif; font-size:15px; line-height:1.7; color:var(--text); white-space:pre-line; }
+#button-row { display:flex; gap:4px; padding:5px 8px; flex-wrap:wrap; border-top:1px solid var(--border); border-bottom:3px double var(--border2); background:linear-gradient(to bottom,var(--bg),var(--bg2)); flex-shrink:0; align-items:center; font-family:'Noto Serif SC',serif; }
+.btn-func { font-size:15px; border:1px solid var(--border); background:var(--bg3); padding:3px 8px; border-radius:2px; cursor:pointer; transition:all .2s; color:var(--text2); white-space:nowrap; }
+.btn-func:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+.btn-func.disabled { opacity:0.4; pointer-events:none; }
+.btn-quick { position:relative; }
+.btn-quick-menu { display:none; position:absolute; bottom:100%; left:0; margin-bottom:4px; background:var(--bg3); border:2px solid var(--border2); padding:4px 0; border-radius:3px; z-index:20; min-width:100px; box-shadow:3px 3px 0 rgba(139,105,20,0.3); }
+.btn-quick-menu.show { display:block; }
+.btn-quick-menu div { padding:4px 12px; font-size:15px; cursor:pointer; color:var(--text); white-space:nowrap; transition:all .15s; }
+.btn-quick-menu div:hover { background:var(--accent); color:#fff; }
+#action-row { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:6px 8px; background:var(--bg2); flex-shrink:0; border-top:1px solid var(--border); font-family:'LXGW WenKai','KaiTi',serif; }
+.btn-action { font-size:15px; padding:7px 6px; text-align:center; border:1px dashed var(--border); background:var(--bg3); cursor:pointer; transition:all .2s; color:var(--text); border-radius:2px; line-height:1.4; }
+.btn-action:hover { border-style:solid; border-color:var(--accent); color:var(--accent); background:#fffef7; }
+#battle-panel { position:absolute; top:0; right:-350px; width:330px; height:100%; background:var(--bg); border-left:3px double var(--border2); z-index:160; transition:right .3s ease; overflow-y:auto; padding:12px; font-size:15px; font-family:'LXGW WenKai','KaiTi',serif; box-shadow:-4px 0 20px rgba(0,0,0,0.4),inset 0 0 30px rgba(139,105,20,0.04); }
+#battle-panel.open { right:0; }
+#battle-panel h4 { font-family:'Noto Serif SC',serif; font-weight:900; font-size:15px; border-bottom:2px solid var(--border2); padding-bottom:4px; margin-bottom:8px; color:var(--accent); letter-spacing:1px; }
+#battle-panel .close-battle { float:right; cursor:pointer; font-size:16px; color:var(--text3); }
+#battle-panel .enemy-section { border:2px solid var(--bad); padding:8px; margin-bottom:8px; background:rgba(192,57,43,0.03); }
+#battle-panel .ally-section { border:2px solid var(--good); padding:8px; background:rgba(62,122,62,0.03); }
+#battle-panel .vs-divider { text-align:center; font-weight:900; color:var(--accent); font-size:15px; margin:6px 0; letter-spacing:4px; font-family:'Noto Serif SC',serif; }
+.overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.3); justify-content:center; align-items:center; }
+.overlay.show { display:flex; }
+.popup { background:var(--bg); border:3px double var(--border2); padding:16px 18px; max-width:90vw; max-height:80vh; overflow-y:auto; position:relative; box-shadow:4px 4px 0 rgba(139,105,20,0.3),inset 0 0 30px rgba(139,105,20,0.06),0 8px 40px rgba(0,0,0,0.5); font-family:'LXGW WenKai','KaiTi',serif; font-size:15px; line-height:1.8; color:var(--text); }
+.popup::before { content:''; position:absolute; inset:5px; border:1px solid var(--border); pointer-events:none; }
+.popup h3 { font-family:'Noto Serif SC',serif; font-weight:900; font-size:16px; border-bottom:2px solid var(--border2); padding-bottom:5px; margin-bottom:10px; letter-spacing:1px; color:var(--accent); }
+.popup .close { position:absolute; top:8px; right:12px; cursor:pointer; font-size:18px; color:var(--text3); transition:color .2s; font-family:'Noto Serif SC',serif; }
+.popup .close:hover { color:var(--accent); }
+.stat-section { margin:4px 12px 10px; }
+.stat-section h4 { font-family:'Noto Serif SC',serif; font-weight:900; font-size:15px; color:var(--accent); border-bottom:2px solid var(--border2); padding-bottom:3px; margin-bottom:6px; letter-spacing:1px; }
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px 8px; font-size:15px; }
+.stat-grid .sg-label { color:var(--text3); font-size:15px; }
+.stat-grid .sg-val { color:var(--text); }
+.stat-grid .sg-full { grid-column:1/-1; }
+.stat-full { font-size:15px; }
+.stat-full .sf-label { color:var(--text3); font-size:15px; }
+.equip-card { border:1px solid var(--border); padding:6px 10px; margin:4px 0; background:var(--bg3); border-radius:2px; }
+.equip-card .eq-name { font-weight:700; color:var(--accent); }
+.equip-clickable.equip-off { border-style:dotted; border-width:2px; opacity:0.65; }
+.equip-clickable.equip-off:hover { opacity:1; }
+.equip-clickable.equip-on { border-style:solid; border-width:2px; opacity:1; }
+.world-subpage { display:none; flex-direction:column; flex:1; overflow-y:auto; }
+.world-subpage.active { display:flex; }
+.world-map-img { width:100%; max-width:380px; aspect-ratio:1; background:var(--bg2); border:2px solid var(--border2); border-radius:2px; margin:10px auto; }
+.dungeon-list-section { padding:4px 12px 8px; flex:1; min-height:0; display:flex; flex-direction:column; }
+.dungeon-list-section h4 { font-family:'Noto Serif SC',serif; font-weight:900; font-size:15px; border-bottom:2px solid var(--border2); padding-bottom:3px; margin-bottom:4px; letter-spacing:1px; color:var(--accent); flex-shrink:0; }
+.dungeon-filters { display:flex; gap:4px; margin-bottom:6px; flex-wrap:wrap; flex-shrink:0; }
+.dungeon-filters select,.dungeon-filters input { font-size:15px; border:1px solid var(--border); padding:3px 6px; background:var(--bg3); font-family:'Noto Serif SC',serif; border-radius:2px; color:var(--text); }
+.dungeon-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:80px; gap:4px; overflow-y:auto; flex:1; min-height:0; align-content:start; }
+.dungeon-card { border:1px solid var(--border); padding:6px 8px; background:var(--bg3); cursor:pointer; border-radius:2px; transition:all .15s; overflow:hidden; }
+.dungeon-card:hover { border-color:var(--accent); box-shadow:1px 1px 4px rgba(139,69,19,0.15); }
+.dungeon-card .dc-top { display:flex; justify-content:space-between; font-weight:700; font-size:14px; }
+.dungeon-card .dc-mid { font-size:12px; color:var(--text3); margin:1px 0; }
+.dungeon-card .dc-stats { font-size:11px; color:var(--text2); display:flex; gap:8px; flex-wrap:wrap; }
+.npc-section { margin:4px 8px; flex:1; min-height:0; display:flex; flex-direction:column; }
+.npc-section.collapsed { flex:0 0 auto; }
+.npc-section.collapsed .npc-content { display:none; }
+.npc-toggle { font-family:'Noto Serif SC',serif; font-weight:900; font-size:15px; color:var(--accent); border-bottom:2px solid var(--border2); padding-bottom:3px; margin-bottom:4px; letter-spacing:1px; cursor:pointer; user-select:none; display:flex; justify-content:space-between; }
+.npc-grid { display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:90px; gap:6px; overflow-y:auto; flex:1; min-height:0; align-content:start; }
+.npc-card { border:1px solid var(--border); padding:6px 8px; background:var(--bg3); border-radius:2px; cursor:pointer; font-size:15px; transition:all .15s; }
+.npc-card:hover { border-color:var(--accent); }
+.npc-card .nc-name { font-weight:700; font-size:15px; color:var(--accent); }
+.npc-card .nc-meta { color:var(--text3); margin:1px 0; }
+.npc-row { padding:3px 6px; border-bottom:1px dotted var(--border); font-size:15px; }
+.nr-name { font-weight:700; }
+.nr-info { font-size:15px; color:var(--text2); }
+.chronicle-row { display:flex; gap:8px; padding:8px 10px; flex:1; min-height:0; }
+.chronicle-col { flex:1; border:1px solid var(--border); padding:6px 8px; background:var(--bg3); border-radius:2px; overflow-y:auto; }
+.chronicle-col h5 { font-family:'Noto Serif SC',serif; font-size:15px; font-weight:700; color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:2px; margin-bottom:4px; }
+.chronicle-entry { font-size:15px; padding:2px 0; border-bottom:1px dotted var(--border); }
+.chronicle-entry .ce-date { color:var(--text3); font-size:15px; }
+.chronicle-full { margin:0 10px 12px; border:1px solid var(--border); background:var(--bg3); border-radius:2px; padding:8px 10px; flex:1; min-height:0; overflow-y:auto; }
+.chronicle-full h5 { font-family:'Noto Serif SC',serif; font-size:15px; font-weight:700; color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:2px; margin-bottom:4px; }
+.record-row { font-size:15px; display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px dotted var(--border); }
+.country-detail { padding:10px; }
+.country-detail .back-btn { font-size:15px; cursor:pointer; color:var(--accent); text-decoration:underline; margin-bottom:8px; display:inline-block; font-family:'Noto Serif SC',serif; }
+.country-map { width:100%; max-width:320px; aspect-ratio:1; background:var(--bg2); border:2px solid var(--border2); margin:6px auto; display:block; border-radius:2px; }
+.country-info { font-size:15px; line-height:1.8; margin:8px 0; }
+.country-info h5 { font-family:'Noto Serif SC',serif; font-size:15px; font-weight:700; color:var(--accent); margin:6px 0 2px; }
+.skill-card { border:1px solid var(--border); padding:8px 12px; margin:6px 0; background:var(--bg3); border-radius:2px; }
+.skill-card .sk-name { font-weight:700; color:var(--accent); font-size:15px; }
+.skill-card .sk-meta { font-size:15px; color:var(--text3); margin:2px 0; }
+.item-row { display:flex; justify-content:space-between; align-items:center; padding:4px 8px; border-bottom:1px dotted var(--border); font-size:15px; }
+.item-row .it-name { font-weight:600; }
+.item-row .it-qty { color:var(--text3); }
+.quest-row { padding:6px 10px; margin:4px 0; border:1px solid var(--border); background:var(--bg3); border-radius:2px; font-size:15px; }
+.quest-row .qr-name { font-weight:700; }
+.quest-row .qr-done { color:var(--good); }
+.quest-row .qr-undone { color:var(--text3); }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="tavern-frame">
+<main id="main-area">
+
+<article class="page active" id="page-story">
+
+  <div id="phase-row">
+    <span class="phase-text">日常阶段 · 大型事件进行中</span>
+    <span class="lv-stats"><span style="color:var(--accent);font-weight:600;font-size:15px;">F级 · 新人冒险者</span><span class="lv-badge" style="margin-left:8px;">Lv.5</span><span class="xp-mini"><span class="fill"></span></span><span style="font-weight:600;color:var(--accent);font-size:15px;">1,280 G</span></span>
+  </div>
+
+  <div id="status-core">
+    <span class="left">384年10月15日 早 · 龙脊联邦·烬喉·龙息公会</span>
+    <span class="right" style="display:flex;gap:8px;align-items:center;"><span id="floor-indicator" style="font-weight:600;color:var(--accent);display:none;">B2 硫磺坑道</span><span>📋</span></span>
+  </div>
+
+  <div id="detail-row">
+    <div id="detail-left">
+      <div class="dl-row"><span class="dl-label">状态</span><span class="dl-value">精力充沛，刚踏出旅店迎接新的一天</span></div>
+      <div class="dl-row"><span class="dl-label">着装</span><span class="dl-value">皮革轻甲，腰间佩短剑</span></div>
+      <div class="dl-row"><span class="dl-label">+</span><span class="dl-value dl-buff">攻击力↑3 · 速度↑2</span></div>
+      <div class="dl-row"><span class="dl-label">-</span><span class="dl-value dl-debuff">轻度疲劳</span></div>
+    </div>
+    <div id="detail-right">
+      <div id="dr-hp-mp-sp">
+        <div class="bar-line b-hp"><span class="b-label">HP</span><span class="b-bar"><span class="b-fill" style="width:75%"></span></span><span class="b-stat">75/100</span></div>
+        <div class="bar-line b-mp"><span class="b-label">MP</span><span class="b-bar"><span class="b-fill" style="width:40%"></span></span><span class="b-stat">20/50</span></div>
+        <div class="bar-line b-sp"><span class="b-label">SP</span><span class="b-bar"><span class="b-fill" style="width:55%"></span></span><span class="b-stat">55/100</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="story-area">
+    推开龙息公会厚重的黑曜石大门，温暖的火焰光芒迎面扑来。
+
+    大厅内高挑的穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼，沙哑地说道："新人？任务板在右手边。别挡道。"
+
+    你走向镶嵌在黑曜石墙壁上的任务板，几张泛黄的委托书被图钉钉在软木板上。最上方的一张引起了你的注意——"招募：需要两名冒险者协助调查硫磺谷深处的魔晶矿脉异常。报酬 300 金币，详情面谈。——委托人：矿工长 格鲁克。"
+
+    公会大厅的另一侧，几位冒险者正围着壁炉喝酒交谈，偶尔传来粗犷的笑声和酒杯碰撞的叮当声。壁炉中的火焰跳动着，将整个大厅染成温暖的琥珀色。
+
+    你撕下那张委托书走向前台，蜥蜴接待员扫了一眼羊皮纸，用爪子蘸了蘸墨汁在登记簿上划了几笔。"硫磺谷那边最近不太平，熔岩蜗兽的活动变得频繁了。上个月有个E级冒险者下去就没再上来。"她将登记簿推过来让你签字，竖瞳里看不出任何情绪。
+
+    签完字后，你转身朝大门走去。推开门的瞬间，山间清晨的冷风夹杂着硫磺味扑面而来。烬喉这座火山城市永远笼罩着一层淡淡的烟雾，龙脊山脉的轮廓在晨雾中若隐若现。
+
+    沿石阶向下穿过铁匠区时，"铁锤老爹"的锻炉已经燃起了火。矮人铁匠抬头看见你，挥了挥手里的锤子："嘿！上次帮你打的那把铁剑使着还行？剑刃钝了就来找我，别等砍不动怪才想起老爹！"粗犷的笑声在石巷里回荡。
+
+    穿过城门踏上通往硫磺谷的山路，路旁的温泉池冒着蒸汽，几个老矿工正泡在水里有一搭没一搭地聊着矿区近况。"……矿脉深处最近挖出了些奇怪的石头，夜里会发蓝光。""你是不是又偷喝地热酒了？""我说真的！格鲁克那小子已经找公会发委托了。"
+
+    山路蜿蜒向下，硫磺味越来越浓。远处的硫磺谷入口如同大地的一道裂口，从裂缝中飘出的淡黄色蒸汽在阳光下折射出诡异的光晕。路边的告示牌上钉着公会的危险警示——"硫磺谷B2以下区域近日魔晶异常波动，建议至少两人组队前往。"
+
+    你在谷口停下脚步，检查了一遍装备——铁剑系紧、皮甲扣牢、背包里还有两瓶回复药水。深吸一口气，迈步踏入了硫磺谷的阴影之中。
+  </div>
+
+  <!-- 特殊装备行 -->
+  <div id="equip-row" style="display:flex;flex-wrap:wrap;gap:2px 4px;padding:3px 10px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(250,243,230,0.3);flex-shrink:0;align-items:center;font-size:12px;font-weight:700;">
+    <span style="display:inline-block;border:2px solid rgba(200,160,80,0.4);padding:2px 6px;border-radius:3px;color:#b09060;opacity:0.6;margin:1px 2px;font-size:12px;">奴隶淫纹<span style="font-size:9px;vertical-align:super;font-weight:400;">初阶</span></span>
+    <span style="display:inline-block;border:2px solid #9050c0;padding:2px 6px;border-radius:3px;color:#9050c0;text-shadow:0 0 10px rgba(144,80,192,0.5);margin:1px 2px;background:rgba(144,80,192,0.06);font-size:12px;">触手紧身衣<span style="font-size:9px;vertical-align:super;font-weight:400;">共生</span></span>
+    <span style="display:inline-block;border:2px solid rgba(96,104,160,0.6);padding:2px 6px;border-radius:3px;color:#6068a0;text-shadow:0 0 4px rgba(96,104,160,0.25);opacity:0.8;margin:1px 2px;font-size:12px;">影子分身<span style="font-size:9px;vertical-align:super;font-weight:400;">无心智</span></span>
+    <span style="display:inline-block;border:2px solid rgba(128,176,144,0.7);padding:2px 6px;border-radius:3px;color:#80b090;text-shadow:0 0 6px rgba(128,176,144,0.3);margin:1px 2px;background:rgba(128,176,144,0.04);font-size:12px;">同化胶核<span style="font-size:9px;vertical-align:super;font-weight:400;">转化中期</span></span>
+    <span style="display:inline-block;border:2px solid #b83030;padding:2px 6px;border-radius:3px;color:#b83030;text-shadow:0 0 14px rgba(184,48,48,0.7),0 0 2px rgba(184,48,48,0.3);margin:1px 2px;background:rgba(184,48,48,0.08);animation:hpPulse 2s ease-in-out infinite;font-size:12px;">蜕生项圈<span style="font-size:9px;vertical-align:super;font-weight:400;">终阶</span></span>
+    <span id="eq-visor" class="equip-clickable equip-off" style="display:inline-block;border:2px dotted rgba(208,96,128,0.5);padding:2px 6px;border-radius:3px;color:#c05070;opacity:0.5;margin:1px 2px;cursor:pointer;transition:all .2s;font-size:12px;font-weight:700;">认知扭曲目镜<span style="font-size:9px;vertical-align:super;font-weight:400;">未激活</span></span>
+    <span id="eq-mask" class="equip-clickable equip-on" style="display:inline-block;border:2px solid rgba(136,144,160,0.8);padding:2px 6px;border-radius:3px;color:#7a8290;text-shadow:0 0 8px rgba(136,144,160,0.4);margin:1px 2px;cursor:pointer;transition:all .2s;background:rgba(136,144,160,0.06);font-size:12px;font-weight:700;">人格同化面具<span style="font-size:9px;vertical-align:super;font-weight:400;">中阶</span></span>
+    <span id="eq-body" class="equip-clickable equip-on" style="display:inline-block;border:2px solid rgba(96,160,208,0.8);padding:2px 6px;border-radius:3px;color:#60a0d0;text-shadow:0 0 10px rgba(96,160,208,0.5);margin:1px 2px;cursor:pointer;transition:all .2s;background:rgba(96,160,208,0.08);font-size:12px;font-weight:700;">欲体晶核<span style="font-size:9px;vertical-align:super;font-weight:400;">已激活</span></span>
+    <span id="eq-lust" class="equip-clickable equip-off" style="display:inline-block;border:2px dotted rgba(192,64,64,0.4);padding:2px 6px;border-radius:3px;color:#b05050;opacity:0.5;margin:1px 2px;cursor:pointer;transition:all .2s;font-size:12px;font-weight:700;">淫欲晶核<span style="font-size:9px;vertical-align:super;font-weight:400;">未激活</span></span>
+  </div>
+
+  <div id="button-row">
+    <button class="btn-func" onclick="openPopup('popup-summary')">📃 摘要</button>
+    <button class="btn-func" onclick="openPopup('popup-updatevar')">📝 变量</button>
+    <button class="btn-func" onclick="openPopup('popup-skills')">⚔️ 技能</button>
+    <button class="btn-func" onclick="openPopup('popup-items')">🎒 道具</button>
+    <button class="btn-func" onclick="openPopup('popup-quests')">📋 任务</button>
+    <button class="btn-func" onclick="openPopup('popup-clues')">🔍 线索</button>
+    <button class="btn-func disabled">🛒 商品</button>
+    <button class="btn-func btn-quick" id="btn-quick">⚡ 快捷 ▾<div class="btn-quick-menu" id="quick-menu"><div>前往打造</div><div>前往外地</div><div>前往猎艳</div><div>前往购物</div><div>前往训练</div><div>邀请队友</div><div>度假邀约</div><div>结成伴侣</div></div></button>
+  </div>
+
+  <div id="action-row">
+    <button class="btn-action">前往冒险者公会<br>查看任务板</button>
+    <button class="btn-action">与身边的NPC<br>交谈或加深关系</button>
+    <button class="btn-action">在城镇中四处走走<br>打听情报与街巷</button>
+    <button class="btn-action">回到旅店休息<br>独自整理行囊</button>
+  </div>
+
+  <div id="battle-panel">
+    <div class="close-battle" id="close-battle">✕</div>
+    <h4>⚔️ 战斗状态</h4>
+    <div class="enemy-section">
+      <div style="font-weight:700;font-size:15px;">🔥 哥布林勇士 · 兽人 · Lv.3 · ×3</div>
+      <div class="bar-line b-hp" style="margin:4px 0;"><span class="b-label">HP</span><span class="b-bar"><span class="b-fill" style="width:80%"></span></span><span class="b-stat">80/100</span></div>
+      <div style="font-size:15px;color:var(--text2);margin:4px 0;">攻击力:50 · 防御力:30</div>
+      <div style="font-size:15px;color:var(--text2);">技能: 连环突刺、盾击</div>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="ally-section">
+      <div style="display:flex;gap:6px;">
+        <div style="flex:1;border-right:1px dotted var(--border);padding-right:4px;">
+          <div style="font-weight:700;font-size:15px;color:var(--accent);">主角</div>
+          <div class="bar-line b-hp"><span class="b-label">HP</span><span class="b-bar"><span class="b-fill" style="width:75%"></span></span><span class="b-stat">75/100</span></div>
+          <div class="bar-line b-mp"><span class="b-label">MP</span><span class="b-bar"><span class="b-fill" style="width:40%"></span></span><span class="b-stat">20/50</span></div>
+          <div class="bar-line b-sp"><span class="b-label">SP</span><span class="b-bar"><span class="b-fill" style="width:55%"></span></span><span class="b-stat">55/100</span></div>
+          <div style="font-size:15px;color:var(--text2);margin:2px 0;">攻25 防15 速20 魔10 意12 运8</div>
+          <div style="font-size:15px;color:var(--text2);">装备: 铁剑·皮甲</div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:15px;color:var(--accent);">艾琳</div>
+          <div class="bar-line b-hp"><span class="b-label">HP</span><span class="b-bar"><span class="b-fill" style="width:60%"></span></span><span class="b-stat">60/100</span></div>
+          <div class="bar-line b-mp"><span class="b-label">MP</span><span class="b-bar"><span class="b-fill" style="width:70%"></span></span><span class="b-stat">35/50</span></div>
+          <div class="bar-line b-sp"><span class="b-label">SP</span><span class="b-bar"><span class="b-fill" style="width:80%"></span></span><span class="b-stat">80/100</span></div>
+          <div style="font-size:15px;color:var(--text2);margin:2px 0;">攻15 防10 速30 魔20 意10 运12</div>
+          <div style="font-size:15px;color:var(--text2);">装备: 短弓·布袍</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:15px;color:var(--text3);cursor:pointer;text-decoration:underline;" id="battle-log-toggle">▶ 展开战斗纪要</div>
+    <div id="battle-log" style="display:none;margin-top:4px;font-size:15px;color:var(--text2);">
+      <div>384-10-15: 主角 HP -5 (哥布林反击)</div>
+      <div>384-10-15: 艾琳 技能发动 (精准射击)</div>
+    </div>
+  </div>
+
+</article>
+
+<section class="page" id="page-status">
+  <div style="padding:8px;"></div>
+  <div class="stat-section"><h4>基本信息</h4><div class="stat-grid">
+    <div class="sg-full"><span class="sg-label">姓名</span><br><span class="sg-val">阿尔德</span></div>
+    <div><span class="sg-label">年龄</span><br><span class="sg-val">22岁</span></div><div><span class="sg-label">性别</span><br><span class="sg-val">男</span></div>
+    <div><span class="sg-label">种族</span><br><span class="sg-val">人类</span></div><div><span class="sg-label">职业</span><br><span class="sg-val">冒险者</span></div>
+    <div><span class="sg-label">身份</span><br><span class="sg-val">流浪剑士</span></div><div><span class="sg-label">性格</span><br><span class="sg-val">坚毅寡言</span></div>
+    <div><span class="sg-label">故乡国家</span><br><span class="sg-val">霜境王国</span></div><div><span class="sg-label">故乡城市</span><br><span class="sg-val">黑脉镇</span></div>
+  </div></div>
+  <div class="stat-section"><h4>相貌特征</h4><div class="stat-grid">
+    <div><span class="sg-label">脸型</span><br><span class="sg-val">棱角分明的方脸</span></div><div><span class="sg-label">眼睛颜色</span><br><span class="sg-val">深灰</span></div>
+    <div class="sg-full"><span class="sg-label">发型与发色</span><br><span class="sg-val">暗灰色短发，刘海斜向左侧</span></div>
+    <div><span class="sg-label">五官</span><br><span class="sg-val">深邃眼窝，高鼻</span></div><div><span class="sg-label">特殊记号</span><br><span class="sg-val">右眉上一道旧剑痕</span></div>
+  </div></div>
+  <div class="stat-section"><h4>身材细节</h4><div class="stat-grid">
+    <div><span class="sg-label">身高</span><br><span class="sg-val">178cm</span></div><div><span class="sg-label">体态</span><br><span class="sg-val">精瘦结实</span></div>
+    <div><span class="sg-label">三围</span><br><span class="sg-val">98·76·88</span></div><div><span class="sg-label">皮肤状态</span><br><span class="sg-val">小麦色，多旧疤</span></div>
+    <div><span class="sg-label">肌肉线条</span><br><span class="sg-val">清晰但不夸张</span></div><div><span class="sg-label">体毛状况</span><br><span class="sg-val">稀疏</span></div>
+  </div></div>
+  <div class="stat-section"><h4>性器官特征</h4><div class="stat-full">
+    <div><span class="sf-label">后穴形态：</span>紧致未开发</div>
+    <div><span class="sf-label">胸部形态：</span>平坦结实</div>
+    <div><span class="sf-label">阴茎形态：</span>正常尺寸，包皮半覆</div>
+  </div></div>
+  <div class="stat-section"><h4>战斗属性 & 装备</h4>
+    <div style="display:flex;gap:12px;">
+      <div style="flex:1;">
+        <div class="stat-grid" style="grid-template-columns:1fr 1fr;">
+          <div><span class="sg-label">最大HP</span><br><span class="sg-val">100</span></div><div><span class="sg-label">最大MP</span><br><span class="sg-val">50</span></div>
+          <div><span class="sg-label">最大SP</span><br><span class="sg-val">100</span></div><div></div>
+          <div><span class="sg-label">攻</span><br><span class="sg-val">25</span></div><div><span class="sg-label">防</span><br><span class="sg-val">15</span></div>
+          <div><span class="sg-label">速</span><br><span class="sg-val">20</span></div><div><span class="sg-label">魔</span><br><span class="sg-val">10</span></div>
+          <div><span class="sg-label">意</span><br><span class="sg-val">12</span></div><div><span class="sg-label">运</span><br><span class="sg-val">8</span></div>
+        </div>
+        <div style="margin-top:6px;border-top:1px dotted var(--border);padding-top:4px;">
+           <div style="font-size:15px;color:var(--accent);font-weight:700;margin-bottom:2px;">冒险者信息</div>
+          <div class="stat-grid" style="grid-template-columns:1fr 1fr;">
+            <div><span class="sg-label">知名度</span><br><span class="sg-val">120</span></div><div><span class="sg-label">升阶次数</span><br><span class="sg-val">0</span></div>
+            <div><span class="sg-label">完成任务</span><br><span class="sg-val">12</span></div><div><span class="sg-label">讨伐数</span><br><span class="sg-val">47</span></div>
+            <div><span class="sg-label">攻略数</span><br><span class="sg-val">2</span></div>
+          </div>
+          <div style="font-size:15px;color:var(--text3);margin-top:2px;">所属公会: 龙息公会 · 公会评价: 初出茅庐</div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+        <div class="equip-card"><span class="eq-name">铁剑</span><br><span style="color:var(--text);">一把普通的铁制单手剑，刃口略显磨损</span><br><span style="color:var(--text3);font-size:15px;">属性: 物理 / 增幅: 攻击力+5</span></div>
+        <div class="equip-card"><span class="eq-name">皮甲</span><br><span style="color:var(--text);">鞣制皮革护甲，轻便但防护有限</span><br><span style="color:var(--text3);font-size:15px;">属性: 物理 / 增幅: 防御力+3</span></div>
+        <div class="equip-card"><span class="eq-name">旅行者护符</span><br><span style="color:var(--text);">一枚刻有简单防护符文的铜质护符</span><br><span style="color:var(--text3);font-size:15px;">属性: 魔法 / 增幅: 魔力+2</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="stat-section"><h4>伴侣列表</h4><div class="stat-full" style="color:var(--text3);">暂无</div></div>
+  <div class="stat-section"><h4>房产</h4><div class="stat-full" style="color:var(--text3);">暂无</div></div>
+  <div style="padding:12px;"></div>
+</section>
+
+<section class="page" id="page-world">
+  <div class="world-subpage active" id="world-map-layer" style="display:flex;flex-direction:column;">
+    <div style="flex-shrink:0;">
+    <div class="world-map-img"><div style="padding:16px;text-align:center;line-height:2;color:var(--text2);font-size:15px;"><div style="font-size:16px;font-weight:700;color:var(--accent);margin-bottom:6px;">阿斯特大陆</div><div>龙脊联邦（中央山脉）</div><div>霜境王国（极北冰原）</div><div>密林双廷（西部巨木）</div><div>原野同盟（东部草原）</div><div>金沙帝国（南部沙漠）</div><div>潮汐联邦（南部群岛）</div></div></div>
+    <div style="padding:4px 12px;display:flex;gap:5px;flex-wrap:wrap;">
+      <button class="btn-func" onclick="showCountry('龙脊联邦')">龙脊联邦</button><button class="btn-func" onclick="showCountry('霜境王国')">霜境王国</button>
+      <button class="btn-func" onclick="showCountry('密林双廷')">密林双廷</button><button class="btn-func" onclick="showCountry('原野同盟')">原野同盟</button>
+      <button class="btn-func" onclick="showCountry('金沙帝国')">金沙帝国</button><button class="btn-func" onclick="showCountry('潮汐联邦')">潮汐联邦</button>
+    </div>
+    </div>
+    <div class="dungeon-list-section"><h4>可攻略地下城</h4>
+      <div class="dungeon-filters"><select><option>全部国家</option></select><select><option>全部等级</option></select><input placeholder="搜索..." style="width:100px;"></div>
+      <div class="dungeon-grid">
+      <div class="dungeon-card" onclick="openPopup('popup-dungeon-detail')"><div class="dc-top"><span>硫磺谷矿洞</span><span style="color:var(--accent);">E</span></div><div class="dc-mid">龙脊联邦·灼鳞</div><div class="dc-stats"><span>👥15</span><span>⭐1</span><span>💀0</span></div></div>
+      <div class="dungeon-card" onclick="openPopup('popup-dungeon-detail')"><div class="dc-top"><span>冰封洞窟</span><span style="color:var(--accent);">D</span></div><div class="dc-mid">霜境王国·黑脉镇</div><div class="dc-stats"><span>👥22</span><span>⭐0</span><span>💀3</span></div></div>
+      <div class="dungeon-card" onclick="openPopup('popup-dungeon-detail')"><div class="dc-top"><span>暗影迷宫</span><span style="color:var(--accent);">C</span></div><div class="dc-mid">密林双廷·影渊廷</div><div class="dc-stats"><span>👥8</span><span>⭐1</span><span>💀1</span></div></div>
+      <div class="dungeon-card" onclick="openPopup('popup-dungeon-detail')"><div class="dc-top"><span>金沙遗迹</span><span style="color:var(--accent);">C</span></div><div class="dc-mid">金沙帝国·砂碑关</div><div class="dc-stats"><span>👥30</span><span>⭐3</span><span>💀5</span></div></div>
+      <div class="dungeon-card" onclick="openPopup('popup-dungeon-detail')"><div class="dc-top"><span>潮音洞穴</span><span style="color:var(--accent);">E</span></div><div class="dc-mid">潮汐联邦·珊链屿</div><div class="dc-stats"><span>👥5</span><span>⭐0</span><span>💀0</span></div></div>
+      <div class="dungeon-card" onclick="openPopup('popup-dungeon-detail')"><div class="dc-top"><span>龙息深渊</span><span style="color:var(--accent);">B</span></div><div class="dc-mid">龙脊联邦·裂渊</div><div class="dc-stats"><span>👥45</span><span>⭐5</span><span>💀12</span></div></div>
+      <div class="dungeon-card" onclick="openPopup('popup-dungeon-detail')"><div class="dc-top"><span>霜脊要塞</span><span style="color:var(--accent);">D</span></div><div class="dc-mid">霜境王国·霜木垒</div><div class="dc-stats"><span>👥18</span><span>⭐1</span><span>💀2</span></div></div>
+      <div class="dungeon-card" onclick="openPopup('popup-dungeon-detail')"><div class="dc-top"><span>月泉之底</span><span style="color:var(--accent);">C</span></div><div class="dc-mid">密林双廷·月泉台</div><div class="dc-stats"><span>👥12</span><span>⭐2</span><span>💀1</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="world-subpage" id="country-detail-layer"><div class="country-detail"><span class="back-btn" onclick="goBackToWorld()">← 返回世界地图</span><div class="country-map"><div style="padding:20px;text-align:center;font-size:15px;color:var(--text2);"><div id="country-detail-name" style="font-size:15px;font-weight:700;color:var(--accent);">国家名</div><div style="margin:8px;">（城市标记点见地图）</div></div></div><div class="country-info" id="country-info-content"></div></div></div>
+</section>
+
+<section class="page" id="page-npc">
+  <div class="npc-section" id="npc-important-section" style="flex:1;min-height:0;display:flex;flex-direction:column;">
+    <div class="npc-toggle" onclick="toggleNPCSection('npc-important-section')">⭐ 重要NPC ▾</div>
+    <div class="npc-content npc-grid" style="overflow-y:auto;flex:1;min-height:0;">
+      <div class="npc-card" onclick="openPopup('popup-npc-detail')"><div class="nc-name">铁锤老爹 <span style="border:1px solid rgba(200,160,60,0.7);font-size:12px;padding:0 4px;border-radius:2px;color:#a08030;vertical-align:middle;background:rgba(200,160,60,0.08);box-shadow:inset 0 0 6px rgba(200,160,60,0.12);">主人</span></div><div class="nc-meta">矮人 · 男 · 铁匠</div><div class="nc-meta">好感度: 45 · 关系: 熟人</div></div>
+      <div class="npc-card" onclick="openPopup('popup-npc-detail')"><div class="nc-name">格鲁克 <span style="border:1px solid rgba(139,180,120,0.7);font-size:12px;padding:0 4px;border-radius:2px;color:#6b9068;vertical-align:middle;background:rgba(139,180,120,0.1);box-shadow:inset 0 0 6px rgba(139,180,120,0.12);">胶兽</span></div><div class="nc-meta">龙兽人 · 男 · 矿工长</div><div class="nc-meta">好感度: 20 · 关系: 委托人</div></div>
+      <div class="npc-card" onclick="openPopup('popup-npc-detail')"><div class="nc-name">艾琳 <span style="border:1px solid rgba(200,120,140,0.7);font-size:12px;padding:0 4px;border-radius:2px;color:#b04860;vertical-align:middle;background:rgba(200,120,140,0.08);box-shadow:inset 0 0 6px rgba(200,120,140,0.1);">伴侣</span></div><div class="nc-meta">人类 · 女 · 冒险者</div><div class="nc-meta">好感度: 60 · 关系: 队友</div></div>
+      <div class="npc-card" onclick="openPopup('popup-npc-detail')"><div class="nc-name">蜥蜴接待员</div><div class="nc-meta">蜥蜴兽人 · 女 · 公会前台</div><div class="nc-meta">好感度: 5 · 关系: 陌生</div></div>
+    </div>
+  </div>
+  <div class="npc-section" id="npc-general-section" style="flex:1;min-height:0;display:flex;flex-direction:column;">
+    <div class="npc-toggle" onclick="toggleNPCSection('npc-general-section')">👤 一般NPC ▾</div>
+    <div class="npc-content" style="overflow-y:auto;flex:1;min-height:0;">
+      <div class="npc-row" onclick="openPopup('popup-npc-gen-detail')" style="cursor:pointer;"><span class="nr-name">旅店老板</span><br><span class="nr-info">人类 · 男 · 45岁 · 故乡:霜境王国·铁砧堡 · 所在:龙脊联邦·烬喉 · 本市</span></div>
+      <div class="npc-row" onclick="openPopup('popup-npc-gen-detail')" style="cursor:pointer;"><span class="nr-name">草药商</span><br><span class="nr-info">精灵 · 女 · 132岁 · 故乡:密林双廷·月泉台 · 所在:密林双廷·月泉台 · 本市</span></div>
+      <div class="npc-row" onclick="openPopup('popup-npc-gen-detail')" style="cursor:pointer;"><span class="nr-name">守卫队长</span><br><span class="nr-info">狼兽人 · 男 · 34岁 · 故乡:原野同盟·百牙原 · 所在:原野同盟·百牙原 · 本市</span></div>
+      <div class="npc-row" style="border:2px solid rgba(139,180,120,0.4);background:rgba(139,180,120,0.06);box-shadow:inset 0 0 20px rgba(139,180,120,0.08);cursor:pointer;" onclick="openPopup('popup-npc-gen-detail')"><span class="nr-name">胶液怪</span><br><span class="nr-info">胶兽 · 未知 · - · 故乡:密林双廷·影渊廷 · 所在:密林双廷·影渊廷 · 世界</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="page-chronicle">
+  <div class="chronicle-row" style="flex:1;min-height:0;">
+    <div class="chronicle-col" style="overflow-y:auto;"><h5>大陆动态</h5><select style="font-size:15px;margin-bottom:4px;border:1px solid var(--border);background:var(--bg3);padding:2px;"><option>龙脊联邦</option></select>
+      <div class="chronicle-entry"><span class="ce-date">384年10月</span><br>龙息公会发布C级紧急委托</div>
+      <div class="chronicle-entry"><span class="ce-date">384年09月</span><br>灼鳞矿区发现新魔晶矿脉</div>
+      <div class="chronicle-entry"><span class="ce-date">384年08月</span><br>霜脊边境关闭，强化警戒</div>
+      <div class="chronicle-entry"><span class="ce-date">384年07月</span><br>烬喉举行年度冒险者考核</div>
+      <div class="chronicle-entry"><span class="ce-date">384年06月</span><br>东部平原爆发罕见魔兽潮</div>
+    </div>
+    <div class="chronicle-col" style="overflow-y:auto;"><h5>历史纪要</h5>
+      <div class="chronicle-entry"><span class="ce-date">384年10月15日</span><br>抵达龙息公会查看任务板</div>
+      <div class="chronicle-entry"><span class="ce-date">384年10月14日</span><br>从霜境王国出发向南</div>
+      <div class="chronicle-entry"><span class="ce-date">384年10月10日</span><br>通过冒险者资格考核</div>
+      <div class="chronicle-entry"><span class="ce-date">384年10月05日</span><br>在铁砧堡购置基础装备</div>
+      <div class="chronicle-entry"><span class="ce-date">384年10月01日</span><br>离开家乡黑脉镇踏上旅途</div>
+      <div class="chronicle-entry"><span class="ce-date">384年09月20日</span><br>收到龙息公会入会邀请函</div>
+    </div>
+  </div>
+  <div class="chronicle-full" style="flex:1;min-height:0;overflow-y:auto;"><h5>攻略记录</h5>
+    <div class="record-row"><span>硫磺谷矿洞</span><span>384-10-02→10-05</span><span>击杀:12</span><span>450G</span><span style="color:var(--good);">成功</span></div>
+    <div class="record-row"><span>暗影森林迷宫</span><span>384-09-15→09-22</span><span>击杀:8</span><span>800G</span><span style="color:var(--good);">成功</span></div>
+    <div class="record-row"><span>冰封洞窟</span><span>384-08-20→08-21</span><span>击杀:3</span><span>100G</span><span style="color:var(--bad);">败北</span></div>
+    <div class="record-row"><span>灼鳞废弃矿道</span><span>384-07-10→07-12</span><span>击杀:5</span><span>200G</span><span style="color:var(--good);">成功</span></div>
+    <div class="record-row"><span>霜脊山道</span><span>384-06-25→06-26</span><span>击杀:2</span><span>50G</span><span style="color:var(--bad);">败北</span></div>
+    <div class="record-row"><span>裂渊下层</span><span>384-05-15→05-18</span><span>击杀:15</span><span>600G</span><span style="color:var(--good);">成功</span></div>
+  </div>
+</section>
+
+</main>
+
+<nav id="tab-bar">
+  <div class="tab-item active" data-page="story">故事</div>
+  <div class="tab-item" data-page="status">主角状态</div>
+  <div class="tab-item" data-page="world">世界信息</div>
+  <div class="tab-item" data-page="npc">NPC关系</div>
+  <div class="tab-item" data-page="chronicle">纪要</div>
+  <div id="battle-trigger" class="tab-item show">战斗</div>
+</nav>
+</div>
+
+<div class="overlay" id="popup-summary"><div class="popup" style="width:380px;"><span class="close" onclick="closePopup('popup-summary')">✕</span><h3>当前局势摘要</h3><p>你身处龙脊联邦的首都烬喉，刚刚抵达龙息公会大厅。这是你成为冒险者的第一天。任务板上有数张委托等待挑选，大厅里也有其他冒险者可以交谈。</p></div></div>
+<div class="overlay" id="popup-updatevar"><div class="popup" style="width:390px;"><span class="close" onclick="closePopup('popup-updatevar')">✕</span><h3>变量</h3><div style="font-size:15px;"><div style="font-weight:700;color:var(--accent);margin-bottom:4px;">Analysis</div><div style="color:var(--text2);margin-bottom:10px;line-height:1.6;">- 时间：主角从旅店出发前往公会，流逝约1小时。<br>- 主角位置：从「旅店」变更至「冒险者公会·大厅」。<br>- 金币：住宿费-20。</div><div style="font-weight:700;color:var(--accent);margin-bottom:4px;">JSONPatch</div><pre style="font-size:15px;color:var(--text2);background:var(--bg2);padding:8px;border-radius:2px;white-space:pre-wrap;word-break:break-all;">[{"op":"replace","path":"/主角/当前状态/当前地点","value":"冒险者公会·大厅"},{"op":"delta","path":"/主角/当前状态/金币","value":-20}]</pre></div></div></div>
+<div class="overlay" id="popup-skills"><div class="popup" style="width:360px;"><span class="close" onclick="closePopup('popup-skills')">✕</span><h3>技能列表</h3><div class="skill-card"><div class="sk-name">横斩</div><div class="sk-meta">物理 · 倍率1.2x · 斩属性</div><div style="font-size:15px;color:var(--text2);">横向挥剑，对前方扇形范围内的敌人造成伤害。</div></div><div class="skill-card"><div class="sk-name">急救包扎</div><div class="sk-meta">恢复 · 倍率0.5x · 治疗</div><div style="font-size:15px;color:var(--text2);">用随身绷带快速处理伤口，恢复少量HP。</div></div><div class="skill-card"><div class="sk-name">火焰弹</div><div class="sk-meta">魔法 · 倍率1.5x · 火属性</div><div style="font-size:15px;color:var(--text2);">凝聚魔力发射一枚小型火焰弹，对单个敌人造成火焰伤害。</div></div></div></div>
+<div class="overlay" id="popup-items"><div class="popup" style="width:360px;"><span class="close" onclick="closePopup('popup-items')">✕</span><h3>道具栏</h3><div class="item-row"><span class="it-name">回复药水</span><span class="it-qty">x3</span></div><div class="item-row"><span class="it-name">魔力药水</span><span class="it-qty">x1</span></div><div class="item-row"><span class="it-name">解毒草</span><span class="it-qty">x2</span></div><div class="item-row"><span class="it-name">火把</span><span class="it-qty">x5</span></div></div></div>
+<div class="overlay" id="popup-quests"><div class="popup" style="width:370px;"><span class="close" onclick="closePopup('popup-quests')">✕</span><h3>任务列表</h3><div class="quest-row"><div><span class="qr-name">讨伐哥布林</span> <span class="qr-undone">（进行中）</span></div><div style="font-size:15px;color:var(--text2);">前往暗影洞穴讨伐5只哥布林并带回证明。</div><div style="font-size:15px;color:var(--text3);">奖励: 金币50 + 经验值30</div></div><div class="quest-row"><div><span class="qr-name">收集药草</span> <span class="qr-done">（已完成）</span></div><div style="font-size:15px;color:var(--text2);">在龙脊山脉南坡采集5株月光草。</div><div style="font-size:15px;color:var(--text3);">奖励: 金币30 + 回复药水x2</div></div></div></div>
+<div class="overlay" id="popup-clues"><div class="popup" style="width:360px;"><span class="close" onclick="closePopup('popup-clues')">✕</span><h3>已知线索</h3><div style="font-size:15px;color:var(--text3);">暂无进行中的大型事件。</div></div></div>
+<div class="overlay" id="popup-dungeon-detail"><div class="popup" style="width:370px;"><span class="close" onclick="closePopup('popup-dungeon-detail')">✕</span><h3>硫磺谷矿洞</h3><div style="font-size:15px;line-height:1.8;"><div><b>等级:</b> E级 · <b>所在:</b> 龙脊联邦 · 灼鳞</div><div><b>描述:</b> 位于活火山带南侧山腰的废弃矿洞，因地热活动导致魔晶矿脉异常。</div><div><b>BOSS:</b> 熔岩蜗兽王 - 巨型底层蜗兽</div><div><b>层数:</b> 5</div><div style="font-size:15px;">B1 矿道入口 · B2 硫磺坑道 · B3 废弃冶炼区 · B4 魔晶矿脉 · B5 地热核心</div><div style="margin-top:10px;text-align:center;"><button class="btn-func" onclick="closePopup('popup-dungeon-detail')" style="font-size:15px;padding:4px 20px;">⚔️ 前往攻略</button></div></div></div></div>
+<div class="overlay" id="popup-npc-detail"><div class="popup" style="width:360px;"><span class="close" onclick="closePopup('popup-npc-detail')">✕</span><h3>铁锤老爹</h3><div style="font-size:15px;line-height:1.8;"><div><b>种族:</b> 矮人 · <b>性别:</b> 男 · <b>年龄:</b> 187岁</div><div><b>身份:</b> 铁匠 · <b>所属:</b> 锻火公会</div><div><b>故乡:</b> 霜境王国 · 铁砧堡 · <b>所在:</b> 龙脊联邦 · 烬喉</div><div><b>外观:</b> 矮壮身材，花白山羊胡。</div><div><b>性格:</b> 粗犷直爽。</div><div><b>好感度:</b> 45 · <b>关系:</b> 熟人</div><div style="margin-top:10px;display:flex;gap:4px;flex-wrap:wrap;"><button class="btn-func">邀请入队</button><button class="btn-func">邀请度假</button><button class="btn-func">猎艳目标</button><button class="btn-func">结成伴侣</button></div></div></div></div>
+
+<div class="overlay" id="popup-npc-gen-detail"><div class="popup" style="width:360px;"><span class="close" onclick="closePopup('popup-npc-gen-detail')">✕</span><h3>旅店老板</h3><div style="font-size:15px;line-height:1.8;"><div><b>种族:</b> 人类 · <b>性别:</b> 男 · <b>年龄:</b> 45岁</div><div><b>故乡:</b> 霜境王国 · 铁砧堡 · <b>所在:</b> 龙脊联邦 · 烬喉</div><div><b>活动范围:</b> 本市</div><div style="margin-top:10px;display:flex;gap:4px;flex-wrap:wrap;"><button class="btn-func">邀请入队</button><button class="btn-func">邀请度假</button><button class="btn-func">猎艳目标</button><button class="btn-func">结成伴侣</button></div></div></div></div>
+
+<script>
+document.querySelectorAll('#tab-bar .tab-item').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    if(!this.dataset.page)return;
+    document.querySelectorAll('#tab-bar .tab-item').forEach(function(t){t.classList.remove('active');});
+    this.classList.add('active');
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+    var t=document.getElementById('page-'+this.dataset.page);
+    if(t)t.classList.add('active');
+  });
+});
+function openPopup(id){document.getElementById(id).classList.add('show');}
+function closePopup(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.overlay').forEach(function(ov){ov.addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
+document.getElementById('btn-quick').addEventListener('click',function(e){e.stopPropagation();document.getElementById('quick-menu').classList.toggle('show');});
+document.addEventListener('click',function(){document.getElementById('quick-menu').classList.remove('show');});
+var bp=document.getElementById('battle-panel');
+document.getElementById('battle-trigger').addEventListener('click',function(e){e.stopPropagation();bp.classList.toggle('open');});
+document.getElementById('close-battle').addEventListener('click',function(){bp.classList.remove('open');});
+document.getElementById('battle-log-toggle').addEventListener('click',function(){
+  var log=document.getElementById('battle-log');
+  if(log.style.display==='none'){log.style.display='block';this.textContent='▼ 收起战斗纪要';}
+  else{log.style.display='none';this.textContent='▶ 展开战斗纪要';}
+});
+var CD={龙脊联邦:{自然:'龙脊山脉纵贯全境，地形以海拔三千米以上的高山为主，分布有活火山群、硫磺温泉区、冰川峡谷和深不见底的地渊裂隙。',社会:'部落长老议会制。全国由七个主要龙兽人氏族组成，每氏族推举一名长老进入「龙息议会」共同执政。',种族:'龙兽人 60%、蜥蜴兽人 10%、精灵 5%、人类 8% 等',公会:'龙息公会',风格:'倚山凿石建造，外墙以黑曜石与熔岩石砌筑，入口设永久火盆为标识。'},霜境王国:{自然:'全境以低矮丘陵和高原为主，北部沿海为冻土苔原，南部为针叶林带。大部分地区被冰雪覆盖。',社会:'封建君主制。国王为最高统治者，下设贵族分封领地。人口约五百万。',种族:'人类 50%、地精 20%、矮人 15%、狼兽人 5% 等',公会:'锻火公会',风格:'采用厚重花岗岩砌筑，屋顶为陡坡尖顶防止积雪，内部设中央壁炉大厅。'},密林双廷:{自然:'全境被原始密林覆盖，树木高度普遍超过五十米，林中分布有天然魔力泉眼。',社会:'二元共治君主制。由森林精灵与暗精灵共同统治，设有「双叶议会」。',种族:'森林精灵 35%、暗精灵 30%、人类 10%、猫兽人 8% 等',公会:'翠枝公会',风格:'建于巨树之上或与树体共生，利用活树枝干编织而成，各分会通过树冠吊桥连接。'},原野同盟:{自然:'全境为广袤的温带草原，龙脉河自西向东横贯全境。人口约八百万。',社会:'部落酋长联盟制。由数十个部落组成，共同推举「大酋长」。',种族:'虎兽人 20%、狼兽人 15%、人类 12%、马兽人 10% 等',公会:'长风公会',风格:'以石材基座加木结构建造，外形受游牧帐篷启发，内部开阔无柱。'},金沙帝国:{自然:'全境以沙漠为主，由流动沙丘、砾石荒漠和岩石峡谷组成。散布数十处绿洲。',社会:'神权君主制。皇帝自称太阳神后裔，下设祭司团和沙卫军团。人口约六百万。',种族:'蛇兽人 20%、恶魔与魅魔 20%、蝎兽人 10%、人类 10% 等',公会:'金沙公会',风格:'以砂岩砖砌筑，大型建筑采用阶梯金字塔式结构，内部设地下大厅以避暑。'},潮汐联邦:{自然:'由三座大型火山岛和数十座小型珊瑚岛组成，岛屿之间以浅海和珊瑚礁相隔。',社会:'松散岛邦联盟制。各主要岛屿为独立岛邦，共同组成「潮汐议会」。人口约二百万。',种族:'鲨鱼兽人 20%、鱼兽人 15%、龟兽人 10%、人类 10% 等',公会:'潮音公会',风格:'以珊瑚石和贝壳灰岩为主要建材，部分架空于浅海之上，以栈桥相连。'}};
+function showCountry(n){
+  document.getElementById('world-map-layer').classList.remove('active');document.getElementById('country-detail-layer').classList.add('active');
+  document.getElementById('country-detail-name').textContent=n;
+  var d=CD[n],h='<h5>自然环境</h5><p>'+d.自然+'</p><h5>社会结构</h5><p>'+d.社会+'</p><h5>种族构成</h5><p>'+d.种族+'</p><h5>公会</h5><p><b>'+d.公会+'</b> - '+d.风格+'</p>';
+  document.getElementById('country-info-content').innerHTML=h;
+}
+function goBackToWorld(){document.getElementById('country-detail-layer').classList.remove('active');document.getElementById('world-map-layer').classList.add('active');}
+function toggleNPCSection(id){
+  document.getElementById(id).classList.toggle('collapsed');
+  var t=document.getElementById(id).querySelector('.npc-toggle');
+  t.textContent=t.textContent.indexOf('▾')>-1?t.textContent.replace('▾','▸'):t.textContent.replace('▸','▾');
+}
+// 特殊装备点击激活/取消
+var eqStages={
+  'eq-visor':{stages:['未激活','已激活'],idx:0,
+    off:{border:'2px dotted rgba(208,96,128,0.5)',color:'#c05070',opacity:'0.5',textShadow:'none',bg:'none'},
+    on:{border:'2px solid rgba(208,96,128,0.8)',color:'#d06080',opacity:'1',textShadow:'0 0 12px rgba(208,96,128,0.6)',bg:'rgba(208,96,128,0.08)'}},
+  'eq-mask':{stages:['初阶','中阶','终阶'],idx:1,
+    off:{border:'2px solid rgba(136,144,160,0.6)',color:'#7a8290',opacity:'0.8',textShadow:'0 0 6px rgba(136,144,160,0.3)',bg:'rgba(136,144,160,0.04)'},
+    on:{border:'2px solid rgba(136,144,160,0.9)',color:'#8890a0',opacity:'1',textShadow:'0 0 14px rgba(136,144,160,0.6)',bg:'rgba(136,144,160,0.08)'}},
+  'eq-body':{stages:['未激活','已激活'],idx:1,
+    off:{border:'2px dotted rgba(96,160,208,0.5)',color:'#5090c0',opacity:'0.5',textShadow:'none',bg:'none'},
+    on:{border:'2px solid rgba(96,160,208,0.8)',color:'#60a0d0',opacity:'1',textShadow:'0 0 10px rgba(96,160,208,0.5)',bg:'rgba(96,160,208,0.08)'}},
+  'eq-lust':{stages:['未激活','已激活'],idx:0,
+    off:{border:'2px dotted rgba(192,64,64,0.4)',color:'#b05050',opacity:'0.5',textShadow:'none',bg:'none'},
+    on:{border:'2px solid rgba(192,64,64,0.7)',color:'#c04040',opacity:'1',textShadow:'0 0 12px rgba(192,64,64,0.5)',bg:'rgba(192,64,64,0.06)'}}
+};
+document.querySelectorAll('.equip-clickable').forEach(function(el){
+  el.addEventListener('click',function(){
+    var data=eqStages[el.id],labelEl=el.querySelector('span');
+    // cycle to next stage
+    data.idx=(data.idx+1)%data.stages.length;
+    var stageName=data.stages[data.idx];
+    if(labelEl)labelEl.textContent=stageName;
+    // apply visual based on whether stage is activated
+    var isOn=(stageName==='已激活'||stageName==='终阶'||stageName==='中阶');
+    if(stageName==='初阶')isOn=false;
+    var s=isOn?data.on:data.off;
+    el.style.border=s.border;el.style.color=s.color;el.style.opacity=s.opacity;
+    el.style.textShadow=s.textShadow;el.style.background=s.bg||'none';
+    if(isOn){el.classList.add('equip-on');el.classList.remove('equip-off');}
+    else{el.classList.add('equip-off');el.classList.remove('equip-on');}
+  });
+});
+
+</script>
+</body>
+</html>

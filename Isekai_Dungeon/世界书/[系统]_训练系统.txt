@@ -1,0 +1,120 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const trainEvent = pendingEvents['训练进行中事件'];
+if (phase !== '日常阶段' || !trainEvent) return;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+
+const isLearnSkill = trainEvent === '学习技能';
+
+const importantNPCs = _.get(stat, '重要NPC信息', {});
+const normalNPCs = _.get(stat, '一般NPC信息', {});
+const localImportant = Object.entries(importantNPCs).filter(([n, d]) => d.所在国家 === currentCountry && d.所在城市 === currentCity);
+const localNormal = Object.entries(normalNPCs).filter(([n, d]) => d.所在国家 === currentCountry && d.所在城市 === currentCity);
+const localNPCs = [...localImportant, ...localNormal];
+const hasLocalNPC = localNPCs.length > 0;
+
+const selfTrain = Math.random() < 0.5;
+const useNPC = hasLocalNPC && !selfTrain;
+
+let teacherName = '', teacherTitle = '';
+if (useNPC) {
+  const pool = localImportant.length > 0 ? localImportant : localNPCs;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  teacherName = pick[0];
+  teacherTitle = pick[1].职业 || pick[1].身份 || '当地居民';
+}
+
+const skills = _.get(stat, '主角.技能列表', []);
+const skillStrs = skills.length > 0
+  ? skills.map(s => {
+      const eff = (s.技能属性 && s.技能增幅) ? `${s.技能属性}${s.技能增幅}` : (s.技能属性 || s.技能增幅 || '');
+      const effPart = eff ? `(${eff})` : '';
+      return `${s.技能名称}(${s.技能类型},×${s.技能倍率})${effPart}·${s.技能描述||''}`;
+    }).join(' | ')
+  : '无';
+
+const mcLevel = _.get(stat, '主角.当前状态.等级', 1);
+const maxHP = _.get(stat, '主角.战斗属性.最大HP', 100);
+const maxMP = _.get(stat, '主角.战斗属性.最大MP', 50);
+const maxSP = _.get(stat, '主角.战斗属性.最大SP', 100);
+
+const pools = ['魔力','意志','速度','幸运'];
+for (let i = pools.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [pools[i], pools[j]] = [pools[j], pools[i]];
+}
+const pick1 = pools[0], pick2 = pools[1];
+
+const statGrowth = {
+  魔力: pick1 === '魔力' || pick2 === '魔力' ? 2 : 0,
+  速度: pick1 === '速度' || pick2 === '速度' ? 1 : 0,
+  意志: pick1 === '意志' || pick2 === '意志' ? 2 : 0,
+  幸运: pick1 === '幸运' || pick2 === '幸运' ? 1 : 0,
+};
+_%>
+# 系统指令：训练系统
+
+<%_ if (isLearnSkill) { _%>
+  训练类型：学习技能
+
+  当前技能：<%= skillStrs %>
+
+  narrative_guidance:
+<%_ if (selfTrain) { _%>
+    - "主角选择独自钻研，在<%= currentCity %>的训练场/郊外/僻静处专注修炼。描写主角回顾过往战斗的经验，感悟到了新的技能。"
+    - "描写领悟瞬间的体感，技能的使用表现，以及主角难以抑制的激动。"
+<%_ } else { _%>
+    - "主角请求<%= teacherName %>（<%= teacherTitle || '当地居民' %>）指导训练。。"
+    - "在<%= teacherName %>的指导下，主角在一段时间的刻苦训练后领悟了新的技能。描写技能的使用表现，以及<%= teacherName %>和主角间的互动。"
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "结束训练，将新技能写入技能列表："
+    patch_code: |
+      [
+        { "op": "insert", "path": "/主角/技能列表/-", "value": { "技能名称": "[AI创作的新技能名称]", "技能描述": "[技能描述]", "技能类型": "[物理/魔法/辅助]", "技能倍率": [1.0~3.0], "技能属性": ["攻击力", "魔力"], "技能增幅": ["+5", "*1.2"] } },
+        // 技能属性为字符串数组，可选值为攻击力/防御力/速度/魔力/意志/幸运等属性名；技能增幅与属性按索引一一配对
+        { "op": "remove", "path": "/系统状态/待处理事件/训练进行中事件" }
+      ]
+
+<%_ } else { _%>
+  训练类型：基础提升
+
+  当前等级：Lv.<%= mcLevel %>
+  升级后随机成长属性：【<%= pick1 %>】+<%= {魔力:2,意志:2,速度:1,幸运:1}[pick1] %> | 【<%= pick2 %>】+<%= {魔力:2,意志:2,速度:1,幸运:1}[pick2] %>
+
+  narrative_guidance:
+<%_ if (selfTrain) { _%>
+    - "主角选择独自苦练——在<%= currentCity %>的训练场或郊外挥洒汗水，进行高强度的体能锻炼、魔力回路运转的反复练习、以及对战中步伐与反应的强化训练。"
+    - "描写一段时间后的突破瞬间，主角能明确感受到自己变得更强了。"
+<%_ } else { _%>
+    - "主角找到<%= teacherName %>（<%= teacherTitle || '当地居民' %>）请求互练。<%= teacherName %>爽快地放下手中的活计，摆出了切磋的架势。"
+    - "描写互练的过程。最终当<%= teacherName %>收手时，主角能感到体内涌动的成长。"
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "结束训练，完成升级："
+    patch_code: |
+      [
+        { "op": "delta", "path": "/主角/当前状态/等级", "value": 1 },
+        { "op": "delta", "path": "/主角/战斗属性/最大HP", "value": 20 },
+        { "op": "delta", "path": "/主角/战斗属性/最大MP", "value": 10 },
+        { "op": "delta", "path": "/主角/战斗属性/最大SP", "value": 10 },
+        { "op": "delta", "path": "/主角/战斗属性/攻击力", "value": 3 },
+        { "op": "delta", "path": "/主角/战斗属性/防御力", "value": 2 },
+        { "op": "delta", "path": "/主角/战斗属性/魔力", "value": <%= statGrowth.魔力 %> },
+        { "op": "delta", "path": "/主角/战斗属性/速度", "value": <%= statGrowth.速度 %> },
+        { "op": "delta", "path": "/主角/战斗属性/意志", "value": <%= statGrowth.意志 %> },
+        { "op": "delta", "path": "/主角/战斗属性/幸运", "value": <%= statGrowth.幸运 %> },
+        { "op": "replace", "path": "/主角/当前状态/当前HP", "value": <%= maxHP + 20 %> },
+        { "op": "replace", "path": "/主角/当前状态/当前MP", "value": <%= maxMP + 10 %> },
+        { "op": "replace", "path": "/主角/当前状态/当前SP", "value": <%= maxSP + 10 %> },
+        { "op": "remove", "path": "/系统状态/待处理事件/训练进行中事件" }
+      ]
+
+<%_ } _%>
+<%_ } _%>

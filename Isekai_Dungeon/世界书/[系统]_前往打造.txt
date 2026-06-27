@@ -1,0 +1,30 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+if (phase !== '日常阶段' || pendingEvents['打造进行中事件']) return;
+
+const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
+const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
+const geoData = _.get(stat, '地理信息', {});
+const countryData = geoData[currentCountry] || {};
+const cityData = _.get(countryData, `城市列表.${currentCity}`, {});
+
+const inventory = _.get(stat, '主角.道具栏', {});
+const materials = Object.entries(inventory).filter(([k,v]) => v.类型 === '素材');
+const matList = materials.map(([k,v]) => `${k}×${v.数量||1}`).join('、');
+_%>
+# 系统指令：前往打造
+
+  narrative_guidance:
+    - "主角决定前往铁匠铺打造装备。根据<%= currentCity || '当前城镇' %>（<%= currentCountry || '当前国家' %>）的特色，描写主角找到的这家铁匠铺的环境。"
+    - "主角当前持有的素材：<%= matList || '无' %>。铁匠仔细检查了这些素材的品质后，根据当地特色提出了可能的打造方案——可能是一把新的武器、一件更好的护甲、或一枚功能性的饰品。"
+    - "铁匠会详细说明打造所需素材组合、预期产出的装备属性与增幅，以及费用。但本回合内禁止主角决定进行打造，结尾留出自由选择空间。"
+
+  mandatory_data_sync:
+    instruction: "插入打造事件标记："
+    patch_code: |
+      [
+        { "op": "insert", "path": "/系统状态/待处理事件/打造进行中事件", "value": true }
+      ]
+<%_ } _%>

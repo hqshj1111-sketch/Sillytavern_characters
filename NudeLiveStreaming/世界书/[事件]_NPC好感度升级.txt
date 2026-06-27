@@ -1,0 +1,59 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['NPC好感度升级事件'] && currentPhase === '日常阶段' && !isSexActive) {
+    const npcName = events['NPC好感度升级事件'];  // 字符串，即 NPC 名字
+    const npc = _.get(stat, `NPC数据.${npcName}`, {});
+    const affection = parseInt(npc.好感度) || 0;
+    const lewdness = parseInt(npc.淫乱度) || 0;
+    const currentRel = npc.身份信息?.与主角关系 || '未知';
+    const npcPersonality = npc.性格 || {};
+    const lewdStageKey = lewdness >= 75 ? '阶段4' : (lewdness >= 50 ? '阶段3' : (lewdness >= 25 ? '阶段2' : '阶段1'));
+    const lewdStageText = _.get(npc, `淫乱度阶段.${lewdStageKey}`, '未知');
+    // 根据当前好感度推算当前等阶（1/2/3）
+    const currentTier = affection >= 75 ? 3 : (affection >= 50 ? 2 : (affection >= 25 ? 1 : 0));
+    const tierNames = { 1: '第一', 2: '第二', 3: '第三' };
+    const tierName = tierNames[currentTier] || '新';
+    // 根据等阶确定行为边界
+    let behaviorBoundary = '';
+    let eventTag = '';
+    if (currentTier <= 2) {
+      behaviorBoundary = '非插入性行为（手交、口交、足交、乳交等），禁止在本回合进行插入性行为';
+      eventTag = '非插入性亲密';
+    } else {
+      behaviorBoundary = '插入性行为，标志着二人肉体与情感关系的正式确立';
+      eventTag = '肉体交合确立';
+    }
+_%>
+# 事件：NPC好感度突破 —— <%= eventTag %>
+affection_breakthrough:
+  event_name: "与<%= npcName %>的<%= tierName %>次亲密接触"
+  involved_character: "<%= npcName %>"
+  current_affection: <%= affection %>
+  new_tier: <%= currentTier %>
+  npc_lewdness_stage: "<%= lewdStageText %>"
+  current_relationship: "<%= currentRel %>"
+  behavior_boundary: "<%= behaviorBoundary %>"
+  
+  narrative_guidance:
+    - "<%= npcName %>对你的好感度已突破新阶段。基于你们原有的社会关系【<%= currentRel %>】、他/她的性格设定<% if (npcPersonality.外在) { %>（外在<%= npcPersonality.外在 %>，内在<%= npcPersonality.内在 %>）<% } %>以及当前的淫乱度阶段【<%= lewdStageText %>】，推进一场情感与肉欲交织的亲密互动。让肉欲主导，让压抑的渴望涌出。"
+    - "行为边界：<%= behaviorBoundary %>。"
+    <%_ if (currentTier === 3) { _%>
+    - "这是决定性的一步。跨过这道门槛后，两人的关系将不可逆地进入身心交融的新阶段——让两人以欲望为誓，完成彻彻底底的纠缠。"
+    <%_ } _%>
+    - "请将互动场景自然地融入当前环境与氛围，描写双方的神情、触碰与心声，结尾留给玩家选择下一步走向的空间。"
+
+  mandatory_data_sync:
+    instruction: "事件推进完毕后，更新关系标签并移除事件标记。新关系标签需结合原有的关系、角色人设与本次互动的性质来动态拟定："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/NPC数据/<%= npcName %>/身份信息/与主角关系", "value": "[根据原社会关系、角色人设与当前阶段动态拟定的新关系标签]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/NPC好感度升级事件" }
+      ]
+
+<%_ } } _%>

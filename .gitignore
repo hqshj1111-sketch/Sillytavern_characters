@@ -1,0 +1,13 @@
+# SillyTavern character card repositiory
+
+# Generated/cache files
+*.bak
+*.tmp
+
+# Large binary files (optional - add to track specs)
+# resources/*.png
+# resources/*.jpg
+
+# System files
+Thumbs.db
+.DS_Store

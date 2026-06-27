@@ -1,0 +1,44 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['老师约炮邀请事件'] && isDaily && !isSexActive ) {
+    const saya = _.get(stat, 'NPC数据.冰室纱耶', {});
+    const affection = parseInt(_.get(saya, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(saya, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.老师约炮邀请事件', 0)) || 0;
+    const sexCount = parseInt(_.get(saya, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：约炮邀请
+event_initiator:
+  event_name: "约炮邀请"
+  character: "冰室纱耶"
+  location: "不限"
+  time: "20:00-23:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角的手机震动，收到纱耶发来的消息。"
+    <%_ if (eventCount > 0) { _%>
+    - "这次连寒暄都没有。纱耶直接发来一张自己下面湿透的特写照片——手指掰开阴唇，淫水已经往外流。附言简短直接：想做了，现在过来。"
+    - "她太清楚主角的喜好了。结合做爱次数(<%= sexCount %>)调整照片和文字的具体内容——次数越多，她越精准地拿捏主角的兴奋点，可能会附上文字具体说想要什么姿势，或者回忆上次做得有多爽。"
+    - "结尾留给主角选择：立刻出门、先语言上调戏她再过去、或找个理由婉拒。"
+    <%_ } else { _%>
+    - "主角的手机震动，收到纱耶发来的消息。没有寒暄，没有铺垫——她直接发来一张自己下身湿透的特写照片，附言说她现在就想做爱，让主角赶紧来她的公寓。"
+    - "纱耶的用词下流直白，结合好感度(<%= affection %>)调整语气的亲密度——好感度越高越带有独占和撒娇意味；结合淫乱度(<%= lewdness %>)调整描述的具体程度——淫乱度越高用词越下流。"
+    - "结尾留给主角选择：立刻前往、先回复挑逗再过去、或找个理由婉拒。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/老师约炮邀请事件" }
+      ]
+
+<%_ } } _%>

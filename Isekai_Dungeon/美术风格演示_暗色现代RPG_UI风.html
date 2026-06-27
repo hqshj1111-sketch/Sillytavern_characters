@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暗色现代 RPG UI</title>
+<style>
+  :root {
+    --bg-base: #0d1117;
+    --bg-panel: #161b22;
+    --bg-raised: #21262d;
+    --border: #30363d;
+    --border-bright: #8b949e;
+    --text-primary: #f0f6fc;
+    --text-secondary: #c9d1d9;
+    --text-dim: #8b949e;
+    --accent: #d2a859;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --hp: #f85149;
+    --mp: #79c0ff;
+    --sp: #56d364;
+    --danger: #ff7b72;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #060508;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .tavern-frame {
+    width: 420px;
+    height: 100vh;
+    max-height: 900px;
+    display: flex;
+    overflow: hidden;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    letter-spacing: 0.2px;
+  }
+
+  #app { display: flex; flex: 1; }
+
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-base);
+  }
+
+  /* ── 核心状态栏 ── */
+  #status-bar {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  #status-bar .left { color: var(--text-secondary); font-weight: 500; }
+  #status-bar .mid { display: flex; gap: 20px; align-items: center; }
+  #status-bar .mid .lv {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 14px;
+    background: rgba(210,168,89,0.12);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  #status-bar .mid .xp-bar { width: 100px; height: 6px; background: var(--bg-raised); border-radius: 3px; overflow: hidden; }
+  #status-bar .mid .xp-fill { height: 100%; width: 40%; background: var(--accent); border-radius: 3px; }
+  #status-bar .mid .gold { color: var(--accent); font-weight: 600; }
+  #status-bar .right { color: var(--accent-green); font-size: 11px; border: 1px solid var(--accent-green); padding: 2px 8px; border-radius: 3px; }
+
+  /* ── 详细信息行 ── */
+  #detail-row {
+    display: flex;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 4px 16px;
+    min-height: 72px;
+  }
+  #detail-left {
+    flex: 1;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    justify-content: center;
+  }
+  #detail-left .field { display: flex; gap: 6px; }
+  #detail-left .label { color: var(--text-dim); text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+  #detail-left .value { color: var(--text-secondary); }
+  #detail-right {
+    width: 190px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: center;
+  }
+  .bar-hp, .bar-mp, .bar-sp { height: 8px; border-radius: 4px; background: var(--bg-base); overflow: hidden; }
+  .bar-hp .fill { height: 100%; width: 70%; background: var(--hp); box-shadow: 0 0 6px rgba(248,81,73,0.4); }
+  .bar-mp .fill { height: 100%; width: 40%; background: var(--mp); box-shadow: 0 0 6px rgba(121,192,255,0.4); }
+  .bar-sp .fill { height: 100%; width: 60%; background: var(--sp); box-shadow: 0 0 6px rgba(86,211,100,0.4); }
+  .bar-label { font-size: 10px; color: var(--text-dim); display: flex; justify-content: space-between; letter-spacing: 0.5px; }
+
+  /* ── 正文区 ── */
+  #story-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    font-size: 14px;
+    line-height: 2;
+    color: var(--text-secondary);
+    background: linear-gradient(to bottom, var(--bg-base), #0a0e13);
+  }
+  #story-area p { margin-bottom: 16px; }
+  #story-area .first { color: var(--accent); font-size: 15px; font-weight: 600; }
+  #story-area em { color: var(--accent-blue); font-style: normal; }
+
+  /* ── 功能按钮 ── */
+  #button-row {
+    display: flex;
+    gap: 4px;
+    padding: 6px 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+    flex-wrap: wrap;
+  }
+  .btn-func {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .btn-func:hover {
+    background: var(--bg-raised);
+    color: var(--text-primary);
+    border-color: var(--border-bright);
+  }
+
+  /* ── 行动选项 ── */
+  #action-row {
+    display: flex;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border);
+  }
+  .btn-action {
+    flex: 1;
+    background: var(--bg-raised);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 10px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    text-align: left;
+    border-left: 3px solid transparent;
+  }
+  .btn-action:hover {
+    border-color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(210,168,89,0.08);
+    color: var(--accent);
+  }
+
+  /* ── 右侧页签 ── */
+  #tab-bar {
+    width: 44px;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 8px 4px;
+    gap: 2px;
+  }
+  .tab-item {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    padding: 6px 4px;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-right: 2px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tab-item:hover { color: var(--text-secondary); }
+  .tab-item.active {
+    color: var(--accent);
+    border-right-color: var(--accent);
+    background: rgba(210,168,89,0.06);
+  }
+
+  /* ── 弹窗 ── */
+  .popup-demo {
+    position: fixed;
+    top: 12%; left: 8%; right: 8%;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-bright);
+    border-radius: 6px;
+    padding: 16px 20px;
+    color: var(--text-secondary);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(210,168,89,0.2);
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  .popup-demo h3 {
+    color: var(--accent);
+    margin-bottom: 10px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    font-weight: 600;
+  }
+  .popup-demo .close { float: right; color: var(--text-dim); cursor: pointer; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="tavern-frame">
+<div id="app">
+  <div id="main">
+    <div id="status-bar">
+      <span class="left">日常阶段 · 384年10月15日 早 · 龙脊联邦·烬喉·龙息公会</span>
+      <span class="mid">
+        <span class="lv">Lv.5</span>
+        <span class="xp-bar"><span class="xp-fill"></span></span>
+        <span class="gold">⏣ 1,280</span>
+      </span>
+      <span class="right">QUEST</span>
+    </div>
+
+    <div id="detail-row">
+      <div id="detail-left">
+        <div class="field"><span class="label">冒险者</span><span class="value">F级 · 新人冒险者 · 知名度 120</span></div>
+        <div class="field"><span class="label">状态</span><span class="value">精力充沛，以饱满的精神迎接新一天</span></div>
+        <div class="field"><span class="label">着装</span><span class="value">皮革轻甲，腰间佩短剑</span></div>
+        <div class="field"><span class="label">+</span><span class="value" style="color:#3fb950">攻击力↑3 · 速度↑2</span></div>
+        <div class="field"><span class="label">-</span><span class="value" style="color:#f85149">轻度疲劳</span></div>
+      </div>
+      <div id="detail-right">
+        <div class="bar-label"><span>HP</span><span>85 / 100</span></div>
+        <div class="bar-hp"><div class="fill"></div></div>
+        <div class="bar-label"><span>MP</span><span>40 / 50</span></div>
+        <div class="bar-mp"><div class="fill"></div></div>
+        <div class="bar-label"><span>SP</span><span>60 / 100</span></div>
+        <div class="bar-sp"><div class="fill"></div></div>
+      </div>
+    </div>
+
+    <div id="story-area">
+      <p class="first">推开龙息公会厚重的黑曜石大门，温暖的火焰光芒迎面扑来。</p>
+      <p>大厅内高挑的穹顶上悬挂着百年龙兽人先祖的骸骨吊灯，墙壁上铭刻着历代英雄的名字。前台是一位蜥蜴兽人接待员，她用竖瞳瞥了你一眼，沙哑地说道："新人？任务板在右手边。别挡道。"</p>
+      <p>你走向镶嵌在黑曜石墙壁上的任务板，几张泛黄的委托书被图钉钉在软木板上。最上方的一张引起了你的注意——</p>
+      <p><em>"招募：需要两名冒险者协助调查硫磺谷深处的魔晶矿脉异常。报酬 300 金币，详情面谈。——委托人：矿工长 格鲁克"</em></p>
+      <p>公会大厅的另一侧，几位冒险者正围着壁炉喝酒交谈，偶尔传来粗犷的笑声和酒杯碰撞的叮当声。壁炉中的火焰跳动着，将整个大厅染成温暖的琥珀色。</p>
+    </div>
+
+    <div id="button-row">
+      <button class="btn-func">📃 摘要</button>
+      <button class="btn-func">📝 UpdateVariable</button>
+      <button class="btn-func">⚔️ 技能</button>
+      <button class="btn-func">🎒 道具</button>
+      <button class="btn-func">📋 任务</button>
+      <button class="btn-func">🔍 线索</button>
+      <button class="btn-func">🛒 商品</button>
+      <button class="btn-func">⚡ 快捷行动 ▾</button>
+    </div>
+
+    <div id="action-row">
+      <button class="btn-action">前往冒险者公会查看任务板，寻找适合的委托</button>
+      <button class="btn-action">与身边的NPC交谈或加深关系</button>
+      <button class="btn-action">在城镇中四处走走——打听情报、熟悉街巷</button>
+      <button class="btn-action">回到旅店休息恢复体力，或独自整理思绪与行囊</button>
+    </div>
+  </div>
+
+  <div id="tab-bar">
+    <div class="tab-item active">故事</div>
+    <div class="tab-item">主角状态</div>
+    <div class="tab-item">世界信息</div>
+    <div class="tab-item">NPC关系</div>
+    <div class="tab-item">纪要</div>
+  </div>
+</div>
+
+<div class="popup-demo">
+  <span class="close">✕</span>
+  <h3>📃 CURRENT SUMMARY</h3>
+  <p>你身处龙脊联邦的首都烬喉，刚刚抵达龙息公会大厅。这是你成为冒险者的第一天。任务板上有数张委托等待挑选，大厅里也有其他冒险者可以交谈。目前没有进行中的大型事件，天气晴朗，时间尚早。</p>
+</div>
+</div>
+</div>
+
+</body>
+</html>

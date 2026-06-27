@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案17：千夜之夜阿拉伯风 | Arabian Nights Mosaic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lateef&family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0604;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', serif;
+    color: #c0a870;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(ellipse at 50% 20%, rgba(200,150,50,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(180,120,40,0.04) 0%, transparent 50%);
+  }
+
+  .app { width: 100%; max-width: 660px; }
+
+  .arabesque-frame {
+    background: linear-gradient(180deg, #100c08 0%, #0a0604 100%);
+    border: 2px solid #4a3020;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(180,120,40,0.08);
+  }
+  /* 阿拉伯花纹 */
+  .arabesque-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    border: 8px solid transparent;
+    border-image: repeating-linear-gradient(45deg,
+      rgba(180,140,60,0.12) 0px, rgba(180,140,60,0.12) 2px,
+      transparent 2px, transparent 6px,
+      rgba(180,140,60,0.06) 6px, rgba(180,140,60,0.06) 8px,
+      transparent 8px, transparent 12px) 8;
+  }
+
+  .mosaic-header {
+    position: relative;
+    z-index: 4;
+    text-align: center;
+    padding: 18px 20px 8px;
+  }
+  .mosaic-header .arch {
+    display: inline-block;
+    padding: 6px 30px;
+    border: 2px solid #6b4a20;
+    border-bottom: none;
+    border-radius: 50px 50px 0 0;
+    position: relative;
+  }
+  .mosaic-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    color: #d4a850;
+    text-shadow: 0 0 15px rgba(200,150,60,0.2);
+  }
+  .mosaic-header .poem {
+    font-size: 9px;
+    color: #6b4a20;
+    letter-spacing: 5px;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .tile-divider {
+    height: 14px;
+    position: relative;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .tile-divider .tile {
+    flex: 0 1 14px;
+    height: 4px;
+  }
+  .tile-divider .tile:nth-child(4n+1) { background: rgba(200,60,40,0.4); }
+  .tile-divider .tile:nth-child(4n+2) { background: rgba(60,100,180,0.4); }
+  .tile-divider .tile:nth-child(4n+3) { background: rgba(200,160,40,0.4); }
+  .tile-divider .tile:nth-child(4n) { background: rgba(60,150,80,0.4); }
+
+  .mosaic-panel {
+    position: relative;
+    z-index: 4;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(16,10,6,0.6);
+    border: 1px solid #3a2010;
+    box-shadow: inset 0 0 20px rgba(40,20,10,0.2);
+  }
+  .mosaic-panel .panel-label {
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: #c09040;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label .star8 {
+    width: 16px; height: 16px;
+    background: rgba(200,150,50,0.3);
+    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+    flex-shrink: 0;
+  }
+
+  .desert-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .desert-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(10,6,3,0.4);
+    border: 1px solid #3a2010;
+  }
+  .desert-stat .lamp {
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    border: 1px solid #5a3818;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .desert-stat .body { flex: 1; min-width: 0; }
+  .desert-stat .head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .head .tag { color: #6b4a20; letter-spacing: 2px; }
+  .head .val { color: #c0a060; font-weight: 600; }
+  .sand-bar {
+    height: 5px;
+    background: rgba(20,10,5,0.5);
+    border: 1px solid #3a2010;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .sand-fill { height: 100%; }
+  .sand-fill.hp { background: linear-gradient(90deg, #8b3020, #d05040); }
+  .sand-fill.mp { background: linear-gradient(90deg, #204080, #4060d0); }
+  .sand-fill.sp { background: linear-gradient(90deg, #8b7020, #d0b040); }
+  .sand-fill.exp { background: linear-gradient(90deg, #207040, #40b060); }
+
+  .tile-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .tile-attr {
+    text-align: center;
+    min-width: 48px;
+    padding: 6px 4px;
+    background: rgba(10,6,3,0.3);
+    border: 1px solid #3a2010;
+  }
+  .tile-attr .glyph { font-size: 16px; color: #c09040; display: block; }
+  .tile-attr .val { font-size: 14px; color: #c0a870; font-weight: 600; }
+  .tile-attr .key { font-size: 7px; color: #5a3810; letter-spacing: 2px; }
+
+  .oasis-text {
+    margin: 6px 14px;
+    padding: 18px 22px;
+    background: rgba(12,8,4,0.5);
+    border: 1px solid #3a2010;
+    border-left: 3px solid #d4a850;
+    position: relative;
+    z-index: 4;
+  }
+  .oasis-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #a09070;
+  }
+  .oasis-text p:last-child { margin-bottom: 0; }
+  .oasis-text .gold { color: #e0c060; }
+  .oasis-text .henna { color: #d08050; }
+
+  .caravan-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .caravan-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: rgba(20,12,6,0.5);
+    border: 1px solid #4a3020;
+    color: #a09070;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .caravan-btn:hover {
+    border-color: #c09040;
+    color: #d4b870;
+  }
+  .caravan-btn.primary { border-color: #c09040; color: #d4b870; }
+  .caravan-btn.primary::before { content: '◆ '; }
+
+  .bazaar-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .bazaar-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(10,6,3,0.3);
+    border: 1px solid #3a2010;
+    font-size: 11px;
+  }
+  .bazaar-item .type { color: #6b4a20; font-size: 9px; letter-spacing: 1px; }
+  .bazaar-item .name { color: #a09070; }
+
+  .talisman-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .talisman {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(200,150,40,0.06);
+    border: 1px solid rgba(200,150,40,0.12);
+    color: #8b6a30;
+  }
+  .talisman.bound {
+    background: rgba(200,150,40,0.12);
+    border-color: rgba(200,150,40,0.3);
+    color: #c09040;
+  }
+
+  .desert-footer {
+    position: relative;
+    z-index: 4;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #5a3810;
+    letter-spacing: 3px;
+    border-top: 1px dotted #3a2010;
+    margin: 0 14px;
+    font-style: italic;
+  }
+  .desert-footer .pattern {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="arabesque-frame">
+
+    <div class="mosaic-header">
+      <div class="arch">
+        <h1>异 世 界 地 下 城</h1>
+      </div>
+      <div class="poem">✧ Isekai Dungeon · Arabian Nights ✧</div>
+    </div>
+
+    <div class="tile-divider">
+      <span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span>
+      <span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span>
+      <span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span>
+    </div>
+
+    <div class="mosaic-panel">
+      <div class="panel-label"><span class="star8"></span> 旅 人 之 命</div>
+      <div class="desert-stats">
+        <div class="desert-stat">
+          <div class="lamp">♥</div>
+          <div class="body">
+            <div class="head"><span class="tag">生命</span><span class="val">78 / 100</span></div>
+            <div class="sand-bar"><div class="sand-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="desert-stat">
+          <div class="lamp">✦</div>
+          <div class="body">
+            <div class="head"><span class="tag">魔力</span><span class="val">54 / 100</span></div>
+            <div class="sand-bar"><div class="sand-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="desert-stat">
+          <div class="lamp">⚔</div>
+          <div class="body">
+            <div class="head"><span class="tag">体力</span><span class="val">90 / 100</span></div>
+            <div class="sand-bar"><div class="sand-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="desert-stat">
+          <div class="lamp">⏫</div>
+          <div class="body">
+            <div class="head"><span class="tag">经验</span><span class="val">350 / 1000</span></div>
+            <div class="sand-bar"><div class="sand-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="tile-attrs">
+        <div class="tile-attr"><span class="glyph">⚔</span><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="tile-attr"><span class="glyph">🛡</span><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="tile-attr"><span class="glyph">⚡</span><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="tile-attr"><span class="glyph">✧</span><div class="val">30</div><div class="key">INT</div></div>
+        <div class="tile-attr"><span class="glyph">☘</span><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="tile-attr"><span class="glyph">◎</span><div class="val">1250</div><div class="key">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="oasis-text">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="gold">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="henna">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="henna">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="gold">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="mosaic-panel">
+      <div class="panel-label"><span class="star8"></span> 命 运 之 择</div>
+      <div class="caravan-actions">
+        <button class="caravan-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="caravan-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="caravan-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="caravan-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="mosaic-panel">
+      <div class="panel-label"><span class="star8"></span> 行 囊 与 宝 物</div>
+      <div class="bazaar-grid">
+        <div class="bazaar-item"><span class="type">武器</span><span class="name">铁质长剑 Lv.3</span></div>
+        <div class="bazaar-item"><span class="type">防具</span><span class="name">皮甲 Lv.2</span></div>
+        <div class="bazaar-item"><span class="type">饰品</span><span class="name">冒险者徽章</span></div>
+        <div class="bazaar-item"><span class="type">消耗</span><span class="name">回复药水 ×3</span></div>
+      </div>
+      <div class="talisman-tags">
+        <span class="talisman bound">触手紧身衣·共生期</span>
+        <span class="talisman bound">蜕生项圈·中期</span>
+        <span class="talisman">影子分身·无心智</span>
+        <span class="talisman">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="desert-footer">
+      <div class="pattern">✦ ✦ ✦ ✦ ✦</div>
+      <div>地下城第三层 · 阿斯特大陆 · 黄昏 · 第十二夜</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,1760 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NudeLiveStreaming</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-base:#16191f;--bg-card:#1c1f27;--bg-card-alt:#21242d;--bg-input:#242730;
+  --color-steel:#4a90d9;--color-steel-dim:rgba(74,144,217,0.15);--color-steel-glow:rgba(74,144,217,0.22);
+  --color-brass:#c4a24a;--color-brass-dim:rgba(196,162,74,0.15);
+  --color-teal:#3d9e8b;--color-teal-dim:rgba(61,158,139,0.15);
+  --color-copper:#e07040;--color-copper-dim:rgba(224,112,64,0.15);
+  --color-red:#e05555;--color-green:#4aab73;
+  --text-pri:#e2e4e8;--text-sec:#959aa3;--text-ter:#6b6f78;--text-mut:#4a4d55;
+  --border:rgba(255,255,255,0.06);--border-hvr:rgba(255,255,255,0.12);
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.3);--shadow-md:0 4px 16px rgba(0,0,0,0.4);--shadow-lg:0 8px 32px rgba(0,0,0,0.5);
+  --space-xs:3px;--space-sm:6px;--space-md:12px;--space-lg:18px;--space-xl:24px;
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-full:9999px;
+  --font-cn:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-latin:'Inter',-apple-system,sans-serif;--font-mono:'JetBrains Mono','Fira Code',monospace;
+  --text-xs:14px;--text-sm:15.5px;--text-base:17px;--text-lg:19px;--text-xl:22px;
+  --ease-smooth:cubic-bezier(0.4,0,0.2,1);--ease-out:cubic-bezier(0.16,1,0.3,1);
+  --t-fast:0.15s var(--ease-smooth);--t-norm:0.28s var(--ease-smooth);
+  --z-header:50;--z-toast:200;--z-modal-back:300;--z-modal:310;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:17px;-webkit-font-smoothing:antialiased;background:var(--bg-base);color:var(--text-pri);font-family:var(--font-cn);line-height:1.5;overflow:hidden}
+body{height:810px;background:linear-gradient(180deg,#16191f 0%,#1a1d26 40%,#16191f 100%);display:flex;justify-content:center;overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;outline:none;transition:all var(--t-fast)}
+button:focus-visible{outline:2px solid var(--color-steel);outline-offset:2px}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:var(--radius-full)}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.06) transparent}
+::selection{background:var(--color-steel-dim);color:var(--color-steel)}
+
+/* ============================================================
+   APP, HEADER, LEFT COL, CONTENT — same as before
+   ============================================================ */
+.app-wrap{width:100%;max-width:750px;padding:var(--space-md) var(--space-sm);display:flex;flex-direction:column;gap:var(--space-sm);position:relative;height:100%}
+.main-row{flex:1;min-height:0;display:flex;gap:var(--space-sm);margin:0 var(--space-sm);position:relative}
+.header{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);margin:0 var(--space-sm);margin-right:-36px}
+.header__left{display:flex;align-items:center;gap:10px}
+.header__brand{font-weight:900;font-size:var(--text-base);font-family:var(--font-latin);letter-spacing:-0.02em;color:var(--color-steel)}
+.header__brand span{color:var(--color-brass)}
+.header__date{font-size:var(--text-xs);color:var(--text-ter);font-family:var(--font-cn);font-weight:500;letter-spacing:0.02em}
+.header__clock{font-family:var(--font-mono);font-size:var(--text-sm);font-weight:600}
+.header__weather{display:flex;align-items:center;gap:3px;font-size:var(--text-xs);color:var(--text-sec)}
+.header__weather svg{width:14px;height:14px;color:var(--color-brass)}
+.header__loc{font-size:var(--text-xs);color:var(--text-ter)}
+.phase-tag{padding:3px 12px;border-radius:var(--radius-full);font-size:10px;font-weight:700;letter-spacing:0.05em}
+.phase-tag--daily{background:var(--color-steel-dim);color:var(--color-steel);border:1px solid rgba(74,144,217,0.2)}
+.phase-tag--live{background:var(--color-copper-dim);color:var(--color-copper);border:1px solid rgba(224,112,64,0.2);animation:soft-pulse 1s ease-in-out infinite}
+.phase-tag--create{background:rgba(255,255,255,0.04);color:var(--text-mut);border:1px solid var(--border)}
+
+.left-col{display:flex;flex-direction:column;align-items:center;gap:var(--space-sm);padding:var(--space-md) var(--space-sm);background:linear-gradient(180deg,#1e212b 0%,var(--bg-card) 40%,var(--bg-card) 60%,#1a1d26 100%);border-radius:var(--radius-lg);border:1px solid var(--border);width:92px;flex-shrink:0;position:relative;overflow-y:auto}
+.left-col::before{content:'';position:absolute;top:0;left:8px;right:8px;height:1px;background:linear-gradient(90deg,transparent,var(--color-steel),transparent);opacity:0.4}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;transition:filter 0.5s var(--ease-out)}
+.gauge-wrap--hot{filter:drop-shadow(0 0 6px currentColor)}
+.gauge__lbl-h{font-size:10px;font-weight:700;color:var(--text-sec);letter-spacing:0.06em;writing-mode:horizontal-tb;text-transform:uppercase;font-family:var(--font-latin)}
+.gauge{position:relative;width:50px;height:50px}
+.gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+.gauge__track{fill:none;stroke:rgba(255,255,255,0.05);stroke-width:5}
+.gauge__fill{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 0.8s var(--ease-out)}
+.gauge__fill--steel{stroke:var(--color-steel)}.gauge__fill--brass{stroke:var(--color-brass)}
+.gauge__glow{fill:none;stroke-width:11;stroke-linecap:round;opacity:0.06;filter:blur(5px);transition:stroke-dashoffset 0.8s var(--ease-out),opacity 0.6s var(--ease-out)}
+.gauge__glow--steel{stroke:var(--color-steel)}.gauge__glow--brass{stroke:var(--color-brass)}
+.gauge__center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.gauge__val{font-size:14px;font-weight:900;font-family:var(--font-mono);line-height:1;transition:color 0.5s var(--ease-out),text-shadow 0.5s var(--ease-out)}
+.gauge__val--steel{color:var(--color-steel)}.gauge__val--brass{color:var(--color-brass)}
+@keyframes gauge-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.gauge--pulse{animation:gauge-pulse 0.6s ease-in-out infinite}
+
+.si-row{display:flex;flex-direction:column;gap:1px;padding:3px 0}
+.si-row__lbl{font-size:9px;color:var(--text-mut);letter-spacing:0.04em;font-family:var(--font-latin);text-transform:uppercase}
+.si-row__val{color:var(--text-sec);font-weight:700;font-family:var(--font-mono);font-size:11px;letter-spacing:-0.02em}
+.left-divider{width:70%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);flex-shrink:0}
+
+.content-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:var(--space-sm);position:relative;overflow:hidden}
+.tab-content{display:none;flex-direction:column;gap:var(--space-sm);overflow-y:auto;overflow-x:hidden;height:100%}
+.tab-content--active{display:flex}
+.tab-content .card{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+#tab-status{overflow-y:visible}
+
+.physio-info{display:flex;flex-direction:column;gap:2px;padding:6px 12px;background:linear-gradient(135deg,var(--bg-card) 0%,rgba(74,144,217,0.04) 100%);border-radius:var(--radius-md);border:1px solid var(--border);border-left:2px solid var(--color-steel);font-size:var(--text-xs);flex-shrink:0}
+.physio-row{display:flex;align-items:flex-start;gap:4px;color:var(--text-ter)}
+.physio-row__dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.physio-row__dot--s{background:var(--color-green)}.physio-row__dot--o{background:var(--color-steel)}
+.physio-row__dot--e{background:var(--color-teal)}.physio-row__dot--a{background:var(--color-brass)}
+.physio-row__lbl{flex-shrink:0}.physio-row__val{color:var(--text-sec);font-weight:500}
+.physio-row__list{color:var(--text-sec);font-weight:500;display:flex;flex-direction:column;gap:1px}
+
+.stream-card{background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border);border-top:2px solid var(--color-brass);overflow:hidden;flex:1;display:flex;flex-direction:column;box-shadow:0 0 20px rgba(196,162,74,0.04)}
+.stream-video{position:relative;flex:1;overflow:hidden;background:linear-gradient(135deg,#1a1d28 0%,#1e2230 25%,#1c1f2a 50%,#1e2230 75%,#1a1d28 100%);background-size:300% 300%;animation:bg-shift 15s ease infinite}
+.stream-video::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(22,25,31,0.7) 100%);pointer-events:none;z-index:1}
+.stream-video__lines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(74,144,217,0.015) 2px,rgba(74,144,217,0.015) 4px);z-index:2;pointer-events:none}
+
+.stream-idle{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-lg)}
+.idle-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--color-steel),var(--color-teal));display:flex;align-items:center;justify-content:center;font-size:var(--text-xl);font-weight:900;color:#fff;box-shadow:0 4px 22px var(--color-steel-glow);font-family:var(--font-cn)}
+.idle-text{font-size:var(--text-sm);color:var(--text-ter);letter-spacing:0.05em}
+
+.stream-live{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;padding:var(--space-sm) var(--space-md)}
+.stream-live__title-row{display:flex;align-items:flex-start;gap:var(--space-sm);margin-bottom:var(--space-sm)}
+.stream-live__title{font-size:var(--text-base);font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,0.6);flex:1;min-width:0}
+.intruder-alert{font-size:10px;font-weight:700;color:#e05060;background:rgba(224,80,96,0.12);padding:4px 10px;border-radius:var(--radius-sm);border:1px solid rgba(224,80,96,0.25);white-space:nowrap;animation:soft-pulse 0.8s ease-in-out infinite;flex-shrink:0}
+.tags-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.tag{font-size:9px;padding:2px 8px;border-radius:var(--radius-full);font-weight:600}
+.tag--steel{background:var(--color-steel-dim);color:var(--color-steel);border:1px solid rgba(74,144,217,0.2)}
+.tag--brass{background:var(--color-brass-dim);color:var(--color-brass);border:1px solid rgba(196,162,74,0.2)}
+.tag--teal{background:var(--color-teal-dim);color:var(--color-teal);border:1px solid rgba(61,158,139,0.2)}
+.tag--copper{background:var(--color-copper-dim);color:var(--color-copper);border:1px solid rgba(224,112,64,0.2)}
+
+.metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);margin-bottom:var(--space-sm)}
+.met{text-align:center;padding:6px 4px;background:rgba(0,0,0,0.35);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.met__val{font-size:var(--text-lg);font-weight:900;font-family:var(--font-mono);line-height:1}
+.met__val--steel{color:var(--color-steel)}.met__val--brass{color:var(--color-brass)}.met__val--copper{color:var(--color-copper)}
+.met__lbl{font-size:9px;color:var(--text-ter);margin-top:1px}
+.task-current{font-size:var(--text-xs);color:var(--text-sec);padding:6px 10px;background:rgba(0,0,0,0.3);border-radius:var(--radius-sm);margin-bottom:var(--space-sm);min-height:28px;display:flex;align-items:center;gap:var(--space-sm)}
+.chat-box{flex:1;min-height:0;overflow-y:auto;padding:var(--space-xs) var(--space-sm);background:rgba(0,0,0,0.25);border-radius:var(--radius-sm);border:1px solid var(--border);font-size:var(--text-xs)}
+.chat-item{display:flex;gap:5px;align-items:baseline;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.02);font-size:10px}
+.chat-item__name{font-weight:600;color:var(--color-steel);white-space:nowrap;flex-shrink:0;font-size:16px}
+.chat-item__text{color:var(--text-sec);word-break:break-all;font-size:16px}
+.chat-item--gift .chat-item__name{color:var(--color-brass)}
+.chat-item--gift{background:var(--color-brass-dim);border-radius:3px;padding:3px 5px}
+
+.stream-footer{display:flex;align-items:center;justify-content:space-between;padding:var(--space-xs) var(--space-md);background:var(--bg-card-alt);border-top:1px solid var(--border)}
+.stream-footer__time{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-ter)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 18px;border-radius:var(--radius-full);font-size:var(--text-sm);font-weight:600;letter-spacing:0.02em;transition:all var(--t-fast)}
+.btn:active{transform:scale(0.96)}
+.btn--outline{border:1.5px solid var(--border);color:var(--text-sec);background:transparent}
+.btn--outline:hover{border-color:var(--color-steel);color:var(--color-steel)}
+.btn--sm{padding:5px 12px;font-size:11px}
+.btn svg{width:15px;height:15px;flex-shrink:0}
+
+/* --- Modal --- */
+.modal-overlay{position:fixed;inset:0;z-index:var(--z-modal-back);background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:var(--space-lg);opacity:0;pointer-events:none;transition:opacity 0.3s var(--ease-smooth)}
+.modal-overlay--open{opacity:1;pointer-events:auto}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--space-xl);width:100%;max-width:440px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(10px) scale(0.97);transition:transform 0.3s var(--ease-out)}
+.modal-overlay--open .modal{transform:translateY(0) scale(1)}
+.modal__head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-xl)}
+.modal__title{font-size:var(--text-xl);font-weight:700}
+.modal__close{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-ter);transition:all var(--t-fast)}
+.modal__close:hover{background:rgba(255,255,255,0.05);color:var(--text-pri)}
+.modal__body{display:flex;flex-direction:column;gap:var(--space-lg)}
+.modal__footer{display:flex;justify-content:flex-end;gap:var(--space-sm);margin-top:var(--space-xl)}
+
+.inv-wrap{position:relative}
+.inv-panel{display:none;position:absolute;bottom:100%;right:0;margin-bottom:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-sm);min-width:180px;max-height:260px;overflow-y:auto;box-shadow:var(--shadow-lg);z-index:10}
+.inv-panel--open{display:block;animation:fadeIn 0.2s var(--ease-smooth)}
+.inv-item{display:flex;align-items:center;gap:var(--space-sm);padding:4px 6px;border-radius:var(--radius-sm);font-size:10px;color:var(--text-sec);border-bottom:1px solid var(--border)}
+
+/* Right tabs */
+.side-tabs{position:absolute;right:-42px;top:0;bottom:0;width:36px;display:flex;flex-direction:column;gap:2px;list-style:none;z-index:5}
+.side-tab{flex:1;display:flex;align-items:center;justify-content:center;writing-mode:vertical-lr;letter-spacing:3px;font-weight:700;font-size:11px;cursor:pointer;transition:all 0.25s var(--ease-smooth);border-radius:0 var(--radius-sm) var(--radius-sm) 0;background:var(--bg-card-alt);border:1px solid var(--border);color:var(--text-ter);border-left:none;font-family:var(--font-cn);min-height:28px}
+.side-tab:hover{color:var(--text-sec);filter:brightness(1.15)}
+.side-tab--active{width:48px;margin-left:-12px;z-index:6;color:#fff;box-shadow:-3px 0 14px rgba(0,0,0,0.3);border-color:transparent;background:var(--color-steel)}
+
+/* Cards & common */
+.sec-label{display:flex;align-items:center;gap:var(--space-sm);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--color-steel);margin-bottom:var(--space-md);font-family:var(--font-latin);text-shadow:0 0 8px var(--color-steel-dim)}
+.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.card{background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);padding:var(--space-md);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--color-steel-dim),transparent);opacity:0.6}
+.card:hover::before{opacity:1}
+
+/* --- Dynamics --- */
+.dyn-main{display:flex;flex-direction:column;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);background:var(--bg-card-alt);border-radius:var(--radius-md);border:1px solid var(--border);margin-bottom:var(--space-sm)}
+.dyn-triple{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-md)}
+.dyn-block{display:flex;flex-direction:column;gap:0;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden}
+.dyn-block__head{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;gap:var(--space-sm);background:rgba(255,255,255,0.015)}
+.dyn-block__lbl{font-size:10px;font-weight:500;color:var(--text-mut);white-space:nowrap;font-family:var(--font-latin);letter-spacing:0.05em;text-transform:uppercase;position:relative;padding-left:9px}
+.dyn-block__lbl::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:10px;border-radius:2px}
+.dyn-block__lbl--shame::before{background:var(--color-copper)}.dyn-block__lbl--lewd::before{background:var(--color-steel)}.dyn-block__lbl--ident::before{background:var(--color-brass)}.dyn-block__lbl--skill::before{background:var(--color-teal)}
+.dyn-block__badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);white-space:nowrap;font-family:var(--font-mono);letter-spacing:-0.02em}
+.dyn-block__badge--steel{background:var(--color-steel-dim);color:var(--color-steel);border:1px solid rgba(74,144,217,0.2)}
+.dyn-block__badge--brass{background:var(--color-brass-dim);color:var(--color-brass);border:1px solid rgba(196,162,74,0.2)}
+.dyn-block__badge--copper{background:var(--color-copper-dim);color:var(--color-copper);border:1px solid rgba(224,112,64,0.2)}
+.dyn-block__gauge{padding:2px 8px 4px;display:flex;align-items:center;gap:var(--space-sm)}
+.dyn-block__gauge-val{font-size:var(--text-lg);font-weight:900;font-family:var(--font-mono);color:var(--text-pri);letter-spacing:-0.03em;line-height:1}
+.dyn-block__gauge-bar{flex:1;height:5px;background:var(--border);border-radius:var(--radius-full);overflow:hidden}
+.dyn-block__gauge-bar-fill{height:100%;border-radius:var(--radius-full);transition:width 0.8s var(--ease-out)}
+.dyn-block__gauge-bar-fill--copper{background:var(--color-copper)}.dyn-block__gauge-bar-fill--steel{background:var(--color-steel)}
+.dyn-block__divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 8px}
+.dyn-block__desc{padding:5px 8px 7px;font-size:var(--text-xs);color:var(--text-sec);line-height:1.45;min-height:30px;font-weight:500}
+.dyn-wide{display:flex;flex-direction:column;gap:0;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden}
+.dyn-wide__head{display:flex;align-items:center;justify-content:space-between;padding:4px 10px;gap:var(--space-sm);background:rgba(255,255,255,0.015)}
+.dyn-wide__lbl{font-size:10px;font-weight:500;color:var(--text-mut);white-space:nowrap;font-family:var(--font-latin);letter-spacing:0.05em;text-transform:uppercase;position:relative;padding-left:9px}
+.dyn-wide__lbl::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:10px;border-radius:2px;background:var(--color-teal)}
+.dyn-wide__badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);white-space:nowrap;font-family:var(--font-mono);letter-spacing:-0.02em;background:var(--color-teal-dim);color:var(--color-teal);border:1px solid rgba(61,158,139,0.2)}
+.dyn-wide__divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 10px}
+.dyn-wide__desc{padding:5px 10px 7px;font-size:var(--text-xs);color:var(--text-sec);line-height:1.45;font-weight:500}
+
+.dyn-npc-card{background:var(--bg-card-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:4px;overflow:hidden;transition:all var(--t-fast)}
+.dyn-npc-card:hover{box-shadow:0 3px 10px rgba(0,0,0,0.25)}
+.dyn-npc-card .dyn-row{padding:3px 10px;margin-bottom:0;border:none;border-radius:0;background:transparent}
+.dyn-npc-card .dyn-row+.dyn-row{border-top:1px solid rgba(255,255,255,0.02)}
+.dyn-row{display:flex;align-items:center;gap:var(--space-sm);padding:5px 10px;background:var(--bg-card-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:3px;font-size:var(--text-xs)}
+.dyn-row__name{font-weight:700;color:var(--text-pri);white-space:nowrap;min-width:36px}
+.dyn-row__rel{color:var(--text-ter);white-space:nowrap;font-size:9px;padding:2px 7px;border-radius:var(--radius-full);border:1px solid var(--border);background:rgba(255,255,255,0.02)}
+.dyn-row__stat{display:flex;align-items:center;gap:3px;white-space:nowrap;color:var(--text-sec)}
+.dyn-row__stat-val{font-family:var(--font-mono);font-weight:600;font-size:10px}
+.dyn-row__stat-txt{font-size:var(--text-xs);color:var(--text-ter)}
+.dyn-row__bar{width:36px;height:3px;background:var(--border);border-radius:var(--radius-full);overflow:hidden;flex-shrink:0}
+.dyn-row__bar-fill{height:100%;border-radius:var(--radius-full)}
+.dyn-row__tag{font-size:12px;padding:1px 6px;border-radius:var(--radius-full);font-weight:600;white-space:nowrap}
+.dyn-row__tag--yes{background:rgba(224,85,85,0.12);color:var(--color-red)}
+.dyn-row__tag--no{background:rgba(255,255,255,0.04);color:var(--text-mut)}
+
+/* --- Records --- */
+.rec-section{margin-bottom:var(--space-lg)}
+.rec-section__title{font-size:10px;font-weight:600;color:var(--text-ter);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--space-sm);font-family:var(--font-latin)}
+.rec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-sm)}
+.rec-cell{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);border-left:2px solid transparent;font-size:var(--text-xs);transition:all var(--t-fast)}
+.rec-cell:nth-child(odd){border-left-color:rgba(74,144,217,0.15)}
+.rec-cell:nth-child(even){border-left-color:rgba(61,158,139,0.15)}
+.rec-cell:hover{border-color:var(--border-hvr)}
+.rec-cell__lbl{color:var(--text-ter);font-weight:500}
+.rec-cell__val{font-weight:700;font-family:var(--font-mono);color:var(--text-pri);letter-spacing:-0.01em}
+.rec-dev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm)}
+.rec-dev-cell{text-align:center;padding:var(--space-sm);background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.rec-dev-cell__lbl{font-size:10px;color:var(--text-ter);margin-bottom:2px}
+.rec-dev-cell__val{font-size:var(--text-base);font-weight:700;font-family:var(--font-mono);color:var(--color-steel)}
+.rec-dev-cell__bar{height:3px;background:var(--border);border-radius:var(--radius-full);margin-top:3px;overflow:hidden}
+.rec-dev-cell__bar-fill{height:100%;background:var(--color-steel);border-radius:var(--radius-full)}
+
+/* --- Archive --- */
+.arch-tabs{display:flex;gap:2px;margin-bottom:var(--space-md);flex-wrap:wrap}
+.arch-tab{padding:5px 12px;border-radius:var(--radius-full);font-size:10px;font-weight:600;color:var(--text-ter);cursor:pointer;transition:all var(--t-fast);border:1px solid transparent;font-family:var(--font-cn);letter-spacing:0.03em}
+.arch-tab:hover{color:var(--text-sec);background:var(--bg-card-alt);border-color:var(--border)}
+.arch-tab--active{background:linear-gradient(135deg,var(--color-steel-dim),rgba(74,144,217,0.08));color:var(--color-steel);border-color:rgba(74,144,217,0.25);box-shadow:0 0 10px var(--color-steel-dim);font-weight:700}
+.arch-pane{display:none;flex-direction:column;gap:var(--space-md)}
+.arch-pane--active{display:flex}
+.arch-section{margin-bottom:var(--space-sm)}
+.arch-section__title{font-size:10px;font-weight:600;color:var(--text-ter);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--space-sm);padding-bottom:4px;border-bottom:1px solid var(--border);font-family:var(--font-latin)}
+.arch-kv{display:grid;grid-template-columns:80px 1fr;gap:2px var(--space-md);font-size:var(--text-xs);padding:1px 0}
+.arch-kv__k{color:var(--text-ter);white-space:nowrap}.arch-kv__v{color:var(--text-sec)}
+
+/* --- Shop --- */
+.shop-cat-title{font-size:var(--text-xs);font-weight:600;color:var(--color-brass);margin:var(--space-md) 0 var(--space-sm);padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);letter-spacing:0.04em;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all var(--t-fast);user-select:none;background:var(--bg-card)}
+.shop-cat-title:hover{border-color:var(--border-hvr);background:var(--bg-card-alt)}
+.shop-cat-title::after{content:'+';font-size:var(--text-base);font-weight:400;color:var(--text-ter);transition:transform var(--t-fast)}
+.shop-cat-title--open::after{content:'\2212'}
+.shop-grid{display:none;grid-template-columns:repeat(4,1fr);gap:var(--space-sm)}
+.shop-grid--open{display:grid}
+.shop-card{background:var(--bg-card-alt);border-radius:var(--radius-sm);border:1px solid var(--border);padding:var(--space-sm);text-align:center;transition:all var(--t-fast);position:relative;overflow:hidden;cursor:pointer}
+.shop-card::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--color-brass-dim),transparent);opacity:0;transition:opacity var(--t-fast)}
+.shop-card:hover{border-color:var(--border-hvr);transform:translateY(-1px);box-shadow:0 2px 10px rgba(0,0,0,0.3)}
+.shop-card:hover::after{opacity:1}
+.shop-card__name{font-size:var(--text-xs);font-weight:700;color:var(--text-pri);margin-bottom:2px;line-height:1.2}
+.shop-card__price{font-size:10px;color:var(--color-brass);font-family:var(--font-mono);font-weight:600;margin-bottom:2px}
+.shop-card__desc{font-size:9px;color:var(--text-ter);line-height:1.3}
+.shop-container{overflow-y:auto;max-height:calc(100vh - 140px)}
+
+/* Toast */
+#toast-container{position:fixed;top:14px;right:14px;z-index:var(--z-toast);display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:300px}
+.toast{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);pointer-events:auto;position:relative;overflow:hidden;animation:toast-in 0.35s var(--ease-out);transform-origin:right center}
+.toast--out{animation:toast-out 0.28s var(--ease-smooth) forwards}
+.toast__icon{width:18px;height:18px;flex-shrink:0;margin-top:1px}.toast__content{flex:1;min-width:0}
+.toast__title{font-size:var(--text-sm);font-weight:600;color:var(--text-pri);margin-bottom:1px}
+.toast__msg{font-size:var(--text-xs);color:var(--text-sec);line-height:1.4}
+.toast__close{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-mut);flex-shrink:0}
+.toast__close:hover{background:rgba(255,255,255,0.05);color:var(--text-pri)}
+.toast__bar{position:absolute;bottom:0;left:0;height:2px;width:100%}
+.toast--info .toast__icon{color:var(--color-steel)}.toast--success .toast__icon{color:var(--color-green)}.toast--event .toast__icon{color:var(--color-copper)}
+
+/* Animations */
+@keyframes bg-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes soft-pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes toast-in{from{opacity:0;transform:translateX(40px) scale(0.9)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes toast-out{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(40px) scale(0.9)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+.hidden{display:none!important}
+.mt-sm{margin-top:var(--space-sm)}
+
+@media(max-width:660px){.side-tabs{right:-34px;width:30px}.side-tab{font-size:10px;letter-spacing:2px}.side-tab--active{width:40px;margin-left:-10px}.left-col{width:64px;padding:var(--space-sm)}.gauge{width:42px;height:42px}.gauge__val{font-size:12px}}
+@media(max-width:480px){.rec-grid{grid-template-columns:1fr}.rec-dev-grid{grid-template-columns:repeat(2,1fr)}.dyn-triple{grid-template-columns:1fr}.arch-kv{grid-template-columns:60px 1fr}}
+@media(hover:none){.btn:active{transform:none}}
+
+/* ========== GM 控制台（露出直播风格融合版） ========== */
+#gm-debug-wrapper {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 99999;
+  font-family: var(--font-cn), 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  user-select: none;
+  opacity: 0.25;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+#gm-debug-wrapper:hover,
+#gm-debug-wrapper:has(.gm-panel.show) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 触发器 */
+.gm-trigger {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--color-steel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(4px);
+  font-size: 18px;
+  transition: transform 0.2s, color 0.2s, background 0.2s;
+}
+.gm-trigger:hover {
+  transform: scale(1.1);
+  color: #fff;
+  background: var(--color-steel);
+  border-color: var(--color-steel);
+}
+
+/* 面板容器 */
+.gm-panel {
+  display: none;
+  position: absolute;
+  bottom: 56px;
+  right: 0;
+  width: 370px;
+  height: 580px;
+  min-width: 300px;
+  min-height: 300px;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  flex-direction: column;
+  overflow: hidden;
+  resize: both;
+  transform-origin: bottom right;
+}
+.gm-panel.show {
+  display: flex;
+  animation: gmSlideIn 0.25s var(--ease-spring);
+}
+
+@keyframes gmSlideIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 头部 */
+.gm-header {
+  padding: 10px 14px;
+  background: var(--bg-card-alt);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-pri);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.gm-header i { color: var(--color-steel); }
+.gm-close { font-size: 1.3em; cursor: pointer; }
+.gm-close:hover { color: var(--color-red); }
+
+/* 导航 */
+.gm-nav {
+  display: flex;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+.gm-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  cursor: pointer;
+  color: var(--text-ter);
+  font-weight: 600;
+  font-size: 0.95em;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.gm-tab:hover { color: var(--text-sec); }
+.gm-tab.active {
+  color: var(--color-steel);
+  border-bottom-color: var(--color-steel);
+  background: var(--color-steel-dim);
+}
+
+/* 内容区 */
+.gm-content {
+  display: none;
+  flex-grow: 1;
+  height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  background: var(--bg-base);
+}
+.gm-content.active { display: block; }
+.gm-content::-webkit-scrollbar { width: 5px; }
+.gm-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* 区块标题 */
+.gm-label {
+  color: var(--color-steel);
+  font-size: 0.85em;
+  margin-bottom: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 输入框 */
+.gm-input {
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  color: var(--text-pri);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.gm-input:focus {
+  border-color: var(--color-steel);
+  outline: none;
+}
+.gm-input.num { text-align: center; font-weight: bold; }
+
+/* 控件行 */
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.control-row .label {
+  flex: 1;
+  color: var(--text-sec);
+  font-size: 0.9em;
+}
+.control-row .gm-input.num { width: 70px; }
+
+/* 按钮组 */
+.gm-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  transition: all var(--t-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.gm-btn:hover {
+  color: #fff;
+  background: var(--color-steel);
+  border-color: var(--color-steel);
+}
+.gm-btn.full-width { width: 100%; }
+
+/* 快捷动作按钮 */
+.mini-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-ter);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+.mini-btn:hover {
+  background: var(--color-steel);
+  color: #fff;
+  border-color: var(--color-steel);
+}
+
+/* 事件列表 */
+.event-list { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+.event-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.event-item .del { color: var(--color-red); cursor: pointer; opacity: 0.6; }
+.event-item .del:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+
+  <header class="header">
+    <div class="header__left">
+      <div class="header__brand">N<span>L</span>S</div>
+      <span class="header__date" id="hdr-date"></span>
+      <span class="header__clock" id="hdr-time"></span>
+      <span class="header__events" id="hdr-events" style="color:var(--color-brass);font-weight:700;font-size:var(--text-xs);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="header__weather" id="hdr-weather"></span>
+      <span class="header__loc" id="hdr-loc"></span>
+      <span class="phase-tag" id="phase-tag"></span>
+    </div>
+  </header>
+
+  <div class="main-row" id="main-row">
+
+    <div class="left-col">
+      <div class="gauge-wrap">
+        <div class="gauge__lbl-h">快感</div>
+        <div class="gauge" id="gauge-pleasure">
+          <svg viewBox="0 0 50 50"><circle class="gauge__track" cx="25" cy="25" r="21"/><circle class="gauge__glow gauge__glow--steel" cx="25" cy="25" r="21" id="pleasure-glow"/><circle class="gauge__fill gauge__fill--steel" cx="25" cy="25" r="21" id="pleasure-fill"/></svg>
+          <div class="gauge__center"><div class="gauge__val gauge__val--steel" id="pleasure-val">0</div></div>
+        </div>
+      </div>
+      <div class="gauge-wrap">
+        <div class="gauge__lbl-h">性欲</div>
+        <div class="gauge" id="gauge-arousal">
+          <svg viewBox="0 0 50 50"><circle class="gauge__track" cx="25" cy="25" r="21"/><circle class="gauge__glow gauge__glow--brass" cx="25" cy="25" r="21" id="arousal-glow"/><circle class="gauge__fill gauge__fill--brass" cx="25" cy="25" r="21" id="arousal-fill"/></svg>
+          <div class="gauge__center"><div class="gauge__val gauge__val--brass" id="arousal-val">0</div></div>
+        </div>
+      </div>
+      <div class="left-divider"></div>
+      <div class="streamer-info" id="streamer-info"></div>
+    </div>
+
+    <div class="content-col" id="content-col">
+
+      <!-- TAB: 状态 -->
+      <div class="tab-content tab-content--active" id="tab-status">
+        <div class="physio-info" id="physio-info">
+          <div class="physio-row"><span class="physio-row__dot physio-row__dot--s"></span><span class="physio-row__lbl">生理：</span><span class="physio-row__val" id="ps-status"></span></div>
+          <div class="physio-row"><span class="physio-row__dot physio-row__dot--o"></span><span class="physio-row__lbl">着装：</span><span class="physio-row__val" id="ps-outfit"></span></div>
+          <div class="physio-row"><span class="physio-row__dot physio-row__dot--e"></span><span class="physio-row__lbl">佩戴：</span><span class="physio-row__list" id="ps-equipped"></span></div>
+          <div class="physio-row"><span class="physio-row__dot physio-row__dot--a"></span><span class="physio-row__lbl">行为：</span><span class="physio-row__list" id="ps-act-list"></span></div>
+        </div>
+
+        <section class="stream-card">
+          <div class="stream-video" id="stream-video">
+            <div class="stream-video__lines"></div>
+            <div class="stream-idle" id="stream-idle">
+              <div class="idle-avatar" id="idle-avatar-text"></div>
+              <div class="idle-text">主播休息中</div>
+            </div>
+            <div class="stream-live hidden" id="stream-live">
+              <div class="stream-live__title-row">
+                <div class="stream-live__title" id="stream-title-disp"></div>
+                <div class="intruder-alert hidden" id="intruder-alert"></div>
+              </div>
+              <div class="tags-row" id="stream-tags-disp"></div>
+              <div class="metrics-row">
+                <div class="met"><div class="met__val met__val--steel" id="m-viewers">0</div><div class="met__lbl">观众</div></div>
+                <div class="met"><div class="met__val met__val--brass" id="m-heat">0</div><div class="met__lbl">热度</div></div>
+                <div class="met"><div class="met__val met__val--copper" id="m-orgasms">0</div><div class="met__lbl">高潮</div></div>
+              </div>
+              <div class="task-current" id="task-current"></div>
+              <div class="chat-box" id="chat-box"></div>
+            </div>
+          </div>
+          <div class="stream-footer">
+            <span class="stream-footer__time" id="stream-time">00:00</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="inv-wrap">
+                <button class="btn btn--outline btn--sm" id="btn-inv" onclick="toggleInventory()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>道具
+                </button><div class="inv-panel" id="inv-panel"></div>
+              </div>
+              <button class="btn btn--outline btn--sm" onclick="sendToInput('打开露出直播APP性经验统计')">性经验统计</button>
+              <button class="btn btn--outline btn--sm" onclick="sendToInput('打开露出直播APP直播数据统计')">直播数据统计</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB: 角色动态 -->
+      <div class="tab-content" id="tab-dyn">
+        <div class="card"><div class="sec-label">主角动态</div><div class="dyn-main" id="dyn-main"></div><div class="sec-label mt-sm">NPC 动态</div><div id="dyn-npc"></div></div>
+      </div>
+
+      <!-- TAB: 记录 -->
+      <div class="tab-content" id="tab-recs">
+        <div class="card"><div class="sec-label">性经验记录</div><div class="rec-section"><div class="rec-section__title">总览</div><div class="rec-grid" id="rec-overview"></div></div><div class="rec-section"><div class="rec-section__title">性行为次数</div><div class="rec-grid" id="rec-acts"></div></div><div class="rec-section"><div class="rec-section__title">身体开发度</div><div class="rec-dev-grid" id="rec-dev"></div></div></div>
+      </div>
+
+      <!-- TAB: 档案 -->
+      <div class="tab-content" id="tab-arch">
+        <div class="card"><div class="arch-tabs" id="arch-tabs"></div><div id="arch-panes"></div></div>
+      </div>
+
+      <!-- TAB: 商城 -->
+      <div class="tab-content" id="tab-shop">
+        <div class="card"><div class="sec-label">道具商城</div><div class="shop-container" id="shop-container"></div></div>
+      </div>
+
+    </div>
+
+    <ul class="side-tabs" id="side-tabs">
+      <li class="side-tab side-tab--active" data-tab="tab-status" onclick="switchTab('tab-status')">状态</li>
+      <li class="side-tab" data-tab="tab-dyn" onclick="switchTab('tab-dyn')">动态</li>
+      <li class="side-tab" data-tab="tab-recs" onclick="switchTab('tab-recs')">记录</li>
+      <li class="side-tab" data-tab="tab-arch" onclick="switchTab('tab-arch')">档案</li>
+      <li class="side-tab" data-tab="tab-shop" onclick="switchTab('tab-shop')">商城</li>
+    </ul>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-buy">
+  <div class="modal" style="max-width:400px">
+    <div class="modal__head"><h3 class="modal__title" id="buy-title"></h3><button class="modal__close" onclick="closeModal('modal-buy')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal__body" id="buy-body"></div>
+    <div class="modal__footer">
+      <button class="btn btn--outline" onclick="closeModal('modal-buy')">取消</button>
+      <button class="btn btn--primary" id="buy-confirm">确认购买</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+/* ============================================================
+   ICONS
+   ============================================================ */
+const IC={
+  heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  xIcon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  cloud:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>',
+  cloudRain:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="16" y1="19" x2="16" y2="21"/></svg>',
+  camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  trendingUp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+  dollar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+};
+
+/* ============================================================
+   STAGE FUNCTIONS (from reference.txt)
+   ============================================================ */
+function pleasureStage(v){if(v<20)return['平静','身体放松，呼吸平稳'];if(v<40)return['微热','身体深处泛起一丝不易察觉的酥麻'];if(v<60)return['兴奋','快感逐渐累积，呼吸略微加快'];if(v<80)return['亢奋','全身被快感裹挟，思维开始模糊'];return['临界','濒临高潮边缘，身体紧绷到极点'];}
+function desireStage(v){if(v<20)return['心如止水','脑中清明，没有特别的绮念'];if(v<40)return['心猿意马','视线偶尔掠过某些画面时停顿'];if(v<60)return['想入非非','脑海闪过香艳画面，对肢体接触的渴望滋长'];if(v<80)return['春心荡漾','妄想挥之不去，对身边一切异常敏感'];return['欲火中烧','满脑子色情念头，理智与本能在拉扯'];}
+function shameStage(v){if(v>=75)return['极易羞耻','任何裸露或被注视都会脸红心跳'];if(v>=50)return['仍有羞耻','底线尚在，面对过分要求仍会犹豫'];if(v>=25)return['羞耻渐褪','曾经面红耳赤的事变得平常'];return['不知羞耻','羞耻心几乎荡然无存，以挑战禁忌为乐'];}
+function lewdStage(v){if(v<25)return['青涩','对性事陌生而懵懂'];if(v<50)return['入门','开始习惯身体接触，偶尔主动尝试'];if(v<75)return['淫乱','熟练运用身体取悦自己和他人'];return['极度淫乱','沉沦于肉欲深渊，追寻极致快感'];}
+function identityStage(n){if(n<=3)return'割裂：两个世界截然分开，日常与镜头前判若两人';if(n<=6)return'渗透：镜头前的放荡开始偶尔闪回日常';if(n<=10)return'模糊：日常与直播的边界消融，面对熟人偶尔忘记收起主播姿态';return'融合：已分不清哪个才是真实的自己，镜头内外彻底合一';}
+function skillStage(n){if(n<=3)return'新人：镜头前仍显笨拙羞涩，每个大胆举动都伴随心跳加速';if(n<=6)return'熟练：开始掌握互动节奏，羞涩感减退，表演欲上升';if(n<=10)return'老手：开播即入状态，能用肢体和话术精准煽动热度';return'沉沦：镜头是唯一归宿，弹幕是饥渴燃料，表演成为本能';}
+function popStage(n){if(n<100)return['新人主播','默默无闻的新人'];if(n<500)return['小透明','开始拥有零星固定观众'];if(n<2000)return['崭露头角','圈内小有讨论'];if(n<10000)return['小有名气','露出系红人，粉丝群活跃'];if(n<100000)return['人气新星','平台头部主播之一'];if(n<1000000)return['现象级主播','全网皆知的露出传奇'];return['TOP1','色情直播界的绝对王者'];}
+function npcLewdStageText(v,stages){if(!stages)return'';if(v<25)return stages.阶段1||'';if(v<50)return stages.阶段2||'';if(v<75)return stages.阶段3||'';return stages.阶段4||'';}
+function secretText(v){if(v<25)return'毫不知情';if(v<50)return'略有怀疑';if(v<75)return'基本确认';return'完全知晓';}
+
+// Stage colors
+function heatColor(v){if(v<0)return'#6b6f78';if(v<=5)return'#959aa3';if(v<=10)return'#4a90d9';if(v<=20)return'#c4a24a';return'#e07040';}
+function sexCountColor(v){if(v===0)return'#6b6f78';if(v<=5)return'#4a90d9';if(v<=10)return'#c4a24a';return'#e07040';}
+function actDevColor(v){if(v===0)return'#6b6f78';if(v<=3)return'#4a90d9';if(v<=6)return'#5bbfb5';if(v<=10)return'#c4a24a';return'#e07040';}
+function orgasmColor(v){if(v===0)return'#6b6f78';if(v<=10)return'#4a90d9';if(v<=20)return'#c4a24a';if(v<=50)return'#e07040';return'#e05060';}
+function viewerColor(v){if(v<50)return'#6b6f78';if(v<200)return'#4a90d9';if(v<500)return'#c4a24a';return'#e07040';}
+function priceColor(v){if(v<=50)return'#4aab73';if(v<=150)return'#4a90d9';if(v<=300)return'#c4a24a';return'#e07040';}
+function fanColor(v){if(v<100)return'#6b6f78';if(v<500)return'#4a90d9';if(v<2000)return'#3d9e8b';if(v<10000)return'#c4a24a';if(v<100000)return'#e07040';return'#e05060';}
+function streamCountCol(n){if(n<=3)return'#6b6f78';if(n<=6)return'#4a90d9';if(n<=10)return'#c4a24a';return'#e07040';}
+function gaugePleasureCol(v){if(v<20)return'#6b6f78';if(v<40)return'#5bbfb5';if(v<60)return'#4a90d9';if(v<80)return'#c4a24a';return'#e07040';}
+function gaugeDesireCol(v){if(v<20)return'#6b6f78';if(v<40)return'#7a8a9a';if(v<60)return'#4a90d9';if(v<80)return'#e07040';return'#e05060';}
+function stageColor(v){if(v<25)return'#6b6f78';if(v<50)return'#d4a84a';if(v<75)return'#e08840';return'#e05060';}
+function stageColorLewd(v){if(v<25)return'#7a8a9a';if(v<50)return'#5bbfb5';if(v<75)return'#f08840';return'#d04050';}
+function stageColorSec(v){if(v<25)return'#6e7a8a';if(v<50)return'#c4a24a';if(v<75)return'#d06838';return'#c83848';}
+const NPC_COLORS={汐见真帆:'#5b9bd5',黑崎海斗:'#e07040',冰室纱耶:'#b347ea',风见迅:'#4aab73'};
+
+/* ============================================================
+   MVU VARIABLE INTERFACE (summertown.html pattern)
+   ============================================================ */
+function getMvuInstance(){
+  try{return window.Mvu||(window.parent&&window.parent.Mvu)||(window.top&&window.top.Mvu)||null;}catch(e){return null;}
+}
+
+const getValue=(data,path,defaultValue=null)=>{
+  const value=path.split('.').reduce((acc,part)=>acc&&acc[part],data);
+  return(value===undefined||value===null)?defaultValue:value;
+};
+
+let globalData={};
+
+/* Default data — only used in standalone mode when MVU is absent */
+const DEFAULT_STAT = {
+  进程:{阶段:'日常阶段',当前年份:2025,当前月份:10,当前日份:15,当前小时:19,当前分钟:0,当前时间戳:Date.now(),当前天气:'晴',当前假期:'否',当前周几:3},
+  系统状态:{主角创建完毕:false,同名事件队列:{},事件等待处理中:false,待处理事件:{}},
+  直播状态:{是否正在直播:false,当前直播间标题:'',当前直播间标签:[],当前直播间人数:0,当前直播间热度:0,当次直播高潮次数:0,当前直播开始时间戳:0,当前直播间弹幕:[]},
+  主角:{
+    基本信息:{姓名:'待设定',年龄:'18岁',性格:'内向但对亲密之人放得开',背景:'汐望高中高三学生，独居'},
+    相貌特征:{脸型:'清秀少年脸型',五官:'眉眼温和',发型与发色:'黑色短碎发',眼睛颜色:'深棕色',特殊记号:'左耳有一颗小痣'},
+    身材细节:{身高:'175cm',三围:'B88/W72/H90',体态:'匀称偏瘦',皮肤状态:'白皙光滑',肌肉线条:'腹部浅层肌肉线条'},
+    性器官特征:{后穴形态:'未经开发，颜色浅粉',乳头形态:'小巧浅褐色',阴茎形态:'中等尺寸，颜色偏浅',体毛状况:'四肢体毛稀疏浅色'},
+    当前状态:{当前区域:'文教区',当前地点:'自宅公寓',当前生理状态:'体温正常，呼吸平稳',当前着装:'汐望高中校服',当前性行为:[],当前佩戴:{},快感值:0,性欲值:0,羞耻度:100,淫乱度:0},
+    性经验记录:{与陌生人做爱次数:0,总高潮次数:0,自慰次数:5,情趣玩具使用次数:1,主动手交次数:0,被动手交次数:0,主动足交次数:0,被动足交次数:0,主动口交次数:0,被动口交次数:0,被动乳交次数:0,小穴插入性爱次数:0,后穴插入性爱次数:0,后穴性爱次数:0},
+    开发度:{口腔开发度:0,胸部开发度:0,双手开发度:3,双足开发度:0,肉棒开发度:2,后穴开发度:0},
+    主播信息:{主播名字:'蓮',直播总次数:0,单次直播最高人数:0,单次直播最高高潮次数:0,直播点数:0,粉丝数:0,主播态度:'对自己露出主播的身份尚无实感，感觉像一场荒诞的梦境。'},
+    道具栏:{已购道具列表:[]}
+  },
+  NPC数据:{
+    '汐见真帆':{身份信息:{年龄:'17岁',身份:'汐望高中高二学生',与主角关系:'同居的兄妹'},外貌:{脸型与发型:'褐色双马尾，眼角微挑',眼睛:'琥珀色瞳',皮肤:'白皙细腻'},身体:{身高:'160cm',三围:'B74(A)/W56/H78',体态:'纤细娇小',体毛:'四肢细软浅色绒毛',性器官描述:'小穴浅粉微外翻；乳头小颜色淡；后穴紧致粉嫩'},着装:{日常:'汐望高中制服，白色过膝袜'},性格:{外在:'抖S，毒舌，不懂性事',内在:'二次元老司机，网上爱说荤话，关心哥哥'},爱好:'刷二次元论坛、用荤话调戏网友、深夜看里番、自慰',偏好性行为:'足交、手交、后穴性爱',活跃区域:['文教区','住宅区','商业区'],好感度:15,淫乱度:15,淫乱度阶段:{阶段1:'纸上谈兵的色胚——满嘴骚话但仅限于网络',阶段2:'自慰升级——深夜玩具收藏逐渐丰富',阶段3:'欲求外溢——网上的骚话开始滑进现实',阶段4:'闷骚毕业——线上线下统一，坦然承认自己是色胚'},与主角做爱次数:0,秘密察觉程度:0,秘密发现:false},
+    '黑崎海斗':{身份信息:{年龄:'20岁',身份:'汐望大学体育系学生',与主角关系:'青梅竹马的挚友'},外貌:{脸型与发型:'红色短碎发，清爽英俊脸',眼睛:'深棕色瞳',皮肤:'浅小麦色'},身体:{身高:'175cm',三围:'B98/W76/H92',体态:'肌肉结实',体毛:'体毛浓密',性器官描述:'鸡巴粗长颜色深；乳头深褐色；后穴肌肉紧实'},着装:{日常:'运动T恤与运动短裤或慢跑裤，球鞋'},性格:{外在:'阳光开朗，直率真诚',内在:'简单纯粹，对朋友忠诚尊重'},爱好:'晨跑与力量训练、足球、看热血漫画、自慰',偏好性行为:'手交、口交、插入性爱',活跃区域:['文教区','住宅区','海滨区'],好感度:15,淫乱度:5,淫乱度阶段:{阶段1:'排泄日常——性欲旺盛但只当生理需求',阶段2:'骚话觉醒——训练后的燥热催生歪念',阶段3:'欲望外溢——不再满足自慰主动锁定猎物',阶段4:'人形种马——主动建立多对炮友关系'},与主角做爱次数:0,秘密察觉程度:0,秘密发现:false},
+    '冰室纱耶':{身份信息:{年龄:'30岁',身份:'汐望大学文学系选修课讲师',与主角关系:'选修课的师生'},外貌:{脸型与发型:'黑色长直发，知性温柔五官，戴银框眼镜',眼睛:'深蓝色瞳',皮肤:'白皙保养极好'},身体:{身高:'170cm',三围:'B98(H)/W63/H96',体态:'高挑丰腴',体毛:'精心打理',性器官描述:'小穴深红饱满；乳头深褐大而敏感；后穴因开发柔软能自然接纳'},着装:{日常:'知性风衬衫与过膝裙或阔腿裤'},性格:{外在:'知性温柔',内在:'极度淫乱——多名固定炮友'},爱好:'文学创作、音乐、做爱',偏好性行为:'乳交、口交、手交、小穴性爱、后穴性爱',活跃区域:['文教区','海滨区','商业区','湾区'],好感度:5,淫乱度:90,淫乱度阶段:{阶段1:'无',阶段2:'无',阶段3:'无',阶段4:'彻底的肉食者——炮友无数，三穴深度开发'},与主角做爱次数:0,秘密察觉程度:0,秘密发现:false},
+    '风见迅':{身份信息:{年龄:'18岁',身份:'汐望高中高三学生，新入行露出系主播',与主角关系:'正常往来的邻居'},外貌:{脸型与发型:'银色短碎发，右耳戴银色耳钉',眼睛:'浅灰色瞳',皮肤:'偏白但健康'},身体:{身高:'165cm',三围:'B84/W70/H86',体态:'偏瘦但线条流畅',体毛:'体毛稀疏浅色',性器官描述:'鸡巴一般尺寸颜色浅，龟头有摩擦痕迹；乳头小敏感；后穴有使用痕迹微松弛'},着装:{日常:'改短的黑色校服衬衫与宽大长裤'},性格:{外在:'标准雄小鬼——嘴臭挑衅装凶',内在:'抖M——渴望被支配羞辱'},爱好:'露出直播、浏览辱骂弹幕、收藏情趣玩具',偏好性行为:'口交、后穴性爱',活跃区域:['文教区','住宅区','海滨区','远郊'],主播信息:{粉丝数:56,主播名字:'银犬'},好感度:0,淫乱度:35,淫乱度阶段:{阶段1:'无',阶段2:'无',阶段3:'嘴上嫌弃身体诚实——被指令羞辱时脸红嘴硬但鸡巴已硬',阶段4:'M性全开的雄小鬼——线上线下统一乐在其中'},与主角做爱次数:0,秘密察觉程度:0,秘密发现:false}
+  }
+};
+
+/* ============================================================
+   NOTIFICATION
+   ============================================================ */
+class Notif{
+  show(type,title,msg,dur){
+    dur=dur||4000;const c=document.getElementById('toast-container');
+    const t=document.createElement('div');t.className='toast toast--'+type;
+    const icons={info:IC.info,success:IC.check,event:IC.star};
+    t.innerHTML='<div class="toast__icon">'+icons[type]+'</div><div class="toast__content"><div class="toast__title">'+title+'</div><div class="toast__msg">'+msg+'</div></div><button class="toast__close" onclick="this.closest(\'.toast\').remove()">'+IC.xIcon+'</button><div class="toast__bar"></div>';
+    c.appendChild(t);
+    requestAnimationFrame(()=>{const b=t.querySelector('.toast__bar');b.style.transition='width '+dur+'ms linear';requestAnimationFrame(()=>{b.style.width='0%';});});
+    setTimeout(()=>{t.classList.add('toast--out');setTimeout(()=>{if(t.parentNode)t.remove();},280);},dur);
+  }
+}
+
+/* ============================================================
+   UI RENDERERS
+   ============================================================ */
+const U={
+  initGauge(id,val){
+    const c=document.getElementById(id+'-fill');if(!c)return;const r=c.r.baseVal.value,circ=2*Math.PI*r;
+    c.style.strokeDasharray=circ;c.style.strokeDashoffset=circ;
+    const g=document.getElementById(id+'-glow');if(g){g.style.strokeDasharray=circ;g.style.strokeDashoffset=circ;}
+    this.updGauge(id,val);
+  },
+  updGauge(id,val,max){
+    max=max||100;const c=document.getElementById(id+'-fill');if(!c)return;
+    const r=c.r.baseVal.value,circ=2*Math.PI*r,off=circ*(1-Math.min(val,max)/max);
+    c.style.strokeDasharray=circ;c.style.strokeDashoffset=off;
+    const g=document.getElementById(id+'-glow');if(g){g.style.strokeDasharray=circ;g.style.strokeDashoffset=off;g.style.opacity=Math.max(0.06,val/100*0.35);}
+    const ve=document.getElementById(id+'-val');if(ve){ve.textContent=Math.round(val);ve.style.textShadow=val>=60?'0 0 '+(6+(val-60)/8)+'px currentColor':'';}
+    const wrap=document.getElementById('gauge-'+id)?.parentElement?.parentElement;
+    if(wrap){wrap.classList.toggle('gauge-wrap--hot',val>=75);}
+    const gaugeEl=document.getElementById('gauge-'+id);
+    if(gaugeEl){gaugeEl.classList.toggle('gauge--pulse',val>=85);}
+  },
+  animNum(el,target,dur){
+    dur=dur||450;if(!el)return;
+    const start=parseFloat(el.textContent.replace(/[^0-9.]/g,''))||0;
+    if(Math.abs(target-start)<0.5){el.textContent=target>=1000?target.toLocaleString('zh-CN'):String(target);return;}
+    const st=performance.now();
+    const anim=ts=>{const p=Math.min((ts-st)/dur,1),e=1-Math.pow(2,-10*p),c=start+(target-start)*e;el.textContent=target>=1000?Math.round(c).toLocaleString('zh-CN'):String(Math.round(c));if(p<1)requestAnimationFrame(anim);else el.textContent=target>=1000?target.toLocaleString('zh-CN'):String(target);};
+    requestAnimationFrame(anim);
+  },
+
+  renderAll(){
+    this.renderPhysio();
+    this.renderStreamerInfo();
+    this.renderPhase();
+    this.renderStreamState();
+  },
+
+  renderPhase(){
+    const phase=getValue(globalData,'进程.阶段');
+    const tag=document.getElementById('phase-tag');
+    tag.textContent=phase||'日常';
+    tag.className='phase-tag';
+    if(phase==='直播阶段')tag.className='phase-tag phase-tag--live';
+    else if(phase==='创角阶段')tag.className='phase-tag phase-tag--create';
+    else tag.className='phase-tag phase-tag--daily';
+  },
+
+  renderStreamState(){
+    const phase=getValue(globalData,'进程.阶段');
+    const isLive=phase==='直播阶段';
+    const idle=document.getElementById('stream-idle');
+    const live=document.getElementById('stream-live');
+    if(isLive){
+      idle.classList.add('hidden');live.classList.remove('hidden');
+      this._renderStreamLive();
+    }else{
+      idle.classList.remove('hidden');live.classList.add('hidden');
+      const avatar=document.getElementById('idle-avatar-text');
+      avatar.textContent=(getValue(globalData,'主角.主播信息.主播名字')||'蓮')[0];
+    }
+    // Timer
+    this._updateTimer();
+  },
+
+  _renderStreamLive(){
+    // Title
+    document.getElementById('stream-title-disp').textContent=getValue(globalData,'直播状态.当前直播间标题')||'未命名直播';
+    // Tags
+    const tags=getValue(globalData,'直播状态.当前直播间标签')||[];
+    const cs=['tag--steel','tag--brass','tag--teal','tag--copper'];
+    document.getElementById('stream-tags-disp').innerHTML=tags.map((t,i)=>'<span class="tag '+cs[i%4]+'">'+t+'</span>').join('');
+    // Metrics
+    this._updateMetrics();
+    // Task from 系统状态.待处理事件.观众任务事件
+    const taskText=getValue(globalData,'系统状态.待处理事件.观众任务事件');
+    document.getElementById('task-current').innerHTML=taskText?'<span style="color:var(--color-brass)">●</span> '+taskText:'<span style="color:var(--text-mut)">无</span>';
+    // Chat from 直播状态.当前直播间弹幕
+    this._renderChatFull();
+    // Intruder
+    const intruder=getValue(globalData,'系统状态.待处理事件.外人闯入事件');
+    const ia=document.getElementById('intruder-alert');
+    if(intruder){ia.textContent='外人闯入:'+intruder+'!!!';ia.classList.remove('hidden');}
+    else{ia.classList.add('hidden');}
+  },
+
+  _updateMetrics(){
+    const v=getValue(globalData,'直播状态.当前直播间人数')||0;
+    const h=getValue(globalData,'直播状态.当前直播间热度')||0;
+    const o=getValue(globalData,'直播状态.当次直播高潮次数')||0;
+    const ve=document.getElementById('m-viewers');ve.textContent=v;ve.style.color=viewerColor(v);
+    const he=document.getElementById('m-heat');he.textContent=h.toFixed?h.toFixed(0):h;he.style.color=heatColor(h);
+    const oe=document.getElementById('m-orgasms');oe.textContent=o;oe.style.color=o===0?'#6b6f78':o<=2?'#4a90d9':o<=4?'#e07040':'#e05060';
+  },
+
+  _renderChatFull(){
+    const msgs=getValue(globalData,'直播状态.当前直播间弹幕')||[];
+    const box=document.getElementById('chat-box');
+    if(!msgs.length){box.innerHTML='<div style="color:var(--text-mut);font-size:10px;text-align:center;padding:10px">暂无弹幕</div>';return;}
+    box.innerHTML=msgs.map(m=>{
+      const sender=m[0]||'未知';
+      const txt=m[1]||'';
+      return '<div class="chat-item"><span class="chat-item__name">'+sender+'</span><span class="chat-item__text">'+txt+'</span></div>';
+    }).join('');
+    box.scrollTop=box.scrollHeight;
+  },
+
+  _updateTimer(){
+    const phase=getValue(globalData,'进程.阶段');
+    if(phase!=='直播阶段'){document.getElementById('stream-time').textContent='00:00';return;}
+    const startTs=getValue(globalData,'直播状态.当前直播开始时间戳')||0;
+    const nowTs=getValue(globalData,'进程.当前时间戳')||Date.now();
+    const diff=Math.max(0,Math.floor((nowTs-startTs)/1000));
+    document.getElementById('stream-time').textContent=Math.floor(diff/3600).toString().padStart(2,'0')+':'+Math.floor((diff%3600)/60).toString().padStart(2,'0');
+  },
+
+  renderPhysio(){
+    const cs=getValue(globalData,'主角.当前状态');
+    if(!cs)return;
+    document.getElementById('ps-status').textContent=cs.当前生理状态||'体温正常，呼吸平稳';
+    document.getElementById('ps-outfit').textContent=cs.当前着装||'待设定';
+    // Equipped: key 位于 位置，描述
+    const eq=cs.当前佩戴||{};
+    const eqEl=document.getElementById('ps-equipped');
+    const eqKeys=Object.keys(eq);
+    if(eqKeys.length===0){eqEl.innerHTML='<span>无</span>';}
+    else{eqEl.innerHTML=eqKeys.map(k=>'<span>'+k+' 位于 '+eq[k].位置+'，'+eq[k].描述+'</span>').join('');}
+    // Activity: 正在与 对象 进行 行为
+    const acts=cs.当前性行为||[];
+    const actEl=document.getElementById('ps-act-list');
+    if(acts.length===0){actEl.innerHTML='<span>无</span>';}
+    else{actEl.innerHTML=acts.map(a=>'<span>正在与 '+a.对象+' 进行 '+a.行为+'</span>').join('');}
+  },
+
+  renderStreamerInfo(){
+    const s=getValue(globalData,'主角.主播信息');
+    if(!s)return;
+    const pop=popStage(s.粉丝数||0);
+    const fc=fanColor(s.粉丝数||0);
+    document.getElementById('streamer-info').innerHTML=
+      '<div class="si-row"><span class="si-row__lbl">主播</span><span class="si-row__val">'+(s.主播名字||'')+'</span></div>'+
+      '<div class="si-row"><span class="si-row__lbl">直播次数</span><span class="si-row__val" style="color:'+streamCountCol(s.直播总次数||0)+'">'+(s.直播总次数||0)+'</span></div>'+
+      '<div class="si-row"><span class="si-row__lbl">粉丝</span><span class="si-row__val" style="color:'+fc+'">'+(s.粉丝数||0)+'</span></div>'+
+      '<div class="si-row"><span class="si-row__lbl">知名度</span><span class="si-row__val" style="color:'+fc+'">'+pop[0]+'</span></div>'+
+      '<div class="si-row"><span class="si-row__lbl">点数</span><span class="si-row__val" style="color:'+sexCountColor(s.直播点数||0)+'">'+(s.直播点数||0)+'</span></div>';
+  },
+
+  renderInventory(){
+    const items=getValue(globalData,'主角.道具栏.已购道具列表')||[];
+    const el=document.getElementById('inv-panel');
+    if(items.length===0){el.innerHTML='<div class="inv-item"><span style="color:var(--text-mut)">暂无道具</span></div>';return;}
+    el.innerHTML=items.map(n=>'<div class="inv-item"><span>'+n+'</span><span style="font-size:9px;color:var(--text-ter);font-family:var(--font-mono)">x1</span></div>').join('');
+  },
+
+  // Dynamics
+  renderDynamics(){
+    const cs=getValue(globalData,'主角.当前状态');
+    const si=getValue(globalData,'主角.主播信息');
+    if(!cs||!si)return;
+    const sh=shameStage(cs.羞耻度||100),lw=lewdStage(cs.淫乱度||0);
+    const idSt=identityStage(si.直播总次数||0),skSt=skillStage(si.直播总次数||0);
+    const idParts=idSt.split('：'),skParts=skSt.split('：');
+    const idCol=streamCountCol(si.直播总次数||0),skCol=streamCountCol(si.直播总次数||0);
+    document.getElementById('dyn-main').innerHTML=
+      '<div class="dyn-triple">'+
+        '<div class="dyn-block">'+
+          '<div class="dyn-block__head"><span class="dyn-block__lbl dyn-block__lbl--shame">羞耻度</span></div>'+
+          '<div class="dyn-block__gauge"><span class="dyn-block__gauge-val">'+(cs.羞耻度||100)+'</span><div class="dyn-block__gauge-bar"><div class="dyn-block__gauge-bar-fill dyn-block__gauge-bar-fill--copper" style="width:'+Math.min(100,cs.羞耻度||100)+'%"></div></div><span class="dyn-block__badge dyn-block__badge--copper" style="flex-shrink:0">'+sh[0]+'</span></div>'+
+          '<div class="dyn-block__divider"></div><div class="dyn-block__desc">'+sh[1]+'</div></div>'+
+        '<div class="dyn-block">'+
+          '<div class="dyn-block__head"><span class="dyn-block__lbl dyn-block__lbl--lewd">淫乱度</span></div>'+
+          '<div class="dyn-block__gauge"><span class="dyn-block__gauge-val">'+(cs.淫乱度||0)+'</span><div class="dyn-block__gauge-bar"><div class="dyn-block__gauge-bar-fill dyn-block__gauge-bar-fill--steel" style="width:'+Math.min(100,cs.淫乱度||0)+'%"></div></div><span class="dyn-block__badge dyn-block__badge--steel" style="flex-shrink:0">'+lw[0]+'</span></div>'+
+          '<div class="dyn-block__divider"></div><div class="dyn-block__desc">'+lw[1]+'</div></div>'+
+        '<div class="dyn-block">'+
+          '<div class="dyn-block__head"><span class="dyn-block__lbl dyn-block__lbl--ident">身份平衡</span><span class="dyn-block__badge" style="background:'+idCol+'20;color:'+idCol+';border:1px solid '+idCol+'40">'+(idParts[0]||'')+'</span></div>'+
+          '<div class="dyn-block__divider"></div><div class="dyn-block__desc">'+(idParts[1]||idSt)+'</div></div>'+
+      '</div>'+
+      '<div class="dyn-wide">'+
+        '<div class="dyn-wide__head"><span class="dyn-wide__lbl">主播熟练度</span><span class="dyn-wide__badge" style="background:'+skCol+'20;color:'+skCol+';border:1px solid '+skCol+'40">'+(skParts[0]||'')+'</span></div>'+
+        '<div class="dyn-wide__divider"></div><div class="dyn-wide__desc">'+(skParts[1]||skSt)+'</div></div>'+
+      '<div class="dyn-wide">'+
+        '<div class="dyn-wide__head"><span class="dyn-wide__lbl">主播态度</span></div>'+
+        '<div class="dyn-wide__divider"></div><div class="dyn-wide__desc">'+(si.主播态度||'')+'</div></div>';
+    // NPCs
+    const npcs=getValue(globalData,'NPC数据')||{};
+    let html='';
+    Object.entries(npcs).forEach(([name,d])=>{
+      const rel=d.身份信息?.与主角关系||'';
+      const aff=d.好感度||0;
+      const lewd=d.淫乱度||0;
+      const lwTxt=npcLewdStageText(lewd,d.淫乱度阶段);
+      const sec=d.秘密察觉程度||0;
+      const secTxt=secretText(sec);
+      const secretRevealed = d.秘密发现 === true;
+      const barW=Math.min(100,aff);
+      const fanCount=(d.主播信息&&d.主播信息.粉丝数)?d.主播信息.粉丝数:null;
+      const npcCol=NPC_COLORS[name]||'#959aa3';
+      const affCol=stageColor(aff);
+      const lewdCol=stageColorLewd(lewd);
+      const secCol=stageColorSec(sec);
+      html+='<div class="dyn-npc-card" style="border-left:2px solid '+npcCol+'">'+
+        '<div class="dyn-row">'+
+          '<span class="dyn-row__name" style="color:'+npcCol+'">'+name+'</span>'+
+          '<span class="dyn-row__rel" style="border-color:'+affCol+'40;color:'+affCol+'">'+rel+'</span>'+
+          '<span class="dyn-row__stat">好感 <span class="dyn-row__stat-val" style="color:'+affCol+'">'+aff+'</span><span class="dyn-row__bar"><span class="dyn-row__bar-fill" style="width:'+barW+'%;background:'+affCol+'"></span></span></span>';
+      if (name !== '黑崎海斗') {
+        html += '<span class="dyn-row__tag ' + (secretRevealed ? 'dyn-row__tag--yes' : 'dyn-row__tag--no') + '">' + (secretRevealed ? '秘密已揭晓' : '秘密未觉') + '</span>';
+      }
+        html+='</div>'+
+        '<div class="dyn-row"><span class="dyn-row__stat" style="flex:1">淫乱 <span class="dyn-row__stat-val" style="color:'+lewdCol+'">'+lewd+'</span> <span class="dyn-row__stat-txt">'+lwTxt+'</span></span></div>'+
+        '<div class="dyn-row"><span class="dyn-row__stat" style="flex:1">察觉 <span class="dyn-row__stat-val" style="color:'+secCol+'">'+sec+'</span> <span class="dyn-row__stat-txt">'+secTxt+'</span></span></div>'+
+        (fanCount!==null?'<div class="dyn-row"><span class="dyn-row__stat" style="flex:1">粉丝 <span class="dyn-row__stat-val">'+fanCount+'</span></span></div>':'')+
+      '</div>';
+    });
+    document.getElementById('dyn-npc').innerHTML=html;
+  },
+
+  // Records
+  renderRecords(){
+    const rec=getValue(globalData,'主角.性经验记录');const dev=getValue(globalData,'主角.开发度');const npcs=getValue(globalData,'NPC数据')||{};
+    if(!rec||!dev)return;
+    let totalSex=0;Object.values(npcs).forEach(n=>totalSex+=n.与主角做爱次数||0);
+    totalSex+=rec.与陌生人做爱次数||0;
+    const rv=function(v,fn){return'<span class="rec-cell__val" style="color:'+fn(v)+'">'+v+'</span>';};
+    document.getElementById('rec-overview').innerHTML=
+      '<div class="rec-cell"><span class="rec-cell__lbl">总做爱次数</span>'+rv(totalSex,sexCountColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">与陌生人做爱</span>'+rv(rec.与陌生人做爱次数||0,sexCountColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">总高潮次数</span>'+rv(rec.总高潮次数||0,orgasmColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">自慰次数</span>'+rv(rec.自慰次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">情趣玩具使用</span>'+rv(rec.情趣玩具使用次数||0,actDevColor)+'</div>'+
+      Object.entries(npcs).map(([n,d])=>'<div class="rec-cell"><span class="rec-cell__lbl">与'+n+'做爱</span>'+rv(d.与主角做爱次数||0,sexCountColor)+'</div>').join('');
+    document.getElementById('rec-acts').innerHTML=
+      '<div class="rec-cell"><span class="rec-cell__lbl">主动手交</span>'+rv(rec.主动手交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">被动手交</span>'+rv(rec.被动手交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">主动足交</span>'+rv(rec.主动足交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">被动足交</span>'+rv(rec.被动足交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">主动口交</span>'+rv(rec.主动口交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">被动口交</span>'+rv(rec.被动口交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">被动乳交</span>'+rv(rec.被动乳交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">小穴插入性爱</span>'+rv(rec.小穴插入性爱次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">后穴插入性爱</span>'+rv(rec.后穴插入性爱次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">后穴性爱</span>'+rv(rec.后穴性爱次数||0,actDevColor)+'</div>';
+    const devItems=[{k:'口腔开发度',v:dev.口腔开发度||0},{k:'胸部开发度',v:dev.胸部开发度||0},{k:'双手开发度',v:dev.双手开发度||0},{k:'双足开发度',v:dev.双足开发度||0},{k:'肉棒开发度',v:dev.肉棒开发度||0},{k:'后穴开发度',v:dev.后穴开发度||0}];
+    document.getElementById('rec-dev').innerHTML=devItems.map(di=>{const dc=actDevColor(di.v);return'<div class="rec-dev-cell"><div class="rec-dev-cell__lbl">'+di.k+'</div><div class="rec-dev-cell__val" style="color:'+dc+'">'+di.v+'</div><div class="rec-dev-cell__bar"><div class="rec-dev-cell__bar-fill" style="width:'+Math.min(100,di.v)+'%;background:'+dc+'"></div></div></div>';}).join('');
+  },
+
+  // Archive
+  renderArchive(){
+    const self=getValue(globalData,'主角');const npcs=getValue(globalData,'NPC数据')||{};
+    const allChars=[{key:'self',name:self?.主播信息?.主播名字||'主角'}];
+    Object.keys(npcs).forEach(k=>allChars.push({key:k,name:k}));
+    const archCol=function(key){return key==='self'?'#f0b84d':(NPC_COLORS[key]||'#959aa3');};
+    document.getElementById('arch-tabs').innerHTML=allChars.map((c,i)=>{const col=archCol(c.key);return'<span class="arch-tab'+(i===0?' arch-tab--active':'')+'" data-arch="'+c.key+'" onclick="switchArchTab(\''+c.key+'\')" style="'+(i===0?'background:'+col+'20;color:'+col+';border-color:'+col+'40;box-shadow:0 0 10px '+col+'30':'')+'">'+c.name+'</span>';}).join('');
+    let panes=this._archSelfPane(self);
+    Object.entries(npcs).forEach(([name,d])=>{panes+=this._archNpcPane(name,d);});
+    document.getElementById('arch-panes').innerHTML=panes;
+  },
+  _archSelfPane(s){
+    if(!s)return'';
+    return'<div class="arch-pane arch-pane--active" id="arch-self">'+
+      '<div class="arch-section"><div class="arch-section__title">基本信息</div>'+this._kv([['姓名',s.基本信息?.姓名],['年龄',s.基本信息?.年龄],['性格',s.基本信息?.性格],['背景',s.基本信息?.背景]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">相貌特征</div>'+this._kv([['脸型',s.相貌特征?.脸型],['五官',s.相貌特征?.五官],['发型与发色',s.相貌特征?.发型与发色],['眼睛颜色',s.相貌特征?.眼睛颜色],['特殊记号',s.相貌特征?.特殊记号]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">身材细节</div>'+this._kv([['身高',s.身材细节?.身高],['三围',s.身材细节?.三围],['体态',s.身材细节?.体态],['皮肤状态',s.身材细节?.皮肤状态],['肌肉线条',s.身材细节?.肌肉线条]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">性器官特征</div>'+this._kv([['后穴形态',s.性器官特征?.后穴形态],['乳头形态',s.性器官特征?.乳头形态],['阴茎形态',s.性器官特征?.阴茎形态],['体毛状况',s.性器官特征?.体毛状况]])+'</div>'+
+    '</div>';
+  },
+  _archNpcPane(name,d){
+    const hasStreamer=d.主播信息?'<div class="arch-section"><div class="arch-section__title">主播信息</div>'+this._kv([['主播名字',d.主播信息.主播名字],['粉丝数',d.主播信息.粉丝数]])+'</div>':'';
+    return'<div class="arch-pane" id="arch-'+name+'">'+
+      '<div class="arch-section"><div class="arch-section__title">身份信息</div>'+this._kv([['年龄',d.身份信息?.年龄],['身份',d.身份信息?.身份],['与主角关系',d.身份信息?.与主角关系]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">外貌</div>'+this._kv([['脸型与发型',d.外貌?.脸型与发型],['眼睛',d.外貌?.眼睛],['皮肤',d.外貌?.皮肤]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">身体</div>'+this._kv([['身高',d.身体?.身高],['三围',d.身体?.三围],['体态',d.身体?.体态],['体毛',d.身体?.体毛],['性器官',d.身体?.性器官描述]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">着装与性格</div>'+this._kv([['日常着装',d.着装?.日常],['外在性格',d.性格?.外在],['内在性格',d.性格?.内在]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">爱好与偏好</div>'+this._kv([['爱好',d.爱好],['偏好性行为',d.偏好性行为],['活跃区域',(d.活跃区域||[]).join('、')]])+'</div>'+
+      hasStreamer+'</div>';
+  },
+  _kv(pairs){return pairs.map(p=>'<div class="arch-kv"><span class="arch-kv__k">'+(p[0]||'')+'</span><span class="arch-kv__v">'+(p[1]||'')+'</span></div>').join('');},
+
+  // Shop
+  renderShop(){
+    const el=document.getElementById('shop-container');if(!el)return;
+    const cat=function(t,items){return'<div class="shop-cat-title" onclick="toggleShopCat(\'shop-cat-'+t.replace(/[^a-zA-Z一-鿿]/g,'')+'\')">'+t+'</div><div class="shop-grid" id="shop-cat-'+t.replace(/[^a-zA-Z一-鿿]/g,'')+'">'+items.join('')+'</div>';};
+    const card=function(n,p,d){var pn=parseInt(p);return'<div class="shop-card" onclick="openBuyModal(\''+n.replace(/'/g,"\\'")+'\',\''+p+'\',\''+d.replace(/'/g,"\\'")+'\')"><div class="shop-card__name">'+n+'</div><div class="shop-card__price" style="color:'+priceColor(pn)+'">'+p+'点</div><div class="shop-card__desc">'+d+'</div></div>';};
+    el.innerHTML=
+      cat('自慰与榨精类',[card('入门级飞机杯','30','柔软硅胶，内壁颗粒刺激'),card('螺旋纹理飞机杯','50','多层螺旋通道，吸吮感强'),card('透明伸缩飞机杯','70','全透明杯身，配伸缩功能'),card('双人共享飞机杯','120','U型双口，联动直播利器'),card('电动发声飞机杯','200','内置振动与音频模块'),card('电动榨精器','300','强力旋转伸缩同步榨精'),card('多功能震动棒','120','弯头设计，多频震动'),card('静音震动棒','200','超低噪音，强劲马力')])+
+      cat('插入与扩张类',[card('基础款假鸡巴','40','仿真造型，吸盘底座'),card('双头龙假鸡巴','100','双端插入，双人互动利器'),card('震动伸缩假鸡巴','180','电动伸缩旋转，配遥控器'),card('射精功能假鸡巴','250','内藏储液囊，模拟射精'),card('肛门拉珠','50','6颗渐变硅胶珠'),card('心跳肛塞','80','金属材质，可震动'),card('狼尾巴肛塞','140','毛茸尾巴连接金属肛塞'),card('模拟产卵器','350','明胶卵推入后穴再排出'),card('肛门扩张器','150','可调节撑开幅度')])+
+      cat('调教类',[card('迷你遥控跳蛋','20','无线遥控，适合塞入'),card('双蛋联动跳蛋','60','两枚独立控制'),card('带夹跳蛋','80','附带可调乳夹'),card('可调乳夹链','30','金属链连接软垫夹'),card('震动乳夹','70','内置微小马达持续震动')])+
+      cat('束缚类',[card('充气口球','30','可充气撑开嘴巴'),card('内置口球口罩','50','既遮掩面部又刺激口腔'),card('项圈与牵引绳套装','60','黑色皮革项圈配金属链'),card('贞操锁','100','金属材质带钥匙'),card('自缚套装（计时锁）','150','含手铐脚镣与计时锁')])+
+      cat('外观类',[card('纹身贴纸包（淫语系）','15','10张临时纹身'),card('身体涂鸦专用马克笔','20','安全无毒墨水'),card('全遮光眼罩','15','剥夺视觉增强敏感度'),card('乳环','60','金属穿刺环，永久标志')])+
+      cat('装扮类',[card('透明连帽雨衣','60','完全透视PVC材质'),card('透明泳裤（男款）','40','湿水后高度透明'),card('兔女郎装扮套装','200','兔耳+连体衣+网袜'),card('逆兔女郎装扮套装','250','仅剩领结袖扣高跟鞋'),card('女仆装扮套装','180','围裙+蓬裙+白丝'),card('木乃伊装扮套装','280','弹力绷带缠绕全身'),card('狼耳发饰','40','仿真狼耳'),card('JK制服装扮套装','150','白衬衫+格裙+领结'),card('死库水装扮','130','深蓝竞技泳衣可开合'),card('裸体围裙','80','仅一条围裙遮前身'),card('黑色紧身衣','120','高弹力完美勾勒轮廓'),card('透明紧身衣','180','远看整齐近看暴露'),card('隐身衣','600','完全隐形但触感存在')])+
+      cat('规则类',[card('常识篡改手电','450','照射目标修改常识认知'),card('认知洗脑麦克风','500','声音指令被接受为自身想法'),card('快感同步项圈','300','佩戴者同步主角快感'),card('替身人偶','250','被观众误认为主播本人'),card('羞耻心剥离贴纸','300','羞耻感暂时剥离'),card('敏感度提升喷雾','150','轻微触碰即引发强烈快感')])+
+      cat('辅助类',[card('热感润滑液（可多次使用）','10','随摩擦升温灼热快感'),card('冰感润滑液（可多次使用）','10','产生清凉刺激'),card('完全恢复药水（可多次使用）','10','喝下后能让身体一切疲惫异常消除'),card('便携式自慰器清洗套装','10','含清洁液刷子收纳袋')]);
+  },
+};
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+function switchTab(tabId){
+  document.querySelectorAll('.tab-content').forEach(p=>p.classList.remove('tab-content--active'));
+  document.getElementById(tabId).classList.add('tab-content--active');
+  document.querySelectorAll('.side-tab').forEach(t=>t.classList.remove('side-tab--active'));
+  document.querySelector('.side-tab[data-tab="'+tabId+'"]').classList.add('side-tab--active');
+  if(tabId==='tab-dyn')U.renderDynamics();
+  if(tabId==='tab-recs')U.renderRecords();
+  if(tabId==='tab-arch')U.renderArchive();
+  if(tabId==='tab-shop')U.renderShop();
+}
+function switchArchTab(key){
+  document.querySelectorAll('.arch-pane').forEach(p=>p.classList.remove('arch-pane--active'));
+  document.querySelectorAll('.arch-tab').forEach(t=>{t.classList.remove('arch-tab--active');t.style.background='';t.style.color='';t.style.borderColor='';t.style.boxShadow='';});
+  document.getElementById('arch-'+key).classList.add('arch-pane--active');
+  const activeTab=document.querySelector('.arch-tab[data-arch="'+key+'"]');
+  activeTab.classList.add('arch-tab--active');
+  const col=key==='self'?'#f0b84d':(NPC_COLORS[key]||'#959aa3');
+  activeTab.style.background=col+'20';activeTab.style.color=col;activeTab.style.borderColor=col+'40';activeTab.style.boxShadow='0 0 10px '+col+'30';
+}
+function toggleShopCat(id){const g=document.getElementById(id);const t=g.previousElementSibling;g.classList.toggle('shop-grid--open');t.classList.toggle('shop-cat-title--open');}
+function openBuyModal(name,price,desc){
+  document.getElementById('buy-title').textContent=name;
+  const pts=getValue(globalData,'主角.主播信息.直播点数')||0;
+  const pn=parseInt(price);const remain=pts-pn;
+  document.getElementById('buy-body').innerHTML=
+    '<div style="display:flex;flex-direction:column;gap:12px;font-size:var(--text-sm);color:var(--text-sec)">'+
+      '<div style="display:flex;justify-content:space-between"><span>价格</span><span style="color:'+priceColor(pn)+';font-weight:700;font-family:var(--font-mono)">'+price+'点</span></div>'+
+      '<div style="display:flex;justify-content:space-between"><span>描述</span><span style="color:var(--text-ter);text-align:right;max-width:60%">'+desc+'</span></div>'+
+      '<div style="height:1px;background:var(--border)"></div>'+
+      '<div style="display:flex;justify-content:space-between"><span>当前直播点数</span><span style="font-weight:700;font-family:var(--font-mono)">'+pts+'</span></div>'+
+      '<div style="display:flex;justify-content:space-between"><span>购买后剩余</span><span style="font-weight:700;font-family:var(--font-mono);color:'+(remain<0?'#e05555':'#4aab73')+'">'+remain+'</span></div>'+
+    '</div>';
+  const confirmBtn=document.getElementById('buy-confirm');
+  confirmBtn.disabled=remain<0;
+  confirmBtn.style.opacity=remain<0?'0.4':'1';
+  confirmBtn.onclick=function(){
+    sendToInput('花费'+price+'点数购买'+name+'，描述为'+desc);
+    closeModal('modal-buy');
+  };
+  openModal('modal-buy');
+}
+function toggleInventory(){const p=document.getElementById('inv-panel');if(p.classList.contains('inv-panel--open')){p.classList.remove('inv-panel--open');}else{U.renderInventory();p.classList.add('inv-panel--open');}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay--open').forEach(m=>m.classList.remove('modal-overlay--open'));});
+function openModal(id){document.getElementById(id).classList.add('modal-overlay--open');}
+function closeModal(id){document.getElementById(id).classList.remove('modal-overlay--open');}
+function sendToInput(text){
+  try{
+    const inputArea=window.parent.document.querySelector('#send_textarea');
+    if(inputArea){
+      inputArea.value=(inputArea.value.trim()?inputArea.value+'\n':'')+text;
+      inputArea.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+  }catch(e){console.error(e);}
+}
+document.addEventListener('click',e=>{
+  const p=document.getElementById('inv-panel'),b=document.getElementById('btn-inv');
+  if(p&&b&&!b.contains(e.target)&&!p.contains(e.target))p.classList.remove('inv-panel--open');
+});
+
+/* ============================================================
+   CLOCK
+   ============================================================ */
+function updClock(){
+  const y=getValue(globalData,'进程.当前年份'),mo=getValue(globalData,'进程.当前月份'),d=getValue(globalData,'进程.当前日份'),h=getValue(globalData,'进程.当前小时'),mi=getValue(globalData,'进程.当前分钟'),w=getValue(globalData,'进程.当前周几');
+  const mNames=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  let season='';const mn=mo||10;if(mn>=3&&mn<=5)season='春季';else if(mn>=6&&mn<=8)season='夏季';else if(mn>=9&&mn<=11)season='秋季';else season='冬季';
+  const wNames=['周一','周二','周三','周四','周五','周六','周日'];
+  document.getElementById('hdr-date').textContent=(y||2025)+'-'+String(mn).padStart(2,'0')+'-'+String(d||15).padStart(2,'0')+' '+season+' '+(wNames[w-1]||'周三');
+  document.getElementById('hdr-time').textContent=String(h||19).padStart(2,'0')+':'+String(mi||0).padStart(2,'0');
+  // Weather
+  const weather=getValue(globalData,'进程.当前天气')||'晴';
+  const wh=document.getElementById('hdr-weather');
+  if(weather==='晴')wh.innerHTML=IC.sun+' <span>'+weather+'</span>';
+  else if(weather.includes('雨'))wh.innerHTML=IC.cloudRain+' <span>'+weather+'</span>';
+  else wh.innerHTML=IC.cloud+' <span>'+weather+'</span>';
+  // Location
+  const area=getValue(globalData,'主角.当前状态.当前区域')||'';const loc=getValue(globalData,'主角.当前状态.当前地点')||'';
+  document.getElementById('hdr-loc').textContent=area+(loc?' · '+loc:'');
+  // Update timer
+  U._updateTimer();
+}
+
+/* ============================================================
+   POLL & INIT
+   ============================================================ */
+function renderApp(){
+  const cs=getValue(globalData,'主角.当前状态');
+  if(cs){
+    U.updGauge('pleasure',cs.快感值||0);
+    const pv=document.getElementById('pleasure-val');if(pv)pv.style.color=gaugePleasureCol(cs.快感值||0);
+    U.updGauge('arousal',cs.性欲值||0);
+    const av=document.getElementById('arousal-val');if(av)av.style.color=gaugeDesireCol(cs.性欲值||0);
+  }
+  U.renderPhase();
+  U.renderStreamState();
+  U.renderPhysio();
+  U.renderStreamerInfo();
+  if(document.getElementById('tab-dyn').classList.contains('tab-content--active'))U.renderDynamics();
+  if(document.getElementById('tab-recs').classList.contains('tab-content--active'))U.renderRecords();
+  if(document.getElementById('tab-arch').classList.contains('tab-content--active'))U.renderArchive();
+  updClock();
+  const pendingEvt = getValue(globalData,'系统状态.待处理事件',{});
+  const evtEl = document.getElementById('hdr-events');
+  if(evtEl){
+    const keys = Object.keys(pendingEvt).filter(k=>k!=='观众任务事件' && k!=='外人闯入事件'); // 可选：过滤掉已在直播面板展示的任务/闯入
+    if(keys.length>0){
+      evtEl.style.display = '';
+      evtEl.textContent = '⚡'+keys.join('、');
+    } else {
+      evtEl.style.display = 'none';
+    }
+  }
+}
+
+const init=async()=>{
+  const Mvu=getMvuInstance();
+  if(Mvu&&Mvu.events){
+    document.addEventListener(Mvu.events.VARIABLE_UPDATE_ENDED,(e)=>{
+      if(e.detail&&e.detail.stat_data){
+        globalData=e.detail.stat_data;
+        renderApp();
+      }
+    });
+    const wrapper=Mvu.getMvuData({type:'message',message_id:-1});
+    if(wrapper){
+      globalData=wrapper.stat_data||wrapper;
+      renderApp();
+    }
+  }else{
+    // Standalone: use default data
+    globalData=JSON.parse(JSON.stringify(DEFAULT_STAT));
+    renderApp();
+    setTimeout(init,1000);
+  }
+};
+
+const startApp = () => {
+  // Load default to init gauges before MVU connects
+  globalData=JSON.parse(JSON.stringify(DEFAULT_STAT));
+  window.notif=new Notif();
+  U.initGauge('pleasure',getValue(globalData,'主角.当前状态.快感值')||0);
+  U.initGauge('arousal',getValue(globalData,'主角.当前状态.性欲值')||0);
+  U.renderAll();
+  U.renderDynamics();U.renderRecords();U.renderArchive();U.renderShop();U.renderInventory();
+  const name=getValue(globalData,'主角.主播信息.主播名字');
+  document.getElementById('idle-avatar-text').textContent=(name||'蓮')[0];
+  updClock();
+  // Begin MVU connection
+  init();
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
+</script>
+
+<!-- ===== GM控制台 (Director Studio Pro) ===== -->
+<div id="gm-debug-wrapper">
+    <!-- GM触发器按钮 -->
+    <div class="gm-trigger" onclick="toggleGM()" title="GM控制台">
+        <i class="fa-solid fa-clapperboard"></i>
+    </div>
+    <!-- ===== GM 控制台主面板（替换原有 .gm-panel 内容） ===== -->
+    <div class="gm-panel" id="gm-panel">
+        <!-- 头部 -->
+        <div class="gm-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span><i class="fa-solid fa-terminal"></i> DIRECTOR_MODE</span>
+                <span id="save-status" style="font-size:0.8em; font-weight:normal; opacity:0.5;"></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="gm-icon-btn" onclick="restoreSnapshot()" title="撤销全部修改">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <button class="gm-icon-btn" onclick="toggleGMMaximize()" title="最大化/还原">
+                    <i class="fa-regular fa-square" id="gm-max-icon"></i>
+                </button>
+                <span class="gm-close" onclick="toggleGM()">×</span>
+            </div>
+        </div>
+      
+        <!-- 导航标签 -->
+        <div class="gm-nav">
+            <div class="gm-tab active" onclick="switchGmTab(this, 'gm-tab-narrative')">叙事</div>
+            <div class="gm-tab" onclick="switchGmTab(this, 'gm-tab-stats')">状态</div>
+        </div>
+      
+        <!-- Tab 1: 叙事 -->
+        <div id="gm-tab-narrative" class="gm-content active">
+            <!-- 阶段切换 -->
+            <div class="gm-section">
+                <div class="gm-label">
+                    <span><i class="fa-solid fa-forward"></i> 强制转场 (Phase)</span>
+                    <span id="current-phase-display" style="color:#7aa2f7; font-weight:normal;"></span>
+                </div>
+                <select id="phase-selector" class="gm-input full"
+                        onchange="gm_update('stat_data.进程.阶段', this.value)">
+                    <option value="日常阶段">☕ 日常阶段</option>
+                    <option value="直播阶段">🔴 直播阶段</option>
+                </select>
+            </div>
+          
+            <!-- 直播状态快速查看 (新增) -->
+            <div class="gm-section">
+                <div class="gm-label">
+                    <span><i class="fa-solid fa-tower-broadcast"></i> 直播状态</span>
+                    <span id="live-status-display" style="color:#e0af68; font-weight:normal;"></span>
+                </div>
+                <div class="control-row">
+                    <span class="label">观看人数</span>
+                    <input type="number" id="inp-viewers" class="gm-input num" onchange="gm_update('stat_data.直播状态.当前直播间人数', Number(this.value))">
+                </div>
+                <div class="control-row">
+                    <span class="label">直播间热度</span>
+                    <input type="number" id="inp-heat" class="gm-input num" onchange="gm_update('stat_data.直播状态.当前直播间热度', Number(this.value))">
+                </div>
+            </div>
+          
+            <!-- 待处理事件队列 -->
+            <div class="gm-section">
+                <div class="gm-label">
+                    <span><i class="fa-solid fa-list-check"></i> 待处理事件</span>
+                    <i class="fa-solid fa-rotate-right" onclick="renderGM()" title="刷新" style="cursor:pointer"></i>
+                </div>
+                <div id="event-list-container" class="event-list"></div>
+                    <div class="input-group" style="margin-top:6px; display:flex; gap:4px;">
+                        <input type="text" id="new-event-input" class="gm-input" placeholder="事件名称" style="flex:1;">
+                        <input type="text" id="new-event-value" class="gm-input" placeholder="值（可选）" style="width:40%;">
+                        <button class="gm-btn-icon" onclick="addCustomEvent()" title="添加事件">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                <button class="gm-btn gray full-width" style="margin-top:5px;" 
+                        onclick="gm_update('stat_data.系统状态.待处理事件', {})">
+                    <i class="fa-solid fa-eraser"></i> 清空所有事件
+                </button>
+            </div>
+        </div>
+      
+        <!-- Tab 2: 状态 -->
+        <div id="gm-tab-stats" class="gm-content">
+            <div class="gm-section">
+                <div class="gm-label"><i class="fa-solid fa-sliders"></i> 主角核心数值</div>
+            
+                <div class="control-row">
+                    <span class="label">快感值</span>
+                    <input type="number" id="inp-pleasure" class="gm-input num"
+                           onchange="gm_update('stat_data.主角.当前状态.快感值', Number(this.value))">
+                    <div class="quick-actions">
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.快感值', -10, 'add')">-10</button>
+                        <button class="mini-btn pink" onclick="gm_update('stat_data.主角.当前状态.快感值', 0)">归零</button>
+                    </div>
+                </div>
+              
+                <div class="control-row">
+                    <span class="label">性欲值</span>
+                    <input type="number" id="inp-desire" class="gm-input num"
+                           onchange="gm_update('stat_data.主角.当前状态.性欲值', Number(this.value))">
+                    <div class="quick-actions">
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.性欲值', -10, 'add')">-10</button>
+                        <button class="mini-btn pink" onclick="gm_update('stat_data.主角.当前状态.性欲值', 0)">归零</button>
+                    </div>
+                </div>
+              
+                <div class="control-row">
+                    <span class="label">羞耻度</span>
+                    <input type="number" id="inp-shame" class="gm-input num"
+                           onchange="gm_update('stat_data.主角.当前状态.羞耻度', Number(this.value))">
+                    <div class="quick-actions">
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.羞耻度', -10, 'add')">-10</button>
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.羞耻度', 100)">满</button>
+                    </div>
+                </div>
+              
+                <div class="control-row">
+                    <span class="label">淫乱度</span>
+                    <input type="number" id="inp-lewd" class="gm-input num"
+                           onchange="gm_update('stat_data.主角.当前状态.淫乱度', Number(this.value))">
+                    <div class="quick-actions">
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.淫乱度', 10, 'add')">+10</button>
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.淫乱度', 0)">归零</button>
+                    </div>
+                </div>
+              
+                <!-- 当前性行为管理 -->
+                <div class="gm-section" style="margin-top:12px;">
+                    <div class="gm-label"><i class="fa-solid fa-heart-circle-bolt"></i> 当前性行为管理</div>
+                
+                    <!-- 行为列表展示 -->
+                    <div id="sex-acts-list" class="event-list" style="max-height:160px;"></div>
+                
+                    <!-- 快速添加表单 -->
+                    <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
+                        <input type="text" id="new-act-target" class="gm-input" placeholder="对象" style="flex:1; min-width:80px;" list="act-target-list">
+                        <datalist id="act-target-list">
+                            <option value="自己">
+                            <!-- 其余选项将在 renderGM 中动态填充 -->
+                        </datalist>
+                        <select id="new-act-gender" class="gm-input" style="width:60px;">
+                            <option value="">性别</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                        <select id="new-act-part" class="gm-input" style="width:80px;">
+                            <option value="">部位</option>
+                            <option value="肉棒">肉棒</option>
+                            <option value="后穴">后穴</option>
+                            <option value="胸部">胸部</option>
+                            <option value="嘴巴">嘴巴</option>
+                        </select>
+                        <select id="new-act-action" class="gm-input" style="width:100px;">
+                            <option value="">行为</option>
+                            <option value="自慰">自慰</option>
+                            <option value="使用情趣玩具">使用情趣玩具</option>
+                            <option value="主动手交">主动手交</option>
+                            <option value="被动手交">被动手交</option>
+                            <option value="主动足交">主动足交</option>
+                            <option value="被动足交">被动足交</option>
+                            <option value="主动口交">主动口交</option>
+                            <option value="被动口交">被动口交</option>
+                            <option value="被动乳交">被动乳交</option>
+                            <option value="小穴插入性爱">小穴插入性爱</option>
+                            <option value="后穴插入性爱">后穴插入性爱</option>
+                            <option value="后穴性爱">后穴性爱</option>
+                        </select>
+                        <button class="gm-btn-icon" onclick="addSexAct()" title="添加行为">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <small style="color:var(--text-ter);">添加后请点击「应用修改」保存到变量</small>
+                </div>
+
+                <div class="gm-label" style="margin-top:12px;"><i class="fa-solid fa-coins"></i> 直播事业</div>
+              
+                <div class="control-row">
+                    <span class="label">直播点数</span>
+                    <input type="number" id="inp-points" class="gm-input num"
+                           onchange="gm_update('stat_data.主角.主播信息.直播点数', Number(this.value))">
+                </div>
+                <div class="control-row">
+                    <span class="label">粉丝数</span>
+                    <input type="number" id="inp-fans" class="gm-input num"
+                           onchange="gm_update('stat_data.主角.主播信息.粉丝数', Number(this.value))">
+                </div>
+                <div class="control-row">
+                    <span class="label">直播总次数</span>
+                    <input type="number" id="inp-stream-count" class="gm-input num"
+                           onchange="gm_update('stat_data.主角.主播信息.直播总次数', Number(this.value))">
+                </div>
+              
+                <div class="gm-label" style="margin-top:12px;"><i class="fa-solid fa-wand-magic-sparkles"></i> 快捷操作</div>
+                <div class="gm-btn-group">
+                    <button class="gm-btn green" onclick="resetDailyStatus()">
+                        <i class="fa-solid fa-sun"></i> 重置日常状态
+                    </button>
+                    <button class="gm-btn" onclick="forceEndStream()">
+                        <i class="fa-solid fa-stop"></i> 强制结束直播
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ===== GM控制台 结束 ===== -->
+
+<script>
+/* ============================================================
+   GM 控制台核心逻辑（Director Mode）
+   适配“露出直播”变量路径，请确保此脚本在状态面板主体JS之后加载
+   ============================================================ */
+let _gmSnapshot = null;       // 用于撤销的快照
+let _currentMvuData = null;   // 当前完整MVU数据
+
+// ------------------- 工具函数（若原脚本未提供，则再次定义） -------------------
+const getDeep = (obj, path, def) => path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? def;
+
+const showToast = (msg, selector) => {
+  const el = document.querySelector(selector);
+  if (el) {
+    el.innerText = msg;
+    el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 2000);
+  }
+};
+
+const setInp = (id, val) => {
+  const el = document.getElementById(id);
+  if (el && document.activeElement !== el) el.value = (typeof val === 'number') ? Math.round(val) : val;
+};
+
+const setTxt = (id, val) => {
+  const el = document.getElementById(id);
+  if (el) el.innerText = val;
+};
+
+// ------------------- 面板显示/隐藏 -------------------
+function toggleGM() {
+  const panel = document.getElementById('gm-panel');
+  if (!panel) return;
+  if (!panel.classList.contains('show')) {
+    panel.style.display = 'flex';
+    requestAnimationFrame(() => {
+      panel.classList.add('show');
+      renderGM(); // 打开时刷新所有数据
+      if (_currentMvuData) {
+        _gmSnapshot = JSON.parse(JSON.stringify(_currentMvuData));
+        showToast('快照已保存，可撤销', '#save-status');
+      }
+    });
+  } else {
+    panel.classList.remove('show');
+    setTimeout(() => { panel.style.display = 'none'; }, 250);
+  }
+}
+
+function toggleGMMaximize() {
+  const panel = document.getElementById('gm-panel');
+  const icon = document.getElementById('gm-max-icon');
+  if (panel) {
+    panel.classList.toggle('maximized');
+    icon.className = panel.classList.contains('maximized') ? 'fa-regular fa-clone' : 'fa-regular fa-square';
+  }
+}
+
+function switchGmTab(btn, targetId) {
+  document.querySelectorAll('.gm-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.gm-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(targetId).classList.add('active');
+}
+
+// ------------------- 主渲染函数：读取所有变量并填充控件 -------------------
+async function renderGM() {
+  try {
+    const Mvu = getMvuInstance();
+    if (!Mvu) return;
+    const wrapper = Mvu.getMvuData({ type: 'message', message_id: -1 });
+    if (!wrapper) return;
+    _currentMvuData = wrapper.stat_data || wrapper;
+    const d = _currentMvuData;
+
+    // --- 阶段显示 ---
+    const phase = getDeep(d, '进程.阶段', '日常阶段');
+    setTxt('current-phase-display', phase);
+    setInp('phase-selector', phase);
+
+    // --- 核心数值 ---
+    setInp('inp-pleasure', getDeep(d, '主角.当前状态.快感值', 0));
+    setInp('inp-desire', getDeep(d, '主角.当前状态.性欲值', 0));
+    setInp('inp-shame', getDeep(d, '主角.当前状态.羞耻度', 100));
+    setInp('inp-lewd', getDeep(d, '主角.当前状态.淫乱度', 0));
+    setInp('inp-points', getDeep(d, '主角.主播信息.直播点数', 0));
+    setInp('inp-fans', getDeep(d, '主角.主播信息.粉丝数', 0));
+    setInp('inp-stream-count', getDeep(d, '主角.主播信息.直播总次数', 0));
+
+    // --- 直播状态 ---
+    const isStreaming = getDeep(d, '直播状态.是否正在直播', false);
+    document.getElementById('live-status-display').innerText = isStreaming ? '直播中' : '未开播';
+    setInp('inp-viewers', getDeep(d, '直播状态.当前直播间人数', 0));
+    setInp('inp-heat', getDeep(d, '直播状态.当前直播间热度', 0));
+
+    // --- 待处理事件队列 ---
+    const events = getDeep(d, '系统状态.待处理事件', {});
+    const eventKeys = Object.keys(events).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+    const eventContainer = document.getElementById('event-list-container');
+    if (eventKeys.length > 0) {
+        eventContainer.innerHTML = eventKeys.map(k => {
+        const val = events[k];
+        let displayVal = '';
+        if (typeof val === 'string') {
+          displayVal = val;
+        } else if (typeof val === 'boolean') {
+          displayVal = val.toString();
+        } else if (typeof val === 'object') {
+          displayVal = JSON.stringify(val, null, 1);
+        } else if (val !== undefined) {
+          displayVal = String(val);
+        }
+        return `<div class="event-item">
+          <div style="flex:1; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <span style="font-weight:600; color:#c0caf5;">${k}</span>
+            ${displayVal ? `<span style="font-size:0.85em; color:#787c99; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${displayVal}</span>` : ''}
+          </div>
+          <i class="fa-solid fa-xmark del" onclick="gm_update('stat_data.系统状态.待处理事件.${k.replace(/'/g, "\\'")}', null, 'remove')"></i>
+        </div>`;
+      }).join('');
+    } else {
+      eventContainer.innerHTML = '<div style="text-align:center; opacity:0.5; padding:4px;">(空)</div>';
+    }
+
+    // 动态更新“对象”候选列表
+    const targetList = document.getElementById('act-target-list');
+    if (targetList) {
+        const defaultTargets = ['自己', '路人', '陌生人', '汐见真帆', '黑崎海斗', '冰室纱耶', '风见迅'];
+        const npcs = _.get(d, 'stat_data.NPC数据') || {};
+        const npcNames = Object.keys(npcs).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+
+        const allTargets = [...new Set([...defaultTargets, ...npcNames])];
+        targetList.innerHTML = allTargets.map(name => `<option value="${name}">`).join('');
+    }
+
+    // ===== 渲染当前性行为列表 =====
+    const sexActs = _.get(d, '主角.当前状态.当前性行为') || [];
+    const sexContainer = document.getElementById('sex-acts-list');
+    if (sexContainer) {
+        if (!Array.isArray(sexActs) || sexActs.length === 0) {
+            sexContainer.innerHTML = '<div style="text-align:center; opacity:0.5; padding:4px;">(无)</div>';
+        } else {
+            sexContainer.innerHTML = sexActs.map((act, index) => {
+                const target = act.对象 || '?';
+                const gender = act.性别 || '';
+                const part   = act.部位 || '?';
+                const action = act.行为 || '?';
+                const desc = `${target}${gender ? '('+gender+')' : ''} · ${part} · ${action}`;
+                return `
+                <div class="event-item" style="justify-content:space-between;">
+                    <span style="font-size:12px;">${desc}</span>
+                    <div>
+                        <button class="mini-btn blue" onclick="editSexAct(${index})" title="编辑">✎</button>
+                        <i class="fa-solid fa-xmark del" onclick="removeSexAct(${index})" style="margin-left:4px;"></i>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // 这里可以根据需要继续扩展其他控件……
+    
+  } catch (e) {
+    console.error('[GM Render]', e);
+  }
+}
+
+// ------------------- 核心变量修改函数 -------------------
+async function gm_update(path, value, mode = 'set') {
+  try {
+    const Mvu = getMvuInstance();
+    if (!Mvu) return showToast('未连接到MVU系统', '#save-status');
+    const mvuData = Mvu.getMvuData({ type: 'message', message_id: -1 });
+    if (!mvuData) return;
+
+    if (typeof _ !== 'undefined' && _.set) {
+      if (mode === 'remove') {
+        _.unset(mvuData, path);
+      } else if (mode === 'add') {
+        const old = _.get(mvuData, path) || 0;
+        _.set(mvuData, path, Number(old) + Number(value));
+      } else {
+        _.set(mvuData, path, value);
+      }
+    }
+
+    await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: -1 });
+    const cleanData = JSON.parse(JSON.stringify(mvuData.stat_data || mvuData));
+    document.dispatchEvent(new CustomEvent(Mvu.events.VARIABLE_UPDATE_ENDED, { detail: { stat_data: cleanData }, bubbles: true }));
+    setTimeout(renderGM, 50);
+    showToast('变量已更新', '#save-status');
+  } catch (e) {
+    console.error('[GM Update]', e);
+    showToast('更新失败', '#save-status');
+  }
+}
+
+// ========== 性行为管理函数（MVU直读直写） ==========
+
+async function _getCurrentActs() {
+    const Mvu = getMvuInstance();
+    if (!Mvu) throw new Error('MVU未连接');
+    const mvuData = Mvu.getMvuData({ type: 'message', message_id: -1 });
+    if (!mvuData) throw new Error('无法获取MVU数据');
+    let acts = _.get(mvuData, 'stat_data.主角.当前状态.当前性行为') || [];
+    if (!Array.isArray(acts)) acts = [];
+    return acts;
+}
+
+async function addSexAct() {
+    const target = document.getElementById('new-act-target')?.value.trim();
+    if (!target) return alert('请填写对象名称');
+    const gender = document.getElementById('new-act-gender')?.value || '';
+    const part   = document.getElementById('new-act-part')?.value || '';
+    const action = document.getElementById('new-act-action')?.value || '';
+    if (!part || !action) return alert('请选择部位和行为');
+
+    const newAct = { 对象: target, 部位: part, 行为: action };
+    if (gender) newAct.性别 = gender;
+
+    try {
+        const acts = await _getCurrentActs();
+        acts.push(newAct);
+        await gm_update('stat_data.主角.当前状态.当前性行为', acts);
+        // 清空输入框
+        ['new-act-target', 'new-act-gender', 'new-act-part', 'new-act-action'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+    } catch (e) { console.error('[addSexAct]', e); }
+}
+
+async function removeSexAct(index) {
+    try {
+        const acts = await _getCurrentActs();
+        if (index < 0 || index >= acts.length) return;
+        if (!confirm('确定删除这个性行为？')) return;
+        acts.splice(index, 1);
+        await gm_update('stat_data.主角.当前状态.当前性行为', acts);
+    } catch (e) { console.error('[removeSexAct]', e); }
+}
+
+async function editSexAct(index) {
+    try {
+        const acts = await _getCurrentActs();
+        if (index < 0 || index >= acts.length) return;
+        const act = acts[index];
+        const newJson = prompt('编辑性行为 (JSON格式)', JSON.stringify(act, null, 2));
+        if (!newJson) return;
+        const parsed = JSON.parse(newJson);
+        acts[index] = parsed;
+        await gm_update('stat_data.主角.当前状态.当前性行为', acts);
+    } catch (e) { console.error('[editSexAct]', e); }
+}
+
+// ------------------- 快捷操作 -------------------
+// 添加自定义事件到待处理队列
+async function addCustomEvent() {
+    const nameInput = document.getElementById('new-event-input');
+    const valueInput = document.getElementById('new-event-value');
+    const eventName = nameInput.value.trim();
+    if (!eventName) return;
+
+    let eventValue = true; // 默认布尔值
+    const rawVal = valueInput.value.trim();
+    if (rawVal !== '') {
+        // 尝试解析为布尔/数字/JSON，失败则保留字符串
+        if (rawVal === 'true') eventValue = true;
+        else if (rawVal === 'false') eventValue = false;
+        else if (!isNaN(rawVal)) eventValue = Number(rawVal);
+        else {
+            try { eventValue = JSON.parse(rawVal); } catch (e) { eventValue = rawVal; }
+        }
+    }
+
+    await gm_update(`stat_data.系统状态.待处理事件.${eventName}`, eventValue);
+    nameInput.value = '';
+    valueInput.value = '';
+    showToast(`已添加事件: ${eventName}`, '#save-status');
+}
+
+// 一键重置日常状态（示例）
+async function resetDailyStatus() {
+  if (confirm('重置快感、性欲、心跳等临时状态？')) {
+    await gm_update('stat_data.主角.当前状态.快感值', 0);
+    await gm_update('stat_data.主角.当前状态.性欲值', 0);
+    await gm_update('stat_data.主角.当前状态.当前生理状态', '体温正常，呼吸平稳');
+    showToast('日常状态已重置', '#save-status');
+  }
+}
+
+// 强制结束当前直播
+async function forceEndStream() {
+  if (confirm('强制结束当前直播？这将重置直播间数据并进入结算。')) {
+    // 具体操作可根据实际变量路径调整，这里仅示例
+    await gm_update('stat_data.直播状态.是否正在直播', false);
+    await gm_update('stat_data.直播状态.当前直播间人数', 0);
+    await gm_update('stat_data.系统状态.待处理事件.直播结算事件', true);
+    showToast('直播已结束，结算事件已加入队列', '#save-status');
+  }
+}
+
+// 恢复到打开面板时的快照
+async function restoreSnapshot() {
+  if (!_gmSnapshot) {
+    alert('没有快照可供恢复！');
+    return;
+  }
+  if (confirm('恢复到打开控制台前的状态？所有修改将丢失。')) {
+    await gm_update('stat_data', _gmSnapshot, 'set');
+    showToast('已恢复快照', '#save-status');
+  }
+}
+
+// ------------------- 键盘快捷键支持 -------------------
+document.addEventListener('keydown', (e) => {
+  // Ctrl+Shift+G 打开/关闭 GM 面板
+  if (e.ctrlKey && e.shiftKey && e.key === 'G') {
+    e.preventDefault();
+    toggleGM();
+  }
+});
+
+// 初始化：尝试在页面加载完毕后自动渲染一次
+window.addEventListener('load', () => {
+  setTimeout(async () => {
+    try {
+      const Mvu = getMvuInstance();
+      if (Mvu) {
+        // 监听变量更新，实时刷新GM面板
+        if (Mvu.events) {
+          document.addEventListener(Mvu.events.VARIABLE_UPDATE_ENDED, () => {
+            // 避免频繁刷新，仅在面板打开时更新
+            const panel = document.getElementById('gm-panel');
+            if (panel && panel.classList.contains('show')) {
+              renderGM();
+            }
+          });
+        }
+        await renderGM();
+      }
+    } catch (e) { console.log('GM控制台初始化延迟，等待MVU就绪'); }
+  }, 1500);
+});
+</script>
+</body>
+</html>
+```

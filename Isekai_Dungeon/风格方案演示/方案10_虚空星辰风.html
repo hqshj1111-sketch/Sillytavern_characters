@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案10：虚空星辰风 | Starry Void Astral</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #060610;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', 'Cormorant Garamond', serif;
+    color: #b0b8d0;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1px 1px at 90px 40px, #ddd, transparent),
+      radial-gradient(2px 2px at 160px 120px, #eee, transparent),
+      radial-gradient(1px 1px at 230px 50px, rgba(255,255,255,0.7), transparent),
+      radial-gradient(2px 2px at 300px 90px, #fff, transparent),
+      radial-gradient(1px 1px at 350px 30px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(3px 3px at 420px 110px, rgba(180,200,255,0.9), transparent),
+      radial-gradient(1px 1px at 500px 60px, #eee, transparent),
+      radial-gradient(2px 2px at 580px 100px, rgba(255,255,255,0.8), transparent);
+    background-size: 660px 160px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+  }
+
+  .astral-frame {
+    position: relative;
+    background: linear-gradient(180deg, rgba(8,6,18,0.85), rgba(5,4,12,0.9));
+    border: 1px solid rgba(100,120,180,0.15);
+    backdrop-filter: blur(2px);
+    overflow: hidden;
+  }
+  .astral-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(100,140,220,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 70%, rgba(160,120,200,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(180,160,220,0.03) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .astral-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 45% 75%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(2px 2px at 65% 15%, rgba(180,200,255,0.4), transparent),
+      radial-gradient(1px 1px at 25% 85%, rgba(200,180,255,0.3), transparent),
+      radial-gradient(2px 2px at 55% 90%, rgba(255,255,255,0.4), transparent);
+    pointer-events: none;
+    z-index: 6;
+  }
+
+  /* ── 星图标题 ── */
+  .astral-header {
+    position: relative;
+    z-index: 7;
+    text-align: center;
+    padding: 20px 20px 12px;
+  }
+  .astral-header .constellation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .astral-header .star-point {
+    width: 3px; height: 3px;
+    background: #c0d0ff;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(180,200,255,0.5);
+  }
+  .astral-header .star-point.bright {
+    width: 5px; height: 5px;
+    box-shadow: 0 0 12px rgba(200,210,255,0.7);
+  }
+  .astral-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: 8px;
+    color: #c0c8e0;
+    text-shadow: 0 0 30px rgba(150,170,220,0.3);
+  }
+  .astral-header .subtitle {
+    font-size: 10px;
+    color: #606880;
+    letter-spacing: 6px;
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  /* ── 星尘分隔 ── */
+  .stardust-rule {
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    position: relative;
+    z-index: 7;
+  }
+  .stardust-rule .dust {
+    width: 2px; height: 2px;
+    background: rgba(180,200,255,0.4);
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(180,200,255,0.3);
+  }
+  .stardust-rule .dust-line {
+    flex: 0 0 30px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(100,120,180,0.2), transparent);
+  }
+
+  /* ── 面板：星界观察窗 ── */
+  .astral-panel {
+    position: relative;
+    z-index: 7;
+    margin: 4px 14px;
+    padding: 14px 18px;
+    background: rgba(10,8,22,0.5);
+    border: 1px solid rgba(100,120,180,0.1);
+    border-radius: 1px;
+    box-shadow: inset 0 0 30px rgba(60,80,140,0.05);
+  }
+  .astral-panel .panel-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    color: #7888b0;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label .moon-phase {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 1px solid rgba(120,136,176,0.4);
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, rgba(180,200,255,0.3), transparent);
+  }
+
+  /* ── 星座状态 ── */
+  .stellar-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stellar-stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: rgba(5,4,12,0.4);
+    border: 1px solid rgba(100,120,180,0.06);
+  }
+  .stellar-stat .orb {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .orb.hp {
+    background: radial-gradient(circle at 35% 35%, #ff8090, #801030);
+    box-shadow: 0 0 10px rgba(255,100,120,0.25);
+  }
+  .orb.mp {
+    background: radial-gradient(circle at 35% 35%, #80a0ff, #103080);
+    box-shadow: 0 0 10px rgba(100,140,255,0.25);
+  }
+  .orb.sp {
+    background: radial-gradient(circle at 35% 35%, #ffd080, #805010);
+    box-shadow: 0 0 10px rgba(255,200,100,0.25);
+  }
+  .orb.exp {
+    background: radial-gradient(circle at 35% 35%, #80ffa0, #105030);
+    box-shadow: 0 0 10px rgba(100,255,140,0.25);
+  }
+  .stellar-stat .stat-body { flex: 1; min-width: 0; }
+  .stat-body .stat-topline {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-bottom: 3px;
+  }
+  .stat-topline .name {
+    color: #687088;
+    letter-spacing: 2px;
+  }
+  .stat-topline .val {
+    color: #98a8c8;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+  }
+  .astral-bar {
+    height: 3px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .astral-fill { height: 100%; border-radius: 1px; }
+  .astral-fill.hp { background: linear-gradient(90deg, #ff4060, #ff8090); }
+  .astral-fill.mp { background: linear-gradient(90deg, #4060b0, #80a0ff); }
+  .astral-fill.sp { background: linear-gradient(90deg, #b08030, #ffd080); }
+  .astral-fill.exp { background: linear-gradient(90deg, #308050, #80ffa0); }
+
+  /* ── 星位参数 ── */
+  .zodiac-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .zodiac-sign {
+    text-align: center;
+    min-width: 54px;
+    padding: 6px 4px;
+    border: 1px solid rgba(100,120,180,0.08);
+    background: rgba(5,4,12,0.3);
+  }
+  .zodiac-sign .glyph {
+    font-size: 18px;
+    color: #7888b0;
+    display: block;
+    text-shadow: 0 0 8px rgba(120,136,176,0.3);
+  }
+  .zodiac-sign .number {
+    font-size: 14px;
+    font-weight: 500;
+    color: #b0b8d0;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .zodiac-sign .rune {
+    font-size: 8px;
+    color: #586088;
+    letter-spacing: 3px;
+  }
+
+  /* ── 正文：星空卷轴 ── */
+  .astral-scroll {
+    margin: 6px 14px;
+    padding: 18px 22px;
+    background: rgba(8,6,18,0.5);
+    border: 1px solid rgba(100,120,180,0.08);
+    border-left: 2px solid rgba(140,160,220,0.15);
+    position: relative;
+    z-index: 7;
+  }
+  .astral-scroll p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #8890a8;
+  }
+  .astral-scroll p:last-child { margin-bottom: 0; }
+  .astral-scroll .silver { color: #c0c8e0; }
+  .astral-scroll .nebula { color: #b080c0; }
+  .astral-scroll .comet { color: #ff6040; }
+
+  /* ── 星光行动 ── */
+  .astral-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 14px;
+  }
+  .astral-action {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: rgba(12,10,24,0.5);
+    border: 1px solid rgba(100,120,180,0.1);
+    color: #8890a8;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .astral-action:hover {
+    border-color: rgba(140,160,220,0.3);
+    color: #b0b8d0;
+    background: rgba(16,14,30,0.5);
+    box-shadow: 0 0 15px rgba(100,140,220,0.08);
+  }
+  .astral-action.fated {
+    border-color: rgba(140,160,220,0.3);
+    color: #c0c8e0;
+  }
+  .astral-action.fated::before { content: '✦ '; color: #a0b0d0; }
+
+  /* ── 装备 ── */
+  .astral-wardrobe {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .astral-item {
+    padding: 8px 12px;
+    background: rgba(5,4,12,0.3);
+    border: 1px solid rgba(100,120,180,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .astral-item .essence {
+    font-size: 9px;
+    color: #586088;
+    letter-spacing: 2px;
+  }
+  .astral-item .material {
+    font-size: 11px;
+    color: #98a8c8;
+  }
+  .astral-item .material.void { color: #303050; font-style: italic; }
+
+  .nebula-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .nebula-tag {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(100,120,180,0.04);
+    border: 1px solid rgba(100,120,180,0.08);
+    color: #586088;
+  }
+  .nebula-tag.awake {
+    background: rgba(100,120,180,0.08);
+    border-color: rgba(100,120,180,0.2);
+    color: #7888b0;
+  }
+
+  /* ── 底部 ── */
+  .astral-footer {
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #505878;
+    letter-spacing: 3px;
+    position: relative;
+    z-index: 7;
+  }
+  .astral-footer .cosmos-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .astral-footer .cosmos-line .orbit {
+    width: 8px; height: 8px;
+    border: 1px solid rgba(100,120,180,0.3);
+    border-radius: 50%;
+  }
+  .astral-footer .cosmos-line .planet {
+    width: 3px; height: 3px;
+    background: #c0d0ff;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(180,200,255,0.4);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="astral-frame">
+
+    <div class="astral-header">
+      <div class="constellation">
+        <span class="star-point"></span>
+        <span class="star-point bright"></span>
+        <span class="star-point"></span>
+        <span class="star-point bright"></span>
+        <span class="star-point"></span>
+      </div>
+      <h1>異 世 界 地 下 城</h1>
+      <div class="subtitle">✦ ISEKAI DUNGEON ✦</div>
+    </div>
+
+    <div class="stardust-rule">
+      <span class="dust"></span><span class="dust-line"></span>
+      <span class="dust"></span><span class="dust-line"></span>
+      <span class="dust"></span>
+    </div>
+
+    <div class="astral-panel">
+      <div class="panel-label"><span class="moon-phase"></span> 星軌観測</div>
+      <div class="stellar-stats">
+        <div class="stellar-stat">
+          <div class="orb hp">♥</div>
+          <div class="stat-body">
+            <div class="stat-topline"><span class="name">生命星辰</span><span class="val">78 / 100</span></div>
+            <div class="astral-bar"><div class="astral-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="stellar-stat">
+          <div class="orb mp">✦</div>
+          <div class="stat-body">
+            <div class="stat-topline"><span class="name">魔力星雲</span><span class="val">54 / 100</span></div>
+            <div class="astral-bar"><div class="astral-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="stellar-stat">
+          <div class="orb sp">⚔</div>
+          <div class="stat-body">
+            <div class="stat-topline"><span class="name">闘志銀河</span><span class="val">90 / 100</span></div>
+            <div class="astral-bar"><div class="astral-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="stellar-stat">
+          <div class="orb exp">⏫</div>
+          <div class="stat-body">
+            <div class="stat-topline"><span class="name">経験星座</span><span class="val">350 / 1000</span></div>
+            <div class="astral-bar"><div class="astral-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="zodiac-attrs">
+        <div class="zodiac-sign"><span class="glyph">♈</span><div class="number">42</div><div class="rune">ATK</div></div>
+        <div class="zodiac-sign"><span class="glyph">♉</span><div class="number">28</div><div class="rune">DEF</div></div>
+        <div class="zodiac-sign"><span class="glyph">♊</span><div class="number">35</div><div class="rune">AGI</div></div>
+        <div class="zodiac-sign"><span class="glyph">♋</span><div class="number">30</div><div class="rune">INT</div></div>
+        <div class="zodiac-sign"><span class="glyph">♌</span><div class="number">18</div><div class="rune">LCK</div></div>
+        <div class="zodiac-sign"><span class="glyph">♍</span><div class="number">1250</div><div class="rune">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="astral-scroll">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="silver">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="comet">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="comet">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="silver">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层<span class="nebula">淫靡的气息</span>……
+      </p>
+    </div>
+
+    <div class="astral-panel">
+      <div class="panel-label"><span class="moon-phase"></span> 命運抉擇</div>
+      <div class="astral-actions">
+        <button class="astral-action fated">⚔ 挥剑斩向哥布林头领</button>
+        <button class="astral-action">🔥 释放火球术灼烧敌群</button>
+        <button class="astral-action">🛡 防御姿态，观察敌人弱点</button>
+        <button class="astral-action">💋 尝试魅惑其中一只哥布林</button>
+      </div>
+    </div>
+
+    <div class="astral-panel">
+      <div class="panel-label"><span class="moon-phase"></span> 星界武具</div>
+      <div class="astral-wardrobe">
+        <div class="astral-item"><span class="essence">武器</span><span class="material">铁质长剑 Lv.3</span></div>
+        <div class="astral-item"><span class="essence">防具</span><span class="material">皮甲 Lv.2</span></div>
+        <div class="astral-item"><span class="essence">飾品</span><span class="material">冒险者徽章</span></div>
+        <div class="astral-item"><span class="essence">消耗</span><span class="material">回复药水 ×3</span></div>
+      </div>
+      <div class="nebula-tags">
+        <span class="nebula-tag awake">触手紧身衣·共生期</span>
+        <span class="nebula-tag awake">蜕生项圈·中期</span>
+        <span class="nebula-tag">影子分身·无心智</span>
+        <span class="nebula-tag">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="astral-footer">
+      <div class="cosmos-line">
+        <span class="orbit"></span>
+        <span class="planet"></span>
+        <span class="orbit"></span>
+        <span class="planet"></span>
+        <span class="orbit"></span>
+      </div>
+      <div>第三層 · 阿斯特大陸 · 星暦384年10月15日 · 黄昏 · 第12刻</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

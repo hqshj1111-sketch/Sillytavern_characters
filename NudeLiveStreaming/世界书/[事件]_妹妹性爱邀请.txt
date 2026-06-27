@@ -1,0 +1,47 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹性爱邀约事件'] && isDaily && !isSexActive) {
+    const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+    const affection = parseInt(_.get(makoto, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.妹妹性爱邀约事件', 0)) || 0;
+    const sexCount = parseInt(_.get(makoto, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：性爱邀约
+event_initiator:
+  event_name: "性爱邀约"
+  character: "汐见真帆"
+  location: "住宅区"
+  time: "19:00-23:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "真帆推开门，这次连开场白都省了。她直接走过来把主角推倒，骑了上去。她说想和哥哥做爱——不是请求也不是命令，而是陈述一个事实。她现在湿得不行，需要哥哥负责。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整她的语气——好感度和次数越高越黏腻，会提上次喜欢的姿势、上次射在里面很舒服、这次还想那样。结合淫乱度(<%= lewdness %>)调整用词的下流程度。"
+    - "结尾留给主角选择：让她骑上来主导、翻身把她压到下面、或先撩她几句让她更着急。"
+    <%_ } else if (sexCount === 0) { _%>
+    - "真帆推门进来，表情和平时不太一样。她没有用命令式的抖S口吻，也没有理直气壮地索要。她站在门口犹豫了几秒，然后深吸一口气，说她想和哥哥做爱——真正的、第一次的那种。"
+    - "她说她想把第一次给哥哥。这个决定不是一时冲动，她想了很久。结合好感度(<%= affection %>)调整她的语气——这个时刻的她是难得的坦诚，没有傲娇和嘴硬，只有对哥哥的信任和把自己交出去时的不安。"
+    - "她说完后脸颊微红地看着哥哥，等一个回答。结尾留给主角选择：温柔地牵住她的手、把她拉到身边、或先确认她是否真的想好了。"
+    <%_ } else { _%>
+    - "真帆推门进来，开门见山地说她想和主角做爱。没有拐弯抹角的傲娇借口，没有用帮忙或练习来掩饰——她就是直接想要。"
+    - "结合好感度(<%= affection %>)调整她的语气——好感度越高越带着撒娇和独占宣告，好感度偏低则用更强势的抖S口吻命令主角配合。结合淫乱度(<%= lewdness %>)调整用词——淫乱度越高越下流直白地说出具体想被怎么操。"
+    - "结尾留给主角选择：毫不犹豫答应并主导、先戏谑她是不是忍不住了再开始、或暂时拒绝。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹性爱邀约事件" }
+      ]
+
+<%_ } } _%>

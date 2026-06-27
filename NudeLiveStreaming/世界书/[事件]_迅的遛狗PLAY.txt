@@ -1,0 +1,46 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const jin = _.get(stat, 'NPC数据.风见迅', {});
+  const jinDiscovered = _.get(jin, '秘密发现', false);
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['迅遛狗PLAY事件'] && isDaily && jinDiscovered && !isSexActive) {
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(jin, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.迅遛狗PLAY事件', 0)) || 0;
+    const sexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：遛狗PLAY
+event_initiator:
+  event_name: "遛狗PLAY"
+  character: "风见迅"
+  location: "住宅区 - 迅的房间"
+  time: "20:00-23:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "迅又把主角叫到他房间。一进门，项圈已经戴好了，狗链整齐地摆在床边。他没有像上次那样解释这是直播需要，只是看了主角一眼，把链子递了过去。"
+    - "他说今天的弹幕又在刷遛狗——自从上次那条直播火了之后，他这个节目已经成了固定栏目。他用雄小鬼的口吻说主角要是没空就算了，他自己也能播。但他递链子的手没有收回，眼神也在期待。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整迅的坦诚度——次数越多他越不掩饰想被主角牵着的渴望，嘴上的恶态越薄。他可能直接说上次被主角牵着爬到走廊尽头的时候差点高潮了，今晚想挑战更远的地方。"
+    - "结尾留给主角选择：牵起狗链带他出门、只在室内牵着他玩、或让他今天自己遛自己在旁边看着。"
+    <%_ } else { _%>
+    - "迅把主角叫到他的房间。一进门，就看到他已经给自己戴好了黑色项圈，连着一条金属狗链。他把链子递到主角手里，说今天的直播主题是被狗遛——不对，是被主人遛。"
+    - "他用雄小鬼的口吻挑衅主角：敢不敢牵着他出去走一圈——走廊、电梯、楼下，甚至出小区。弹幕想看银犬像条真正的狗一样被牵着爬。他嘴上说着这不过是直播效果，但戴项圈的脖颈微微发颤，眼神紧张又兴奋。"
+    - "结合好感度(<%= affection %>)调整迅的坦诚度——好感度越低越强调这只是直播需要、让主角别自作多情；好感度越高越透露出只有主角能当这个牵他的人。结合淫乱度(<%= lewdness %>)调整他的身体状态——淫乱度越高，项圈下可能早已硬透。"
+    - "结尾留给主角选择：牵起狗链走出去、只在室内牵着他玩、或拒绝但答应留在旁边看他直播。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/迅遛狗PLAY事件" }
+      ]
+
+<%_ } } _%>

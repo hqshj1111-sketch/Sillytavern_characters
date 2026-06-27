@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案7：和风浮世绘风 | Ukiyo-e Fantasy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700;900&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0b08;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', 'Noto Serif JP', serif;
+    color: #c4b99a;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(180,60,30,0.04) 0%, transparent 60%);
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+  }
+
+  .ukiyo-frame {
+    border: 2px solid #2a1a10;
+    background: linear-gradient(180deg, #100c08 0%, #0a0705 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .ukiyo-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgba(180,60,30,0.025) 0%, transparent 3%, transparent 97%, rgba(180,60,30,0.025) 100%);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* ── 标题栏：暖帘风格 ── */
+  .noren-header {
+    text-align: center;
+    padding: 20px 20px 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .noren-header .seal {
+    display: inline-block;
+    width: 40px; height: 40px;
+    border: 2px solid #8b3a2a;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #c05030;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .noren-header .seal::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border: 1px solid rgba(200,80,48,0.2);
+    border-radius: 50%;
+  }
+  .noren-header h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: #c9a060;
+    text-shadow: 0 0 20px rgba(200,80,48,0.15);
+  }
+  .noren-header .sub {
+    font-size: 10px;
+    color: #6b4a30;
+    letter-spacing: 8px;
+    margin-top: 4px;
+  }
+
+  /* ── 青海波分隔线 ── */
+  .seigaiha-divider {
+    height: 16px;
+    background:
+      radial-gradient(circle at 50% 0, transparent 4px, rgba(60,30,20,0.3) 4px, rgba(60,30,20,0.3) 5px, transparent 5px) 0 0 / 10px 8px;
+    opacity: 0.6;
+    margin: 2px 0;
+  }
+
+  /* ── 面板：檜皮葺风格 ── */
+  .hiwada-panel {
+    position: relative;
+    z-index: 1;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(15,10,6,0.6);
+    border: 1px solid #2a1a10;
+    border-left: 2px solid #5c2a1a;
+  }
+  .hiwada-panel .panel-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    color: #c08050;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title .ensō {
+    width: 16px; height: 16px;
+    border: 1px solid rgba(200,80,48,0.4);
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* ── 笔势状态 ── */
+  .sumi-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .sumi-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+  }
+  .sumi-stat .ink-mark {
+    font-size: 16px;
+    width: 24px;
+    text-align: center;
+    color: #c05030;
+    flex-shrink: 0;
+  }
+  .sumi-stat .ink-label {
+    font-size: 9px;
+    color: #5c3a20;
+    letter-spacing: 2px;
+    width: 26px;
+    text-align: right;
+  }
+  .ink-bar-bg {
+    flex: 1;
+    height: 4px;
+    background: #1a0e06;
+    border: 1px solid #2a1a0a;
+    position: relative;
+  }
+  .ink-bar-fill {
+    height: 100%;
+    transition: width 0.4s;
+  }
+  .ink-bar-fill.hp { background: linear-gradient(90deg, #6b2020, #c04040); }
+  .ink-bar-fill.mp { background: linear-gradient(90deg, #1a2a4a, #4060a0); }
+  .ink-bar-fill.sp { background: linear-gradient(90deg, #4a3a1a, #b09040); }
+  .ink-bar-fill.exp { background: linear-gradient(90deg, #1a3a2a, #408050); }
+  .ink-num {
+    font-size: 10px;
+    color: #8a7060;
+    width: 56px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── 家紋属性 ── */
+  .kamon-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .kamon {
+    text-align: center;
+    min-width: 48px;
+  }
+  .kamon .crest {
+    width: 32px; height: 32px;
+    border: 1px solid rgba(200,80,48,0.25);
+    border-radius: 50%;
+    margin: 0 auto 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #c08050;
+  }
+  .kamon .val {
+    font-size: 14px;
+    font-weight: 600;
+    color: #c4b090;
+  }
+  .kamon .key {
+    font-size: 8px;
+    color: #5c3a20;
+    letter-spacing: 2px;
+  }
+
+  /* ── 正文：巻物 ── */
+  .makimono {
+    margin: 8px 14px;
+    padding: 18px 20px 18px 24px;
+    background: linear-gradient(180deg,
+      rgba(25,18,10,0.5) 0%,
+      rgba(20,14,8,0.6) 100%);
+    border: 1px solid #2a1a10;
+    border-left: 3px solid #5c3a20;
+    position: relative;
+    z-index: 1;
+  }
+  .makimono p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #b4a090;
+  }
+  .makimono p:last-child { margin-bottom: 0; }
+  .makimono .kin { color: #d4b060; }
+  .makimono .aka { color: #d06050; }
+  .makimono .sumi { color: #6a5a4a; }
+
+  /* ── 行動 ── */
+  .koudou {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 14px;
+  }
+  .koudou-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: rgba(20,12,6,0.6);
+    border: 1px solid #2a1a10;
+    color: #b4a090;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .koudou-btn:hover {
+    border-color: #8b3a2a;
+    color: #d4b890;
+  }
+  .koudou-btn.main {
+    border-color: #8b3a2a;
+    color: #d4b890;
+  }
+  .koudou-btn.main::before { content: '◈ '; color: #c05030; }
+
+  /* ── 所持品 ── */
+  .shoji-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .shoji-slot {
+    padding: 8px 12px;
+    background: rgba(15,10,6,0.4);
+    border: 1px solid #1a0e06;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .shoji-slot .kind {
+    font-size: 9px;
+    color: #5c3a20;
+    letter-spacing: 2px;
+  }
+  .shoji-slot .item {
+    font-size: 11px;
+    color: #b4a090;
+  }
+  .shoji-slot .item.none { color: #2a1a10; }
+
+  .omamori-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .omamori {
+    font-size: 10px;
+    padding: 4px 10px;
+    border: 1px solid #2a1a10;
+    color: #6a5a40;
+    background: rgba(20,12,6,0.3);
+  }
+  .omamori.lit {
+    border-color: rgba(200,80,48,0.3);
+    color: #c08050;
+    background: rgba(30,15,8,0.4);
+  }
+
+  /* ── 底 ── */
+  .ukiyo-footer {
+    padding: 8px 16px 12px;
+    text-align: center;
+    font-size: 10px;
+    color: #5c3a20;
+    letter-spacing: 3px;
+    position: relative;
+    z-index: 1;
+  }
+  .ukiyo-footer .wave {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: #3a2010;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="ukiyo-frame">
+
+    <div class="noren-header">
+      <div class="seal">地</div>
+      <h1>異 世 界 地 下 城</h1>
+      <div class="sub">ISEKAI DUNGEON</div>
+    </div>
+    <div class="seigaiha-divider"></div>
+
+    <div class="hiwada-panel">
+      <div class="panel-title"><span class="ensō"></span> 冒険者·魂ノ器</div>
+      <div class="sumi-stats">
+        <div class="sumi-stat">
+          <span class="ink-mark">❤</span>
+          <span class="ink-label">生命</span>
+          <div class="ink-bar-bg"><div class="ink-bar-fill hp" style="width:78%"></div></div>
+          <span class="ink-num">78 / 100</span>
+        </div>
+        <div class="sumi-stat">
+          <span class="ink-mark">✦</span>
+          <span class="ink-label">魔力</span>
+          <div class="ink-bar-bg"><div class="ink-bar-fill mp" style="width:54%"></div></div>
+          <span class="ink-num">54 / 100</span>
+        </div>
+        <div class="sumi-stat">
+          <span class="ink-mark">⚔</span>
+          <span class="ink-label">体力</span>
+          <div class="ink-bar-bg"><div class="ink-bar-fill sp" style="width:90%"></div></div>
+          <span class="ink-num">90 / 100</span>
+        </div>
+        <div class="sumi-stat">
+          <span class="ink-mark">⏣</span>
+          <span class="ink-label">経験</span>
+          <div class="ink-bar-bg"><div class="ink-bar-fill exp" style="width:35%"></div></div>
+          <span class="ink-num">350 / 1000</span>
+        </div>
+      </div>
+      <div class="kamon-attrs">
+        <div class="kamon"><div class="crest">⚔</div><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="kamon"><div class="crest">🛡</div><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="kamon"><div class="crest">⚡</div><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="kamon"><div class="crest">✧</div><div class="val">30</div><div class="key">INT</div></div>
+        <div class="kamon"><div class="crest">☘</div><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="kamon"><div class="crest">◎</div><div class="val">1250</div><div class="key">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="makimono">
+      <p>
+        汝、重き石門を押し開けば<span class="kin">魔素</span>の微光が朽ちた空気に漂う。甬道の奥より低き嘶き——<span class="aka">三体の哥布林</span>、影より飛び出で、錆びし短刀を振るいて汝に迫る。
+      </p>
+      <p>
+        佩刀を固く握りしめし時、足下の魔紋仄かに光りぬ。戦の勘、告ぐ——左方の頭領めきたる者こそ真の脅威、その瞳に<span class="aka">尋常ならざる赤き光</span>が宿る。
+      </p>
+      <p>
+        甬道の両壁に刻まれし古き浮彫は<span class="kin">魅魔女王</span>の封印を語る。その<span class="sumi">淫らなる姿態</span>は、この暗き地下に一層の色香を添えて……
+      </p>
+    </div>
+
+    <div class="hiwada-panel">
+      <div class="panel-title"><span class="ensō"></span> 行動選択</div>
+      <div class="koudou">
+        <button class="koudou-btn main">⚔ 哥布林頭領に斬りかかる</button>
+        <button class="koudou-btn">🔥 火球術にて敵群を灼く</button>
+        <button class="koudou-btn">🛡 守勢にて敵の弱点を見極む</button>
+        <button class="koudou-btn">💋 哥布林の一匹を魅了せんとす</button>
+      </div>
+    </div>
+
+    <div class="hiwada-panel">
+      <div class="panel-title"><span class="ensō"></span> 所持品·装備</div>
+      <div class="shoji-grid">
+        <div class="shoji-slot"><span class="kind">武器</span><span class="item">鉄ノ長剣 Lv.3</span></div>
+        <div class="shoji-slot"><span class="kind">防具</span><span class="item">革鎧 Lv.2</span></div>
+        <div class="shoji-slot"><span class="kind">飾品</span><span class="item">冒険者徽章</span></div>
+        <div class="shoji-slot"><span class="kind">消耗</span><span class="item">回復薬水 ×3</span></div>
+      </div>
+      <div class="omamori-tags">
+        <span class="omamori lit">触手緊身衣·共生期</span>
+        <span class="omamori lit">蛻生項圈·中期</span>
+        <span class="omamori">影分身·無心智</span>
+        <span class="omamori">淫欲晶核·閉</span>
+      </div>
+    </div>
+
+    <div class="ukiyo-footer">
+      <div class="wave">〰 〰 〰</div>
+      <div>地下城 第三層 · 阿斯特大陸 · 384年神無月十五日 · 黄昏</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

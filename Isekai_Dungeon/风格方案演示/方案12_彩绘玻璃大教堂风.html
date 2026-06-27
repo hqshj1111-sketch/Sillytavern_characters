@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案12：彩绘玻璃大教堂风 | Stained Glass Cathedral</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #060610;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', serif;
+    color: #d0c8e0;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 660px;
+  }
+
+  .cathedral-frame {
+    position: relative;
+    background: #0a0814;
+    overflow: hidden;
+  }
+  /* 彩窗光投射 */
+  .cathedral-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    background:
+      radial-gradient(ellipse at 30% 15%, rgba(180,40,40,0.06) 0%, transparent 40%),
+      radial-gradient(ellipse at 70% 15%, rgba(40,80,180,0.06) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% 50%, rgba(180,160,40,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 80%, rgba(40,160,80,0.06) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 80%, rgba(160,80,180,0.06) 0%, transparent 40%);
+  }
+
+  /* ── 拱顶标题 ── */
+  .gothic-header {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 18px 20px 10px;
+  }
+  .gothic-header .arch-top {
+    display: inline-block;
+    padding: 8px 32px 0;
+    border-top: 2px solid rgba(200,160,80,0.4);
+    border-left: 2px solid rgba(200,160,80,0.3);
+    border-right: 2px solid rgba(200,160,80,0.3);
+    border-top-left-radius: 40px;
+    border-top-right-radius: 40px;
+  }
+  .gothic-header h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    color: #d4b860;
+    text-shadow: 0 0 20px rgba(200,160,80,0.2);
+  }
+  .gothic-header .canticle {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 9px;
+    color: #706088;
+    letter-spacing: 6px;
+    margin-top: 4px;
+  }
+
+  /* ── 铅条分隔线 ── */
+  .lead-divider {
+    height: 18px;
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .lead-divider .glass-pane {
+    flex: 0 1 14px;
+    height: 4px;
+  }
+  .glass-pane.c1 { background: rgba(200,60,60,0.4); }
+  .glass-pane.c2 { background: rgba(60,100,200,0.4); }
+  .glass-pane.c3 { background: rgba(200,170,40,0.4); }
+  .glass-pane.c4 { background: rgba(60,160,80,0.4); }
+  .glass-pane.c5 { background: rgba(160,80,180,0.4); }
+  .lead-divider .lead-line { flex: 0 1 20px; height: 2px; background: rgba(40,30,50,0.6); }
+
+  /* ── 面板：彩窗嵌板 ── */
+  .stained-panel {
+    position: relative;
+    z-index: 5;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(10,8,20,0.6);
+    border: 2px solid rgba(60,45,70,0.4);
+    box-shadow: inset 0 0 30px rgba(100,60,120,0.05);
+  }
+  .stained-panel .panel-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #c0a060;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title .rosette {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: conic-gradient(
+      #c04040 0deg 60deg, #4060c0 60deg 120deg,
+      #c0a040 120deg 180deg, #40a060 180deg 240deg,
+      #a060c0 240deg 300deg, #c07040 300deg 360deg
+    );
+    box-shadow: 0 0 8px rgba(180,140,60,0.3);
+    flex-shrink: 0;
+  }
+
+  /* ── 状态：彩窗条 ── */
+  .vitrail-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .vitrail-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .vitrail-stat .shard {
+    width: 26px; height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+  .shard.ruby { background: rgba(200,50,50,0.3); color: #ff8080; }
+  .shard.sapphire { background: rgba(50,80,200,0.3); color: #8090ff; }
+  .shard.topaz { background: rgba(200,150,40,0.3); color: #ffd060; }
+  .shard.emerald { background: rgba(40,150,60,0.3); color: #60e080; }
+  .vitrail-stat .stat-body { flex: 1; min-width: 0; }
+  .stat-body .stat-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .stat-head .label { color: #706088; letter-spacing: 2px; font-family: 'Cinzel Decorative', serif; }
+  .stat-head .val { color: #b0a0c0; font-weight: 600; }
+  .vitrail-bar {
+    height: 5px;
+    background: rgba(20,15,30,0.4);
+    border: 1px solid rgba(60,45,70,0.3);
+  }
+  .vitrail-fill { height: 100%; }
+  .vitrail-fill.hp { background: linear-gradient(90deg, #8b2020, #c05050, #e07070); }
+  .vitrail-fill.mp { background: linear-gradient(90deg, #20308b, #4050b0, #6070e0); }
+  .vitrail-fill.sp { background: linear-gradient(90deg, #7b6020, #b09030, #d0b040); }
+  .vitrail-fill.exp { background: linear-gradient(90deg, #206b30, #40a050, #60d070); }
+
+  /* ── 属性：菱形宝石 ── */
+  .gem-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .gem-attr {
+    text-align: center;
+    min-width: 48px;
+  }
+  .gem-attr .lozenge {
+    width: 28px; height: 28px;
+    margin: 0 auto 3px;
+    background: rgba(80,40,120,0.15);
+    border: 1px solid rgba(120,80,160,0.3);
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: #d4b860;
+  }
+  .gem-attr .lozenge span { transform: rotate(-45deg); }
+  .gem-attr .val {
+    font-size: 13px;
+    font-weight: 600;
+    color: #c0b0d0;
+  }
+  .gem-attr .key {
+    font-size: 8px;
+    color: #605070;
+    letter-spacing: 2px;
+    font-family: 'Cinzel Decorative', serif;
+  }
+
+  /* ── 正文：彩窗投影 ── */
+  .sanctuary-text {
+    margin: 6px 14px;
+    padding: 18px 22px;
+    background: rgba(10,8,20,0.5);
+    border: 1px solid rgba(60,45,70,0.3);
+    border-left: 3px solid;
+    border-image: linear-gradient(180deg, #c04040, #4060c0, #c0a040, #40a060) 1;
+    position: relative;
+    z-index: 5;
+  }
+  .sanctuary-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #a098b8;
+  }
+  .sanctuary-text p:last-child { margin-bottom: 0; }
+  .sanctuary-text .light { color: #d4b860; }
+
+  /* ── 行动：跪凳按钮 ── */
+  .pew-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .pew-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: rgba(20,15,35,0.5);
+    border: 1px solid rgba(60,45,70,0.4);
+    color: #a098b8;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+  }
+  .pew-btn:hover {
+    background: rgba(30,20,50,0.5);
+    border-color: #c0a060;
+    color: #d4b860;
+  }
+  .pew-btn.primary {
+    border-color: #c0a060;
+    color: #d4b860;
+  }
+  .pew-btn.primary::before { content: '✠ '; }
+
+  /* ── 装备 ── */
+  .reliquary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .reliquary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(15,12,25,0.4);
+    border: 1px solid rgba(60,45,70,0.2);
+    font-size: 11px;
+  }
+  .reliquary-item .ordo { color: #605070; font-size: 9px; letter-spacing: 1px; }
+  .reliquary-item .nomen { color: #b0a0c0; }
+
+  .sanctus-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .sanctus {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(80,40,120,0.1);
+    border: 1px solid rgba(120,80,160,0.2);
+    color: #8060a0;
+  }
+  .sanctus.consecrated {
+    background: rgba(80,40,120,0.2);
+    border-color: rgba(160,120,200,0.3);
+    color: #b090d0;
+  }
+
+  /* ── 底部 ── */
+  .cathedral-footer {
+    position: relative;
+    z-index: 5;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: #504060;
+    letter-spacing: 3px;
+  }
+  .cathedral-footer .tracery {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .cathedral-footer .tracery .lancet {
+    width: 3px; height: 10px;
+    background: rgba(200,160,80,0.3);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="cathedral-frame">
+
+    <div class="gothic-header">
+      <div class="arch-top">
+        <h1>异 世 界 地 下 城</h1>
+      </div>
+      <div class="canticle">ISEKAI DUNGEON</div>
+    </div>
+
+    <div class="lead-divider">
+      <span class="glass-pane c1"></span><span class="lead-line"></span>
+      <span class="glass-pane c2"></span><span class="lead-line"></span>
+      <span class="glass-pane c3"></span><span class="lead-line"></span>
+      <span class="glass-pane c4"></span><span class="lead-line"></span>
+      <span class="glass-pane c5"></span>
+    </div>
+
+    <div class="stained-panel">
+      <div class="panel-title"><span class="rosette"></span> 圣 者 之 光</div>
+      <div class="vitrail-stats">
+        <div class="vitrail-stat">
+          <div class="shard ruby">♥</div>
+          <div class="stat-body">
+            <div class="stat-head"><span class="label">VITA</span><span class="val">78/100</span></div>
+            <div class="vitrail-bar"><div class="vitrail-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="vitrail-stat">
+          <div class="shard sapphire">✦</div>
+          <div class="stat-body">
+            <div class="stat-head"><span class="label">MANA</span><span class="val">54/100</span></div>
+            <div class="vitrail-bar"><div class="vitrail-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="vitrail-stat">
+          <div class="shard topaz">⚔</div>
+          <div class="stat-body">
+            <div class="stat-head"><span class="label">VIGOR</span><span class="val">90/100</span></div>
+            <div class="vitrail-bar"><div class="vitrail-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="vitrail-stat">
+          <div class="shard emerald">⏫</div>
+          <div class="stat-body">
+            <div class="stat-head"><span class="label">GRACE</span><span class="val">35%</span></div>
+            <div class="vitrail-bar"><div class="vitrail-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="gem-attrs">
+        <div class="gem-attr"><div class="lozenge"><span>⚔</span></div><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="gem-attr"><div class="lozenge"><span>🛡</span></div><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="gem-attr"><div class="lozenge"><span>⚡</span></div><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="gem-attr"><div class="lozenge"><span>✧</span></div><div class="val">30</div><div class="key">INT</div></div>
+        <div class="gem-attr"><div class="lozenge"><span>☘</span></div><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="gem-attr"><div class="lozenge"><span>◎</span></div><div class="val">1250</div><div class="key">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="sanctuary-text">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="light">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="light">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="light">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="light">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="stained-panel">
+      <div class="panel-title"><span class="rosette"></span> 神 谕 抉 择</div>
+      <div class="pew-actions">
+        <button class="pew-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="pew-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="pew-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="pew-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="stained-panel">
+      <div class="panel-title"><span class="rosette"></span> 圣 物 厅</div>
+      <div class="reliquary-grid">
+        <div class="reliquary-item"><span class="ordo">圣剑</span><span class="nomen">铁质长剑 Lv.3</span></div>
+        <div class="reliquary-item"><span class="ordo">圣铠</span><span class="nomen">皮甲 Lv.2</span></div>
+        <div class="reliquary-item"><span class="ordo">圣徽</span><span class="nomen">冒险者徽章</span></div>
+        <div class="reliquary-item"><span class="ordo">圣药</span><span class="nomen">回复药水 ×3</span></div>
+      </div>
+      <div class="sanctus-tags">
+        <span class="sanctus consecrated">触手紧身衣·共生期</span>
+        <span class="sanctus consecrated">蜕生项圈·中期</span>
+        <span class="sanctus">影子分身·无心智</span>
+        <span class="sanctus">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="cathedral-footer">
+      <div class="tracery"><span class="lancet"></span><span class="lancet"></span><span class="lancet"></span><span class="lancet"></span><span class="lancet"></span></div>
+      <div>地下城第三层 · 阿斯特大陆 · 黄昏 · 第十二回合</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

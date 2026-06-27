@@ -1,0 +1,51 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentHour = parseInt(_.get(stat, '进程.当前小时', 12)) || 12;
+  const currentRegion = _.get(stat, '主角.当前状态.当前区域', '');
+  const isDaily = _.get(stat, '进程.阶段', '日常阶段') === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['海斗更衣室自慰事件'] && isDaily && !isSexActive) {
+    const kaido = _.get(stat, 'NPC数据.黑崎海斗', {});
+    const lewdness = parseInt(_.get(kaido, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.海斗更衣室自慰事件', 0)) || 0;
+    const sexCount = parseInt(_.get(kaido, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：更衣室撞见
+event_initiator:
+  event_name: "更衣室撞见"
+  character: "黑崎海斗"
+  location: "文教区/海滨区 - 更衣室"
+  time: "15:00-19:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角走进更衣室。"
+    <%_ if (eventCount > 0) { _%>
+    - "更衣室里传来熟悉的粗重喘息和撸动声。主角不用拐过那排储物柜就知道海斗又在自慰了。"
+    - "海斗听到脚步声，直接出声招呼让主角过来。他靠在长椅上，手上的动作根本没停——已经不是第一次被主角撞见，他完全不需要尴尬。"
+    - "结合淫乱度(<%= lewdness %>)和做爱次数(<%= sexCount %>)调整他的状态——次数越多他越自然地把主角拉进来参与，可能直接让主角替他弄，或者反过来伸手扯主角的裤链。他的发言从'憋得慌'变成'就等你了'，甚至会提及上次在更衣室的后续。"
+    - "结尾留给主角选择：走过去接手他的动作、脱掉衣服加入他、或靠在旁边看戏。"
+    <%_ } else { _%>
+    - "主角走进更衣室，撞见海斗背对着门，粗重的喘息和手臂的快速动作暴露了他正在做的事。"
+    <%_ if (lewdness < 25) { _%>
+    - "海斗听到动静转过身，手上动作一滞，微微尴尬地笑了笑，但还是当着主角的面继续了几下直到释放。"
+    <%_ } else if (lewdness < 50) { _%>
+    - "海斗正面对着他靠在长椅上自慰。看见主角进来也不停，反而坦然地打招呼，说训练完憋得慌，问主角要不要冲个澡。"
+    <%_ } else { _%>
+    - "海斗正面对着他靠在长椅上自慰。看见主角进来，他不仅没停，反而放慢动作，用下流的话问主角要不要一起来一发，或者过来帮他一把。"
+    <%_ } _%>
+    - "结尾留给主角选择：退出更衣室回避、留下但保持距离、或接受暗示靠近。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/海斗更衣室自慰事件" }
+      ]
+
+<%_ } } _%>

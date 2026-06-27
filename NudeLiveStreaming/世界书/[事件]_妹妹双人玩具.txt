@@ -1,0 +1,47 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+  const discovered = _.get(makoto, '秘密发现', false);
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹双人玩具事件'] && isDaily && discovered && !isSexActive) {
+    const affection = parseInt(_.get(makoto, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.妹妹双人玩具事件', 0)) || 0;
+    const sexCount = parseInt(_.get(makoto, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：双人情趣玩具
+event_initiator:
+  event_name: "双人情趣玩具"
+  character: "汐见真帆"
+  location: "住宅区 - 真帆的房间"
+  time: "19:00-23:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "真帆把哥哥拉进房间，从床底掏出一个快递盒。"
+    <%_ if (eventCount > 0) { _%>
+    - "真帆没有找任何借口。她直接说她想和哥哥一起爽，这次买的是更出格的双人情趣玩具——可能是尺寸更大的双头龙、带电击功能的联动款、或者是带吸盘可以固定在地板上的那种。"
+    - "她一边拆包装一边兴奋地介绍这个玩具有多厉害，说她看了好几篇测评才决定下单的，今天一定要试试。结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整她的语气——好感度和次数越高她越主动，直接帮哥哥脱裤子。"
+    - "结合淫乱度(<%= lewdness %>)调整她对玩具的熟练操作程度。"
+    - "结尾留给主角选择：配合她尝试这个新玩具、接过主导权让她做承受方、或吐槽她买这些东西越来越离谱。"
+    <%_ } else { _%>
+    - "真帆鬼鬼祟祟地把哥哥拉进房间，从床底掏出一个快递盒。她嘴上说着这是为了写论坛测评才买的，让哥哥帮她试试效果，不许想歪。但拆开的包装暴露了真相——双头龙假鸡巴或远程联动跳蛋，分明是需要两个人一起用的情趣玩具。"
+    - "真帆红着脸却嘴硬地命令哥哥配合，说都已经拆了就顺便体验一下，别浪费钱。但她的白丝腿在紧张地蹭来蹭去，暴露了内心。"
+    - "结合好感度(<%= affection %>)和淫乱度(<%= lewdness %>)调整真帆的表现——好感度越高越嘴硬却越黏人，淫乱度越高越熟练且越放得开。"
+    - "结尾留给主角选择：配合妹妹完成这次体验、接过主导权让她做承受方、或戏谑她是不是早就想好要和哥哥玩了。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹双人玩具事件" }
+      ]
+
+<%_ } } _%>

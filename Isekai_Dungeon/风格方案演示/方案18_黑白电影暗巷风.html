@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案18：黑白电影暗巷风 | Film Noir Monochrome</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0a;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Noto Serif SC', serif;
+    color: #a0a0a0;
+    font-size: 14px;
+    line-height: 1.8;
+    background-image: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.02) 0%, transparent 60%);
+  }
+
+  .app { width: 100%; max-width: 660px; }
+
+  .noir-frame {
+    background: linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
+    border: 2px solid #333333;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.8);
+  }
+  /* 胶片颗粒 */
+  .noir-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.008) 1px, rgba(255,255,255,0.008) 2px);
+  }
+  /* 侧边光 */
+  .noir-frame::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 4px;
+    background: linear-gradient(180deg, transparent 10%, #ffffff 20%, transparent 30%, #ffffff 50%, transparent 60%, #ffffff 80%, transparent 90%);
+    opacity: 0.03;
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  .noir-header {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 16px 20px 8px;
+    border-bottom: 3px double #444;
+  }
+  .noir-header .slug {
+    font-family: 'Special Elite', cursive;
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .noir-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: #cccccc;
+    text-shadow: 0 2px 3px rgba(0,0,0,0.8);
+  }
+  .noir-header .tagline {
+    font-family: 'Special Elite', cursive;
+    font-size: 9px;
+    color: #666;
+    letter-spacing: 4px;
+    margin-top: 4px;
+  }
+
+  .grain-divider {
+    height: 8px;
+    position: relative;
+    z-index: 5;
+    background: repeating-linear-gradient(90deg, #333 0px, #333 2px, transparent 2px, transparent 4px);
+    opacity: 0.4;
+  }
+
+  .noir-panel {
+    position: relative;
+    z-index: 5;
+    margin: 6px 14px;
+    padding: 14px 18px;
+    background: rgba(20,20,20,0.5);
+    border: 1px solid #333;
+  }
+  .noir-panel .panel-label {
+    font-family: 'Special Elite', cursive;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #999;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+  }
+  .panel-label .crosshair {
+    width: 10px; height: 10px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .crosshair::before, .crosshair::after {
+    content: '';
+    position: absolute;
+    background: #666;
+  }
+  .crosshair::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+  .crosshair::after { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+
+  .noir-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .noir-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: rgba(15,15,15,0.5);
+    border: 1px solid #2a2a2a;
+  }
+  .noir-stat .mark {
+    width: 26px; height: 26px;
+    border: 2px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .mark.crimson { border-color: #a04040; color: #e06060; }
+  .mark.slate { border-color: #4060a0; color: #6080e0; }
+  .mark.amber { border-color: #a09040; color: #e0c060; }
+  .mark.mint { border-color: #40a060; color: #60e080; }
+  .noir-stat .body { flex: 1; min-width: 0; }
+  .noir-stat .head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+  .head .tag { color: #666; letter-spacing: 1px; font-family: 'Special Elite', cursive; }
+  .head .val { color: #aaa; }
+  .noir-bar {
+    height: 4px;
+    background: #0a0a0a;
+    border: 1px solid #222;
+  }
+  .noir-fill { height: 100%; }
+  .noir-fill.hp { background: linear-gradient(90deg, #808080, #e0e0e0); }
+  .noir-fill.mp { background: linear-gradient(90deg, #606060, #c0c0c0); }
+  .noir-fill.sp { background: linear-gradient(90deg, #707070, #d0d0d0); }
+  .noir-fill.exp { background: linear-gradient(90deg, #505050, #b0b0b0); }
+
+  .dossier-attrs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+  }
+  .dossier-attr {
+    text-align: center;
+    min-width: 48px;
+    padding: 6px 4px;
+    background: rgba(15,15,15,0.3);
+    border: 1px solid #2a2a2a;
+  }
+  .dossier-attr .icon { font-size: 14px; color: #888; display: block; }
+  .dossier-attr .val { font-size: 14px; color: #bbb; font-family: 'Special Elite', cursive; }
+  .dossier-attr .key {
+    font-size: 7px;
+    color: #555;
+    letter-spacing: 2px;
+    font-family: 'Special Elite', cursive;
+  }
+
+  .manuscript-text {
+    margin: 6px 14px;
+    padding: 18px 22px;
+    background: rgba(18,18,18,0.5);
+    border: 1px solid #333;
+    border-left: 2px solid #666;
+    position: relative;
+    z-index: 5;
+  }
+  .manuscript-text p {
+    margin-bottom: 10px;
+    text-indent: 2em;
+    color: #888;
+  }
+  .manuscript-text p:last-child { margin-bottom: 0; }
+  .manuscript-text .red { color: #d06060; }
+  .manuscript-text .bold { color: #bbb; }
+
+  .case-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 14px;
+  }
+  .case-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    background: rgba(20,20,20,0.5);
+    border: 1px solid #333;
+    color: #888;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .case-btn:hover {
+    border-color: #666;
+    color: #bbb;
+    background: rgba(30,30,30,0.5);
+  }
+  .case-btn.primary { border-color: #666; color: #ccc; }
+  .case-btn.primary::before { content: '▸ '; }
+
+  .evidence-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .evidence-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(15,15,15,0.3);
+    border: 1px solid #2a2a2a;
+    font-size: 11px;
+  }
+  .evidence-item .type { color: #555; font-size: 9px; font-family: 'Special Elite', cursive; }
+  .evidence-item .name { color: #999; }
+
+  .exhibit-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .exhibit {
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(50,50,50,0.1);
+    border: 1px solid #333;
+    color: #666;
+    font-family: 'Special Elite', cursive;
+    letter-spacing: 1px;
+  }
+  .exhibit.filed {
+    border-color: #555;
+    color: #999;
+    background: rgba(50,50,50,0.2);
+  }
+
+  .noir-footer {
+    position: relative;
+    z-index: 5;
+    padding: 10px 20px 14px;
+    text-align: center;
+    font-family: 'Special Elite', cursive;
+    font-size: 9px;
+    color: #555;
+    letter-spacing: 2px;
+    border-top: 1px solid #2a2a2a;
+    margin: 0 14px;
+  }
+  .noir-footer .dot-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="noir-frame">
+
+    <div class="noir-header">
+      <div class="slug">Case File #384</div>
+      <h1>异 世 界 地 下 城</h1>
+      <div class="tagline">ISEKAI DUNGEON · THE DARK ALLEY</div>
+    </div>
+    <div class="grain-divider"></div>
+
+    <div class="noir-panel">
+      <div class="panel-label"><span class="crosshair"></span> SUBJECT STATUS</div>
+      <div class="noir-stats">
+        <div class="noir-stat">
+          <div class="mark crimson">♥</div>
+          <div class="body">
+            <div class="head"><span class="tag">VITALITY</span><span class="val">78 / 100</span></div>
+            <div class="noir-bar"><div class="noir-fill hp" style="width:78%"></div></div>
+          </div>
+        </div>
+        <div class="noir-stat">
+          <div class="mark slate">✦</div>
+          <div class="body">
+            <div class="head"><span class="tag">PSYCHE</span><span class="val">54 / 100</span></div>
+            <div class="noir-bar"><div class="noir-fill mp" style="width:54%"></div></div>
+          </div>
+        </div>
+        <div class="noir-stat">
+          <div class="mark amber">⚔</div>
+          <div class="body">
+            <div class="head"><span class="tag">STAMINA</span><span class="val">90 / 100</span></div>
+            <div class="noir-bar"><div class="noir-fill sp" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="noir-stat">
+          <div class="mark mint">⏫</div>
+          <div class="body">
+            <div class="head"><span class="tag">PROGRESS</span><span class="val">35%</span></div>
+            <div class="noir-bar"><div class="noir-fill exp" style="width:35%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="dossier-attrs">
+        <div class="dossier-attr"><span class="icon">⚔</span><div class="val">42</div><div class="key">ATK</div></div>
+        <div class="dossier-attr"><span class="icon">🛡</span><div class="val">28</div><div class="key">DEF</div></div>
+        <div class="dossier-attr"><span class="icon">⚡</span><div class="val">35</div><div class="key">AGI</div></div>
+        <div class="dossier-attr"><span class="icon">✧</span><div class="val">30</div><div class="key">INT</div></div>
+        <div class="dossier-attr"><span class="icon">☘</span><div class="val">18</div><div class="key">LCK</div></div>
+        <div class="dossier-attr"><span class="icon">◎</span><div class="val">1250</div><div class="key">GOLD</div></div>
+      </div>
+    </div>
+
+    <div class="manuscript-text">
+      <p>
+        你推开沉重的石门，腐朽的空气中弥漫着<span class="bold">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="red">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。
+      </p>
+      <p>
+        你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="red">不寻常的红光</span>。
+      </p>
+      <p>
+        甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="bold">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……
+      </p>
+    </div>
+
+    <div class="noir-panel">
+      <div class="panel-label"><span class="crosshair"></span> COURSE OF ACTION</div>
+      <div class="case-actions">
+        <button class="case-btn primary">⚔ 挥剑斩向哥布林头领</button>
+        <button class="case-btn">🔥 释放火球术灼烧敌群</button>
+        <button class="case-btn">🛡 防御姿态观察敌人弱点</button>
+        <button class="case-btn">💋 尝试魅惑哥布林</button>
+      </div>
+    </div>
+
+    <div class="noir-panel">
+      <div class="panel-label"><span class="crosshair"></span> INVENTORY LOG</div>
+      <div class="evidence-grid">
+        <div class="evidence-item"><span class="type">EXHIBIT A</span><span class="name">铁质长剑 Lv.3</span></div>
+        <div class="evidence-item"><span class="type">EXHIBIT B</span><span class="name">皮甲 Lv.2</span></div>
+        <div class="evidence-item"><span class="type">EXHIBIT C</span><span class="name">冒险者徽章</span></div>
+        <div class="evidence-item"><span class="type">EXHIBIT D</span><span class="name">回复药水 ×3</span></div>
+      </div>
+      <div class="exhibit-tags">
+        <span class="exhibit filed">触手紧身衣·共生期</span>
+        <span class="exhibit filed">蜕生项圈·中期</span>
+        <span class="exhibit">影子分身·无心智</span>
+        <span class="exhibit">淫欲晶核·关闭</span>
+      </div>
+    </div>
+
+    <div class="noir-footer">
+      <div class="dot-line">· · · · ·</div>
+      <div>B3F · ASTOR · 384.10.15 · 20:30 · TURN 12</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

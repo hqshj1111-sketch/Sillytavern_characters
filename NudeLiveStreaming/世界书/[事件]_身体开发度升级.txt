@@ -1,0 +1,50 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['身体开发度升级事件'] && isDaily && !isSexActive) {
+    const partKey = events['身体开发度升级事件'];
+    // 部位映射表
+    const partMap = {
+      '后穴': { path: '主角.开发度.后穴开发度', descPath: '/主角.性器官特征/后穴形态', name: '后穴' },
+      '肉棒': { path: '主角.开发度.肉棒开发度', descPath: '/主角.性器官特征/阴茎形态', name: '阴茎' },
+      '胸部': { path: '主角.开发度.胸部开发度', descPath: '/主角.性器官特征/乳头形态', name: '乳头' }
+    };
+    const partInfo = partMap[partKey] || { name: partKey, descPath: `/主角/性器官特征/${partKey}形态` };
+    const devValue = parseInt(_.get(stat, partInfo.path.replace(/\//g, '.'), 0)) || 0;
+
+    let stageName = '';
+    if (devValue >= 10) stageName = '深度开发';
+    else if (devValue >= 6) stageName = '中度开发';
+    else if (devValue >= 3) stageName = '初步开发';
+    else stageName = '初始';
+    const isStreamer = _.get(stat, '主角.主播信息.直播总次数', 0) > 0;
+_%>
+# 事件：身体开发度升级
+body_development:
+  event_name: "<%= partInfo.name %>开发度升级"
+  part: "<%= partInfo.name %>"
+  current_value: <%= devValue %>
+  stage: "<%= stageName %>"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角在独处时无意间瞥见镜中的自己。他停下脚步，从未如此仔细地审视这具身体——焦点落在<%= partInfo.name %>上。"
+    - "与先前的模样相比，<%= partInfo.name %>进一步显现出被反复开发使用的痕迹。<%= devValue < 3 ? '变化尚微，但仔细观察已能察觉与普通人的不同' : (devValue < 6 ? '变化显而易见——色泽、形状、敏感度都在提醒他这段日子有多疯狂' : (devValue < 10 ? '镜子里的那个部位已经彻底变了样，带着被深度使用后的淫靡美感' : '即便是最老练的性爱者看到这个部位也会为之惊叹——这是一个完全为快感而生的器官')) %>。<%= isStreamer ? '或许观众们在镜头里比他自己更早注意到这些变化。' : '' %>"
+    - "结合当前淫乱度描写主角对身体变化的感受——是羞耻、骄傲、怀念曾经的青涩、还是期待更进一步？"
+    - "结尾留给主角选择：触碰并感受自己的变化、拍下照片记录这个阶段、或穿上衣服继续新的一天。"
+
+  mandatory_data_sync:
+    instruction: "更新对应部位的描述后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/身体开发度升级事件" },
+        { "op": "replace", "path": "<%= partInfo.descPath %>", "value": "[根据阶段和开发次数更新的详细描述]" }
+      ]
+
+<%_ } } _%>

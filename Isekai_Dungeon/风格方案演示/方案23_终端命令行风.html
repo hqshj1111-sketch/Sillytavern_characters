@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案23：终端命令行风 | Terminal MUD</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a08;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 16px;
+  }
+
+  .terminal {
+    width: 100%; max-width: 660px;
+    background: #0a0c0a;
+    border: 2px solid #1a3a1a;
+    padding: 16px 20px;
+    font-family: 'Courier New', 'SimSun', monospace;
+    font-size: 13px; line-height: 1.5;
+    color: #33cc33;
+    box-shadow: 0 0 40px rgba(0,255,0,0.06), inset 0 0 60px rgba(0,0,0,0.5);
+    position: relative; overflow: hidden;
+  }
+  /* 荧光屏扫描线 */
+  .terminal::before {
+    content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+  }
+  /* CRT 光晕 */
+  .terminal::after {
+    content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0,255,0,0.02) 0%, transparent 70%);
+  }
+
+  .terminal-content { position: relative; z-index: 3; }
+
+  /* ASCII 标题 */
+  .ascii-title {
+    color: #66ff66; text-align: center; margin-bottom: 4px;
+    font-size: 9px; line-height: 1.2; white-space: pre;
+  }
+  .header-line {
+    color: #228822; text-align: center; font-size: 11px;
+    letter-spacing: 3px; margin-bottom: 10px;
+    border-top: 1px solid #1a4a1a; border-bottom: 1px solid #1a4a1a;
+    padding: 4px 0;
+  }
+  .header-line .blink {
+    animation: cursor-blink 1s steps(1) infinite;
+  }
+  @keyframes cursor-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* 信息块 */
+  .info-block {
+    border: 1px solid #1a401a; padding: 8px 12px; margin-bottom: 8px;
+  }
+  .info-block .block-title {
+    color: #44aa44; font-weight: bold; margin-bottom: 4px;
+    letter-spacing: 2px;
+  }
+  .info-row {
+    display: flex; justify-content: space-between;
+    color: #2a882a; font-size: 12px;
+  }
+  .info-row .label { color: #1a6a1a; }
+  .info-row .val { color: #44cc44; }
+
+  /* ASCII 进度条 */
+  .ascii-bar {
+    display: inline-block; color: #33cc33; letter-spacing: -1px;
+    margin-left: 4px;
+  }
+  .ascii-bar .filled { color: #44ff44; }
+  .ascii-bar .empty { color: #0a2a0a; }
+
+  /* 正文 */
+  .narration {
+    border: 1px solid #1a401a; padding: 10px 14px; margin-bottom: 8px;
+    color: #2a882a; font-size: 12px; line-height: 1.7;
+  }
+  .narration p { margin-bottom: 8px; text-indent: 2em; }
+  .narration p:last-child { margin-bottom: 0; }
+  .narration .hl { color: #55dd55; }
+  .narration .warn { color: #dd5555; }
+
+  /* 操作提示 */
+  .prompt-area {
+    border: 1px solid #1a401a; padding: 8px 12px; margin-bottom: 8px;
+  }
+  .prompt-area .prompt-title {
+    color: #44aa44; margin-bottom: 6px; letter-spacing: 2px;
+  }
+  .action-line {
+    display: block; padding: 3px 0; color: #2a882a;
+    cursor: pointer; transition: color 0.15s;
+  }
+  .action-line:hover { color: #66ff66; }
+  .action-line .num { color: #1a6a1a; margin-right: 6px; }
+  .action-line.primary { color: #55dd55; }
+  .action-line.primary .num { color: #44cc44; }
+
+  /* 命令输入行 */
+  .cmd-line {
+    color: #44cc44; font-size: 12px; margin-top: 4px;
+  }
+  .cmd-line .prompt { color: #44aa44; }
+  .cmd-line .cursor {
+    display: inline-block; width: 8px; height: 14px;
+    background: #33cc33; vertical-align: middle;
+    animation: cursor-blink 1s steps(1) infinite;
+  }
+  .prompt { color: #44aa44; }
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="terminal-content">
+
+    <!-- ASCII Art 标题 -->
+    <div class="ascii-title">
+ ___ _   _ _ __   _____  ___ _   _       ___ _   _ _ __   ___  ___  ___ _ __
+|_ _| \ | | |\ \ / / _ \/ __| | | |     | __| | | | |\ \ / / \| _ \/ __| '_ \
+ | ||  \| | | \ V /|  _/\__ \ |_| |     | _|| |_| | | \ V /| .) | | (__| | | |
+|___|_|\__|_|  \_/ |_|  |___/\___/     |___|\___/|_|  \_/ |___/|_| \___|_| |_|
+    </div>
+    <div class="header-line">ISEKAI DUNGEON SYSTEM v3.84 <span class="blink">_</span></div>
+
+    <!-- 状态 -->
+    <div class="info-block">
+      <div class="block-title">[ STATUS ]</div>
+      <div class="info-row"><span class="label">HP</span><span>78/100 <span class="ascii-bar"><span class="filled">███████████████████████████████████████</span><span class="empty">███████████</span></span></span></div>
+      <div class="info-row"><span class="label">MP</span><span>54/100 <span class="ascii-bar"><span class="filled">███████████████████████████</span><span class="empty">███████████████████████</span></span></span></div>
+      <div class="info-row"><span class="label">SP</span><span>90/100 <span class="ascii-bar"><span class="filled">█████████████████████████████████████████████</span><span class="empty">█████</span></span></span></div>
+      <div class="info-row"><span class="label">EXP</span><span>35% <span class="ascii-bar"><span class="filled">█████████████████</span><span class="empty">███████████████████████████████</span></span></span></div>
+    </div>
+
+    <!-- 属性 -->
+    <div class="info-block">
+      <div class="block-title">[ ATTRIBUTES ]</div>
+      <div class="info-row">
+        <span>ATK: <span class="val">42</span></span>
+        <span>DEF: <span class="val">28</span></span>
+        <span>AGI: <span class="val">35</span></span>
+        <span>INT: <span class="val">30</span></span>
+        <span>LCK: <span class="val">18</span></span>
+        <span>GOLD: <span class="val">1250</span></span>
+      </div>
+    </div>
+
+    <!-- 叙述 -->
+    <div class="narration">
+      <p>你推开沉重的石门，腐朽的空气中弥漫着<span class="hl">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="warn">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。</p>
+      <p>你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="warn">不寻常的红光</span>。</p>
+      <p>甬道两侧的石壁上，古老的浮雕描绘着曾被封印在此的<span class="hl">魅魔女王</span>。那些姿态不堪入目的壁画，让这幽暗的地下空间多了一层淫靡的气息……</p>
+    </div>
+
+    <!-- 行动选项 -->
+    <div class="prompt-area">
+      <div class="prompt-title">[ 选择你的行动 ]</div>
+      <span class="action-line primary"><span class="num">[1]</span> 挥剑斩向哥布林头领</span>
+      <span class="action-line"><span class="num">[2]</span> 释放火球术灼烧敌群</span>
+      <span class="action-line"><span class="num">[3]</span> 防御姿态，观察敌人弱点</span>
+      <span class="action-line"><span class="num">[4]</span> 尝试魅惑其中一只哥布林</span>
+    </div>
+
+    <!-- 装备 -->
+    <div class="info-block">
+      <div class="block-title">[ EQUIPMENT ]</div>
+      <div class="info-row"><span class="label">WPN</span><span>铁质长剑 Lv.3</span></div>
+      <div class="info-row"><span class="label">ARM</span><span>皮甲 Lv.2</span></div>
+      <div class="info-row"><span class="label">ACC</span><span>冒险者徽章</span></div>
+      <div class="info-row"><span class="label">ITM</span><span>回复药水 ×3</span></div>
+      <div class="info-row" style="margin-top:4px;"><span class="label">SPC</span><span>[触手紧身衣·共生期] [蜕生项圈·中期] [影子分身·无心智] [淫欲晶核·关闭]</span></div>
+    </div>
+
+    <!-- 命令行 -->
+    <div class="cmd-line">
+      <span class="prompt">dungeon@astor:~$</span> <span class="cursor"></span>
+    </div>
+
+    <div style="color:#1a4a1a; font-size:10px; margin-top:4px; text-align:right;">
+      B3F · ASTOR · 384.10.15 · DUSK · TURN 12
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

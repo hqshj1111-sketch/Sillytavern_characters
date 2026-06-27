@@ -1,0 +1,23 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+const phase = _.get(stat, '进程.阶段', '创角阶段');
+if (phase === '创角阶段') return;
+const specialEquips = _.get(stat, '主角.特殊装备', []);
+const isActive = specialEquips.includes('欲体晶核（已激活）');
+const isInactive = specialEquips.includes('欲体晶核（未激活）');
+if (!isActive && !isInactive) return;
+const gender = _.get(stat, '主角.基本信息.性别', '');
+_%>
+<%= isActive ? '# 欲体晶核·已激活（特殊装备）' : '# 欲体晶核·未激活（特殊装备）' %>
+
+- 类型：特殊体内晶核，不可见且深埋于佩戴者体内，已与机体彻底融合，无法以物理方式取出
+<%_ if (isActive) { _%>
+- 状态：晶核已激活，佩戴者已完成性转。心理与自我认知不变，身体已改变
+- 性器官变化：<% if (gender === '男') { %>鸡巴已消失，取而代之的是完整的小穴；胸部显著隆起变大<% } else { %>胸部已平坦化；小穴闭合消失，取而代之的是完整的鸡巴<% } %>
+- 解除：可反向激活晶核回归原性别；激活与反向激活均由佩戴者意念控制
+<%_ } else { _%>
+- 状态：晶核未激活，当前佩戴者保持原有生理性别
+- 作用概述：激活后晶核将在极短时间内完成佩戴者的性转——心理与自我认知完全不变，仅身体层面发生彻底的改变
+- 激活：由佩戴者意念触发激活
+<%_ } _%>
+<%_ } _%>

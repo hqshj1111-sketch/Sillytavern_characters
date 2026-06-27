@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案24：塔罗牌占卜风 | Tarot Divination</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0608;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 12px;
+    background-image: radial-gradient(ellipse at 50% 40%, rgba(120,60,140,0.06) 0%, transparent 60%);
+  }
+
+  .tarot-table {
+    width: 100%; max-width: 660px;
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+
+  /* ====== 顶部十字 ====== */
+  .cross-row {
+    display: flex; gap: 10px; align-items: flex-end;
+  }
+
+  /* ====== 塔罗牌通用 ====== */
+  .tarot-card {
+    background: linear-gradient(180deg, #1a0e20, #100818);
+    border: 2px solid #4a2850;
+    border-radius: 6px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 20px rgba(80,30,100,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: default;
+    display: flex; flex-direction: column;
+  }
+  .tarot-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0,0,0,0.6), 0 0 30px rgba(120,60,160,0.15);
+  }
+  .tarot-card .card-border {
+    position: absolute; inset: 4px; border: 1px solid rgba(120,60,140,0.2);
+    border-radius: 3px; pointer-events: none;
+  }
+  .tarot-card .card-header {
+    padding: 6px 10px 4px; text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 9px; letter-spacing: 3px;
+    color: #9060a0;
+    border-bottom: 1px solid rgba(120,60,140,0.15);
+    position: relative; z-index: 1;
+  }
+  .tarot-card .card-body {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 6px 8px; position: relative; z-index: 1;
+    text-align: center;
+  }
+  .tarot-card .card-roman {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; color: #604070; opacity: 0.3;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ====== 中央大牌：叙事 ====== */
+  .center-card {
+    width: 260px; height: 170px;
+    background: linear-gradient(180deg, #1a0a20, #0e0614);
+    border: 3px solid #6a3a70;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.6), 0 0 30px rgba(140,60,180,0.12);
+  }
+  .center-card .card-header {
+    font-size: 11px; color: #b070c0; padding: 8px 12px 6px;
+  }
+  .center-card .narrative-scroll {
+    flex: 1; padding: 8px 14px;
+    color: #a080b0; font-size: 11px; line-height: 1.7;
+    overflow-y: auto; text-align: left;
+  }
+  .center-card .narrative-scroll p { margin-bottom: 6px; text-indent: 2em; }
+  .center-card .narrative-scroll p:last-child { margin-bottom: 0; }
+  .center-card .narrative-scroll .gilt { color: #d0b060; }
+  .center-card .narrative-scroll .warn { color: #e06060; }
+
+  /* ====== 环绕小牌：状态 ====== */
+  .stat-card {
+    width: 100px; height: 110px;
+  }
+  .stat-card .card-body .big-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 30px; font-weight: 600; color: #c0a0d0;
+  }
+  .stat-card .card-body .stat-detail {
+    font-size: 9px; color: #705080; margin-top: 2px;
+  }
+  .stat-card .card-body .mini-bar {
+    width: 60px; height: 3px; background: rgba(120,60,140,0.15);
+    border-radius: 1px; overflow: hidden; margin-top: 3px;
+  }
+  .stat-card .card-body .mini-bar .fill { height: 100%; }
+  .stat-card .card-body .mini-bar .fill.hp { background: #c04040; }
+  .stat-card .card-body .mini-bar .fill.mp { background: #4060c0; }
+  .stat-card .card-body .mini-bar .fill.sp { background: #c0a040; }
+  .stat-card .card-body .mini-bar .fill.exp { background: #40a060; }
+
+  /* ====== 底部扇形：行动选项 ====== */
+  .fan-row {
+    display: flex; gap: 8px; justify-content: center;
+  }
+  .action-card {
+    width: 120px; height: 90px;
+    cursor: pointer;
+  }
+  .action-card:hover {
+    border-color: #9060b0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 20px rgba(140,80,180,0.2);
+  }
+  .action-card .card-body .action-symbol {
+    font-size: 22px; margin-bottom: 2px;
+  }
+  .action-card .card-body .action-text {
+    font-size: 10px; color: #9070a0; line-height: 1.4;
+  }
+  .action-card.primary { border-color: #9060b0; }
+  .action-card.primary .action-text { color: #b080c0; }
+
+  /* ====== 属性小牌行 ====== */
+  .minor-row {
+    display: flex; gap: 6px; justify-content: center;
+  }
+  .minor-card {
+    width: 62px; height: 62px;
+  }
+  .minor-card .card-body .minor-sym {
+    font-size: 16px; color: #9060a0; margin-bottom: 1px;
+  }
+  .minor-card .card-body .minor-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; color: #c0a0d0; font-weight: 600;
+  }
+  .minor-card .card-body .minor-key {
+    font-size: 7px; color: #503060; letter-spacing: 1px;
+  }
+
+  /* ====== 底部信息条 ====== */
+  .table-edge {
+    width: 100%; display: flex; justify-content: space-between;
+    padding: 4px 10px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 9px; color: #403050; letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+<div class="tarot-table">
+
+  <!-- 第一行：HP / 中央叙事 / MP -->
+  <div class="cross-row">
+    <div class="tarot-card stat-card">
+      <div class="card-border"></div>
+      <div class="card-header">THE VITAL</div>
+      <div class="card-body">
+        <div class="card-roman">I</div>
+        <div class="big-num">78</div>
+        <div class="stat-detail">生命 · 78/100</div>
+        <div class="mini-bar"><div class="fill hp" style="width:78%"></div></div>
+      </div>
+    </div>
+
+    <div class="tarot-card center-card">
+      <div class="card-border"></div>
+      <div class="card-header">✦ THE DUNGEON · 地下城 ✦</div>
+      <div class="card-body">
+        <div class="narrative-scroll">
+          <p>你推开沉重的石门，腐朽的空气中弥漫着<span class="gilt">魔素</span>的微光。甬道深处传来低沉的嘶吼——<span class="warn">三只哥布林</span>从阴影中窜出，手持锈迹斑斑的短刀向你扑来。</p>
+          <p>你握紧手中的长剑，脚下魔力纹路微微亮起。战斗的直觉告诉你，左侧那只头领模样的家伙才是真正的威胁——它的眼中闪烁着<span class="warn">不寻常的红光</span>。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tarot-card stat-card">
+      <div class="card-border"></div>
+      <div class="card-header">THE MANA</div>
+      <div class="card-body">
+        <div class="card-roman">II</div>
+        <div class="big-num">54</div>
+        <div class="stat-detail">魔力 · 54/100</div>
+        <div class="mini-bar"><div class="fill mp" style="width:54%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第二行：属性小牌 -->
+  <div class="minor-row">
+    <div class="tarot-card minor-card">
+      <div class="card-border"></div>
+      <div class="card-body"><div class="minor-sym">⚔</div><div class="minor-val">42</div><div class="minor-key">ATK</div></div>
+    </div>
+    <div class="tarot-card minor-card">
+      <div class="card-border"></div>
+      <div class="card-body"><div class="minor-sym">🛡</div><div class="minor-val">28</div><div class="minor-key">DEF</div></div>
+    </div>
+    <div class="tarot-card minor-card">
+      <div class="card-border"></div>
+      <div class="card-body"><div class="minor-sym">⚡</div><div class="minor-val">35</div><div class="minor-key">AGI</div></div>
+    </div>
+    <div class="tarot-card minor-card">
+      <div class="card-border"></div>
+      <div class="card-body"><div class="minor-sym">✧</div><div class="minor-val">30</div><div class="minor-key">INT</div></div>
+    </div>
+    <div class="tarot-card minor-card">
+      <div class="card-border"></div>
+      <div class="card-body"><div class="minor-sym">☘</div><div class="minor-val">18</div><div class="minor-key">LCK</div></div>
+    </div>
+    <div class="tarot-card minor-card">
+      <div class="card-border"></div>
+      <div class="card-body"><div class="minor-sym">◎</div><div class="minor-val">1250</div><div class="minor-key">GOLD</div></div>
+    </div>
+    <div class="tarot-card minor-card">
+      <div class="card-border"></div>
+      <div class="card-body"><div class="minor-sym">⏫</div><div class="minor-val">35%</div><div class="minor-key">EXP</div></div>
+    </div>
+    <div class="tarot-card minor-card">
+      <div class="card-border"></div>
+      <div class="card-body"><div class="minor-sym">⚔</div><div class="minor-val">90</div><div class="minor-key">SP</div></div>
+    </div>
+  </div>
+
+  <!-- 第三行：行动牌扇 -->
+  <div class="fan-row">
+    <div class="tarot-card action-card primary">
+      <div class="card-border"></div>
+      <div class="card-header">THE BLADE</div>
+      <div class="card-body">
+        <div class="action-symbol">⚔</div>
+        <div class="action-text">挥剑斩向哥布林头领</div>
+      </div>
+    </div>
+    <div class="tarot-card action-card">
+      <div class="card-border"></div>
+      <div class="card-header">THE FLAME</div>
+      <div class="card-body">
+        <div class="action-symbol">🔥</div>
+        <div class="action-text">释放火球术灼烧敌群</div>
+      </div>
+    </div>
+    <div class="tarot-card action-card">
+      <div class="card-border"></div>
+      <div class="card-header">THE SHIELD</div>
+      <div class="card-body">
+        <div class="action-symbol">🛡</div>
+        <div class="action-text">防御姿态观察弱点</div>
+      </div>
+    </div>
+    <div class="tarot-card action-card">
+      <div class="card-border"></div>
+      <div class="card-header">THE LOVER</div>
+      <div class="card-body">
+        <div class="action-symbol">💋</div>
+        <div class="action-text">尝试魅惑哥布林</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部 -->
+  <div class="table-edge">
+    <span>☽ B3F · 阿斯特大陆</span>
+    <span>✧ 384年10月15日 · 黄昏 ✧</span>
+    <span>第十二张牌</span>
+  </div>
+
+</div>
+</body>
+</html>

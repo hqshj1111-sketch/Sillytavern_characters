@@ -1,0 +1,45 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentHour = parseInt(_.get(stat, '进程.当前小时', 12)) || 12;
+  const isDaily = _.get(stat, '进程.阶段', '日常阶段') === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹丝袜足交事件'] && isDaily && !isSexActive ) {
+    const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+    const affection = parseInt(_.get(makoto, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.妹妹丝袜足交事件', 0)) || 0;
+_%>
+# 事件：妹妹的白丝足交
+event_initiator:
+  event_name: "白丝足交"
+  character: "汐见真帆"
+  location: "住宅区"
+  time: "10:00-22:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "真帆新买了一双白色过膝袜，正要向主角展示上脚效果。"
+    <%_ if (eventCount > 0) { _%>
+    - "还没等她开口，主角已经主动接过袜子，半跪下来帮她穿。手指沿着她的小腿往上抚平袜口时，鸡巴已经硬得顶起了裤子。"
+    - "真帆低头看了一眼，嘴上嘲弄哥哥现在比她还积极，恶心死了。但她的脚没有收回，反而踩着那颗硬物调整位置，配合着他的手把袜子拉好。"
+    - "穿好后，她的脚熟练地踩了上去。结合好感度(<%= affection %>)调整她的语气——好感度越高越在嘲弄中夹杂宠溺。结合淫乱度(<%= lewdness %>)调整脚上的动作——淫乱度越高越会用脚趾玩弄细节。"
+    - "结尾留给主角选择：抓住她脚踝回应、把她拉到腿上、或反客为主把她按在沙发上。"
+    <%_ } else { _%>
+    - "真帆新买了一双白色过膝袜，走过来向主角展示上脚效果，问好不好看。"
+    - "真帆注意到主角的勃起，嘴上嘟囔着哥哥好恶心，脚却轻轻踩了上去。"
+    - "结合真帆当前好感度(<%= affection %>)和淫乱度(<%= lewdness %>)决定她的下一步：更高好感度会带着戏谑和宠溺，更高淫乱度会采取更淫荡的脚部动作。"
+    - "结尾留给主角选择：推开并尴尬逃离、默许并继续、或主动抓住她的脚踝回应。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹丝袜足交事件" }
+      ]
+
+<%_ } } _%>

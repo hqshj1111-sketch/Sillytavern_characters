@@ -1,0 +1,46 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['妹妹白丝舔足事件'] && isDaily && !isSexActive) {
+    const makoto = _.get(stat, 'NPC数据.汐见真帆', {});
+    const affection = parseInt(_.get(makoto, '好感度', 0)) || 0;
+    const lewdness = parseInt(_.get(makoto, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.妹妹白丝舔足事件', 0)) || 0;
+    const sexCount = parseInt(_.get(makoto, '与主角做爱次数', 0)) || 0;
+_%>
+# 事件：白丝舔足
+event_initiator:
+  event_name: "白丝舔足"
+  character: "汐见真帆"
+  location: "住宅区 - 客厅"
+  time: "14:00-22:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角和妹妹一同在客厅打发时间。真帆懒散地窝在沙发另一端，穿着白丝过膝袜的腿随意地搭在扶手上。"
+    <%_ if (eventCount > 0) { _%>
+    - "主角已经不用再偷偷瞄了。他自然地挪过去，一边撸动着自己早已硬透的鸡巴，一边捧起妹妹的白丝小脚，舌头熟练地沿着足弓舔到脚趾。"
+    - "真帆连眼皮都没抬，继续刷着手机。她嘲弄地说哥哥已经是离不开她白丝的变态了，每次看到她穿白丝就硬。她顿了顿，又用施舍的口吻说如果主角好好求她，她可以大发慈悲用脚帮他打出来。"
+    - "结合好感度(<%= affection %>)调整她嘲弄中的宠溺程度，结合淫乱度(<%= lewdness %>)和做爱次数(<%= sexCount %>)调整她脚上动作的熟练和下流程度。"
+    - "结尾留给主角选择：开口求她、不说话继续舔等她自己忍不住、或把她拉到腿上。"
+    <%_ } else { _%>
+    - "她注意到主角的目光几次三番地落在她的脚上，嘴角慢慢浮起了然于心的弧度。"
+    - "真帆把脚伸到主角面前，脚趾在白丝里嚣张地动了动。她用挑衅的口吻问主角是不是一直盯着她的脚看，想舔就直说，她可以大发慈悲让他舔一次。"
+    - "结合好感度(<%= affection %>)调整她挑衅的温度——好感度越高越藏不住声音里的期待和纵容。结合淫乱度(<%= lewdness %>)调整她的动作——淫乱度越高脚趾越不安分地往主角嘴边凑。"
+    - "结尾留给主角选择：顺从地捧起她的脚、嘴硬拒绝但身体没动、或抓住她的脚踝反过来挠她脚心。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/妹妹白丝舔足事件" }
+      ]
+
+<%_ } } _%>
