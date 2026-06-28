@@ -2,7 +2,7 @@
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
 
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
 
@@ -174,4 +174,4 @@ if (eventNamesDungeon.length > 0) { _%>
 
 <%_ } _%>
 
-<%_ } } _%>
+<%_ } } } _%>

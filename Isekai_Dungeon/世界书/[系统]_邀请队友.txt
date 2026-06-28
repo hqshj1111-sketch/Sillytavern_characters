@@ -1,10 +1,10 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const inviteEvent = _.get(stat, '系统状态.待处理事件.队友邀请事件', null);
-if (!inviteEvent || !inviteEvent.邀请名单) return;
+if (inviteEvent && inviteEvent.邀请名单) {
 const inviteNames = inviteEvent.邀请名单.filter(n => n);
 
 const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
@@ -91,4 +91,4 @@ _%>
       [
         { "op": "remove", "path": "/系统状态/待处理事件/队友邀请事件" }
       ]
-<%_ } _%>
+<%_ } } } _%>

@@ -1,7 +1,7 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 const specialEquips = _.get(stat, '主角.特殊装备', []);
 const isMidActive = specialEquips.includes('人格同化面具（中阶激活）');
 const isMidInactive = specialEquips.includes('人格同化面具（中阶未激活）');
@@ -9,7 +9,7 @@ const isInitActive = specialEquips.includes('人格同化面具（初阶激活�
 const isInitInactive = specialEquips.includes('人格同化面具（初阶未激活）');
 const isFinal = specialEquips.includes('人格同化面具（终阶）');
 const hasAny = isInitInactive || isInitActive || isMidInactive || isMidActive || isFinal;
-if (!hasAny) return;
+if (hasAny) {
 const activeCount = _.get(stat, '主角.人格同化面具激活次数', 0);
 _%>
 <%= isFinal ? '# 人格同化面具·终阶（特殊装备）' : (isMidActive ? '# 人格同化面具·中阶激活（特殊装备）' : (isMidInactive ? '# 人格同化面具·中阶未激活（特殊装备）' : (isInitActive ? '# 人格同化面具·初阶激活（特殊装备）' : '# 人格同化面具·初阶未激活（特殊装备）'))) %>
@@ -45,4 +45,4 @@ _%>
 - 特性：主动性欲与放纵本能已完全内化为新人格的自然行为。散发极强魅力，对他人的性吸引力持续存在且并非常态地"刻意释放"而是自然流露，寻求性爱时直接坦率
 - 自我认知：新人格完全接受并热爱自己的全部——包括性的渴望、放纵的欲望与对他人的诱惑力。羞耻感仅存于必要的社交仪式层面，不真正限制行为
 <%_ } _%>
-<%_ } _%>
+<%_ } } } _%>

@@ -1,7 +1,7 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const isInCombat = _.get(stat, '战斗状态.是否战斗中', false);
-if (!isInCombat) return;
+if (isInCombat) {
 
 const enemyName = _.get(stat, '战斗状态.敌方名称', '');
 const enemyRace = _.get(stat, '战斗状态.敌方种族', '未知');
@@ -184,4 +184,5 @@ _%>
         // { "op": "replace", "path": "/战斗状态/是否战斗中", "value": false },
         // { "op": "replace", "path": "/战斗状态/是否战斗结算中", "value": true }
       ]
+<%_ } _%>
 <%_ } _%>

@@ -1,0 +1,211 @@
+```html
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色创建</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:transparent;--bg2:rgba(220,200,160,.12);--text:#d2c8b4;--text2:#b8a890;--text3:#8a7b68;--border:rgba(180,150,120,.25);--border2:#8b6914;--accent:#c09040;--good:#5a9a5a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:transparent;font-family:'Noto Serif SC',serif;padding:8px 0}
+.app-wrap{width:100%;max-width:600px;margin:0 auto}
+.card{border:1px solid var(--border);border-radius:6px;padding:16px}
+.sec-title{font-size:15px;font-weight:700;color:var(--accent);border-bottom:1px solid var(--border2);padding-bottom:4px;margin-bottom:8px;letter-spacing:1px}
+.sec-desc{font-size:15px;color:var(--text3);margin-bottom:12px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-bottom:8px}
+.form-group{display:flex;flex-direction:column;gap:2px}
+.form-group--wide{grid-column:1/-1}
+.form-label{font-size:15px;font-weight:600;color:var(--text2);letter-spacing:.5px}
+.form-input{width:100%;padding:5px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:3px;font-size:15px;color:var(--text);outline:none;font-family:'Noto Serif SC',serif;transition:border .15s}
+.form-input:focus{border-color:var(--accent);background:rgba(220,200,160,.18)}
+.form-textarea{width:100%;padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:3px;font-size:15px;color:var(--text);outline:none;font-family:'Noto Serif SC',serif;resize:vertical;min-height:70px;line-height:1.6;transition:border .15s}
+.form-textarea:focus{border-color:var(--accent);background:rgba(220,200,160,.18)}
+.form-select{width:100%;padding:5px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:3px;font-size:15px;color:var(--text);outline:none;font-family:'Noto Serif SC',serif;cursor:pointer}
+.actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border);margin-top:8px}
+.btn{padding:7px 20px;border-radius:3px;font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Noto Serif SC',serif;border:1px solid var(--border);background:var(--bg2);color:var(--text2)}
+.btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn--primary{background:var(--accent);color:#1a1410;border-color:var(--accent);box-shadow:0 1px 6px rgba(192,144,64,.25)}
+.btn--primary:hover{background:#d4a050;color:#1a1410}
+.btn--ghost{background:transparent;border:1px dashed var(--text3);color:var(--text3)}
+.btn--ghost:hover{background:transparent;color:var(--accent);border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.notification{text-align:center;font-size:15px;color:var(--good);min-height:18px;margin-top:4px}
+</style></head>
+<body>
+<div class="app-wrap"><div class="card">
+  <div class="sec-title">角色创建表单</div>
+  <div class="sec-desc">设定你的冒险者档案，踏上异世界地下城的旅途。</div>
+
+  <form id="creator-form" onsubmit="return false;">
+    <div class="sec-title" style="font-size:15px;border-bottom-width:1px;margin-bottom:6px">基本信息</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">姓名</label><input class="form-input" type="text" id="mc-name" placeholder="你的名字..."></div>
+      <div class="form-group"><label class="form-label">性别</label><select class="form-select" id="mc-gender"><option value="男">男</option><option value="女">女</option></select></div>
+      <div class="form-group"><label class="form-label">年龄</label><input class="form-input" type="text" id="mc-age" placeholder="18岁"></div>
+      <div class="form-group"><label class="form-label">种族</label><input class="form-input" type="text" id="mc-race" placeholder="人类"></div>
+      <div class="form-group"><label class="form-label">职业</label><input class="form-input" type="text" id="mc-job" placeholder="剑士 / 魔法师 / 盗贼 ..."></div>
+      <div class="form-group"><label class="form-label">身份</label><input class="form-input" type="text" id="mc-identity" placeholder="冒险者"></div>
+      <div class="form-group"><label class="form-label">故乡国家</label><select class="form-select" id="mc-homeland"><option value="">选择国家...</option></select></div>
+      <div class="form-group"><label class="form-label">故乡城市</label><select class="form-select" id="mc-homecity"><option value="">先选择国家...</option></select></div>
+      <div class="form-group form-group--wide"><label class="form-label">性格</label><input class="form-input" type="text" id="mc-personality" placeholder="勇敢果断但有时冲动，对同伴忠诚..."></div>
+      <div class="form-group form-group--wide"><label class="form-label">背景</label><textarea class="form-textarea" id="mc-background" placeholder="出身来历、过往经历、为何成为冒险者..."></textarea></div>
+    </div>
+
+    <div class="sec-title" style="font-size:15px;border-bottom-width:1px;margin-bottom:6px">相貌特征 <span style="font-size:15px;color:var(--text3);font-weight:400">(AI将基于此补全)</span></div>
+    <div class="form-group form-group--wide">
+      <label class="form-label">外貌与气质关键词</label>
+      <textarea class="form-textarea" id="mc-appearance" placeholder="例如：清秀少年脸型、黑色短碎发、深棕色眼瞳、左耳小痣、鼻梁挺直、笑容温和..."></textarea>
+    </div>
+
+    <div class="sec-title" style="font-size:15px;border-bottom-width:1px;margin-bottom:6px">身材细节 <span style="font-size:15px;color:var(--text3);font-weight:400">(AI将基于此补全)</span></div>
+    <div class="form-group form-group--wide">
+      <label class="form-label">身材与体质描述</label>
+      <textarea class="form-textarea" id="mc-body" placeholder="例如：175cm、匀称偏瘦、白皙光滑、腹部浅层肌肉线条、四肢体毛稀疏浅色..."></textarea>
+    </div>
+
+    <div class="sec-title" style="font-size:15px;border-bottom-width:1px;margin-bottom:6px">性器官特征 <span style="font-size:15px;color:var(--text3);font-weight:400">(可选，AI将根据性别合理补全)</span></div>
+    <div class="form-group form-group--wide">
+      <label class="form-label" id="lbl-genital">性器官特征描述</label>
+      <textarea class="form-textarea" id="mc-genital" placeholder="例如：阴茎中等尺寸颜色偏浅、后穴未经开发紧致粉嫩..."></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn--primary" id="generate-btn" type="button">⚔️ 提交创角档案</button>
+      <button class="btn btn--ghost" id="reset-btn" type="button">清空表单</button>
+    </div>
+    <div class="notification" id="notification"></div>
+  </form>
+</div></div>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var form=document.getElementById('creator-form');
+  var generateBtn=document.getElementById('generate-btn');
+  var resetBtn=document.getElementById('reset-btn');
+  var notification=document.getElementById('notification');
+  var allInputs=Array.from(form.querySelectorAll('input[type=text], textarea, select'));
+  var initialBtnHTML=generateBtn.innerHTML;
+  var AUTOSAVE_KEY='idf_charCreate_autosave_v1';
+  var saveTimeout;
+
+  // City data
+  var CITY_DATA={
+    '龙脊联邦':['霜脊','烬喉','灼鳞','雾骸','裂渊'],
+    '霜境王国':['黑脉镇','长风驿','霜木垒','铁砧堡','冰湾港'],
+    '密林双廷':['影渊廷','藤崖渡','林曦塞','月泉台','叶冕庭'],
+    '原野同盟':['沙角营','河鬃渡','蹄风港','百牙原','霜爪垒'],
+    '金沙帝国':['金帆港','砂碑关','烈风驿','日轮都','炎宴城'],
+    '潮汐联邦':['蓝渊礁','焰岛','珊链屿','扬帆湾','汐音屿']
+  };
+
+  var homelandSelect=document.getElementById('mc-homeland');
+  var homecitySelect=document.getElementById('mc-homecity');
+
+  Object.keys(CITY_DATA).forEach(function(cn){
+    var opt=document.createElement('option');opt.value=cn;opt.textContent=cn;homelandSelect.appendChild(opt);
+  });
+
+  var notify=function(msg,color){
+    color=color||'#5a9a5a';notification.textContent=msg;notification.style.color=color;notification.style.opacity='1';
+    clearTimeout(notification._tid);notification._tid=setTimeout(function(){notification.style.opacity='0'},3500);
+  };
+
+  var getFormData=function(){var d={};allInputs.forEach(function(inp){if(inp.id)d[inp.id]=inp.value});return d};
+
+  var populateForm=function(data){if(!data)return;allInputs.forEach(function(inp){var k=inp.id;if(data[k]!==undefined){if(inp===homelandSelect){inp.value=data[k];inp.dispatchEvent(new Event('change'))}else{inp.value=data[k]}}else if(inp.tagName!=='SELECT')inp.value=''})};
+
+  var autoSave=function(){localStorage.setItem(AUTOSAVE_KEY,JSON.stringify(getFormData()))};
+  var debouncedSave=function(){clearTimeout(saveTimeout);saveTimeout=setTimeout(autoSave,500)};
+
+  // Gender toggle for genital label
+  document.getElementById('mc-gender').addEventListener('change',function(){
+    var isMale=this.value==='男';
+    var lbl=document.getElementById('lbl-genital');
+    var ta=document.getElementById('mc-genital');
+    lbl.textContent='性器官特征描述'+(isMale?' (阴茎形态/后穴形态/胸部形态)':' (小穴形态/后穴形态/胸部形态/乳头形态)');
+    if(isMale)ta.placeholder=ta.placeholder.indexOf('阴茎')===-1?'阴茎中等尺寸颜色偏浅，后穴未经开发紧致粉嫩，胸部平坦结实...':ta.placeholder;
+    else ta.placeholder=ta.placeholder.indexOf('小穴')===-1?'小穴紧致敏感内侧浅粉色，后穴未经开发，胸部柔软微微隆起，乳头小巧浅褐色...':ta.placeholder;
+    debouncedSave();
+  });
+
+  homelandSelect.addEventListener('change',function(){
+    homecitySelect.innerHTML='';
+    var cities=CITY_DATA[this.value]||[];
+    if(cities.length){
+      var opt=document.createElement('option');opt.value='';opt.textContent='选择城市...';homecitySelect.appendChild(opt);
+      cities.forEach(function(ct){
+        var o=document.createElement('option');o.value=ct;o.textContent=ct;homecitySelect.appendChild(o);
+      });
+    }else{
+      var opt=document.createElement('option');opt.value='';opt.textContent='先选择国家...';homecitySelect.appendChild(opt);
+    }
+    debouncedSave();
+  });
+
+  form.addEventListener('input',debouncedSave);
+
+  resetBtn.addEventListener('click',function(){
+    if(confirm('确定清空所有填写内容？')){form.reset();debouncedSave();notify('表单已清空','#c4a24a')}
+  });
+
+  generateBtn.addEventListener('click',function(){
+    autoSave();generateBtn.disabled=true;
+    generateBtn.innerHTML='⚔️ 提交中...';
+    notification.style.opacity='0';
+
+    var data=getFormData();
+    var fmt=function(v,ph){var t=(v||'').trim();return t||(ph||'[未填写，请AI自由发挥补全]')};
+
+    var yaml=
+'<init_data>\n'+
+'```yaml\n'+
+'# AI任务：解析以下创角档案，初始化主角的全部变量（基本信息、相貌特征、身材细节、性器官特征），\n'+
+'# 并根据档案内容生成开场的冒险者公会登记场景。缺失信息请AI基于关键词进行富有想象力的扩写补全。\n'+
+'\n'+
+'创角档案:\n'+
+'  基本信息:\n'+
+'    姓名: "'+fmt(data['mc-name'],'未知 (请AI赋予奇幻风格姓名)')+'"\n'+
+'    性别: "'+fmt(data['mc-gender'],'男')+'"\n'+
+'    年龄: "'+fmt(data['mc-age'],'18岁')+'"\n'+
+'    种族: "'+fmt(data['mc-race'],'人类')+'"\n'+
+'    职业: "'+fmt(data['mc-job'],'剑士')+'"\n'+
+'    身份: "'+fmt(data['mc-identity'],'冒险者')+'"\n'+
+'    性格: "'+fmt(data['mc-personality'],'勇敢果断但有时冲动，对同伴忠诚')+'"\n'+
+'    故乡国家: "'+fmt(data['mc-homeland'],'龙脊联邦')+'"\n'+
+'    故乡城市: "'+fmt(data['mc-homecity'],'烬喉')+'"\n'+
+'    背景: "'+fmt(data['mc-background'],'普通冒险者出身')+'"\n'+
+'  外貌与身材:\n'+
+'    外貌关键词: "'+fmt(data['mc-appearance'])+'"\n'+
+'    身体关键词: "'+fmt(data['mc-body'])+'"\n'+
+'    性器官关键词: "'+fmt(data['mc-genital'],'[未填写，请AI根据性别合理设定]')+'"\n'+
+'```\n'+
+'</init_data>';
+
+    setTimeout(function(){
+      try{
+        var inputArea=window.parent.document.querySelector('#send_textarea');
+        var sendBtn=window.parent.document.querySelector('#send_but');
+        if(inputArea&&sendBtn){
+          inputArea.value=yaml;inputArea.dispatchEvent(new Event('input',{bubbles:true}));
+          sendBtn.click();notify('档案已提交！等待AI回应...');
+          generateBtn.innerHTML='✅ 已提交';
+        }else throw new Error('UI not found');
+      }catch(err){
+        console.error(err);generateBtn.innerHTML='发送失败';
+        navigator.clipboard.writeText(yaml).then(function(){notify('自动发送失败！已复制到剪贴板，请手动粘贴发送。','#c0392b')});
+      }
+      setTimeout(function(){generateBtn.disabled=false;generateBtn.innerHTML=initialBtnHTML},5000);
+    },500);
+  });
+
+  // Init
+  var auto=localStorage.getItem(AUTOSAVE_KEY);
+  if(auto)populateForm(JSON.parse(auto));
+  document.getElementById('mc-gender').dispatchEvent(new Event('change'));
+});
+</script>
+</body>
+</html>
+```

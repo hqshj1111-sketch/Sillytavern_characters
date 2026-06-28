@@ -1,11 +1,11 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 const specialEquips = _.get(stat, '主角.特殊装备', []);
 const isSymbiote = specialEquips.includes('共生触手紧身衣');
 const hasBasic = specialEquips.includes('触手紧身衣');
-if (!hasBasic && !isSymbiote) return;
+if (hasBasic || isSymbiote) {
 const gender = _.get(stat, '主角.基本信息.性别', '');
 _%>
 <%= isSymbiote ? '# 共生触手紧身衣（特殊装备）' : '# 触手紧身衣（特殊装备）' %>
@@ -28,4 +28,4 @@ _%>
 - 穿脱：穿着期间可正常穿脱护甲、饰品和其他衣物。穿入护甲时紧身衣会如吞入般将护甲包裹入内层，脱下护甲时紧身衣则如吐出般将其排出体外
 - 解除：穿上后除非借助特定解除手段否则不可脱下
 <%_ } _%>
-<%_ } _%>
+<%_ } } } _%>

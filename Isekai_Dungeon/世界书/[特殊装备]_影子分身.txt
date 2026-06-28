@@ -1,12 +1,12 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 const specialEquips = _.get(stat, '主角.特殊装备', []);
 const isFull = specialEquips.includes('影子分身（完整心智）');
 const isBasic = specialEquips.includes('影子分身（基础心智）');
 const isNone = specialEquips.includes('影子分身（无心智）');
-if (!isNone && !isBasic && !isFull) return;
+if (isNone || isBasic || isFull) {
 const cloneName = _.get(stat, '主角.影子分身名字', '');
 const clonePersona = _.get(stat, '主角.影子分身性格', '');
 _%>
@@ -37,4 +37,4 @@ _%>
 - 行动：无法脱离拥有者独立存在，始终藏匿于拥有者的影子中。拥有者可通过意念操控分身从影子中现身进行动作，但分身被攻击或被外力拉离影子超过三米时自动溃散为黑雾回归影中
 - 性爱：不存在性欲和性意识。拥有者可通过意念操控分身进行体位配合，但分身本身不发生任何生理反应，如同使用一个与人等大的工具
 <%_ } _%>
-<%_ } _%>
+<%_ } } } _%>

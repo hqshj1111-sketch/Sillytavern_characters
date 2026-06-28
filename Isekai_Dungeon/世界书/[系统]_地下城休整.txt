@@ -1,7 +1,7 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const isResting = _.get(stat, '地下城攻略状态.是否休整中', false);
-if (!isResting) return;
+if (isResting) {
 
 const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
 const currentFloor = _.get(stat, '地下城攻略状态.当前所在层数', 0);
@@ -107,5 +107,6 @@ _%>
           { "op": "replace", "path": "/地下城攻略状态/是否休整中", "value": false }
         ]
 
+<%_ } _%>
 <%_ } _%>
 <%_ } _%>

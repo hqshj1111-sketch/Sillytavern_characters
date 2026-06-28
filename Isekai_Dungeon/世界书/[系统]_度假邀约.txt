@@ -1,10 +1,10 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const event = _.get(stat, '系统状态.待处理事件.度假邀约事件', null);
-if (!event || !event.邀请名单 || !event.目标国家 || !event.目标城市) return;
+if (event && event.邀请名单 && event.目标国家 && event.目标城市) {
 const inviteNames = event.邀请名单.filter(n => n);
 const targetCountry = event.目标国家;
 const targetCity = event.目标城市;
@@ -124,4 +124,4 @@ _%>
         { "op": "replace", "path": "/进程/当前时间段", "value": "[早或午]" },
         { "op": "remove", "path": "/系统状态/待处理事件/度假邀约事件" }
       ]
-<%_ } _%>
+<%_ } } } _%>

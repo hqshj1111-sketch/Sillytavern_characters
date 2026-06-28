@@ -4,7 +4,7 @@ const stat = getvar('stat_data') || {};
 const isPrepared = _.get(stat, '地下城攻略状态.是否准备完毕', false);
 const selectedDungeon = _.get(stat, '地下城攻略状态.当前地下城名称', '');
 
-if (isPrepared || !selectedDungeon) return;
+if (!isPrepared && selectedDungeon) {
 
 const dungeonData = _.get(stat, `地下城信息.${selectedDungeon}`, {});
 const currentYear = _.get(stat, '进程.当前年份', 384);
@@ -92,4 +92,5 @@ dungeon_preparation:
             }
           }}
         ]
+<%_ } _%>
 <%_ } _%>

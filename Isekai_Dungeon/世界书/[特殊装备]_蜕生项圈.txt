@@ -1,12 +1,12 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 const specialEquips = _.get(stat, '主角.特殊装备', []);
 const isFinal = specialEquips.includes('蜕生项圈（终阶）');
 const isMid = specialEquips.includes('蜕生项圈（二阶）');
 const isInit = specialEquips.includes('蜕生项圈（初阶）');
-if (!isInit && !isMid && !isFinal) return;
+if (isInit || isMid || isFinal) {
 const orgasmCount = _.get(stat, '主角.总高潮次数', 0);
 const gender = _.get(stat, '主角.基本信息.性别', '');
 _%>
@@ -38,4 +38,4 @@ _%>
 - 表达：穿戴者仍能维持日常社交中的得体，但私下独处或与亲密伴侣相处时开始不经意地流露出更开放的表达方式。尚未影响日常言行。
 - 性爱：<% if (gender === '女') { %>身体反应略显敏感，阴道湿润更快，适应性微增。<% } else { %>后穴适应性微增，勃起硬度略有提升，节奏不再生涩。<% } %>
 <%_ } _%>
-<%_ } _%>
+<%_ } } } _%>

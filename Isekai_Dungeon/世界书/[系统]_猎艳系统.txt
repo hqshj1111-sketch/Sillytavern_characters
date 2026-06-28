@@ -3,7 +3,7 @@ const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
 const pleasureEvent = pendingEvents['猎艳进行中事件'];
-if (phase !== '日常阶段' || !pleasureEvent) return;
+if (phase === '日常阶段' && pleasureEvent) {
 
 const isTavern = pleasureEvent === '酒馆猎艳';
 const isBrothel = pleasureEvent === '妓院猎艳';
@@ -57,4 +57,5 @@ _%>
       [
         { "op": "remove", "path": "/系统状态/待处理事件/猎艳进行中事件" }
       ]
+<%_ } _%>
 <%_ } _%>

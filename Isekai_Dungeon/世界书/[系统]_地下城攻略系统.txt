@@ -1,7 +1,7 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '地下城攻略阶段') return;
+if (phase === '地下城攻略阶段') {
 
 const isInCombat = _.get(stat, '战斗状态.是否战斗中', false);
 const isCombatSettling = _.get(stat, '战斗状态.是否战斗结算中', false);
@@ -424,5 +424,6 @@ _%>
         ]
 <%_ } _%>
 
+<%_ } _%>
 <%_ } _%>
 <%_ } _%>

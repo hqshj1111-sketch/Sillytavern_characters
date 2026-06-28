@@ -1,9 +1,9 @@
 <%_ {
 const stat = getvar('stat_data') || {};
-if (_.get(stat, '进程.阶段') === '创角阶段') return;
+if (_.get(stat, '进程.阶段') !== '创角阶段') {
 
 const geoData = _.get(stat, '地理信息', {});
-if (Object.keys(geoData).length === 0) return;
+if (Object.keys(geoData).length > 0) {
 
 const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
 const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
@@ -21,13 +21,12 @@ _%>
 <%_ Object.entries(geoData).forEach(([country, cdata]) => {
   const isCurrent = country === currentCountry; _%>
 ## <%= country %><%= isCurrent ? ' （当前所在）' : '' %>
-  简述：<%= cdata.简述||'?' %>
+<%_ if (isCurrent) { _%>
   环境：<%= cdata.自然环境||'?' %>
   社会：<%= cdata.社会结构||'?' %>
   种族：<%= cdata.种族构成||'?' %>
   公会：<%= cdata.公会名称||'无' %><%= cdata.公会风格 ? '('+cdata.公会风格+')' : '' %>
-  <%_ if (isCurrent) {
-   const cities = cdata.城市列表 || {};
+<%_   const cities = cdata.城市列表 || {};
    Object.entries(cities).forEach(([city, c]) => {
      const isCurCity = city === currentCity;
      if (isCurCity) {
@@ -57,10 +56,10 @@ _%>
     <%_ } else { _%>
   [<%= city %>]：<%= c.简述||'' %>
 <%_ } }); } else { _%>
-[<%= country %>]：<%= cdata.简述||'' %>
-  <%_ const citiesB = cdata.城市列表 || {};
+  简述：<%= cdata.简述||'?' %>
+<%_   const citiesB = cdata.城市列表 || {};
   Object.keys(citiesB).forEach(city => { _%>
   - <%= city %>
-  <%_ }); _%>
+<%_   }); _%>
 <%_ } }); _%>
-<%_ } _%>
+<%_ } } } _%>

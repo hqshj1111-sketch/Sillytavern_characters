@@ -2,7 +2,7 @@
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
-if (phase !== '日常阶段' || pendingEvents['打造进行中事件']) return;
+if (phase === '日常阶段' && !pendingEvents['打造进行中事件']) {
 
 const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
 const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
@@ -27,4 +27,4 @@ _%>
       [
         { "op": "insert", "path": "/系统状态/待处理事件/打造进行中事件", "value": true }
       ]
-<%_ } _%>
+<%_ } } _%>

@@ -1,10 +1,10 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const travelEvent = _.get(stat, '系统状态.待处理事件.前往外地事件', null);
-if (!travelEvent || !travelEvent.目标国家 || !travelEvent.目标城市) return;
+if (travelEvent && travelEvent.目标国家 && travelEvent.目标城市) {
 
 const targetCountry = travelEvent.目标国家;
 const targetCity = travelEvent.目标城市;
@@ -15,9 +15,9 @@ const currentLocation = _.get(stat, '主角.当前状态.当前地点', '');
 
 const geoData = _.get(stat, '地理信息', {});
 const targetCountryData = geoData[targetCountry] || {};
-if (!targetCountryData.城市列表) return;
+if (targetCountryData.城市列表) {
 const targetCityData = _.get(targetCountryData, `城市列表.${targetCity}`, {});
-if (!targetCityData.城市规模) return;
+if (targetCityData.城市规模) {
 
 const currentYear = _.get(stat, '进程.当前年份', '?');
 const currentMonth = parseInt(_.get(stat, '进程.当前月份', 1)) || 1;
@@ -87,7 +87,9 @@ _%>
     氛围：<%= vibeStr %>
     <%_ if (placeNames.length > 0) { _%>
     地点：<%= placeNames.map(p => places[p].简述 ? p + '（'+places[p].简述+'）' : p).join('、') %>
-    <%_ } _%>
+<%_ } _%>
+<%_ } _%>
+<%_ } _%>
 
   narrative_guidance:
     - "主角决定离开【<%= currentCountry %> / <%= currentCity %>】，前往【<%= targetCountry %> / <%= targetCity %>】。"
@@ -103,4 +105,4 @@ _%>
       [
         { "op": "remove", "path": "/系统状态/待处理事件/前往外地事件" }
       ]
-<%_ } _%>
+<%_ } } } _%>

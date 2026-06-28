@@ -2,9 +2,9 @@
 const stat = getvar('stat_data') || {};
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
 const eventVal = pendingEvents['节庆祭典事件'];
-if (!eventVal) return;
+if (eventVal) {
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const currentYear = _.get(stat, '进程.当前年份', '?');
 const currentMonth = parseInt(_.get(stat, '进程.当前月份', 1)) || 1;
@@ -17,7 +17,7 @@ else if (currentMonth >= 9 && currentMonth <= 11) season = '秋季';
 else season = '冬季';
 const seasonCharMap = { '春季':'春', '夏季':'夏', '秋季':'秋', '冬季':'冬' };
 const seasonChar = seasonCharMap[season] || '';
-const timeSlotMap = { '早': '清晨', '午': '正午', '晚': '傍晚', '夜': '深夜' }; 
+const timeSlotMap = { '早': '清晨', '午': '正午', '晚': '傍晚', '夜': '深夜' };
 const timeSlotText = timeSlotMap[timeSlot] || timeSlot;
 
 const currentCountry = _.get(stat, '主角.当前状态.当前国家', '未知');
@@ -59,7 +59,7 @@ festival_event:
     <%_ } else { _%>
     - "【创意生成节日】——根据以下城市信息创造贴合背景的独特节庆：城市种族构成【<%= cityRaces || countryRaces %>】、自然环境【<%= cityNature || countryNature %>】、整体氛围【<%= cityVibeStr || '??' %>】、当前季节【<%= season %>】。节日名称和起源应与本地文化/种族/环境深度绑定。"
     - "构建节日核心意象——1个标志性视觉元素、1项核心仪式、1种应季食物或饮品。三者共同构成节日的骨架。"
-    <%_ } _%>
+<%_ } _%>
     - "描写主角走出住处后感知到的节日氛围——视觉：街道被何种装饰覆盖？听觉：怎样的音乐或喧嚣在空气中流淌？嗅觉：空气中弥漫着什么气味？触觉：人群摩肩接踵还是空旷肃穆？味觉：路边摊贩在售卖什么？调用至少三种感官来构建沉浸感。"
     - "<%= guildName || '冒险者公会' %>也未必置身事外——公会可能设立了节日特别任务、比武表演、或免费供应的饮料/食物招待冒险者。这是主角与NPC建立联系、获取特殊委托或稀有限定道具的窗口。"
     - "不同种族在同一节日下的行为差异——<%= cityRaces || countryRaces %>各类种族对这一节日的理解与庆祝方式或有微妙不同：有的种族庄重祭祀、有的种族纵情狂欢、有的种族借机交易。通过街头观察呈现这种丰富的种族生态。"
@@ -79,5 +79,5 @@ festival_event:
     patch_code: |
       [
         { "op": "remove", "path": "/系统状态/待处理事件/节庆祭典事件" }
-      ]
-<%_ } _%>
+       ]
+<%_ } } } _%>

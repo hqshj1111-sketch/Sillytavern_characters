@@ -334,6 +334,8 @@ export const Schema = z.object({
     z.object({
       种族: z.string().prefault(""),
       性别: z.string().prefault(""),
+      性取向: z.string().prefault(""),
+      性向角色: z.string().prefault(""),
       年龄: z.string().prefault(""),
       故乡国家: z.string().prefault(""),
       故乡城市: z.string().prefault(""),
@@ -351,6 +353,8 @@ export const Schema = z.object({
     z.object({
       种族: z.string().prefault(""),
       性别: z.string().prefault(""),
+      性取向: z.string().prefault(""),
+      性向角色: z.string().prefault(""),
       年龄: z.string().prefault(""),
       故乡国家: z.string().prefault(""),
       故乡城市: z.string().prefault(""),

@@ -2,10 +2,10 @@
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
-if (phase !== '日常阶段' || pendingEvents['训练进行中事件']) return;
+if (phase === '日常阶段' && !pendingEvents['训练进行中事件']) {
 
 const trainEvent = _.get(stat, '系统状态.待处理事件.前往训练事件', null);
-if (!trainEvent || !trainEvent.训练类型) return;
+if (trainEvent && trainEvent.训练类型) {
 
 const trainType = trainEvent.训练类型;
 const isLearnSkill = trainType === '学习技能';
@@ -55,4 +55,4 @@ _%>
         { "op": "remove", "path": "/系统状态/待处理事件/前往训练事件" },
         { "op": "insert", "path": "/系统状态/待处理事件/训练进行中事件", "value": "<%= trainType %>" }
       ]
-<%_ } _%>
+<%_ } } } _%>

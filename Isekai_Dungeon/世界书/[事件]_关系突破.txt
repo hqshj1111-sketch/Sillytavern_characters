@@ -2,18 +2,18 @@
 const stat = getvar('stat_data') || {};
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
 const eventVal = pendingEvents['关系变化事件'];
-if (!eventVal) return;
+if (eventVal) {
 
 const phase = _.get(stat, '进程.阶段', '创角阶段');
 const isResting = _.get(stat, '地下城攻略状态.是否休整中', false);
 const isValidDaily = phase === '日常阶段';
 const isValidDungeonRest = phase === '地下城攻略阶段' && isResting;
-if (!isValidDaily && !isValidDungeonRest) return;
+if (isValidDaily || isValidDungeonRest) {
 
 const npcName = String(eventVal.NPC名字 || eventVal);
 const affection = parseInt(eventVal.好感度) || 75;
 const npc = _.get(stat, `重要NPC信息.${npcName}`, null);
-if (!npc) return;
+if (npc) {
 
 const npcRace = _.get(npc, '种族', '?');
 const npcGender = _.get(npc, '性别', '?');
@@ -39,7 +39,7 @@ event_initiator:
   trigger: "好感度突破75"
 
   角色速写：
-    <%= npcName %> | <%= npcRace %> / <%= npcGender %> / <%= npcAge %>岁
+    <%= npcName %> | <%= npcRace %> / <%= npcGender %><% if (npc.性取向) { %>（取向<%= npc.性取向 %><%= npc.性向角色 ? '·'+npc.性向角色 : '' %>）<% } %> / <%= npcAge %>岁
     <%= npcAppearance ? '外观：' + npcAppearance : '' %>
     <%= npcPersonality ? '性格：' + npcPersonality : '' %>
     <%= npcBody ? '身材：' + npcBody : '' %>
@@ -64,4 +64,4 @@ event_initiator:
         { "op": "replace", "path": "/重要NPC信息/<%= npcName %>/关系", "value": "[AI根据本回合的互动自然总结的二人新关系状态，如'从暗生情愫到坦诚相拥的恋人'、'跨越种族界限的伴侣'、'旅途中彼此交付的挚爱'等]" },
         { "op": "remove", "path": "/系统状态/待处理事件/关系变化事件" }
       ]
-<%_ } _%>
+<%_ } } } } _%>

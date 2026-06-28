@@ -1,10 +1,10 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const event = _.get(stat, '系统状态.待处理事件.结成伴侣事件', null);
-if (!event || !event.伴侣对象 || !event.目标国家 || !event.目标城市) return;
+if (event && event.伴侣对象 && event.目标国家 && event.目标城市) {
 
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const partnerName = event.伴侣对象;
 const targetCountry = event.目标国家;
@@ -33,7 +33,7 @@ _%>
 # 事件：结成伴侣
 
   求婚人：<%= mcName %>（<%= mcGender %>）
-  对象：<%= partnerName %><% if (npc) { %> | <%= npc.种族||'?' %> / <%= npc.性别||'?' %> / <%= npc.年龄||'?' %>岁<% } %>
+  对象：<%= partnerName %><% if (npc) { %> | <%= npc.种族||'?' %> / <%= npc.性别||'?' %><% if (npc.性取向) { %> / 取向<%= npc.性取向 %><%= npc.性向角色 ? '·'+npc.性向角色 : '' %><% } %> / <%= npc.年龄||'?' %>岁<% } %>
   仪式地点：<%= targetCountry %> / <%= targetCity %><% if (targetCityData.城市规模) { %> | 规模：<%= targetCityData.城市规模 %><% } %>
 <%_ if (targetCityData.种族构成) { _%>
   当地种族：<%= targetCityData.种族构成 %>
@@ -58,4 +58,4 @@ _%>
       [
         { "op": "remove", "path": "/系统状态/待处理事件/结成伴侣事件" }
       ]
-<%_ } _%>
+<%_ } } } _%>

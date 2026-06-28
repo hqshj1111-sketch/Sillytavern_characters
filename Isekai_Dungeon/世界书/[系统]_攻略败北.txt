@@ -1,7 +1,7 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const isDefeated = _.get(stat, '地下城攻略状态.是否攻略败北中', false);
-if (!isDefeated) return;
+if (isDefeated) {
 
 const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
 const dungeonData = _.get(stat, `地下城信息.${dungeonName}`, {});
@@ -58,4 +58,4 @@ _%>
         { "op": "replace", "path": "/地下城攻略状态/本次攻略结束日期", "value": "<%= currentYear %>年<%= currentMonth %>月<%= currentDay %>日-<%= timeSlot %>" },
         { "op": "replace", "path": "/进程/阶段", "value": "日常阶段" }
       ]
-<%_ } _%>
+<%_ } } _%>

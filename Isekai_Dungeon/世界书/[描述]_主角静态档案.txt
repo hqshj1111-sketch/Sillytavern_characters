@@ -1,6 +1,6 @@
 <%_ {
 const stat = getvar('stat_data') || {};
-if (!stat || _.get(stat, '进程.阶段') === '创角阶段') return;
+if (stat && _.get(stat, '进程.阶段') !== '创角阶段') {
 
 const base = _.get(stat, '主角.基本信息', {});
 const face = _.get(stat, '主角.相貌特征', {});
@@ -44,4 +44,4 @@ _%>
 [冒险者]: Lv.<%= adv.冒险者等级 || 'F' %> <%= adv.冒险者称号 || '新人' %> | <%= adv.所属公会 || '无属公会' %> | 知名度:<%= adv.知名度||0 %>
 [房产]: <%_ const ps = Object.entries(mcProperties); if (ps.length === 0) { %>无<%_ } else { ps.forEach(function ([name, p], i) { _%><%= name %>（<%= p.所在国家 || '?' %>·<%= p.所在城市 || '?' %>：<%= p.简述 || '' %>）<%= i < ps.length - 1 ? ' | ' : '' %><%_ }); } _%>
 [技能]: <%= skillStrs %>
-<%_ } _%>
+<%_ } } _%>

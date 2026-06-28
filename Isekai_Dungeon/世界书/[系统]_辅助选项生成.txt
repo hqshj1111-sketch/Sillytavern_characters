@@ -1,12 +1,11 @@
 <%_
 {
 const stat = getvar('stat_data') || {};
-if (_.get(stat, '系统状态.主角创建完毕') !== true) return;
-
 const phase = _.get(stat, '进程.阶段', '创角阶段');
+const isInit = phase === '创角阶段';
 const isDaily = phase === '日常阶段';
 const isDungeon = phase === '地下城攻略阶段';
-if (!isDaily && !isDungeon) return;
+if (isInit || isDaily || isDungeon) {
 
 const isPrepared = _.get(stat, '地下城攻略状态.是否准备完毕', false);
 const isSettling = _.get(stat, '地下城攻略状态.是否攻略结算中', false);
@@ -42,7 +41,13 @@ options_generator_protocol:
 
   # --- 选项设计矩阵 ---
   option_matrix:
-<%_ if (isDaily) { _%>
+<%_ if (isInit) { _%>
+    # ===== 创角阶段 =====
+    1. [查看任务]: "走向公会右侧的任务板，看看有没有适合新人的委托。"
+    2. [打量四周]: "先在大厅里观察一下周围的冒险者，感受这里的氛围。"
+    3. [与人攀谈]: "向身旁看似友善的冒险者或职员搭话，了解这里的规矩。"
+    4. [审视自身]: "在角落稍作停留，确认自己的状态和随身物品。"
+<%_ } else if (isDaily) { _%>
     # ===== 日常阶段 =====
     1. [冒险]: "前往冒险者公会查看任务板，寻找适合的委托。"
     2. [社交]: "与身边的NPC交谈或加深关系。"
@@ -206,4 +211,5 @@ options_generator_protocol:
 <%_ } _%>
 
   trigger: "现在，请基于主角当前的状态和氛围，生成 <行动选项> 块。"
+<%_ } _%>
 <%_ } _%>

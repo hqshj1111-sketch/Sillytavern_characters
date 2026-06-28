@@ -1,12 +1,12 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 const specialEquips = _.get(stat, '主角.特殊装备', []);
 const isDone = specialEquips.includes('同化胶核（转化完成）');
 const isMid = specialEquips.includes('同化胶核（转化中期）');
 const isInit = specialEquips.includes('同化胶核（转化初期）');
-if (!isInit && !isMid && !isDone) return;
+if (isInit || isMid || isDone) {
 const gender = _.get(stat, '主角.基本信息.性别', '');
 
 const normalNPCs = _.get(stat, '一般NPC信息', {});
@@ -43,4 +43,4 @@ _%>
 - 外观：胸腔区域的皮肤已转化为半透明乳白色胶质，面积约为两掌大小。胶质区域触感明显异于正常皮肤——柔软、微凉、按压后缓慢回弹。胶质边缘呈渐变色与正常皮肤过渡。透过半透明胶质可隐约看到皮下血管和骨骼轮廓
 - 本能固化初期：佩戴者初次面对自己的身体胶质化时产生认知冲突——触碰胶质区域时既感到快感又感到恐惧。本能抗拒他人看到或触碰胶质区域，但在独处时会不由自主反复触摸胶质区域，被其柔软清凉的触感吸引。胶兽本能开始以"侵入性念头"的形式出现——偶尔会莫名产生将他人皮肤也变成胶质的幻想、被他人肆意揉捏自己胶质身体的念头
 <%_ } _%>
-<%_ } _%>
+<%_ } } } _%>

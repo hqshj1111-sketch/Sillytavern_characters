@@ -1,10 +1,10 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const isActive = _.get(stat, '大型事件.进行中', false);
-if (!isActive) return;
+if (isActive) {
 
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const eventName = _.get(stat, '大型事件.名称', '未知事件');
 const truth = _.get(stat, '大型事件.真相', '');
@@ -65,4 +65,4 @@ _%>
         // { "op": "replace", "path": "/大型事件/真相揭露", "value": true }
       ]
 <%_ } _%>
-<%_ } _%>
+<%_ } } } _%>

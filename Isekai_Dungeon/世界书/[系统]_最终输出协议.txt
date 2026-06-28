@@ -10,6 +10,7 @@ master_protocol: "你已阅读上方的【当前阶段】和各类【事件指�
 
   story:
     instruction: "根据当前的阶段氛围、所处场景，进行生动的故事演绎。"
+    restriction: "故事正文必须由<Story></Story>包裹。"
 
   UpdateVariable_block:
     instruction: "基于本次最新的故事输出，使用 JSON Patch (RFC 6902) 标准更新系统变量。"
@@ -97,4 +98,4 @@ master_protocol: "你已阅读上方的【当前阶段】和各类【事件指�
         ]
         </JSONPatch>
       </UpdateVariable>
-<%_ } _%>
+<%_ }} _%>

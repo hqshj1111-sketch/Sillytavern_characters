@@ -3,7 +3,7 @@ const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
 const trainEvent = pendingEvents['训练进行中事件'];
-if (phase !== '日常阶段' || !trainEvent) return;
+if (phase === '日常阶段' && trainEvent) {
 
 const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
 const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
@@ -116,5 +116,6 @@ _%>
         { "op": "remove", "path": "/系统状态/待处理事件/训练进行中事件" }
       ]
 
+<%_ } _%>
 <%_ } _%>
 <%_ } _%>

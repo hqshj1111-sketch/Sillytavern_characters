@@ -1,9 +1,10 @@
-/**
+﻿/**
  * 角色卡 "地下城" 专属MVU监护脚本
  * 包含：用户指令预解析（决定攻略地下城<名称>）、回合计数、攻略记录、阶段维护、变量清理
  */
 const SCRIPT_NAME = '地下城-MVU变量维护监护脚本';
-const SCRIPT_VERSION = 'v1.16';
+const SCRIPT_VERSION = 'v1.17';
+console.info('[' + SCRIPT_NAME + '] 脚本加载完成 v' + SCRIPT_VERSION);
 
 const scriptState = {
     initialized: false,
@@ -15,6 +16,23 @@ const scriptState = {
 };
 
 // ============================================================
+//  缓存：监听 textarea 输入，pre-generation 时无法从 chat 拿到最新消息
+// ============================================================
+(function setupInputCache() {
+    function tryBind() {
+        var ta = window.parent.document.querySelector('#send_textarea');
+        if (ta) {
+            ta.addEventListener('input', function() { var v = ta.value; if (v.trim()) { window.__IDF_LAST_INPUT = v; } });
+            window.__IDF_LAST_INPUT = ta.value || '';
+            console.info('[' + SCRIPT_NAME + '] 输入缓存已绑定 send_textarea');
+        } else {
+            setTimeout(tryBind, 300);
+        }
+    }
+    tryBind();
+})();
+
+// ============================================================
 //  工具：获取 MVU 实例
 // ============================================================
 function getMvuInstance() {
@@ -23,15 +41,32 @@ function getMvuInstance() {
 }
 
 // ============================================================
+//  工具：安全获取聊天消息（绕过 getChatMessages 框架 bug）
+// ============================================================
+function safeGetChatState() {
+    var cached = window.__IDF_LAST_INPUT;
+    if (cached && cached.trim()) {
+        window.__IDF_LAST_INPUT = '';
+        console.info('[' + SCRIPT_NAME + '] 使用缓存输入(len=' + cached.length + '): ' + (cached.length > 60 ? cached.slice(0, 60) + '...' : cached));
+        return {
+            messages: [{ role: 'user', message: cached, message_id: 'latest' }],
+            text: cached,
+            msgId: 'latest'
+        };
+    }
+    return { messages: [], text: '', msgId: null };
+}
+
+// ============================================================
 //  PRE-生成：用户消息预解析
 //  支持格式：决定攻略地下城<地下城名称>
 // ============================================================
 function onBeforeGeneration() {
-    var messages = getChatMessages();
-    var lastUserMsg = [].concat(messages).reverse().find(function (m) { return m.role === 'user'; });
-    if (!lastUserMsg) return;
-
-    var text = lastUserMsg.message;
+    try {
+    var state = safeGetChatState();
+    var text = state.text, msgId = state.msgId;
+    if (!text || !msgId) return;
+    console.info('[' + SCRIPT_NAME + '] PRE-GEN 收到消息(len=' + text.length + '): ' + (text.length > 80 ? text.slice(0, 80) + '...' : text));
 
     // ---- 指令: 决定攻略地下城<名称> ----
     var dungeonMatch = text.match(/决定攻略地下城(.+?)(?=[。，\s]|$)/);
@@ -41,9 +76,9 @@ function onBeforeGeneration() {
         console.info('[' + SCRIPT_NAME + '] 预解析: 地下城="' + dungeonName + '"');
 
         // 写入消息楼层变量
-        var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+        var vars = getVariables({ type: 'message', message_id: msgId });
         _.set(vars, 'stat_data.地下城攻略状态.当前地下城名称', dungeonName);
-        replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
+        replaceVariables(vars, { type: 'message', message_id: msgId });
 
         if (window.toastr) toastr.success('已设定地下城: ' + dungeonName);
         return;
@@ -71,7 +106,7 @@ function onBeforeGeneration() {
 
         console.info('[' + SCRIPT_NAME + '] 预解析: 接受特殊装备=' + equipBaseName + ' → ' + equipFullName);
 
-        var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+        var vars = getVariables({ type: 'message', message_id: msgId });
 
         // 加入特殊装备列表
         var specialEquips = _.get(vars, 'stat_data.主角.特殊装备', []);
@@ -105,7 +140,7 @@ function onBeforeGeneration() {
         // 推送初体验事件
         _.set(vars, 'stat_data.系统状态.待处理事件.特殊装备初体验', equipFullName);
 
-        replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
+        replaceVariables(vars, { type: 'message', message_id: msgId });
 
         if (window.toastr) toastr.success('已接受特殊装备: ' + equipFullName);
         return;
@@ -122,7 +157,7 @@ function onBeforeGeneration() {
             '中阶': ['人格同化面具（中阶未激活）', '人格同化面具（中阶激活）']
         };
 
-        var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+        var vars = getVariables({ type: 'message', message_id: msgId });
         var specialEquips = _.get(vars, 'stat_data.主角.特殊装备', []);
         if (!Array.isArray(specialEquips)) specialEquips = [];
 
@@ -151,16 +186,15 @@ function onBeforeGeneration() {
             }
         }
     }
-}
 
-// ---- 指令: 给影子分身起名为"<名字>" ----
+    // ---- 指令: 给影子分身起名为"<名字>" ----
 var nameMatch = text.match(/给影子分身起名为["「](.+?)["」]/);
 if (nameMatch) {
     var cloneName = nameMatch[1].trim();
     console.info('[' + SCRIPT_NAME + '] 预解析: 影子分身名字="' + cloneName + '"');
-    var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+    var vars = getVariables({ type: 'message', message_id: msgId });
     _.set(vars, 'stat_data.主角.影子分身名字', cloneName);
-    replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
+    replaceVariables(vars, { type: 'message', message_id: msgId });
     if (window.toastr) toastr.success('影子分身已命名为: ' + cloneName);
     return;
 }
@@ -171,9 +205,9 @@ if (travelMatch) {
     var targetCountry = travelMatch[1].trim();
     var targetCity = travelMatch[2].trim();
     console.info('[' + SCRIPT_NAME + '] 预解析: 前往外地 → ' + targetCountry + '·' + targetCity);
-    var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+    var vars = getVariables({ type: 'message', message_id: msgId });
     _.set(vars, 'stat_data.系统状态.待处理事件.前往外地事件', { 目标国家: targetCountry, 目标城市: targetCity });
-    replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
+    replaceVariables(vars, { type: 'message', message_id: msgId });
     if (window.toastr) toastr.success('准备前往: ' + targetCountry + '·' + targetCity);
     return;
 }
@@ -185,33 +219,41 @@ if (trainMatch) {
     var validTypes = ['学习技能', '基础提升'];
     if (validTypes.indexOf(trainType) === -1) trainType = '基础提升';
     console.info('[' + SCRIPT_NAME + '] 预解析: 前往训练 → ' + trainType);
-    var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+    var vars = getVariables({ type: 'message', message_id: msgId });
     _.set(vars, 'stat_data.系统状态.待处理事件.前往训练事件', { 训练类型: trainType });
-    replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
+    replaceVariables(vars, { type: 'message', message_id: msgId });
     if (window.toastr) toastr.success('准备训练: ' + trainType);
     return;
 }
 
-// ---- 指令: 前往猎艳("NPC名字" 或 酒馆/妓院) ----
+// ---- 指令: 前往猎艳("NPC名字" 或 酒馆/妓院·男/女) ----
 var pleasureNamedMatch = text.match(/前往猎艳["「](.+?)["」]/);
-var pleasureVenueMatch = text.match(/前往猎艳·(.+?)(?=[。，\s]|$)/);
+var pleasureVenueMatch = text.match(/前往猎艳·(酒馆|妓院)/);
+var pleasureGenderMatch = text.match(/前往猎艳·(?:酒馆|妓院)·(男|女)/);
 var pleasureSolo = /前往猎艳/.test(text) && !pleasureNamedMatch && !pleasureVenueMatch;
 if (pleasureNamedMatch || pleasureVenueMatch || pleasureSolo) {
-    var pleasureType, pleasureTarget = '';
+    console.info('[' + SCRIPT_NAME + '] 猎艳入口: named=' + !!pleasureNamedMatch + ' venue=' + !!pleasureVenueMatch + ' gender=' + !!pleasureGenderMatch + ' solo=' + pleasureSolo);
+    var pleasureType, pleasureTarget = '', pleasureGender = '';
     if (pleasureNamedMatch) {
         pleasureType = '指定NPC';
         pleasureTarget = pleasureNamedMatch[1].trim();
     } else if (pleasureVenueMatch) {
         var venue = pleasureVenueMatch[1].trim();
         pleasureType = venue === '妓院' ? '妓院猎艳' : '酒馆猎艳';
+        pleasureGender = pleasureGenderMatch ? pleasureGenderMatch[1] : '';
     } else {
         pleasureType = '酒馆猎艳';
     }
-    console.info('[' + SCRIPT_NAME + '] 预解析: 前往猎艳 → ' + pleasureType + (pleasureTarget ? ' (' + pleasureTarget + ')' : ''));
-    var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
-    _.set(vars, 'stat_data.系统状态.待处理事件.前往猎艳事件', { 类型: pleasureType, 目标名字: pleasureTarget });
-    replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
-    if (window.toastr) toastr.success('前往猎艳: ' + (pleasureTarget || pleasureType));
+    console.info('[' + SCRIPT_NAME + '] 猎艳解析: type=' + pleasureType + ' target=' + pleasureTarget + ' gender=' + pleasureGender);
+    try {
+        var vars = getVariables({ type: 'message', message_id: msgId });
+        _.set(vars, 'stat_data.系统状态.待处理事件.前往猎艳事件', { 类型: pleasureType, 目标名字: pleasureTarget, 目标性别: pleasureGender });
+        replaceVariables(vars, { type: 'message', message_id: msgId });
+        console.info('[' + SCRIPT_NAME + '] 猎艳变量写入成功');
+    } catch (ex) {
+        console.error('[' + SCRIPT_NAME + '] 猎艳变量写入失败:', ex);
+    }
+    if (window.toastr) toastr.success('前往猎艳: ' + (pleasureTarget || (pleasureType + (pleasureGender ? '·' + pleasureGender : ''))));
     return;
 }
 
@@ -222,9 +264,9 @@ if (inviteMatch) {
     var names = namesStr.split('·').map(function (n) { return n.trim(); }).filter(function (n) { return n.length > 0; });
     if (names.length === 0) return;
     console.info('[' + SCRIPT_NAME + '] 预解析: 邀请队友 → ' + names.join(', '));
-    var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+    var vars = getVariables({ type: 'message', message_id: msgId });
     _.set(vars, 'stat_data.系统状态.待处理事件.队友邀请事件', { 邀请名单: names });
-    replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
+    replaceVariables(vars, { type: 'message', message_id: msgId });
     if (window.toastr) toastr.success('已邀请: ' + names.join(', '));
     return;
 }
@@ -238,9 +280,9 @@ if (travelInviteMatch) {
     var targetCity = travelInviteMatch[3].trim();
     if (names.length === 0 || !targetCountry || !targetCity) return;
     console.info('[' + SCRIPT_NAME + '] 预解析: 度假邀约 → ' + names.join(', ') + ' 前往 ' + targetCountry + '·' + targetCity);
-    var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+    var vars = getVariables({ type: 'message', message_id: msgId });
     _.set(vars, 'stat_data.系统状态.待处理事件.度假邀约事件', { 邀请名单: names, 目标国家: targetCountry, 目标城市: targetCity });
-    replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
+    replaceVariables(vars, { type: 'message', message_id: msgId });
     if (window.toastr) toastr.success('度假邀约: ' + targetCountry + '·' + targetCity);
     return;
 }
@@ -253,9 +295,9 @@ if (partnerMatch) {
     var targetCity = partnerMatch[3].trim();
     if (!partnerName || !targetCountry || !targetCity) return;
     console.info('[' + SCRIPT_NAME + '] 预解析: 结成伴侣 → ' + partnerName + ' | ' + targetCountry + '·' + targetCity);
-    var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+    var vars = getVariables({ type: 'message', message_id: msgId });
     _.set(vars, 'stat_data.系统状态.待处理事件.结成伴侣事件', { 伴侣对象: partnerName, 目标国家: targetCountry, 目标城市: targetCity });
-    replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
+    replaceVariables(vars, { type: 'message', message_id: msgId });
     if (window.toastr) toastr.success('结成伴侣: ' + partnerName + ' | ' + targetCountry + '·' + targetCity);
     return;
 }
@@ -274,7 +316,7 @@ if (toggleMatch) {
     var isActivate = toggleAction === '激活';
     var oldState = isActivate ? crystalPair[0] : crystalPair[1];
     var newState = isActivate ? crystalPair[1] : crystalPair[0];
-    var vars = getVariables({ type: 'message', message_id: lastUserMsg.message_id });
+    var vars = getVariables({ type: 'message', message_id: msgId });
     var specialEquips = _.get(vars, 'stat_data.主角.特殊装备', []);
     if (!Array.isArray(specialEquips)) specialEquips = [];
     var oldIdx = specialEquips.indexOf(oldState);
@@ -284,9 +326,11 @@ if (toggleMatch) {
     var eventName = isActivate ? '特殊装备激活' : '特殊装备解除';
     _.set(vars, 'stat_data.系统状态.待处理事件.' + eventName, newState);
     console.info('[' + SCRIPT_NAME + '] 预解析: ' + toggleAction + ' ' + toggleTarget + ' → ' + newState);
-    replaceVariables(vars, { type: 'message', message_id: lastUserMsg.message_id });
+    replaceVariables(vars, { type: 'message', message_id: msgId });
     if (window.toastr) toastr.success(toggleAction + ' ' + toggleTarget + ' → ' + newState);
     return;
+}
+    } catch(e) { console.warn('[' + SCRIPT_NAME + '] onBeforeGeneration error:', e); }
 }
 
 // ============================================================
@@ -389,205 +433,6 @@ function processEquipProgression(variables) {
         }
     }
     _.set(variables, 'stat_data.主角.特殊装备', specialEquips);
-}
-
-// ============================================================
-//  模块：回合自增
-// ============================================================
-function processTurnIncrement(variables) {
-    var curTurn = _.get(variables.stat_data, '进程.当前回合数', 0);
-    _.set(variables, 'stat_data.进程.当前回合数', curTurn + 1);
-}
-
-// ============================================================
-//  模块：购物结束 — 清空商品列表
-// ============================================================
-function processShoppingEnd(variables, prevData) {
-    var prevShopping = _.get(prevData, '商城信息.是否购物中', false);
-    var curShopping = _.get(variables.stat_data, '商城信息.是否购物中', false);
-    if (prevShopping && !curShopping) {
-        _.set(variables, 'stat_data.商城信息.商品列表', []);
-        console.info('[' + SCRIPT_NAME + '] 购物结束，已清空商品列表');
-    }
-}
-
-// ============================================================
-//  模块：战斗结束 — 清空敌方数据
-// ============================================================
-function processCombatEnd(variables, prevData) {
-    var prevCombat = _.get(prevData, '战斗状态.是否战斗中', false);
-    var curCombat = _.get(variables.stat_data, '战斗状态.是否战斗中', false);
-    if (!prevCombat || curCombat) return;
-
-    _.set(variables, 'stat_data.战斗状态.敌方名称', '');
-    _.set(variables, 'stat_data.战斗状态.敌方种族', '');
-    _.set(variables, 'stat_data.战斗状态.敌方等级', 1);
-    _.set(variables, 'stat_data.战斗状态.敌方数量', 1);
-    _.set(variables, 'stat_data.战斗状态.敌方HP', 100);
-    _.set(variables, 'stat_data.战斗状态.敌方最大HP', 100);
-    _.set(variables, 'stat_data.战斗状态.敌方攻击力', 50);
-    _.set(variables, 'stat_data.战斗状态.敌方防御力', 50);
-    _.set(variables, 'stat_data.战斗状态.敌方技能', []);
-    _.set(variables, 'stat_data.战斗状态.敌方buff', {});
-    _.set(variables, 'stat_data.战斗状态.敌方debuff', {});
-    console.info('[' + SCRIPT_NAME + '] 战斗结束，已清理敌方数据');
-}
-
-// ============================================================
-//  模块：攻略结束 — 记录攻略 + 清理攻略状态 + 清空队友
-// ============================================================
-function processRaidEnd(variables, prevData) {
-    var prevSettlement = _.get(prevData, '地下城攻略状态.是否攻略结算中', false);
-    var curSettlement = _.get(variables.stat_data, '地下城攻略状态.是否攻略结算中', false);
-    var prevDefeated = _.get(prevData, '地下城攻略状态.是否攻略败北中', false);
-    var curDefeated = _.get(variables.stat_data, '地下城攻略状态.是否攻略败北中', false);
-
-    var result = null;
-    if (prevSettlement && !curSettlement) result = '成功';
-    else if (prevDefeated && !curDefeated) result = '败北';
-    if (!result) return;
-
-    var dungeonName = _.get(variables.stat_data, '地下城攻略状态.当前地下城名称', '');
-    var startDate = _.get(variables.stat_data, '地下城攻略状态.本次攻略开始日期', '');
-    var endDate = _.get(variables.stat_data, '地下城攻略状态.本次攻略结束日期', '');
-    var kills = _.get(variables.stat_data, '地下城攻略状态.本次攻略击杀数', 0);
-    var gold = _.get(variables.stat_data, '地下城攻略状态.本次攻略获得金币', 0);
-    var teammates = _.get(variables.stat_data, '队友信息', {});
-    var teammateNames = Object.keys(teammates);
-
-    // 记录攻略
-    var records = _.get(variables.stat_data, '主角.冒险者信息.攻略记录列表', []);
-    if (!Array.isArray(records)) records = [];
-        records.push({
-            地下城名称: dungeonName,
-            开始日期: startDate,
-            结束日期: endDate,
-            击杀数: kills,
-            获得金币: gold,
-            攻略结果: result,
-            队友名字列表: teammateNames
-        });
-    _.set(variables, 'stat_data.主角.冒险者信息.攻略记录列表', records);
-    console.info('[' + SCRIPT_NAME + '] 攻略' + result + ': ' + dungeonName);
-
-    // 清理攻略状态
-    _.set(variables, 'stat_data.地下城攻略状态.是否准备完毕', false);
-    _.set(variables, 'stat_data.地下城攻略状态.是否休整中', false);
-    _.set(variables, 'stat_data.地下城攻略状态.是否攻略结算中', false);
-    _.set(variables, 'stat_data.地下城攻略状态.是否攻略败北中', false);
-    _.set(variables, 'stat_data.地下城攻略状态.当前地下城名称', '');
-    _.set(variables, 'stat_data.地下城攻略状态.当前所在层数', 0);
-    _.set(variables, 'stat_data.地下城攻略状态.本层进度', 0);
-    _.set(variables, 'stat_data.地下城攻略状态.本次攻略击杀数', 0);
-    _.set(variables, 'stat_data.地下城攻略状态.本次攻略获得金币', 0);
-    _.set(variables, 'stat_data.地下城攻略状态.本次攻略获得素材', {});
-    _.set(variables, 'stat_data.地下城攻略状态.本次攻略开始日期', '');
-    _.set(variables, 'stat_data.地下城攻略状态.本次攻略结束日期', '');
-
-    // 清空队友
-    _.set(variables, 'stat_data.队友信息', {});
-    console.info('[' + SCRIPT_NAME + '] 已清理攻略状态并清空队友');
-}
-
-// ============================================================
-//  模块：战斗结算中途 — 1%概率触发特殊装备发现
-// ============================================================
-const EQUIP_POOL = [
-    '触手紧身衣',
-    '蜕生项圈（初阶）',
-    '认知扭曲目镜（未激活）',
-    '欲体晶核（未激活）',
-    '影子分身（无心智）',
-    '同化胶核（转化初期）',
-    '淫欲晶核（未激活）',
-    '人格同化面具（初阶未激活）',
-];
-
-function processSpecialEquipDiscovery(variables, prevData) {
-    var prevSettling = _.get(prevData, '战斗状态.是否战斗结算中', false);
-    var curSettling = _.get(variables.stat_data, '战斗状态.是否战斗结算中', false);
-    if (prevSettling || !curSettling) return;
-
-    if (Math.random() >= 0.01) return;
-
-    var owned = _.get(variables.stat_data, '主角.特殊装备', []);
-    var available = EQUIP_POOL.filter(function (item) {
-        return owned.indexOf(item) === -1;
-    });
-
-    if (owned.indexOf('触手紧身衣') !== -1 || owned.indexOf('共生触手紧身衣') !== -1) {
-        available = available.filter(function (item) { return item.indexOf('同化胶核') === -1; });
-    } else if (owned.indexOf('同化胶核（转化初期）') !== -1 || owned.indexOf('同化胶核（转化中期）') !== -1 || owned.indexOf('同化胶核（转化完成）') !== -1) {
-        available = available.filter(function (item) { return item.indexOf('触手紧身衣') === -1; });
-    }
-
-    if (available.length === 0) return;
-
-    var picked = available[Math.floor(Math.random() * available.length)];
-    console.info('[' + SCRIPT_NAME + '] 特殊装备发现: ' + picked);
-    _.set(variables, 'stat_data.系统状态.待处理事件.特殊装备发现', picked);
-}
-
-// ============================================================
-//  模块：日常阶段 — 1%概率触发特殊装备发现（城镇偶遇）
-// ============================================================
-const DAILY_EQUIP_POOL = [
-    '奴隶淫纹（初阶）',
-    '人格同化面具（初阶未激活）',
-    '认知扭曲目镜（未激活）',
-];
-
-function processDailyEquipDiscovery(variables, prevData) {
-    var curPhase = _.get(variables.stat_data, '进程.阶段', '');
-    if (curPhase !== '日常阶段') return;
-
-    var isShopping = _.get(variables.stat_data, '商城信息.是否购物中', false);
-    if (isShopping) return;
-
-    var pendingEvents = _.get(variables.stat_data, '系统状态.待处理事件', {});
-    if (pendingEvents['打造进行中事件'] || pendingEvents['训练进行中事件'] || pendingEvents['猎艳进行中事件']) return;
-
-    if (Math.random() >= 0.01) return;
-
-    var owned = _.get(variables.stat_data, '主角.特殊装备', []);
-    var available = DAILY_EQUIP_POOL.filter(function (item) {
-        return owned.indexOf(item) === -1;
-    });
-
-    if (available.length === 0) return;
-
-    var picked = available[Math.floor(Math.random() * available.length)];
-    console.info('[' + SCRIPT_NAME + '] 日常偶遇特殊装备: ' + picked);
-    _.set(variables, 'stat_data.系统状态.待处理事件.特殊装备发现', picked);
-}
-
-// ============================================================
-//  模块：转入日常阶段 — HP/MP/SP 回满
-// ============================================================
-function processPhaseEnterDaily(variables, prevData) {
-    var prevPhase = _.get(prevData, '进程.阶段', '');
-    var curPhase = _.get(variables.stat_data, '进程.阶段', '');
-    if (prevPhase === curPhase || curPhase !== '日常阶段') return;
-
-    var maxHP = _.get(variables.stat_data, '主角.战斗属性.最大HP', 100);
-    var maxMP = _.get(variables.stat_data, '主角.战斗属性.最大MP', 50);
-    var maxSP = _.get(variables.stat_data, '主角.战斗属性.最大SP', 100);
-    _.set(variables, 'stat_data.主角.当前状态.当前HP', maxHP);
-    _.set(variables, 'stat_data.主角.当前状态.当前MP', maxMP);
-    _.set(variables, 'stat_data.主角.当前状态.当前SP', maxSP);
-    console.info('[' + SCRIPT_NAME + '] 转入日常阶段，HP/MP/SP 已回满');
-}
-
-// ============================================================
-//  模块：任务状态检查 — 列表为空则标记未进行
-// ============================================================
-function processTaskStatusCheck(variables) {
-    var taskList = _.get(variables.stat_data, '任务状态.任务列表', {});
-    var isActive = _.get(variables.stat_data, '任务状态.是否任务进行中', false);
-    if (isActive && Object.keys(taskList).length === 0) {
-        _.set(variables, 'stat_data.任务状态.是否任务进行中', false);
-        console.info('[' + SCRIPT_NAME + '] 任务列表为空，已设置 是否任务进行中=false');
-    }
 }
 
 // ============================================================

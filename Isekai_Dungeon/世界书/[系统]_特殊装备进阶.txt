@@ -1,9 +1,9 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 const advanceList = _.get(stat, '系统状态.待处理事件.特殊装备进阶', []);
-if (!advanceList || advanceList.length === 0) return;
+if (advanceList && advanceList.length > 0) {
 const mcGender = _.get(stat, '主角.基本信息.性别', '');
 const mcRace = _.get(stat, '主角.基本信息.种族', '');
 const cloneName = _.get(stat, '主角.影子分身名字', '影子分身');
@@ -54,6 +54,6 @@ mandatory_data_sync:
       <%_ } _%>
       <%_ if (adv === '影子分身（完整心智）') { _%>,
       { "op": "insert", "path": "/重要NPC信息/<%= cloneName %>", "value": { "种族": "<%= mcRace %>", "性别": "<%= mcGender %>", "年龄": "?", "故乡国家": "<%= mcCountry %>", "故乡城市": "<%= mcCity %>", "所在国家": "<%= mcCountry %>", "所在城市": "<%= mcCity %>", "身份": "影子分身", "职业": "冒险者", "所属公会": "", "冒险者等级": "?", "冒险者称号": "", "外观": "与<%= _.get(stat,'主角.基本信息.姓名','') %>的身形、五官、种族特征完全一致，但通体漆黑、呈现出介于实体与阴影之间的流动性。瞳孔为纯黑。", "性格": "<%= clonePersonality || '由主角的影子中诞生，拥有自主意志，对主角极为忠诚且亲近' %>", "身材": "与<%= _.get(stat,'主角.基本信息.姓名','') %>一致", "位置更新日期": "<%= dateStr %>", "最近互动日期": "<%= dateStr %>", "最近互动地点": "<%= mcCountry %>·<%= mcCity %>", "最近互动事项": "影子分身获得完整心智，第一次以自主意志开口说话，成为独立的存在。", "活动范围": "世界", "简述": "由主角的影子中诞生的分身，获得完整心智后成为独立个体。外貌与主角完全一致但通体漆黑。", "好感度": 100, "关系": "互为依存的本体与影子" } }
-      <%_ } _%>
-    ]
-<%_ } _%>
+       <%_ } _%>
+     ]
+<%_ } } } _%>

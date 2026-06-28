@@ -1,15 +1,15 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const event = _.get(stat, '系统状态.待处理事件.NPC升阶事件', null);
-if (!event || !event.NPC名字) return;
+if (event && event.NPC名字) {
 
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const npcName = event.NPC名字;
 const oldRank = event.旧等级 || '?';
 const npc = _.get(stat, '重要NPC信息.' + npcName, null);
-if (!npc) return;
+if (npc) {
 
 const RANK_ORDER = { F:1,E:2,D:3,C:4,B:5,A:6,S:7,SS:8,SSS:9,EX:10 };
 const NUM_TO_RANK = { 1:'F',2:'E',3:'D',4:'C',5:'B',6:'A',7:'S',8:'SS',9:'SSS',10:'EX' };
@@ -45,4 +45,4 @@ _%>
         { "op": "replace", "path": "/重要NPC信息/<%= npcName %>/冒险者称号", "value": "[AI为<%= npcName %>根据其种族、职业和战斗风格创作的新称号]" },
         { "op": "remove", "path": "/系统状态/待处理事件/NPC升阶事件" }
       ]
-<%_ } _%>
+<%_ } } } } _%>

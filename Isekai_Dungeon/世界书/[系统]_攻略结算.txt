@@ -1,7 +1,7 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const isSettling = _.get(stat, '地下城攻略状态.是否攻略结算中', false);
-if (!isSettling) return;
+if (isSettling) {
 
 const dungeonName = _.get(stat, '地下城攻略状态.当前地下城名称', '');
 const raidKills = _.get(stat, '地下城攻略状态.本次攻略击杀数', 0);
@@ -126,4 +126,5 @@ _%>
         <%_ }); _%>
         // 若主角决定保留某些特殊素材不提交，追加：{ "op": "insert", "path": "/主角/道具栏/[素材名称]", "value": { "类型": "素材", "数量": [数量], "描述": "[素材描述]" } }
       ]
+<%_ } _%>
 <%_ } _%>

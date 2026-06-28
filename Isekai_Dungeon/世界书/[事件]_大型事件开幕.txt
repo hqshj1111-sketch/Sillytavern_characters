@@ -1,10 +1,9 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const openingType = _.get(stat, '系统状态.待处理事件.大型事件开幕', '');
-if (!openingType) return;
-
+if (openingType) {
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
 const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
@@ -56,4 +55,4 @@ _%>
         { "op": "replace", "path": "/大型事件/真相揭露", "value": false },
         { "op": "remove", "path": "/系统状态/待处理事件/大型事件开幕" }
       ]
-<%_ } _%>
+<%_ } } } _%>

@@ -2,7 +2,7 @@
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
 const isShopping = _.get(stat, '商城信息.是否购物中', false);
-if (phase !== '日常阶段' || !isShopping) return;
+if (phase === '日常阶段' && isShopping) {
 
 const shopItems = _.get(stat, '商城信息.商品列表', []);
 const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
@@ -40,4 +40,5 @@ _%>
         [
           { "op": "replace", "path": "/商城信息/是否购物中", "value": false }
         ]
+<%_ } _%>
 <%_ } _%>

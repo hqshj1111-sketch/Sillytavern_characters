@@ -2,15 +2,18 @@
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
-if (phase !== '日常阶段' || pendingEvents['猎艳进行中事件']) return;
+if (phase === '日常阶段' && !pendingEvents['猎艳进行中事件']) {
 
 const pleasureEvent = _.get(stat, '系统状态.待处理事件.前往猎艳事件', null);
-if (!pleasureEvent || !pleasureEvent.类型) return;
+if (pleasureEvent && pleasureEvent.类型) {
 
 const isNamed = pleasureEvent.类型 === '指定NPC';
 const isTavern = pleasureEvent.类型 === '酒馆猎艳';
 const isBrothel = pleasureEvent.类型 === '妓院猎艳';
 const targetName = pleasureEvent.目标名字 || '';
+const pleasureGender = pleasureEvent.目标性别 || '';
+const isMale = pleasureGender === '男';
+const isFemale = pleasureGender === '女';
 
 const currentCountry = _.get(stat, '主角.当前状态.当前国家', '');
 const currentCity = _.get(stat, '主角.当前状态.当前城市', '');
@@ -28,14 +31,14 @@ _%>
 <%_ if (isNamed) { _%>
   猎艳方式：指定对象 — <%= targetName %>
   <%_ if (targetNPC) { _%>
-  NPC信息：<%= targetNPC.种族||'?' %> / <%= targetNPC.性别||'?' %> / <%= targetNPC.年龄||'?' %> | <%= targetNPC.简述||targetNPC.职业||'' %>
+  NPC信息：<%= targetNPC.种族||'?' %> / <%= targetNPC.性别||'?' %><% if (targetNPC.性取向) { %> / 取向<%= targetNPC.性取向 %><%= targetNPC.性向角色 ? '·'+targetNPC.性向角色 : '' %><% } %> / <%= targetNPC.年龄||'?' %> | <%= targetNPC.简述||targetNPC.职业||'' %>
   <%_ } else { _%>
   ⚠ 警告：<%= currentCity %>没有名为「<%= targetName %>」的NPC记录。请描写主角在城中尝试寻找此人但未能找到，转而随机应变。
   <%_ } _%>
 <%_ } else if (isTavern) { _%>
-  猎艳方式：酒馆猎艳 — 纯粹偶遇
+  猎艳方式：酒馆猎艳 — 纯粹偶遇<%= pleasureGender ? ' | 目标：'+pleasureGender : '' %>
 <%_ } else { _%>
-  猎艳方式：妓院猎艳 — 花钱买春
+  猎艳方式：妓院猎艳 — 花钱买春<%= pleasureGender ? ' | 目标：'+pleasureGender : '' %>
 <%_ } _%>
 
   narrative_guidance:
@@ -44,9 +47,9 @@ _%>
 <%_ } else if (isNamed && !targetNPC) { _%>
     - "主角在<%= currentCity %>试图寻找<%= targetName %>，但城中似乎没有这个人的踪迹。描写主角在街道和酒馆中打听却屡屡落空的茫然感。最终主角只得改变计划——前往当地的酒馆或妓院，在人群中物色心仪的目标。"
 <%_ } else if (isTavern) { _%>
-    - "主角独自前往<%= currentCity %>的酒馆。描写推开木门时扑面而来的麦酒与烤肉的气味、吧台前零散的酒客、角落里几个独自啜饮的身影。主角的目光扫过人群，在某个身影上短暂停留。走上前去搭讪——以符合主角性格的方式开场，对方的反应则基于其外显的特征与神态。本回合以与目标初步接触、气氛尚在试探中收束，禁止直接开始描写性爱。"
+    - "主角独自前往<%= currentCity %>的酒馆。描写推开木门时扑面而来的麦酒与烤肉的气味、吧台前零散的酒客、角落里几个独自啜饮的身影。主角的目光扫过人群，寻找<%= isMale ? '一名合适的男性' : isFemale ? '一位合适的女性' : '心仪的目标' %>。走上前去搭讪——以符合主角性格的方式开场，对方的反应则基于其外显的特征与神态。本回合以与目标初步接触、气氛尚在试探中收束，禁止直接开始描写性爱。"
 <%_ } else { _%>
-    - "主角独自前往<%= currentCity %>的红灯区花街。描写巷子里的暧昧灯光、沿街揽客的轻佻笑语和薄纱帘后晃动的身影。挑选一家妓院推门进去——鸨母热情迎上前来报价介绍今晚的姑娘/小哥，或某位正在大厅候客的从业者主动走上前来。本回合以与目标初步接触、气氛尚在试探中收束，禁止直接开始描写性爱。"
+    - "主角独自前往<%= currentCity %>的红灯区花街。描写巷子里的暧昧灯光、沿街揽客的轻佻笑语和薄纱帘后晃动的身影。挑选一家妓院推门进去——鸨母热情迎上前来报价介绍今晚的<%= isFemale ? '姑娘' : isMale ? '小哥' : '姑娘/小哥' %>，或某位正在大厅候客的从业者主动走上前来。本回合以与目标初步接触、气氛尚在试探中收束，禁止直接开始描写性爱。"
 <%_ } _%>
     - "结尾为玩家留出自由选择空间——继续靠近、换个目标、或就此作罢。"
 
@@ -57,4 +60,4 @@ _%>
         { "op": "remove", "path": "/系统状态/待处理事件/前往猎艳事件" },
         { "op": "insert", "path": "/系统状态/待处理事件/猎艳进行中事件", "value": "<%= isNamed && targetNPC ? targetName : pleasureEvent.类型 %>" }
       ]
-<%_ } _%>
+<%_ } } } _%>

@@ -1,9 +1,9 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const eventVal = _.get(stat, '系统状态.待处理事件.季节变换事件', '');
-if (!eventVal) return;
+if (eventVal) {
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const newSeason = String(eventVal);
 const seasonNames = ['春季', '夏季', '秋季', '冬季'];
@@ -47,4 +47,4 @@ event_initiator:
       [
         { "op": "remove", "path": "/系统状态/待处理事件/季节变换事件" }
       ]
-<%_ } _%>
+<%_ } } } _%>

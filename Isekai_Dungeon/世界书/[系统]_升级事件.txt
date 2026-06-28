@@ -2,7 +2,7 @@
 const stat = getvar('stat_data') || {};
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
 const levelGainVal = pendingEvents['升级事件'];
-if (!levelGainVal) return;
+if (levelGainVal) {
 const levelGain = Number(levelGainVal) || 1;
 
 const mcLevel = _.get(stat, '主角.当前状态.等级', 1);
@@ -52,4 +52,4 @@ _%>
         { "op": "delta", "path": "/主角/战斗属性/幸运", "value": <%= bonusLuk %> },
         { "op": "remove", "path": "/系统状态/待处理事件/升级事件" }
       ]
-<%_ } _%>
+<%_ } } _%>

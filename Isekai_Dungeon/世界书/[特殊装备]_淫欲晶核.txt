@@ -1,11 +1,11 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 const specialEquips = _.get(stat, '主角.特殊装备', []);
 const isActive = specialEquips.includes('淫欲晶核（已激活）');
 const isInactive = specialEquips.includes('淫欲晶核（未激活）');
-if (!isActive && !isInactive) return;
+if (isActive || isInactive) {
 const baseGender = _.get(stat, '主角.基本信息.性别', '');
 const hasBodySwap = specialEquips.includes('欲体晶核（已激活）');
 const gender = hasBodySwap ? (baseGender === '男' ? '女' : '男') : baseGender;
@@ -24,4 +24,4 @@ _%>
 - 作用概述：激活后晶核将以魔力重塑并高度强化佩戴者的全部性器官——若为男性则鸡巴极大增强且后穴变为自适应精壶；若为女性则小穴和后穴强化为名器且胸部显著增大；不论性别口腔均强化为极致的包裹与快感传导器官。同时性欲大幅增强，身体始终处于性爱准备状态
 - 激活：由佩戴者意念触发激活
 <%_ } _%>
-<%_ } _%>
+<%_ } } } _%>

@@ -1,4 +1,4 @@
-<%_
+<%_ {
 if (
   getvar('initialized_lorebooks') !== undefined &&
   _.has(getvar('stat_data'), '系统状态.主角创建完毕') &&
@@ -117,5 +117,5 @@ character_creation_protocol:
         </UpdateVariable>
 ---
 <%_
-}
+} }
 _%>

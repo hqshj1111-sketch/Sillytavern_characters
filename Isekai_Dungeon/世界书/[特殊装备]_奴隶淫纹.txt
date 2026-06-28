@@ -1,12 +1,12 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 const specialEquips = _.get(stat, '主角.特殊装备', []);
 const isFinal = specialEquips.includes('奴隶淫纹（终阶）');
 const isAdv = specialEquips.includes('奴隶淫纹（进阶）');
 const isInit = specialEquips.includes('奴隶淫纹（初阶）');
-if (!isInit && !isAdv && !isFinal) return;
+if (isInit || isAdv || isFinal) {
 const master = _.get(stat, '主角.主角的主人', '');
 const slaveName = _.get(stat, '主角.奴隶称呼', '');
 const brandAppearance = _.get(stat, '主角.淫纹外观', '');
@@ -38,4 +38,4 @@ _%>
 - 奴性：佩戴者内心仍保留对自身奴隶化的抗拒——会对他人注意到淫纹产生羞耻和遮掩冲动，在非主人的社交中会否认或淡化自己的奴隶身份。但独处时已开始以手指轻触淫纹并默默思索主人对自己的意义
 - 性爱：淫纹在性唤起时发热发光，被主人触碰烙印位置时引发强烈的受支配情欲。与主人的性行为中淫纹随抽插节奏脉动闪光，加深被占有感。佩戴者仍会因被支配而羞耻，但身体已先行反应——湿润或勃起不受意志控制
 <%_ } _%>
-<%_ } _%>
+<%_ } } } _%>

@@ -1,11 +1,11 @@
 <%_ {
 const stat = getvar('stat_data') || {};
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase === '创角阶段') return;
+if (phase !== '创角阶段') {
 const specialEquips = _.get(stat, '主角.特殊装备', []);
 const isActive = specialEquips.includes('欲体晶核（已激活）');
 const isInactive = specialEquips.includes('欲体晶核（未激活）');
-if (!isActive && !isInactive) return;
+if (isActive || isInactive) {
 const gender = _.get(stat, '主角.基本信息.性别', '');
 _%>
 <%= isActive ? '# 欲体晶核·已激活（特殊装备）' : '# 欲体晶核·未激活（特殊装备）' %>
@@ -20,4 +20,4 @@ _%>
 - 作用概述：激活后晶核将在极短时间内完成佩戴者的性转——心理与自我认知完全不变，仅身体层面发生彻底的改变
 - 激活：由佩戴者意念触发激活
 <%_ } _%>
-<%_ } _%>
+<%_ } } } _%>

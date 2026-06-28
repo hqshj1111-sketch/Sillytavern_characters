@@ -2,15 +2,15 @@
 const stat = getvar('stat_data') || {};
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
 const eventVal = pendingEvents['旧友联系事件'];
-if (!eventVal) return;
+if (eventVal) {
 const phase = _.get(stat, '进程.阶段', '创角阶段');
-if (phase !== '日常阶段') return;
+if (phase === '日常阶段') {
 
 const npcName = String(eventVal);
 const keyNpc = _.get(stat, `重要NPC信息.${npcName}`, null);
 const commonNpc = _.get(stat, `一般NPC信息.${npcName}`, null);
 const npc = keyNpc || commonNpc;
-if (!npc) return;
+if (npc) {
 
 const npcCountry = _.get(npc, '所在国家', '未知国度');
 const npcCity = _.get(npc, '所在城市', '未知城镇');
@@ -55,4 +55,4 @@ event_initiator:
       [
         { "op": "remove", "path": "/系统状态/待处理事件/旧友联系事件" }
       ]
-<%_ } _%>
+<%_ } } } } _%>
