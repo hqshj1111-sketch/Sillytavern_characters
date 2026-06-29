@@ -1,0 +1,38 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const missingList = events['社交媒体更新事件'];
+
+  if (Array.isArray(missingList) && missingList.length > 0) {
+    const dateStr = (parseInt(_.get(stat, '进程.当前年份', 2025)) || 2025) + '年' + (parseInt(_.get(stat, '进程.当前月份', 10)) || 10) + '月' + (parseInt(_.get(stat, '进程.当前日份', 15)) || 15) + '日';
+    const slot = _.get(stat, '进程.当前时段', '晚上');
+    const npcData = _.get(stat, 'NPC数据', {});
+    const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
+_%>
+# 系统指令：社交媒体动态生成
+backstage_event:
+  event_name: "社交媒体动态生成"
+  missing_characters: <%= JSON.stringify(missingList) %>
+
+  narrative_guidance:
+    - "【后台变量处理】本指令为纯数据操作，不得在叙事正文中提及或输出任何相关内容。"
+    - "【社交媒体匿名性】这是一个非实名社交平台，用户以昵称而非真实身份发言。在此平台上，人们敢于说出真实想法，无需顾虑社会角色和日常面具。请为以下缺失今日动态的角色，以他/她的匿名身份和真实口吻，各生成一条符合最近剧情进展的今日动态。"
+    - "【角色列表】<% missingList.forEach(function(name, i) { %><%= i > 0 ? '、' : '' %><%= name %><% }); %>"
+    - "主角的动态以主播名「<%= streamerName %>」的口吻发送；NPC 的动态以其社媒昵称的口吻发送。"
+
+  mandatory_data_sync:
+    instruction: "为以下角色各生成一条动态并插入："
+    patch_code: |
+      [
+<%_ missingList.forEach(function(name, i) {
+    const npc = npcData[name] || {};
+    const nick = (name === '主角') ? streamerName : (npc.社媒昵称 || name);
+    const comma = i < missingList.length - 1 ? ',' : '';
+_%>
+        { "op": "insert", "path": "/社交媒体/<%= name %>/动态列表/-", "value": { "日期": "<%= dateStr %>", "时段": "<%= slot %>", "内容": "[以<%= nick %>的口吻，基于近期叙事中<%= name %>的相关剧情，生成一条符合角色内心真实想法的动态]" } }<%= comma %>
+<%_ }); _%>
+        { "op": "remove", "path": "/系统状态/待处理事件/社交媒体更新事件" }
+      ]
+
+<%_ } } _%>

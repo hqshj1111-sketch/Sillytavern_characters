@@ -1,0 +1,53 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['海斗擦药事件'] && isDaily && !isSexActive) {
+    const jin = _.get(stat, 'NPC数据.黑崎海斗', {});
+    const lewdness = parseInt(_.get(jin, '淫乱度', 0)) || 0;
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const sexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.海斗擦药事件', 0)) || 0;
+_%>
+# 事件：帮你涂药
+event_initiator:
+  event_name: "帮你涂药"
+  character: "黑崎海斗"
+  location: "住宅区 / 体育馆更衣室"
+  time: "下午 - 晚上"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "训练后主角注意到海斗走路姿势不对，大腿根部拉伤了。海斗说没事，但主角主动拿来药膏帮他涂。"
+    - "海斗脱了外裤躺下，主角挤了药膏在手上，手指压在他大腿内侧缓慢推开。涂到腹股沟附近时，他裤子里支了起来。主角没停手。他的汗味和运动后的体味在近距离变得很浓。"
+    <%_ if (eventCount > 0) { _%>
+    - "已经不是第一次帮他涂药了。主角拿着药膏直接把手伸进他裤腿，动作比上次深入。海斗连客套的话都没说。"
+    - "他的勃起来得比上次快。主角的手还在抹药，但拇指在鼓起的地方多绕了几圈，头也越来越低——靠近能闻到更浓的味道。"
+    <%_ if (lewdness >= 50) { _%>
+    - "海斗不掩饰被碰到的反应——每次拇指划过他都说一句骚话，腿也往外张开了点。"
+    <%_ } else { _%>
+    - "海斗努力压着呼吸，偶尔把脸转向靠背不让人看见表情，但裤子里撑起来的部分没法藏。"
+    <%_ } _%>
+    - "结尾留给主角选择：继续借涂药的借口探索、把头埋进他味道最浓的地方、或收手把药膏放回药箱。"
+    <%_ } else { _%>
+    <%_ if (lewdness >= 50) { _%>
+    - "海斗低头看了眼自己撑起来的位置，非但没遮掩，反而带着骚话把腿往两边挪给主角腾位置。"
+    <%_ } else { _%>
+    - "海斗说差不多好了，但腿没挪开。主角的手指已经超出了涂药的范围——拇指划过裤腰边缘。"
+    <%_ } _%>
+    - "结尾留给主角选择：装作没看见继续涂、问他要不要多按几下、或给他毛巾让他自己盖住。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/海斗擦药事件" }
+      ]
+
+<%_ } } _%>

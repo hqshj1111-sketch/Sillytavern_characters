@@ -7,97 +7,15 @@
   // ========== 提前获取核心变量 ==========
   const lewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
   const shame = parseInt(_.get(stat, '主角.当前状态.羞耻度', 100)) || 100;
-  const totalStreams = parseInt(_.get(stat, '主角.主播信息.直播总次数', 0)) || 0;
-  const fans = parseInt(_.get(stat, '主角.主播信息.粉丝数', 0)) || 0;
-  const currentLocation = _.get(stat, '主角.当前状态.当前地点', '未知地点');
   const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
 
   // ========== 第一阶段：日常阶段 + 未开播 ==========
   if (currentPhase === '日常阶段' && !isStreaming) {
-
-    // --- 标题风格指导（根据淫乱度） ---
-    let titleStyleGuide = '';
-    if (lewdness < 25) {
-      titleStyleGuide = '擦边暧昧，充满犹豫和试探。例：「第一次开镜头…好紧张😳」';
-    } else if (lewdness < 50) {
-      titleStyleGuide = '开始放开，直接点明行为但语气带矜持。例：「🌙深夜偷偷开播·今天试试不穿内裤🫣」';
-    } else if (lewdness < 75) {
-      titleStyleGuide = '直白色情，主动预告性行为。例：「公园角落玩玩具🔞被人看到就完蛋了🥵」';
-    } else {
-      titleStyleGuide = '极度露骨，语气放荡主动。例：「公厕里全裸撸鸡巴💦贱狗憋不住了想被操🥵」';
-    }
-
-    // --- 开播准备熟练度指导（根据直播总次数） ---
-    let prepSkillGuide = '';
-    if (totalStreams === 0) {
-      prepSkillGuide = '主角首次开播，对APP功能陌生，调试角度手忙脚乱，心跳如鼓。';
-    } else if (totalStreams <= 3) {
-      prepSkillGuide = '已有几次经验，设备准备不再慌乱，但仍会反复检查角度和收音。';
-    } else if (totalStreams <= 6) {
-      prepSkillGuide = '流程熟练，提前规划直播亮点，准备迅速而从容。';
-    } else {
-      prepSkillGuide = '行云流水，开镜即进入状态，动作利落自信。';
-    }
-
-    // --- 开播氛围指导（根据粉丝数） ---
-    let atmosphereGuide = '';
-    if (fans <= 100) {
-      atmosphereGuide = '直播间几乎空无一人，只有各位的观众数字与寂静的聊天框。';
-    } else if (fans <= 500) {
-      atmosphereGuide = '零星老粉涌入，稀稀落落的弹幕划过屏幕，气氛冷清。';
-    } else if (fans <= 2000) {
-      atmosphereGuide = '开播瞬间涌入一批观众，弹幕开始滚动，气氛迅速升温。';
-    } else {
-      atmosphereGuide = '大批观众蜂拥而至，弹幕瞬间刷屏，气氛沸腾。';
-    }
-
-    const startViewers = Math.floor(fans * (Math.random() * 0.2 + 0.6));
-
-    // --- 开播表现指导（羞耻度×淫乱度 16组合） ---
-    const shameLevel = shame >= 75 ? 4 : (shame >= 50 ? 3 : (shame >= 25 ? 2 : 1));
-    const lewdLevel = lewdness >= 75 ? 4 : (lewdness >= 50 ? 3 : (lewdness >= 25 ? 2 : 1));
-    const performanceMap = {
-      '1-1': '双颊烧红，眼神闪躲，连对着镜头打招呼都结结巴巴。',
-      '1-2': '极度羞耻却身体诚实，笨拙地展露时呼吸紊乱，动作僵硬。',
-      '1-3': '羞耻心拉扯着放荡的冲动，一边脸红一边主动撩拨镜头。',
-      '1-4': '明明羞得快哭出来，身体却熟练地摆出下流姿势，形成淫荡反差。',
-      '2-1': '仍有羞耻但已能强装镇定，偶尔避开镜头，整体举止仍显青涩。',
-      '2-2': '羞涩逐渐褪去，开始尝试更大胆的动作，但偶尔还会卡壳。',
-      '2-3': '羞耻化作脸颊红晕的装饰，坦然展露欲望，配合观众指令。',
-      '2-4': '仅存的一点羞耻心反而让放荡更显诱惑，欲拒还迎地挑逗观众。',
-      '3-1': '羞耻感薄弱，对青涩的举止毫无掩饰，自然地笨拙互动。',
-      '3-2': '从容面对镜头，羞耻已不构成阻碍，动作流畅自然。',
-      '3-3': '几乎不知羞耻为何物，熟练地展示身体，享受被视奸的快感。',
-      '3-4': '羞耻感彻底蒸发，以近乎痴女的状态主动索取弹幕指令，放荡不羁。',
-      '4-1': '羞耻早已被驯服，却故意扮演青涩懵懂，形成背德的反差表演。',
-      '4-2': '完全游刃有余，用入门级的裸露动作就能撩起满屏欲火。',
-      '4-3': '将淫荡表演得光明正大，每一个眼神和喘息都精准榨取热度。',
-      '4-4': '彻底沉沦的肉欲化身，不知羞耻、极度淫乱，镜头前只剩纯粹的欲望展示。'
-    };
-    const performanceGuide = performanceMap[`${shameLevel}-${lewdLevel}`] || '根据当前状态自然面对镜头。';
 _%>
-# 系统指令：露出直播 - 开播阶段
-stream_phase_preparation:
+# 系统指令：露出直播 - 日常阶段
+stream_phase_daily:
   narrative_guidance:
-    - "主角尚未开播，处于日常阶段。若玩家表达开播意愿，则立即进入开播准备。"
-    - "【准备熟练度】：<%= prepSkillGuide %>"
-    - "【开播氛围】：<%= atmosphereGuide %>"
-    - "【开播表现】：<%= performanceGuide %>"
-    - "【标题与标签】：根据以上状态生成吸睛的直播间标题（口语化，10-15字）和3-5个精准标签。标题风格：<%= titleStyleGuide %>"
-    - "描写主角打开APP、设置直播间、调试角度，最后点击开播按钮的全过程。"
-
-  mandatory_data_sync:
-    instruction: "开播动作完成后，必须执行以下变量更新："
-    patch_code: |
-      [
-        { "op": "replace", "path": "/直播状态/是否正在直播", "value": true },
-        { "op": "replace", "path": "/直播状态/当前直播间标题", "value": "[拟定的标题]" },
-        { "op": "replace", "path": "/直播状态/当前直播间标签", "value": ["标签1", "标签2", "标签3"] }
-        { "op": "replace", "path": "/直播状态/当前直播间人数", "value": <%= startViewers %> }
-        //模拟直播间实时弹幕，在变量里追加0-3条开播弹幕，弹幕需体现当前开播情况，若人气很低可以不追加，风格直白露骨。
-        //以下为单条示例，多条添加需重复执行
-        { "op": "insert", "path": "/直播状态/当前直播间弹幕/-", "value": ["发送者ID", "弹幕内容"] }
-      ]
+    - "当前为日常阶段，主角尚未开播。开播动作由前端按钮触发，AI无需主动推进。若玩家表达开播意愿，提醒玩家使用开播按钮设置直播参数。"
 
 <%_ } else if (currentPhase === '直播阶段' && isStreaming) {
 
@@ -132,7 +50,7 @@ stream_phase_preparation:
         } else {
           triggeredEvent = 'intruder';
         }
-      
+
         // 生成任务名称（由AI在叙事时填写，此处只给指导，不硬编码具体任务）
         if (triggeredEvent === 'mission') {
           // 任务名由AI根据narrative_guidance生成，不再预设具体文本
@@ -147,10 +65,10 @@ stream_phase_preparation:
           });
 
           if (availableNpcs.length > 0 && Math.random() < 0.3) {
-            // 根据秘密察觉程度赋权：程度越低权重越高
+            // 根据疑心赋权：程度越低权重越高
             const weighted = [];
             availableNpcs.forEach(name => {
-              const suspicion = parseInt(_.get(npcData, `${name}.秘密察觉程度`, 0)) || 0;
+              const suspicion = parseInt(_.get(npcData, `${name}.疑心`, 0)) || 0;
               const weight = 100 - suspicion; // 0察觉→权重100，100察觉→权重0
               for (let i = 0; i < weight; i++) weighted.push(name);
             });
@@ -162,13 +80,13 @@ stream_phase_preparation:
       }
     }
 
-    // 如果当前存在外人闯入事件（触发或进行中），获取该角色的秘密察觉程度
+    // 如果当前存在外人闯入事件（触发或进行中），获取该角色的疑心
     let intruderSuspicion = 0;
     let intruderSuspicionStage = '';
     if (triggeredEvent === 'intruder' || existingIntruder) {
       const intruderKey = triggeredEvent === 'intruder' ? intruderName : existingIntruder;
       if (intruderKey !== '路人') {
-        intruderSuspicion = parseInt(_.get(stat, `NPC数据.${intruderKey}.秘密察觉程度`, 0)) || 0;
+        intruderSuspicion = parseInt(_.get(stat, `NPC数据.${intruderKey}.疑心`, 0)) || 0;
         if (intruderSuspicion <= 25) {
           intruderSuspicionStage = '毫不知情——完全不知道主角在做任何与露出相关的事。';
         } else if (intruderSuspicion <= 50) {
@@ -200,7 +118,7 @@ stream_phase_broadcasting:
 
   narrative_guidance:
     - "直播进行中。描写直播间实况：当前人数、弹幕内容、观众互动。"
-    - "主角在镜头前的露出行为与对弹幕的回应。每轮直播互动都可能引起直播间热度的波动。"
+    - "主角在镜头前的露出行为与对弹幕的回应。APP的多视角可自由切镜——正面、侧面、背面、俯角、近景特写——叙事时不必局限于单一手机镜头的视角限制。每轮直播互动都可能引起直播间热度的波动。"
     <%_ if (triggeredEvent === 'mission') { _%>
     - "【观众任务·触发】：弹幕中一位观众发出了任务要求。根据主角当前的羞耻度(<%= shame %>)、淫乱度(<%= lewdness %>)及直播场景，创意设计一个轻微挑战其舒适区但可执行、不落俗套的具体任务。任务需有明确可辨的完成标准。**禁止在本回合直接描写任务执行的结果，仅描写任务发布的弹幕场景和主角的第一反应。**"
     <%_ } else if (existingMission) { _%>
@@ -208,20 +126,22 @@ stream_phase_broadcasting:
     <%_ } _%>
     <%_ if (triggeredEvent === 'intruder') { _%>
     <%_ if (intruderName !== '路人') { _%>
-    - "【外人闯入·触发】：<%= intruderName %>突然出现在主角的直播范围内或与他互动。他的秘密察觉程度为<%= intruderSuspicion %>（<%= intruderSuspicionStage %>），结合此程度决定他的反应和行动。"
+    - "【外人闯入·触发】：<%= intruderName %>突然出现在主角的直播范围内或与他互动。他的疑心为<%= intruderSuspicion %>（<%= intruderSuspicionStage %>），结合此程度决定他的反应和行动。"
     <%_ } else { _%>
     - "【外人闯入·触发】：一名路人突然出现在主角的直播范围内或与他互动。描写主角发现来人时的瞬间反应——心跳骤停的恐惧、是否被发现的紧张、以及暴露边缘的隐秘刺激。**禁止在本回合直接描写闯入事件的结果，仅描写闯入发生的瞬间和主角的第一反应。**"
     <%_ } _%>
     <%_ } else if (existingIntruder) { _%>
     <%_ if (existingIntruder !== '路人') {
     _%>
-    - "【外人闯入·进行中】：<%= existingIntruder %>仍在附近或与主角互动。他的秘密察觉程度为<%= intruderSuspicion %>（<%= intruderSuspicionStage %>），据此决定他的后续行动。"
+    - "【外人闯入·进行中】：<%= existingIntruder %>仍在附近或与主角互动。他的疑心为<%= intruderSuspicion %>（<%= intruderSuspicionStage %>），据此决定他的后续行动。"
     <%_ } else { _%>
     - "【外人闯入·进行中】：路人仍在附近或与主角互动。主角正在努力应对这突如其来的状况。根据当前发展描写主角的掩饰、挣扎或抉择。"
     <%_ } _%>
-    <%_ } else { _%>
-    - "【直播环境】：当前情况下，周围其他人都只是提供刺激感的背景板，绝不会与主角产生任何互动。"
-    <%_ } _%>
+     <%_ } else { _%>
+     - "【直播环境】：当前情况下，周围其他人都只是提供刺激感的背景板，绝不会与主角产生任何互动。"
+     <%_ } _%>
+     - "【关播规则】：AI 绝对禁止在玩家未明确发出关播指令的情况下主动结束直播。即使观众任务完成、外人离去、主角感到疲劳，也必须保持直播状态，等待玩家的下一步指令。关播动作由系统指令接管，AI 无需负责。"
+
 
   narrative_branch:
     <%_ if (existingMission) { _%>
@@ -235,7 +155,7 @@ stream_phase_broadcasting:
     - condition: "主角选择努力掩饰、坚持直播（无论是否被发现或外人是否离开）"
       instruction: "描写主角在闯入者接近或互动时的掩饰，以及掩饰成功或被发现后依然坚持的刺激感。"
     - condition: "主角选择放弃直播、仓皇逃跑"
-      instruction: "描写主角被恐惧压倒、慌忙收拾设备逃离现场的过程。" 
+      instruction: "描写主角被恐惧压倒、慌忙收拾设备逃离现场的过程。"
     <%_ } else if (triggeredEvent === 'mission') { _%>
     - condition: "观众任务发布，玩家尚未明确回应"
       instruction: "将任务发布的弹幕场景和主角的第一反应作为本回合叙事重点，等待玩家做出决定。"
@@ -243,8 +163,6 @@ stream_phase_broadcasting:
     - condition: "外人闯入，玩家尚未明确回应"
       instruction: "将闯入者出现的瞬间和主角的紧张反应作为本回合叙事重点，等待玩家做出回应。"
     <%_ } else { _%>
-    - condition: "玩家明确表示结束直播"
-      instruction: "进入直播收尾阶段。根据主角的态度，描述主角向观众做最后的告别，以及关播后的现场整理和离开。禁止在本回合进行直播结束后的数据展示。禁止玩家未给出指令就关播。"
     - condition: "玩家继续互动"
       instruction: "根据主角的露出行为和与观众的互动，生动地描述出对直播间热度的影响。"
     <%_ } _%>
@@ -292,11 +210,6 @@ stream_phase_broadcasting:
         { "op": "remove", "path": "/系统状态/待处理事件/外人闯入事件" }
       ]
     <%_ } _%>
-    patch_code_end_stream: |
-      [
-        { "op": "replace", "path": "/直播状态/是否正在直播", "value": false },
-        { "op": "insert", "path": "/系统状态/待处理事件/直播结算事件", "value": true }
-      ]
     patch_code_update_heat: |
       [
         { "op": "delta", "path": "/直播状态/当前直播间热度", "value": [根据剧情在-3到3之间选择整数] }

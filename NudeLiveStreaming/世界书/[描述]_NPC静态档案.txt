@@ -13,7 +13,7 @@ if (npcNames.length > 0) {
         const body = npc.身体 || {};
         const clothing = npc.着装 || {};
         const personality = npc.性格 || {};
-        const suspicion = parseInt(npc.秘密察觉程度, 10) || 0;
+        const suspicion = parseInt(npc.疑心, 10) || 0;
         const activeZones = npc.活跃区域 || [];
         const npcAffection = parseInt(npc.好感度) || 0;
         const npcLewdVal = parseInt(npc.淫乱度) || 0;
@@ -39,7 +39,8 @@ _%>
 - 性格：外在<%= personality.外在 || '未知' %>；内在<%= personality.内在 || '未知' %>
 - 活跃区域：<%= activeZones.length > 0 ? activeZones.join('、') : '全市' %>
 - 爱好：<%= npc.爱好 || '未设定' %>
-- 偏好性行为：<%= npc.偏好性行为 || '未设定' %>
+- 社媒昵称：<%= npc.社媒昵称 || '未设定' %>
+- 偏好性行为（性爱场景优先参考）：<%= npc.偏好性行为 || '未设定' %>
 - 与主角关系：<%= identity.与主角关系 || '未知' %> | 好感度: <%= npcAffection %>/100
 - 淫乱度：<%= npcLewdVal %>/100【<%= npcLewdStageText %>】
 - 与主角做爱次数：<%= npc.与主角做爱次数 || 0 %>
@@ -57,7 +58,7 @@ _%>
 _%>
 - 主播信息：「<%= _.get(npc, '主播信息.主播名字', '银犬') %>」 | 粉丝：<%= jinFans %>（<%= jinPopStage %>——<%= jinPopDesc %>）
 <%_ } _%>
-- 主角秘密察觉程度：<%= suspicion %>/100【<%= suspicionStage %>】- <%= suspicionText %>
+- 对主角疑心：<%= suspicion %>/100【<%= suspicionStage %>】- <%= suspicionText %>
 <%_ if (suspicion < 100) { _%>
   > 约束：该角色尚未完全知晓主角的露出行径和主播身份，严禁表现出了解或提及相关事宜。
 <%_ } _%>

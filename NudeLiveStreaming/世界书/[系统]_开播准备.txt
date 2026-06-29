@@ -1,0 +1,149 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const eventData = events['开播准备事件'];
+
+  if (eventData && typeof eventData === 'object') {
+    const loc = eventData.地点 || '住宅区·单身公寓';
+    const slot = eventData.时段 || _.get(stat, '进程.当前时段', '晚上');
+    const wear = eventData.穿着 || '';
+    const props = eventData.道具 || [];
+    const collabs = eventData.联动 || [];
+
+    const lewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+    const shame = parseInt(_.get(stat, '主角.当前状态.羞耻度', 100)) || 100;
+    const totalStreams = parseInt(_.get(stat, '主角.主播信息.直播总次数', 0)) || 0;
+    const fans = parseInt(_.get(stat, '主角.主播信息.粉丝数', 0)) || 0;
+    const startViewers = Math.floor(fans * (Math.random() * 0.2 + 0.6));
+    const currentSlot = _.get(stat, '进程.当前时段', '晚上');
+
+    // 时段流转提示
+    const SLOT_ORDER = ['凌晨','早上','上午','中午','下午','傍晚','晚上','深夜'];
+    const curIdx = SLOT_ORDER.indexOf(currentSlot);
+    const selIdx = SLOT_ORDER.indexOf(slot);
+    let slotTransHint = '';
+    if (slot !== '现在' && selIdx >= 0 && curIdx >= 0 && selIdx !== curIdx) {
+      if (selIdx > curIdx) {
+        slotTransHint = '。时间自然流转至' + slot + '时段';
+      } else {
+        slotTransHint = '。时间跨越到次日' + slot;
+      }
+    }
+
+    // --- 标题风格指导 ---
+    let titleStyleGuide = '';
+    if (lewdness < 25) {
+      titleStyleGuide = '擦边暧昧，充满犹豫和试探。例：「第一次开镜头…好紧张😳」';
+    } else if (lewdness < 50) {
+      titleStyleGuide = '开始放开，直接点明行为但语气带矜持。例：「🌙深夜偷偷开播·今天试试不穿内裤🫣」';
+    } else if (lewdness < 75) {
+      titleStyleGuide = '直白色情，主动预告性行为。例：「公园角落玩玩具🔞被人看到就完蛋了🥵」';
+    } else {
+      titleStyleGuide = '极度露骨，语气放荡主动。例：「公厕里全裸撸鸡巴💦贱狗憋不住了想被操🥵」';
+    }
+
+    // --- 开播准备熟练度指导 ---
+    let prepSkillGuide = '';
+    if (totalStreams === 0) {
+      prepSkillGuide = '主角首次开播，对APP功能陌生，调试角度手忙脚乱，心跳如鼓。';
+    } else if (totalStreams <= 3) {
+      prepSkillGuide = '已有几次经验，设备准备不再慌乱，但仍会反复检查角度和收音。';
+    } else if (totalStreams <= 6) {
+      prepSkillGuide = '流程熟练，提前规划直播亮点，准备迅速而从容。';
+    } else {
+      prepSkillGuide = '行云流水，开镜即进入状态，动作利落自信。';
+    }
+
+    // --- 开播氛围指导 ---
+    let atmosphereGuide = '';
+    if (fans <= 100) {
+      atmosphereGuide = '直播间几乎空无一人，只有个位的观众数字与寂静的聊天框。';
+    } else if (fans <= 500) {
+      atmosphereGuide = '零星老粉涌入，稀稀落落的弹幕划过屏幕，气氛冷清。';
+    } else if (fans <= 2000) {
+      atmosphereGuide = '开播瞬间涌入一批观众，弹幕开始滚动，气氛迅速升温。';
+    } else {
+      atmosphereGuide = '大批观众蜂拥而至，弹幕瞬间刷屏，气氛沸腾。';
+    }
+
+    // --- 开播表现指导 ---
+    const shameLevel = shame >= 75 ? 4 : (shame >= 50 ? 3 : (shame >= 25 ? 2 : 1));
+    const lewdLevel = lewdness >= 75 ? 4 : (lewdness >= 50 ? 3 : (lewdness >= 25 ? 2 : 1));
+    const performanceMap = {
+      '1-1': '双颊烧红，眼神闪躲，连对着镜头打招呼都结结巴巴。',
+      '1-2': '极度羞耻却身体诚实，笨拙地展露时呼吸紊乱，动作僵硬。',
+      '1-3': '羞耻心拉扯着放荡的冲动，一边脸红一边主动撩拨镜头。',
+      '1-4': '明明羞得快哭出来，身体却熟练地摆出下流姿势，形成淫荡反差。',
+      '2-1': '仍有羞耻但已能强装镇定，偶尔避开镜头，整体举止仍显青涩。',
+      '2-2': '羞涩逐渐褪去，开始尝试更大胆的动作，但偶尔还会卡壳。',
+      '2-3': '羞耻化作脸颊红晕的装饰，坦然展露欲望，配合观众指令。',
+      '2-4': '仅存的一点羞耻心反而让放荡更显诱惑，欲拒还迎地挑逗观众。',
+      '3-1': '羞耻感薄弱，对青涩的举止毫无掩饰，自然地笨拙互动。',
+      '3-2': '从容面对镜头，羞耻已不构成阻碍，动作流畅自然。',
+      '3-3': '几乎不知羞耻为何物，熟练地展示身体，享受被视奸的快感。',
+      '3-4': '羞耻感彻底蒸发，以近乎痴女的状态主动索取弹幕指令，放荡不羁。',
+      '4-1': '羞耻早已被驯服，却故意扮演青涩懵懂，形成背德的反差表演。',
+      '4-2': '完全游刃有余，用入门级的裸露动作就能撩起满屏欲火。',
+      '4-3': '将淫荡表演得光明正大，每一个眼神和喘息都精准榨取热度。',
+      '4-4': '彻底沉沦的肉欲化身，不知羞耻、极度淫乱，镜头前只剩纯粹的欲望展示。'
+    };
+    const performanceGuide = performanceMap[shameLevel+'-'+lewdLevel] || '根据当前状态自然面对镜头。';
+
+    // 迅的秘密分支
+    const jinKnown = collabs.indexOf('风见迅') >= 0;
+    let jinSecretHint = '';
+    if (jinKnown) {
+      const jin = _.get(stat, 'NPC数据.风见迅', {});
+      const jinDiscovered = _.get(jin, '秘密发现', false);
+      if (!jinDiscovered) {
+        jinSecretHint = '主角目前尚未得知迅也是露出主播。收到联动邀请后，迅可能会借合作直播的机会表明自己的主播身份，也可能继续隐藏，以普通朋友的身份出镜。请AI根据迅的性格和两人当前关系自然决定。';
+      }
+    }
+_%>
+# 系统指令：开播准备
+stream_phase_preparation:
+  event_name: "开播准备"
+  location: "<%= loc %>"
+  time_slot: "<%= slot %>"
+  outfit: "<%= wear %>"
+  props: <%= JSON.stringify(props) %>
+  collab_npcs: <%= JSON.stringify(collabs) %>
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角决定开播。当前已选地点为 <%= loc %>，时段为 <%= slot %><%= slotTransHint %>。"
+    <%_ if (wear) { _%>
+    - "主角今天的直播穿着：<%= wear %>。描写换上这身衣物的过程并对着镜子审视自己、调整细节。"
+    <%_ } _%>
+    <%_ if (props.length > 0) { _%>
+    - "主角带上的道具：<%= props.join('、') %>。描写他把这些道具收进随身包，或提前藏在身上某个位置，或佩戴好。"
+    <%_ } _%>
+    <%_ if (collabs.length > 0) { _%>
+    - "主角向 <%= collabs.join('、') %> 发出联动邀请，邀请他/她一起参与今晚的直播。根据NPC对主角的了解和关系状态来决定是否同意邀请。"
+    <%_ } _%>
+    <%_ if (jinSecretHint) { _%>
+    - "【迅的秘密】：<%= jinSecretHint %>"
+    <%_ } _%>
+    - "【准备熟练度】：<%= prepSkillGuide %>"
+    - "【开播氛围】：<%= atmosphereGuide %>"
+    - "【开播表现】：<%= performanceGuide %>"
+    - "【标题与标签】：根据以上状态生成吸睛的直播间标题（口语化，10-15字）和3-5个精准标签。标题风格：<%= titleStyleGuide %>"
+    - "描写主角打开APP、设置直播间、调试角度，最后点击开播按钮的全过程。"
+    - "【APP机制】：露出直播APP并非依赖手机物理镜头，而是通过未知技术实现对主角周围空间的全景多视角捕捉。直播画面可由APP智能切换机位——正面、侧面、背面、俯角、近景特写——观众看到的画面远比单机位直播丰富。叙事时请自由运用这些视角，无需考虑主角手持手机或架设设备的物理限制。"
+    <%_ if (totalStreams === 0) { _%>
+    - "这是主角的第一次直播。描写他/她对着初始观众数为<%= startViewers %>的空白直播间时的紧张与期待。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "开播动作完成后，执行以下变量更新："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/直播状态/是否正在直播", "value": true },
+        { "op": "replace", "path": "/直播状态/当前直播间标题", "value": "[拟定的标题]" },
+        { "op": "replace", "path": "/直播状态/当前直播间标签", "value": ["标签1", "标签2", "标签3"] },
+        { "op": "replace", "path": "/直播状态/当前直播间人数", "value": <%= startViewers %> },
+        { "op": "remove", "path": "/系统状态/待处理事件/开播准备事件" }
+      ]
+
+<%_ } } _%>

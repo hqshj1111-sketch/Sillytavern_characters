@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{
+  --bg:#0d0d12;--card:#13131c;--border:#1e1e2e;--text:#c8c8d0;
+  --muted:#6a6a7a;--accent-green:#4ade80;--accent-red:#f87171;
+  --accent-blue:#60a5fa;--accent-gold:#fbbf24;--accent-purple:#c084fc;
+  --reply-bg:#1a1a26;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:20px;min-height:100vh}
+.container{max-width:720px;margin:0 auto}
+.forum-header{text-align:center;margin-bottom:24px}
+.forum-header h1{font-size:20px;color:var(--accent-gold);letter-spacing:2px}
+.forum-header p{font-size:12px;color:var(--muted);margin-top:4px}
+.forum-stats{display:flex;justify-content:center;gap:24px;margin-top:8px;font-size:11px;color:var(--muted)}
+.post-card{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden}
+.post-header{padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+.post-section{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.sec-露出日常{color:var(--accent-green);background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2)}
+.sec-直播心得{color:var(--accent-red);background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2)}
+.sec-技术交流{color:var(--accent-blue);background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2)}
+.sec-邀约{color:var(--accent-gold);background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2)}
+.sec-情感{color:var(--accent-purple);background:rgba(192,132,252,0.1);border:1px solid rgba(192,132,252,0.2)}
+.post-title{font-size:16px;font-weight:700;color:#e0e0e6;margin:4px 0}
+.post-meta{font-size:11px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+.post-tags{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+.post-tag{font-size:10px;color:var(--accent-blue);background:rgba(96,165,250,0.08);padding:1px 6px;border-radius:3px}
+.post-body{padding:16px;font-size:14px;line-height:1.7;color:#b0b0b8;white-space:pre-wrap}
+.post-replies{border-top:1px solid var(--border);background:var(--reply-bg)}
+.replies-toggle{padding:10px 16px;font-size:12px;color:var(--accent-blue);cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
+.replies-toggle:hover{color:#93c5fd}
+.replies-toggle .arrow{transition:transform .2s;display:inline-block}
+.replies-toggle.open .arrow{transform:rotate(90deg)}
+.reply-list{padding:0 16px 12px;display:none}
+.reply-item{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.reply-item:last-child{border-bottom:none}
+.reply-author{font-size:11px;font-weight:700;color:var(--accent-gold);margin-bottom:2px}
+.reply-content{font-size:13px;color:#909098;line-height:1.5;white-space:pre-wrap}
+.reply-count{font-size:11px;color:var(--muted)}
+.no-posts{text-align:center;color:var(--muted);padding:40px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="forum-header">
+  <h1>露出社区</h1>
+  <p>匿名分享你的故事 · 寻找同好 · 交流技术</p>
+</div>
+<div id="posts"></div>
+</div>
+
+<script>
+(function(){
+  var raw = document.getElementById('__forum_data');
+  if (!raw) return;
+  var text = raw.textContent.trim();
+  if (!text) return;
+
+  var posts = [];
+  var blocks = text.split(/\n(?=\[)/);
+  
+  blocks.forEach(function(block){
+    block = block.trim();
+    if (!block) return;
+    var lines = block.split('\n');
+    
+    // Parse header: [Section] Title
+    var headerMatch = lines[0].match(/^\[(.+?)\]\s*(.+)$/);
+    if (!headerMatch) return;
+    var section = headerMatch[1].trim();
+    var title = headerMatch[2].trim();
+    
+    var author = '', date = '', views = '', tags = '';
+    var bodyLines = [];
+    var replies = [];
+    var inBody = false, inReplies = false, currentReply = '';
+    
+    for (var i = 1; i < lines.length; i++) {
+      var line = lines[i];
+      
+      // Meta line: 作者: xxx | date | 浏览量: N
+      if (line.match(/^作者:/)) {
+        var m = line.match(/^作者:\s*(.+?)\s*\|\s*(.+?)\s*\|\s*浏览量:\s*(\d+)/);
+        if (m) { author = m[1].trim(); date = m[2].trim(); views = m[3].trim(); }
+        continue;
+      }
+      
+      // Tags line
+      if (line.match(/^标签:/)) {
+        var tm = line.match(/^标签:\s*(.+)/);
+        if (tm) tags = tm[1].trim();
+        continue;
+      }
+      
+      // Reply separator
+      if (line.match(/^---回复---$/)) {
+        inBody = false;
+        inReplies = true;
+        continue;
+      }
+      
+      // Between replies: ---
+      if (inReplies && line.match(/^---$/)) {
+        if (currentReply) replies.push(currentReply.trim());
+        currentReply = '';
+        continue;
+      }
+      
+      // Empty line transitions
+      if (line.trim() === '') {
+        if (inBody && bodyLines.length > 0) inBody = false;
+        continue;
+      }
+      
+      if (!inBody && !inReplies && line.match(/^作者:/)) {
+        // Already handled above
+        continue;
+      }
+      
+      if (!inBody && !inReplies) {
+        inBody = true;
+      }
+      
+      if (inBody) {
+        bodyLines.push(line);
+      } else if (inReplies) {
+        if (currentReply) currentReply += '\n' + line;
+        else currentReply = line;
+      }
+    }
+    if (currentReply) replies.push(currentReply.trim());
+    
+    var body = bodyLines.join('\n').trim();
+    if (!body) return;
+    
+    posts.push({ section: section, title: title, author: author, date: date, views: views, tags: tags, body: body, replies: replies });
+  });
+
+  var container = document.getElementById('posts');
+  if (posts.length === 0) {
+    container.innerHTML = '<div class="no-posts">暂时没有帖子。输入"逛论坛"查看最新讨论。</div>';
+    return;
+  }
+
+  var sectionClass = {
+    '露出日常': '露出日常',
+    '直播心得': '直播心得',
+    '技术交流': '技术交流',
+    '邀约': '邀约',
+    '情感': '情感'
+  };
+
+  posts.forEach(function(p, idx){
+    var sc = sectionClass[p.section] || '';
+    var tagsHtml = '';
+    if (p.tags) {
+      var tarr = p.tags.split(/\s*#\s*/).filter(function(t){ return t.length>0; });
+      if (tarr.length > 0) {
+        tagsHtml = '<div class="post-tags">' + tarr.map(function(t){ return '<span class="post-tag">#' + t + '</span>'; }).join('') + '</div>';
+      }
+    }
+    
+    var repliesHtml = '';
+    if (p.replies.length > 0) {
+      var rCount = p.replies.length;
+      var rid = 'replies-' + idx;
+      var replyItems = p.replies.map(function(r){
+        var parts = r.split('\n');
+        var firstLine = parts[0];
+        var colonIdx = firstLine.indexOf(':');
+        var rAuthor = '', rContent = '';
+        if (colonIdx > 0) {
+          rAuthor = firstLine.substring(0, colonIdx).trim();
+          rContent = firstLine.substring(colonIdx + 1).trim();
+          if (parts.length > 1) rContent += '\n' + parts.slice(1).join('\n');
+        } else {
+          rContent = r;
+        }
+        return '<div class="reply-item"><div class="reply-author">' + rAuthor + '</div><div class="reply-content">' + rContent + '</div></div>';
+      }).join('');
+
+      repliesHtml = 
+        '<div class="post-replies">' +
+          '<div class="replies-toggle" onclick="var r=document.getElementById(\''+rid+'\');var t=this;if(r.style.display==\'block\'){r.style.display=\'none\';t.classList.remove(\'open\')}else{r.style.display=\'block\';t.classList.add(\'open\')}">' +
+            '<span class="arrow">▶</span> ' + rCount + ' 条回复' +
+          '</div>' +
+          '<div class="reply-list" id="' + rid + '">' + replyItems + '</div>' +
+        '</div>';
+    }
+
+    container.insertAdjacentHTML('beforeend',
+      '<div class="post-card">' +
+        '<div class="post-header">' +
+          '<span class="post-section sec-' + sc + '">[' + p.section + ']</span>' +
+          '<div class="post-title">' + p.title + '</div>' +
+          '<div class="post-meta">' +
+            '<span>作者: ' + p.author + '</span>' +
+            '<span>' + p.date + '</span>' +
+            '<span>👁 ' + p.views + '</span>' +
+          '</div>' +
+          tagsHtml +
+        '</div>' +
+        '<div class="post-body">' + p.body + '</div>' +
+        repliesHtml +
+      '</div>'
+    );
+  });
+})();
+</script>
+<script type="text/plain" id="__forum_data">$1</script>
+</body>
+</html>

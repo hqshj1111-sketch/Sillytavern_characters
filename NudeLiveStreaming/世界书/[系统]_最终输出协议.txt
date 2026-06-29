@@ -25,19 +25,19 @@ master_protocol: "你已阅读上方的【当前阶段】和各类【事件指�
 
     structure_protocol: |-
       你的 <UpdateVariable> 块必须严格包含以下两部分，且顺序不可颠倒：
-      
+
       1. <Analysis> 块 (思考过程):
       - 强制指令检查：上文中是否明确提供了 `mandatory_patch` 或 `patch_code`？（如果有，且根据对应指示需要添加，你必须直接复制它们，并跳过对这些字段的手动计算）。
-      - 时间流逝：评估本回合实际流逝的分钟数。叙事篇幅不代表时间流逝。
+      - 时间流逝：评估本回合是否有日期或时段的跨越。
       - 主角状态：检查主角的当前区域、地点、着装、生理状态是否发生变化。评估快感值和性欲值的增减。
       <%_ if (isStreaming) { _%>
       - 直播间动态：根据直播互动内容评估热度变化。
       <%_ } _%>
       - NPC好感度与淫乱度：根据互动内容决定增减。
 <%_ const npcDataCheck = _.get(stat, 'NPC数据', {});
-          const hasSuspicionUnder100 = Object.values(npcDataCheck).some(n => (parseInt(n.秘密察觉程度) || 0) < 100);
+          const hasSuspicionUnder100 = Object.values(npcDataCheck).some(n => (parseInt(n.疑心) || 0) < 100);
       if (hasSuspicionUnder100) { _%>
-      - 秘密暴露评估：检查本回合剧情中，主角是否在任何 NPC 面前表现出意外虚弱、可疑行为、破绽或蛛丝马迹，无需评估是否被NPC发现。
+      - 疑心变化评估：检查本回合剧情中，主角是否在任何 NPC 面前表现出意外虚弱、可疑行为、破绽或蛛丝马迹，无需评估是否被NPC发现。
       <%_ } _%>
       <%_ if (!isSexActive) { _%>
       - 性行为判定：[判断本段剧情中主角是否开始与人发生性行为。若是进行对应更新]
@@ -56,17 +56,17 @@ master_protocol: "你已阅读上方的【当前阶段】和各类【事件指�
       最终回复格式范例：[故事正文...]
       <UpdateVariable>
         <Analysis>
-          - 时间：本回合海斗和主角交流谈心，共流逝5分钟。
+          - 时间：本回合为简短交流，时段保持下午不变。
           - 主角：生理状态更新。
           - NPC：主角与海斗亲密互动，海斗好感度+3。
-          - 秘密暴露评估：主角在海斗面前出现了不寻常的行为。
+          - 疑心变化评估：主角在海斗面前出现了不寻常的主动亲密行为。
           - 性行为：无性行为进行中或要开始。
         </Analysis>
         <JSONPatch>[
-          { "op": "delta", "path": "/进程/当前时间戳", "value": 5 },
+          { "op": "replace", "path": "/进程/当前时段", "value": "下午" },
           { "op": "replace", "path": "/主角/当前状态/当前生理状态", "value": "靠着海斗，心跳有些不稳" },
           { "op": "delta", "path": "/NPC数据/黑崎海斗/好感度", "value": 3 },
-          { "op": "delta", "path": "/NPC数据/黑崎海斗/秘密觉察程度", "value": 5 }
+          { "op": "delta", "path": "/NPC数据/黑崎海斗/疑心", "value": 5 }
         ]
         </JSONPatch>
       </UpdateVariable>

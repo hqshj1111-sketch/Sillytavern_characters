@@ -150,6 +150,18 @@ _%>
     - "宝箱内含较多金币（70~100），可能附带稀有道具、技能卷轴或高级素材。"
 <%_ } _%>
 
+  mandatory_data_sync:
+    instruction: "仅当宝箱已正常开启且奖励内容明确后执行："
+    patch_code: |
+      [
+        // 宝箱金币奖励（AI根据品级决定具体数值：common 10~30, uncommon 30~70, rare 70~100）
+        { "op": "delta", "path": "/地下城攻略状态/本次攻略获得金币", "value": [<%= treasureEvent === 'rare' ? randInt(70, 100) : (treasureEvent === 'uncommon' ? randInt(30, 70) : randInt(10, 30)) %>] }
+        // 若宝箱内含素材：{ "op": "delta", "path": "/地下城攻略状态/本次攻略获得素材/[素材名称]", "value": 1 }
+        // 若宝箱内含消耗性道具：{ "op": "insert", "path": "/主角/道具栏/[道具名称]", "value": { "类型": "[消耗品/素材/装备]", "数量": 1, "描述": "[道具描述]" } }
+        { "op": "delta", "path": "/地下城攻略状态/本层进度", "value": <%= progressDelta.treasure %> },
+        { "op": "remove", "path": "/系统状态/待处理事件/宝箱发现事件" }
+      ]
+
 <%_ } else if (puzzleEvent) { _%>
   narrative_guidance:
     - "主角正在尝试破解谜题——<%= puzzleEvent %>。描写主角专注解题的过程。"
@@ -269,6 +281,7 @@ _%>
     narrative_guidance:
       - "当前推进无事发生。正常描写地下城探索过程——环境细节、气氛渲染、主角的警觉与观察。"
       - "可在叙事中暗示潜在的危险——远处微弱的声响、地面新留下的痕迹、空气微妙的变化——为下次遭遇铺垫。"
+      - "禁止在本回合描述敌人的出现和遭遇。"
 
     mandatory_data_sync:
       instruction: "推进本层进度："

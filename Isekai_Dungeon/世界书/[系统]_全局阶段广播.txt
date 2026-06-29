@@ -154,7 +154,7 @@ if (eventNamesRest.length > 0) { _%>
 <%_ } else { _%>
 当前子阶段：地下城攻略阶段
 
-当前攻略：【<%= dungeonName || '未知地下城' %>】 第 <%= currentFloor %> 层 | 进度 <%= floorProgress %>%
+当前攻略：【<%= dungeonName || '未知地下城' %>】 第 <%= currentFloor %> 层 | 本层进度 <%= floorProgress %>%
 
 叙事重点：
   - 根据当前地下城的区域类型、区域描述和危险等级，描写对应的环境，体现其独有的地下城生态。
@@ -166,6 +166,12 @@ if (eventNamesRest.length > 0) { _%>
 视角约束:
   - 严格保持主角第一视角或紧密第三人称视角。
   - 地下城外部的世界动态不得入侵当前的探索叙事。
+
+<%_ const DUNGEON_EVENTS = ['宝箱发现事件', '陷阱触发事件', '谜题触发事件'];
+const urgentEvents = DUNGEON_EVENTS.filter(function(e) { return !!pendingEvents[e]; });
+if (urgentEvents.length > 0) { _%>
+> **【⚠ 立即处理】** <%= urgentEvents.join(' · ') %> — 本回合内引导主角处理此事件。处理完毕前禁止推进本层进度或触发新的遭遇。
+<%_ } _%>
 
 <%_ const eventNamesDungeon = Object.keys(pendingEvents);
 if (eventNamesDungeon.length > 0) { _%>

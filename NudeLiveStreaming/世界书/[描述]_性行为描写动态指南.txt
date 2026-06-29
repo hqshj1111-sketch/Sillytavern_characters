@@ -179,7 +179,7 @@ if (acts.length > 0) {
     // ========== 遍历当前性行为，生成对应指南 ==========
     acts.forEach(actObj => {
         let target = actObj.对象 || '未知';
-        let part = actObj.部位 || '肉棒';
+        let part = actObj.主角部位 || '肉棒';
         let act = actObj.行为 || '自慰';
         let gender = actObj.性别 || '';
 
@@ -230,7 +230,7 @@ if (acts.length > 0) {
     // 收集主角当前性行为涉及部位的性器官特征
     let playerParts = {};
     acts.forEach(a => {
-        const part = a.部位 || '';
+        const part = a.主角部位 || '';
         if (part === '肉棒' && !playerParts['阴茎']) playerParts['阴茎'] = _.get(s, '主角.性器官特征.阴茎形态', '未设定');
         if (part === '后穴' && !playerParts['后穴']) playerParts['后穴'] = _.get(s, '主角.性器官特征.后穴形态', '未设定');
         if (part === '胸部' && !playerParts['乳头']) playerParts['乳头'] = _.get(s, '主角.性器官特征.乳头形态', '未设定');

@@ -1,0 +1,44 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['迅足扰事件'] && isDaily && !isSexActive) {
+    const jin = _.get(stat, 'NPC数据.风见迅', {});
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const sexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.迅足扰事件', 0)) || 0;
+_%>
+# 事件：你太吵了
+event_initiator:
+  event_name: "你太吵了"
+  character: "风见迅"
+  location: "住宅区 - 主角房间"
+  time: "下午 - 晚上"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角在书桌前写作业或打游戏，双手忙着自己的事。迅也在旁边——坐在床上或地板上，嘴上没停：吐槽主角玩的游戏烂、问作业什么时候写完、把脑袋凑到屏幕前面挡视线。"
+    <%_ if (eventCount > 0) { _%>
+    - "主角没回头，脚已经熟门熟路地抬起来踩在迅裆上了。这次是故意的——上次的尴尬已经被消化成两人之间的默契。迅的废话只停了一拍就续上了，但声调往上飘了。他还嘴硬地说主角脚冷，身体往脚底不动声色地蹭了一下。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整迅的反应——次数越多他越不掩饰被踩着的享受，但嘴上的挑衅从来没停过。"
+    - "结尾留给主角选择：把脚挪开让他继续嘴硬、踩重一点让他彻底闭嘴、或终于停下手里的事转头看他。"
+    <%_ } else { _%>
+    - "主角打到了某个需要专注的节点——BOSS 战、作业最后一道大题——懒得转头回应迅的废话，下意识伸脚想把他踢远一点。脚没踢到小腿，落在了更靠上的位置。"
+    - "房间里同时安静了。游戏里的背景音乐还在继续，但两个人的呼吸在这几秒内被无限放大了。主角没动——脚下踩着的触感越来越清晰。迅也没动——他开口想说什么但只发出了半个音节。"
+    - "描写两人之间的沉默——主角盯着屏幕但实际上什么都没看进去，迅大概在盯着主角的脚踝。谁来先开口打破这场尴尬都不合适。脚还踩在那儿。"
+    - "结尾留给主角选择：迅速把脚收回来假装没发生、维持这个姿势等迅先说话、或动一下脚趾试试他的反应。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/迅足扰事件" }
+      ]
+
+<%_ } } _%>

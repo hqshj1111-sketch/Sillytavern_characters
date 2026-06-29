@@ -9,17 +9,33 @@
     const currentFans = _.get(stat, '主角.主播信息.粉丝数', 0);
     const streamCount = _.get(stat, '主角.主播信息.直播总次数', 0);
     const attitude = _.get(stat, '主角.主播信息.主播态度', '');
+    const shame = parseInt(_.get(stat, '主角.当前状态.羞耻度', 100)) || 100;
+    const lewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+
+    // 关播态度差分
+    let endAttitude = '';
+    if (shame >= 50 && lewdness < 25) {
+        endAttitude = '新人心态 — 如释重负，关播后残留的羞耻与心跳久久不散。';
+    } else if (shame >= 50 && lewdness >= 25) {
+        endAttitude = '矛盾心态 — 羞耻与意犹未尽交织，关播后身体仍残留兴奋。';
+    } else if (shame < 50 && lewdness >= 50) {
+        endAttitude = '上瘾 — 依依不舍，关播瞬间已在期待下次开播的边缘。';
+    } else if (shame < 50 && lewdness < 50) {
+        endAttitude = '平静 — 例行公事般淡然结束，平静地回归日常状态。';
+    } else {
+        endAttitude = '沉默 — 内心复杂，分不清是解脱还是失落，压进下一次预想中。';
+    }
 
     // 涨粉计算
-    const baseConversion = 0.35 * (200 / (200 + currentFans)) + 0.04;
+    const baseConversion = 0.55 * (200 / (200 + currentFans)) + 0.07;
     const randomFactor = 0.9 + Math.random() * 0.2;
     const newFansGained = Math.floor(peakViewers * baseConversion * randomFactor);
     const newTotalFans = currentFans + newFansGained;
 
     // 直播点数计算：基础收益 + 观众流量转化
     // 每1000名峰值观众提供约15-25点数（含随机波动），避免数值膨胀
-    const basePoints = 10;
-    const viewerBonus = Math.floor(peakViewers * (0.015 + Math.random() * 0.01));
+    const basePoints = 40;
+    const viewerBonus = Math.floor(peakViewers * (0.05 + Math.random() * 0.05));
     const earnedPoints = basePoints + viewerBonus;
     const totalPoints = (_.get(stat, '主角.主播信息.直播点数', 0) || 0) + earnedPoints;
 
@@ -36,7 +52,10 @@ post_stream_analysis:
     total_points: "<%= totalPoints %>"
 
   narrative_guidance:
-    - "直播结束了。主角查看本次直播的数据——最高在线人数<%= peakViewers %>，粉丝数增长了<%= newFansGained %>，总粉丝达到<%= newTotalFans %>。"
+    - "【关播瞬间】：根据态度差分（<%= endAttitude %>），描写主角关播那一刻的情绪、动作与微表情。"
+    - "【观众告别】：描写关播前弹幕的告别刷屏（不舍、打赏、挑逗），以及主角对观众说的最后一句话。以视听细节描写画面黑屏或数字凝住的那一秒。"
+    - "【关播后的片刻】：描写设备整理、身体痕迹清理、从亢奋到松弛的身体感受、以及外部环境将主角拉回现实的感官细节。"
+    - "【数据展示】直播结束了。主角查看本次直播的数据——最高在线人数<%= peakViewers %>，粉丝数增长了<%= newFansGained %>，总粉丝达到<%= newTotalFans %>。"
     - "请描绘主角看着这些数字时的心情变化。是对于涨粉缓慢的微微沮丧，还是看到数据提升后的兴奋与满足？"
     - "直播点数增加了<%= earnedPoints %>点，累计<%= totalPoints %>点。讲述主角看到收益到账时的满足感或对商城新道具的盘算。"
 

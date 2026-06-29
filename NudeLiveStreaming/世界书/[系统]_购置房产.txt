@@ -1,0 +1,39 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const eventData = events['购置房产事件'];
+
+  if (eventData && typeof eventData === 'object') {
+    const houseName = eventData.房产 || '';
+    const houseDesc = eventData.描述 || '';
+    const cohabitants = eventData.同居NPC || [];
+    const npcData = _.get(stat, 'NPC数据', {});
+_%>
+# 系统指令：购置房产
+estate_purchase:
+  event_name: "购置房产"
+  estate: "<%= houseName %>"
+  description: "<%= houseDesc %>"
+  cohabitants: <%= JSON.stringify(cohabitants) %>
+
+  narrative_guidance:
+    - "主角购置了新房产——<%= houseName %>。<%= houseDesc %>"
+    - "【蒙太奇·新家布置】用蒙太奇手法跳切展现购房后数周的布置过程——选购家具、拆箱整理、两人一起组装或布置某个空间的互动、夜晚在未完工的新家里对着空白墙壁规划未来。选取有生活质感的片段，压缩时间，不要平铺直叙。"
+    <%_ const invitees = cohabitants.filter(function(n){ return n !== '汐见真帆'; });
+    if (invitees.length > 0) { _%>
+    - "在此期间，主角向 <%= invitees.join('、') %> 发出同居邀请。根据好感度和关系状态决定对方是否接受，一两句话带过不同人的回应即可。"
+    <%_ } _%>
+    - "【搬家日】蒙太奇收束在搬家完成的那一天。主角、真帆<% if (invitees.length > 0) { %>、<%= invitees.join('、') %><% } %>一起走近新家。描写新家的样貌和布置，各自探索新家和布置自己房间的过程。"
+    - "【新家第一餐】晚上，大家弄了一顿饭（或叫外卖）。描写这顿饭的氛围以及彼此的互动。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后移除标记："
+    patch_code: |
+      [
+        // 为每个同意同居的NPC更新住处
+        // { "op": "replace", "path": "/NPC数据/[NPC名字]/住处", "value": "<%= houseName %>" },
+        { "op": "remove", "path": "/系统状态/待处理事件/购置房产事件" }
+      ]
+
+<%_ } } _%>

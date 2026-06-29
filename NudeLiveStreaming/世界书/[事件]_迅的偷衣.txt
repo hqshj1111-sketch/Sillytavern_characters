@@ -1,0 +1,45 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['迅偷衣事件'] && isDaily && !isSexActive) {
+    const jin = _.get(stat, 'NPC数据.风见迅', {});
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const sexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.迅偷衣事件', 0)) || 0;
+    const mcGender = _.get(stat, '主角.基本信息.性别', '');
+_%>
+# 事件：偷拿衣服
+event_initiator:
+  event_name: "偷拿衣服"
+  character: "风见迅"
+  location: "住宅区"
+  time: "14:00-22:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角去找迅（还东西、借东西或顺路串门），推开他没锁的门。迅不在玄关，主角往里走了两步才发现他在卧室背对着门蹲在床边，肩膀抖了一下——迅好像在捡什么东西。床角露出一角不属于他的衣角。"
+    - "迅转过身来，手里攥着的正是主角上次落在这里的<% if (mcGender === '女') { %>内衣或贴身衣物<% } else { %>T恤或内裤<% } %>。空气凝住。"
+    <%_ if (eventCount > 0) { _%>
+    - "这次不只是一件了——主角在被单下发现攒了好几件。迅从开始的嘴硬逐渐转为理直气壮的反问：主角故意把东西留在他那儿不就是想让他拿着吗？但那双耳尖烧红的样子出卖了他。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整迅的反应——次数越多他越少辩解，被发现的窘迫会被坦然取而代之。但嘴上的不在乎只是纸老虎。" 
+    <%_ } else { _%>
+    - "短暂的死寂后——"
+    - "迅努力端出平时的雄小鬼嘴脸，憋出一句：主角的东西随便乱丢迟早被妹妹发现，他只是帮忙收着。这套说辞连他自己都不信——耳根烧红、眼神不敢直视主角。他攥着衣服不肯松手却不敢抬头的姿态，比嘴巴诚实一百倍。"
+    - "描写迅被当场揭穿私藏的窘迫。他以为可以把这份秘密永远藏在床单下面，但此刻捏着衣角的指尖像捏着他最后一丝逞强——越想装没事就越狼狈，眼睛不知道往哪看的样子比认输还羞耻。"
+    <%_ } _%>
+    - "结尾留给主角选择：逼问他还藏了什么、伸手把他从蹲姿拽起来、或安静地拿回衣服后问他想不想要个别的什么。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/迅偷衣事件" }
+      ]
+
+<%_ } } _%>

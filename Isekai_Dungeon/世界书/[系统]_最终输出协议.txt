@@ -44,6 +44,7 @@ master_protocol: "你已阅读上方的【当前阶段】和各类【事件指�
 <%_ if (isInDungeon) { _%>
       —— 地下城攻略阶段特有 ——
       - HP/MP/SP变化：本回合HP/MP/SP是否有增减？
+      - 本回合本层进度推进如何？
 <%_ } _%>
 
       2. <JSONPatch> 块 (执行区):

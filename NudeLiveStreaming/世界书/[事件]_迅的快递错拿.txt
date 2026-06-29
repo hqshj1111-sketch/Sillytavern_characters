@@ -3,7 +3,7 @@
   const stat = getvar('stat_data') || {};
   const events = _.get(stat, '系统状态.待处理事件', {});
   const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
-  const currentHour = parseInt(_.get(stat, '进程.当前小时', 12)) || 12;
+  const currentSlot = _.get(stat, '进程.当前时段', '下午');
   const isDaily = currentPhase === '日常阶段';
   const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
   const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
@@ -12,7 +12,7 @@
     const jin = _.get(stat, 'NPC数据.风见迅', {});
     const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
     const jinDiscovered = _.get(jin, '秘密发现', false);
-    const jinSuspicion = parseInt(_.get(jin, '秘密察觉程度', 0)) || 0;
+    const jinSuspicion = parseInt(_.get(jin, '疑心', 0)) || 0;
     const jinKnows = jinSuspicion >= 100;
     const eventCount = parseInt(_.get(stat, '进程.事件计数.快递错拿事件', 0)) || 0;
     const sexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;

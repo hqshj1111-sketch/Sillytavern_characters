@@ -1,0 +1,42 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['老师乳交事件'] && isDaily && !isSexActive) {
+    const saya = _.get(stat, 'NPC数据.冰室纱耶', {});
+    const lewdness = parseInt(_.get(saya, '淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.老师乳交事件', 0)) || 0;
+_%>
+# 事件：办公室交作业
+event_initiator:
+  event_name: "办公室交作业"
+  character: "冰室纱耶"
+  location: "学校 - 办公室"
+  time: "下午"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角去办公室找纱耶交作业。她坐在办公桌前批改卷子，衬衫最上面两颗扣子没扣。主角把作业放在她桌上的时候视线不由自主往下掉进那道缝隙——停留的时间超过了必要的长度。"
+    <%_ if (eventCount > 0) { _%>
+    - "已经不是第一次了。主角推门进去的时候纱耶正靠在椅背上，看到主角就不动了——她笑着说今天没穿胸罩。主角走近办公桌的时候她把椅子往后退了一点，身体往前倾，肘关节撑在桌面上，锁骨下面的分量搁在交叠的前臂上。她的眼神和胸口的弧线一同提着。"
+    - "结合纱耶的淫乱度(<%= lewdness %>)调整她主动的程度——她不会催，只会用姿势和停顿告诉主角这次走近的许可比上次又多了一点。"
+    - "结尾留给主角选择：假装专心谈作业内容但眼睛挪不开、把手里的作业放下后反问她是不是在等他说什么、或转身关门。"
+    <%_ } else { _%>
+    - "纱耶批卷子的手没停，头也没抬，只是嘴角往上挑了一点点。她没点名道姓地问了一句：好看吗。主角的视线在听到这句话之后弹回来，但已经晚了。"
+    - "描写主角被抓包后的沉默——她还在用红笔批卷子，钢笔沙沙响。主角的作业本还搁在桌上，距离她敞开的领口很近。她接下来没再提这件事，但也没有把扣子扣上。"
+    - "结尾留给主角选择：找借口迅速离开办公室、假装没听见继续站在桌前、或反问老师你为什么开着扣子。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/老师乳交事件" }
+      ]
+
+<%_ } } _%>

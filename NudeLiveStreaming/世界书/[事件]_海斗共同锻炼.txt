@@ -2,7 +2,7 @@
 {
   const stat = getvar('stat_data') || {};
   const events = _.get(stat, '系统状态.待处理事件', {});
-  const currentHour = parseInt(_.get(stat, '进程.当前小时', 12)) || 12;
+  const currentSlot = _.get(stat, '进程.当前时段', '下午');
   const currentRegion = _.get(stat, '主角.当前状态.当前区域', '');
   const isDaily = _.get(stat, '进程.阶段', '日常阶段') === '日常阶段';
   const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);

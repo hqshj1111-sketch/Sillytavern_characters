@@ -3,17 +3,10 @@ import { registerMvuSchema } from 'https://cdn.jsdelivr.net/gh/StageDog/tavern_r
 export const Schema = z.object({
   进程: z.object({
     阶段: z.string().prefault("创角阶段"),
-    初始年份: z.coerce.number().prefault(2025),
-    初始月份: z.coerce.number().prefault(10),
-    初始日份: z.coerce.number().prefault(15),
-    初始小时: z.coerce.number().prefault(19),
-    初始分钟: z.coerce.number().prefault(0),
     当前年份: z.coerce.number().prefault(2025),
     当前月份: z.coerce.number().prefault(10),
     当前日份: z.coerce.number().prefault(15),
-    当前小时: z.coerce.number().prefault(19),
-    当前分钟: z.coerce.number().prefault(0),
-    当前时间戳: z.coerce.number().prefault(0),
+    当前时段: z.string().prefault("晚上"),
     当前天气: z.string().prefault("晴"),
     当前假期: z.string().prefault("否"),
     当前周几: z.coerce.number().prefault(3),
@@ -26,7 +19,7 @@ export const Schema = z.object({
     同名事件队列: z.record(z.union([z.boolean(), z.string(), z.array(z.string())])).prefault({}),
     事件等待处理中: z.boolean().prefault(false),
     待处理事件: z.record(
-      z.string(), 
+      z.string(),
       z.union([z.boolean(), z.array(z.string()), z.array(z.array(z.string())), z.string(), z.object({}).passthrough()])
     ).prefault({})
   }).prefault({}),
@@ -38,7 +31,7 @@ export const Schema = z.object({
     当次直播高潮次数: z.coerce.number().prefault(0),
     当前直播间标题: z.string().prefault(""),
     当前直播间标签: z.array(z.string()).prefault([]),
-    当前直播开始时间戳: z.coerce.number().prefault(0),
+    当前直播开始回合: z.coerce.number().prefault(0),
     当前直播间弹幕: z.array(z.array(z.string())).prefault([])
   }).prefault({}),
 
@@ -81,7 +74,7 @@ export const Schema = z.object({
       当前性行为: z.array(z.object({
         对象: z.string().prefault(""),
         性别: z.string().prefault(""),
-        部位: z.string().prefault(""),
+        主角部位: z.string().prefault(""),
         行为: z.string().prefault("")
       })).prefault([]),
       当前佩戴: z.record(
@@ -135,7 +128,24 @@ export const Schema = z.object({
 
     道具栏: z.object({
       已购道具列表: z.array(z.string()).prefault([])
-    }).prefault({})
+    }).prefault({}),
+
+    住所: z.object({
+      名字: z.string().prefault("住宅区 - 单身公寓"),
+      描述: z.string().prefault("一间两居室公寓，主角和妹妹真帆各自有独立的小房间。")
+    }).prefault({}),
+
+    衣橱: z.object({
+      上衣: z.array(z.string()).prefault([]),
+      下衣: z.array(z.string()).prefault([]),
+      内衣: z.array(z.string()).prefault([]),
+      袜子: z.array(z.string()).prefault([]),
+      鞋子: z.array(z.string()).prefault([]),
+      套装: z.array(z.string()).prefault([]),
+      COS服: z.array(z.string()).prefault([]),
+      配饰: z.array(z.string()).prefault([])
+    }).prefault({}),
+    家居布置: z.array(z.string()).prefault([])
   }).prefault({}),
 
   NPC数据: z.record(z.string(), z.object({
@@ -181,14 +191,23 @@ export const Schema = z.object({
       阶段4: z.string().prefault("淫乱入骨，沉溺于肉欲不可自拔。")
     }).prefault({}),
     与主角做爱次数: z.coerce.number().prefault(0),
-    秘密察觉程度: z.coerce.number().prefault(0),
-    秘密发现: z.boolean().prefault(false),
-    主播信息: z.object({
+     疑心: z.coerce.number().prefault(0),
+     秘密发现: z.boolean().prefault(false),
+     社媒昵称: z.string().prefault(""),
+     主播信息: z.object({
       粉丝数: z.coerce.number().prefault(0),
       主播名字: z.string().prefault("")
     }).prefault({})
-      
-  }).prefault({})).prefault({})
+
+  }).prefault({})).prefault({}),
+
+  社交媒体: z.record(z.string(), z.object({
+    动态列表: z.array(z.object({
+      日期: z.string().prefault(""),
+      时段: z.string().prefault(""),
+      内容: z.string().prefault("")
+    })).prefault([])
+  })).prefault({})
 
 }).prefault({});
 

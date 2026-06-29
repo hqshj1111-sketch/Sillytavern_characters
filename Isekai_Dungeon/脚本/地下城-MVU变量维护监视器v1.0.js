@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 角色卡 "地下城" 专属MVU监护脚本
  * 包含：用户指令预解析（决定攻略地下城<名称>）、回合计数、攻略记录、阶段维护、变量清理
  */
@@ -183,6 +183,24 @@ function onBeforeGeneration() {
                     newState = onState;
                     break;
                 }
+            }
+            if (isActivating) {
+                var maskCount = _.get(vars, 'stat_data.主角.人格同化面具激活次数', 0);
+                _.set(vars, 'stat_data.主角.人格同化面具激活次数', maskCount + 1);
+            }
+        }
+
+        if (oldState && newState) {
+            var idx = specialEquips.indexOf(oldState);
+            if (idx !== -1) {
+                specialEquips.splice(idx, 1, newState);
+                _.set(vars, 'stat_data.主角.特殊装备', specialEquips);
+                var eventName = isActivating ? '特殊装备激活' : '特殊装备解除';
+                _.set(vars, 'stat_data.系统状态.待处理事件.' + eventName, newState);
+                console.info('[' + SCRIPT_NAME + '] 预解析: ' + wearAction + ' ' + wearTarget + ' → ' + newState + ' + 推送' + eventName);
+                replaceVariables(vars, { type: 'message', message_id: msgId });
+                if (window.toastr) toastr.success(wearAction + ' ' + wearTarget + ' → ' + newState);
+                return;
             }
         }
     }
@@ -579,8 +597,17 @@ function processNpcRankUp(variables) {
 //  POST-生成：变量更新后维护 (仅 AI 消息触发)
 // ============================================================
 function onVariableUpdateEnded(variables) {
-    var lastMsg = getChatMessages().at(-1);
-    if (!lastMsg || lastMsg.role !== 'assistant') {
+    var lastMsg;
+    try {
+        var chat = SillyTavern.getContext().chat;
+        if (Array.isArray(chat) && chat.length > 0) {
+            lastMsg = chat[chat.length - 1];
+        } else if (chat && Array.isArray(chat.messages) && chat.messages.length > 0) {
+            lastMsg = chat.messages[chat.messages.length - 1];
+        }
+    } catch (e) { console.warn('[' + SCRIPT_NAME + '] onVariableUpdateEnded 无法获取最后消息'); }
+    var isAssistant = lastMsg && (lastMsg.role === 'assistant' || lastMsg.is_user === false);
+    if (!lastMsg || !isAssistant) {
         scriptState.previousData = _.cloneDeep(variables && variables.stat_data);
         return;
     }
@@ -753,8 +780,8 @@ function processCombatEnd(variables, prevData) {
         _.set(variables, 'stat_data.战斗状态.敌方攻击力', 0);
         _.set(variables, 'stat_data.战斗状态.敌方防御力', 0);
         _.set(variables, 'stat_data.战斗状态.敌方技能', []);
-        _.set(variables, 'stat_data.战斗状态.敌方buff', []);
-        _.set(variables, 'stat_data.战斗状态.敌方debuff', []);
+        _.set(variables, "stat_data.战斗状态.敌方buff", {});
+        _.set(variables, "stat_data.战斗状态.敌方debuff", {});
         _.set(variables, 'stat_data.主角.战斗纪要', []);
     }
 }

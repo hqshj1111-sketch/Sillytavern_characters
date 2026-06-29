@@ -1,0 +1,37 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['洗衣遗物事件'] && currentPhase === '日常阶段' && !isSexActive) {
+    const lewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.洗衣遗物事件', 0)) || 0;
+_%>
+# 事件：洗衣房遗物
+event_initiator:
+  event_name: "洗衣房遗物"
+  character: "深夜自助洗衣店里的陌生人衣物"
+  time: "22:00-02:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "凌晨的自助洗衣店只有主角一个人。洗衣机咚咚转着，投币烘干机刚停下。主角打开烘干机取自己的衣物时，发现里面还有一筒没取走的——不是自己的。"
+    - "别人的内衣、T恤或毛巾，还带着烘干后未散尽的温热和柔顺剂的气味。主角的指尖碰到布料的瞬间，那股不属于自己的体温和气味混在一起钻入鼻腔——这个人的味道、这个人穿过的、贴过皮肤的位置。"
+    - "手指比大脑快了一步，把衣物捞了出来，凑到鼻尖前。店外的街道很安静，只有隔壁烘干机硬币倒计时的滴滴声在提醒这个世界还在运转。"
+    <%_ if (eventCount > 0) { _%>
+    - "这已不是第一次。主角甚至有点期待烘干机里还留着谁的东西——手上在叠自己的衣服，眼睛却瞄着邻近的机器，等待那桶忘记了而无人认领的温热织物。"
+    <%_ } _%>
+    - "然后店门上的铃铛响了。那个人推门进来找衣服，主角攥着对方的私物站在原地——来不及放回去，也来不及想解释。"
+    - "结尾留给玩家选择：若无其事地还给他/她，编借口说怕被人拿走帮忙收着，或把衣服留在手里再多一秒。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/洗衣遗物事件" }
+      ]
+
+<%_ } } _%>

@@ -1,0 +1,37 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['引员事件'] && currentPhase === '日常阶段' && !isSexActive) {
+    const lewdness = parseInt(_.get(stat, '主角.当前状态.淫乱度', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.引员事件', 0)) || 0;
+_%>
+# 事件：配送员的门外停留
+event_initiator:
+  event_name: "配送员的门外停留"
+  character: "上门配送员"
+  time: "14:00-21:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "主角开门收快递/外卖时身上只披了件薄睡袍，妹妹不在家。门外的配送员——描写他在夏天户外跑单后的汗水、工作服贴在身上的线条、握包裹的手指和低头发型。主角注意到他的这些细节。他也同样——交递包裹时在主角锁骨以下只扫了一眼，迅速收回。"
+    - "两人正常签收，但每个动作都比必要慢半拍——手机信号不好、他蹲下来放包裹时抬头问一句话、主角翻抽屉找笔多翻了两个格子。没有任何人主动越线，但两人都注意到了对方呼吸节奏的细微变化。"
+    <%_ if (eventCount > 0) { _%>
+    - "这次开门看到的是同一张脸。打过招呼后两人都有上次没说完的默契——他搬箱子进玄关的动作比上次慢了，主角递过去的水他接住的同时两人都笑了。不需要台词也知道彼此在想什么。"
+    - "结尾留给主角选择：直接从他手里接过下一件东西的时候碰到他的手、问他想不想进来休息一会儿（他知道这不是客套话）、或站在门框边上离他近一点什么也不说。"
+    <%_ } else { _%>
+    - "结尾留给主角选择：在他临走前随口问一句要不要进来坐坐歇一会儿再走、问他经常跑这片区域吗方便以后备注配送、或道谢关门靠在门板上听电梯开走。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/引员事件" }
+      ]
+
+<%_ } } _%>

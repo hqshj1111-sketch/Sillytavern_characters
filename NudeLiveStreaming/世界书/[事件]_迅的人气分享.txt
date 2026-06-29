@@ -9,7 +9,7 @@
   if (events['人气分享事件'] && isDaily && !isSexActive) {
     const milestoneFans = events['人气分享事件'];
     const jin = _.get(stat, 'NPC数据.风见迅', {});
-    const jinSuspicion = parseInt(jin.秘密察觉程度) || 0;
+    const jinSuspicion = parseInt(jin.疑心) || 0;
     const jinKnows = jinSuspicion >= 100;
 
     // 迅的主播信息

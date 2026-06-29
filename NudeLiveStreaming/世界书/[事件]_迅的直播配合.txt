@@ -6,7 +6,7 @@
   const isDaily = currentPhase === '日常阶段';
   const jin = _.get(stat, 'NPC数据.风见迅', {});
   const jinDiscovered = _.get(jin, '秘密发现', false);
-  const jinSuspicion = parseInt(_.get(jin, '秘密察觉程度', 0)) || 0;
+  const jinSuspicion = parseInt(_.get(jin, '疑心', 0)) || 0;
   const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
   const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
 

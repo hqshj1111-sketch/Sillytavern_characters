@@ -10,7 +10,7 @@
     const npcName = events['秘密暴露事件'];
     const npc = _.get(stat, `NPC数据.${npcName}`, {});
     const npcPersonality = npc.性格 || {};
-    const currentSuspicion = parseInt(npc.秘密察觉程度) || 0;
+    const currentSuspicion = parseInt(npc.疑心) || 0;
     const relationship = npc.身份信息?.与主角关系 || '未知';
     const isStreamer = _.get(stat, '主角.主播信息.直播总次数', 0) > 0;
     const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
@@ -29,10 +29,10 @@ secret_exposed:
     - "根据该NPC的性格与淫乱度，将暴露的紧张直接导向肉欲冲突，让发现秘密成为肉体接触的导火索。"
 
   mandatory_data_sync:
-    instruction: "事件推进到发现确认后，更新秘密察觉程度为100并移除事件标记："
+    instruction: "事件推进到发现确认后，更新疑心为100并移除事件标记："
     patch_code: |
       [
-        { "op": "replace", "path": "/NPC数据/<%= npcName %>/秘密察觉程度", "value": 100 },
+        { "op": "replace", "path": "/NPC数据/<%= npcName %>/疑心", "value": 100 },
         { "op": "remove", "path": "/系统状态/待处理事件/秘密暴露事件" }
       ]
 

@@ -35,12 +35,10 @@ character_creation_protocol:
       instruction: "完成文学创作后，将你推演的详尽设定化为标准 JSON Patch 操作。请务必为下方每一个字段生成操作，不得遗漏。尤其注意NPC的初始化，你需要遍历所有已知NPC，在思考中为他们每人生成一组合适的状态更新指令。"
       data_mapping_table:
         # --- A组: 进程与环境信息 ---
-        - { field: "初始年份", path: "/进程/初始年份", instruction: "设定故事开始的年份，默认为2025。" }
-        - { field: "初始月份", path: "/进程/初始月份", instruction: "设定故事开始的月份，默认为10。" }
-        - { field: "初始日份", path: "/进程/初始日份", instruction: "设定故事开始的日期，默认为15。" }
-        - { field: "初始小时", path: "/进程/初始小时", instruction: "设定故事开始的小时（0-23），默认为19。" }
-        - { field: "初始分钟", path: "/进程/初始分钟", instruction: "设定故事开始的分钟（0-59），默认为0。" }
-        - { field: "当前时间戳", path: "/进程/当前时间戳", instruction: "以整数(分钟)表示序章结束时经过的时间。初始为0。" }
+        - { field: "当前时段", path: "/进程/当前时段", instruction: "设定故事开始时的时段（凌晨/早上/上午/中午/下午/傍晚/晚上/深夜），默认为晚上。" }
+        - { field: "当前年份", path: "/进程/当前年份", instruction: "设定故事开始的年份，默认为2025。" }
+        - { field: "当前月份", path: "/进程/当前月份", instruction: "设定故事开始的月份，默认为10。" }
+        - { field: "当前日份", path: "/进程/当前日份", instruction: "设定故事开始的日期，默认为15。" }
 
         # --- B组: 主角基础信息 (忠实映射) ---
         - { field: "姓名", path: "/主角/基本信息/姓名", instruction: "直接填入用户提供的姓名。" }

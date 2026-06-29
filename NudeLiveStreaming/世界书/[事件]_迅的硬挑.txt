@@ -1,0 +1,43 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['迅硬挑事件'] && isDaily && !isSexActive) {
+    const jin = _.get(stat, 'NPC数据.风见迅', {});
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+    const sexCount = parseInt(_.get(jin, '与主角做爱次数', 0)) || 0;
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.迅硬挑事件', 0)) || 0;
+_%>
+# 事件：谁更硬挑战
+event_initiator:
+  event_name: "谁更硬挑战"
+  character: "风见迅"
+  location: "住宅区 - 迅的房间"
+  time: "18:00-01:00"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "黄昏或入夜，迅主动找到主角家里（或主角去迅家，根据好感度决定谁主动），进门时他脸上带着一种看猎物似的得意。他翘腿坐到主角床上，用雄小鬼的口吻挑衅——说自己最近禁欲锻炼了很久，现在状态无敌，主角肯定没他能扛。"
+    <%_ if (eventCount > 0) { _%>
+    - "两人都清楚这已经不止一次了。迅也不需要前戏铺垫——他一边解扣子一边还嘴硬说今晚一定让你先求饶。"
+    - "结合好感度(<%= affection %>)和做爱次数(<%= sexCount %>)调整迅的挑衅用词——次数越多他越放肆，但在关键节点眼神会不自觉软下来。"
+    <%_ } else { _%>
+    - "迅向你发起了一场性能力对决——比谁在对方的触摸和挑逗下更能忍住不射、不软、不投降。规则很简单：互相碰、互相刺激、互相攻守转换，直到一个人先认输。他以为主角会被半路上的失控击败，但实际上，先露出败象的总是他自己。"
+    <%_ } _%>
+    - "描写两人在床上/地板上隔着一臂距离的对峙——眼神的交锋、指尖试探性的第一下触碰、以及空气中逐渐紧张的呼吸。迅嘴上还在放着狠话，但你的第一个动作就让他的声音顿了一下。"
+    - "随着攻守交替、你来我往——描写迅的每次嘴硬都在身体诚实面前崩塌。他眼眶微微泛红、声音哑了，嘴硬的白烂话最后碎成含混的鼻音。他以为主角会手下留情，但你在他的颈侧和髋骨边缘施加了更慢的节奏。"
+    - "结尾停留在迅把自己的脸埋在枕头或主角锁骨窝里、身体微微发抖，嘴上咬着被子不肯认输但手已经紧紧攥着主角的衣角的瞬间——留给玩家决定是放过他还是乘胜追击。"
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/迅硬挑事件" }
+      ]
+
+<%_ } } _%>

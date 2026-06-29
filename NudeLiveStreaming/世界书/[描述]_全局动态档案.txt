@@ -5,11 +5,9 @@ if (stat && stat.进程 && _.get(stat, '进程.阶段') !== '创角阶段') {
     const currentYear = _.get(stat, '进程.当前年份');
     const currentMonth = _.get(stat, '进程.当前月份');
     const currentDay = _.get(stat, '进程.当前日份');
-    const currentHour = _.get(stat, '进程.当前小时');
-    const currentMinute = _.get(stat, '进程.当前分钟');
+    const currentSlot = _.get(stat, '进程.当前时段', '晚上');
     
-    const timeStr = `${String(currentHour).padStart(2,'0')}:${String(currentMinute).padStart(2,'0')}`;
-    const dateStr = `${currentYear}年${currentMonth}月${currentDay}日`;
+    const dateStr = `${currentYear}年${currentMonth}月${currentDay}日  ${currentSlot}`;
     
     let season = '';
     if (currentMonth >= 3 && currentMonth <= 5) season = '春季';
@@ -55,6 +53,8 @@ if (stat && stat.进程 && _.get(stat, '进程.阶段') !== '创角阶段') {
     const fans = _.get(stat, '主角.主播信息.粉丝数', 0);
     const attitude = _.get(stat, '主角.主播信息.主播态度', '未知');
     const items = _.get(stat, '主角.道具栏.已购道具列表', []);
+    const closet = _.get(stat, '主角.衣橱', {});
+    const homeItems = _.get(stat, '主角.家居布置', []);
     const totalStreams = parseInt(_.get(stat, '主角.主播信息.直播总次数', 0)) || 0;
 
     // ========== 快感值阶段 ==========
@@ -150,7 +150,6 @@ _%>
 ## 当前环境
 
 - 当前日期：<%= dateStr %> | 天气：<%= weather %> | <%= scheduleText %>
-- 当前时间：<%= timeStr %>
 - 当前季节：<%= season %>
 - 当前区域：<%= _.get(stat, '主角.当前状态.当前区域', '未知') %>
 - 当前地点：<%= _.get(stat, '主角.当前状态.当前地点', '未知') %>
@@ -185,6 +184,7 @@ _%>
 
 ## 主播事业
 - 主播名字：<%= streamerName %>
+- 住所：<%= _.get(stat, '主角.住所.名字', '住宅区 - 单身公寓') %><%_ const homeDesc = _.get(stat, '主角.住所.描述', ''); if (homeDesc) { %>（<%= homeDesc %>）<%_ } _%>
 - 粉丝数：<%= fans %>（<%= popStage %>——<%= popDesc %>）
 - 直播点数：<%= points %>
 - 主播态度：<%= attitude %>
@@ -194,5 +194,18 @@ _%>
 <%_ } else { _%>
 - 已购道具：无
 <%_ } _%>
+
+<%_ if (homeItems.length > 0) { _%>
+- 家居布置：<%= homeItems.join('、') %>
+<%_ } _%>
+
+<%_ const closetKeys = ['上衣','下衣','内衣','袜子','鞋子','套装','COS服','配饰'];
+  let hasCloset = false;
+  closetKeys.forEach(function(k){ if ((closet[k]||[]).length > 0) hasCloset = true; });
+  if (hasCloset) { _%>
+## 衣橱
+<%_ closetKeys.forEach(function(k){ var arr = closet[k]||[]; if (arr.length > 0) { _%>
+- <%= k %>：<%= arr.join('、') %>
+<%_ } }); } _%>
 
 <%_ } } _%>
