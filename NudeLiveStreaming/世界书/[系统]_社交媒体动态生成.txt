@@ -17,9 +17,18 @@ backstage_event:
 
   narrative_guidance:
     - "【后台变量处理】本指令为纯数据操作，不得在叙事正文中提及或输出任何相关内容。"
-    - "【社交媒体匿名性】这是一个非实名社交平台，用户以昵称而非真实身份发言。在此平台上，人们敢于说出真实想法，无需顾虑社会角色和日常面具。请为以下缺失今日动态的角色，以他/她的匿名身份和真实口吻，各生成一条符合最近剧情进展的今日动态。"
+    - "【社交媒体匿名性】这是一个非实名社交平台，用户以昵称而非真实身份发言。在此平台上，人们敢于说出真实想法，无需顾虑社会角色和日常面具。动态须口语化、富有生活感——可以有口语词、碎碎念、倒装句、省略号、突然的情绪转折，而非正式写作。"
     - "【角色列表】<% missingList.forEach(function(name, i) { %><%= i > 0 ? '、' : '' %><%= name %><% }); %>"
     - "主角的动态以主播名「<%= streamerName %>」的口吻发送；NPC 的动态以其社媒昵称的口吻发送。"
+    <%_ const smData = _.get(stat, '社交媒体', {});
+    missingList.forEach(function(name) {
+      const list = _.get(smData, name + '.动态列表', []);
+      const latest = (Array.isArray(list) && list.length > 0) ? list[list.length - 1] : null;
+      const npc = npcData[name] || {};
+      const nick = (name === '主角') ? streamerName : (npc.社媒昵称 || name);
+    _%>
+    - "【<%= name %>·历史最近动态】<% if (latest) { %><%= latest.日期 %> <%= latest.时段 %>：「<%= latest.内容 %>」——新的动态不得与该历史动态重复同一事件或同一情绪，应从近期叙事中选取不同角度或新进展。<% } else { %>暂无历史动态，自由发挥。<% } %>"
+    <%_ }); _%>
 
   mandatory_data_sync:
     instruction: "为以下角色各生成一条动态并插入："

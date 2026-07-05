@@ -8,6 +8,7 @@
 
   if (events['粉丝里程碑事件'] && currentPhase === '日常阶段' && !isSexActive) {
     const milestoneValue = events['粉丝里程碑事件'];
+    const mVal = Number(milestoneValue) || 0;
     const currentFans = _.get(stat, '主角.主播信息.粉丝数', 0);
     const streamerName = _.get(stat, '主角.主播信息.主播名字', '主播');
 
@@ -22,24 +23,16 @@
       return { stage: 'TOP1', desc: '色情直播界的绝对王者，他的名字就是流量与欲望的代名词。' };
     };
 
-    // 根据里程碑值逆推突破前粉丝数
-    const thresholds = [100, 500, 2000, 10000, 100000, 1000000];
-    let prevFans = 0;
-    for (const t of thresholds) {
-      if (milestoneValue <= t) break;
-      prevFans = t;
-    }
-
     const currentPop = getPopularity(currentFans);
-    const previousPop = getPopularity(prevFans);
+    const previousPop = getPopularity(Math.max(0, mVal - 1));
 
     // 里程碑类型简写
     let milestoneType = '';
-    if (milestoneValue <= 500) milestoneType = '初露锋芒';
-    else if (milestoneValue <= 2000) milestoneType = '稳步上升';
-    else if (milestoneValue <= 10000) milestoneType = '声名鹊起';
-    else if (milestoneValue <= 100000) milestoneType = '人气爆发';
-    else if (milestoneValue <= 1000000) milestoneType = '登峰造极';
+    if (mVal <= 500) milestoneType = '初露锋芒';
+    else if (mVal <= 2000) milestoneType = '稳步上升';
+    else if (mVal <= 10000) milestoneType = '声名鹊起';
+    else if (mVal <= 100000) milestoneType = '人气爆发';
+    else if (mVal <= 1000000) milestoneType = '登峰造极';
     else milestoneType = '君临天下';
 _%>
 # 事件：粉丝里程碑

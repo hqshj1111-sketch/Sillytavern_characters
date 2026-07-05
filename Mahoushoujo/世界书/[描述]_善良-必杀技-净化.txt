@@ -1,0 +1,29 @@
+<%_{
+const personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '善良');
+if (personality === '善良') {
+    if (
+      _.get(getvar('stat_data'), '主角.核心状态.净化之力') >= 100 &&
+      _.get(getvar('stat_data'), '世界.当前关卡.Boss状态') !== '濒死'
+    ) {
+_%>
+# 提示: 必杀准备完毕
+action_trigger:
+  event: "必杀准备完毕：主角已经积攒了足够的能量或是找到了致命的反击机会！"
+  narrative_guidance:
+    bad_example: "【系统提示】现在是绝佳的机会！输入 `必杀技`..."
+    good_example:
+      - "通过主角的感官的思路进行描写必杀的准备。"
+      - "在描写的结尾引导性地、自然地将行动权交给玩家。"
+  <%_ if (_.get(getvar('stat_data'), '进程.阶段') === '战斗败北') { _%>
+  comeback_context: |
+    主角的净化之力达到了顶峰。
+    如果主角选择用最后的意志释放全部力量，在叙事完成后，AI必须使用JSONPatch将Boss韧性值减至0来表现必杀技的毁灭性效果，并将阶段切换至战斗胜利。
+  <%_ } _%>
+  <%_ if (_.get(getvar('stat_data'), '主角.生理状态.子宫状态.受孕状态') !== '未受孕') { _%>
+  if_pregnant:
+    narrative_focus: "描绘内心的冲突：这股力量不仅可以摧毁敌人，也能涤荡自己体内的污秽。"
+  <%_ } _%>
+<%_
+    }
+}}
+_%>

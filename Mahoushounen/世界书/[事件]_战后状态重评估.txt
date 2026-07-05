@@ -1,0 +1,58 @@
+<%_
+{
+// ---[事件] 动态成长/状态重评估系统 ---
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+
+if (events['状态演化事件']){
+    const face = _.get(stat, '主角.相貌特征', {});
+    const body = _.get(stat, '主角.身材细节', {});
+    const sexual = _.get(stat, '主角.性器官特征', {});
+
+    const mods = _.get(stat, '主角.永久性身体改造', {});
+    const kinks = _.get(stat, '主角.快感状态.性癖', {});
+    const corruption = _.get(stat, '主角.快感状态.污染度', 0);
+    const battleCount = _.get(stat, '记录.已击败Boss计数', 0);
+
+    const deepKinks = Object.keys(kinks).filter(k => (kinks[k].等级||0) >= 3);
+    
+    const fullProfile = {
+        "相貌特征": face,
+        "身材细节": body,
+        "性器官特征": sexual
+    };
+_%>
+---
+# 指令：生理与气质重评估
+post_battle_evolution_protocol:
+  objective: "主角的故事已经进行了一段时间。基于其经历、改造与污染度，重新评估并永久性更新其生理档案。"
+  
+  current_status:
+    corruption_level: "<%= corruption %>%"
+    battles_won: <%= battleCount %>
+    active_modifications: <%- JSON.stringify(mods) %>
+    deep_kinks: <%- JSON.stringify(deepKinks) %>
+    current_profile: <%- JSON.stringify(fullProfile) %>
+
+  ai_workflow:
+    - step: 1_evaluate_mutations
+      instruction: "检查 [active_modifications]、[deep_kinks] 或高污染度是否会导致主角外观的明确且永久性改变？（例如：瞳色改变、隆胸导致三围变化、淫纹导致皮肤状态改变、阴茎深度开发等）"
+      constraint: "词条字数限制在50字以内。临时性的凌乱（如弄脏、潮红）、可治愈（或希望治愈）的过度性交痕迹不属于永久改变。若无变化，则不生成对应的 Patch。"
+
+    - step: 2_generate_patch
+      instruction: "如果决定修改，你【必须】严格遵循以下路径公式生成 JSONPatch，绝不允许臆造路径！"
+      allowed_paths:
+        相貌修改: "/主角/相貌特征/[脸型/五官/发型与发色/眼睛颜色/特殊记号]"
+        身材修改: "/主角/身材细节/[身高/三围/体态/皮肤状态/肌肉线条/体脂率]"
+        私密修改: "/主角/性器官特征/[胸部形态/乳头颜色/阴茎形态/体毛状况/天生敏感度]"
+      example:
+        - '{ "op": "replace", "path": "/主角/相貌特征/眼睛颜色", "value": "粉色心形瞳孔" }'
+        - '{ "op": "replace", "path": "/主角/身材细节/三围", "value": "B95(B)/W58/H88" }'
+
+    - step: 3_mandatory_cleanup
+      instruction: "无论是否发生生理变化，必须在 <JSONPatch> 数组的末尾输出以下清理指令："
+      patch_code: |[
+          { "op": "remove", "path": "/系统状态/待处理事件/状态演化事件" }
+        ]
+---
+<%_ }} _%>

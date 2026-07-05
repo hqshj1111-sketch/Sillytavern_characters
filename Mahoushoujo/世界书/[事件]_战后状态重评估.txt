@@ -1,0 +1,48 @@
+<%_{
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+if (events['状态演化事件']) {
+  const face = _.get(stat, '主角.相貌特征', {});
+  const body = _.get(stat, '主角.身材细节', {});
+  const sexual = _.get(stat, '主角.性器官特征', {});
+  const pregState = _.get(stat, '主角.生理状态.子宫状态.受孕状态', '未受孕');
+  const vagCapacity = _.get(stat, '主角.生理状态.阴道状态.最大容量', 50);
+%>
+# 指令任务: 战后身体演化重评估
+请在输出底部的 <Analysis> 中，评估她的身体是否因近期的遭遇发生了不可逆的【永久性变化】（例如：发色改变/留下伤疤，长期榨乳导致胸部发育，受孕等情况导致三围/体脂变化，极限扩张导致器官形态改变等）。
+
+hidden_paths_mapping:
+  instruction: "以下为主角当前所有生理外观数据及其 JSON Path。若需永久修改，请在 <JSONPatch> 中调用对应的 path 进行 replace 操作。"
+  
+  appearance_traits:
+    发型与发色: { value: "<%= face.发型与发色 %>", path: "/主角/相貌特征/发型与发色" }
+    眼睛颜色: { value: "<%= face.眼睛颜色 %>", path: "/主角/相貌特征/眼睛颜色" }
+    五官: { value: "<%= face.五官 %>", path: "/主角/相貌特征/五官" }
+    脸型: { value: "<%= face.脸型 %>", path: "/主角/相貌特征/脸型" }
+    特殊记号: { value: "<%= face.特殊记号 %>", path: "/主角/相貌特征/特殊记号" }
+  
+  body_metrics:
+    身高: { value: "<%= body.身高 %>", path: "/主角/身材细节/身高" }
+    三围: { value: "<%= body.三围 %>", path: "/主角/身材细节/三围" }
+    体态: { value: "<%= body.体态 %>", path: "/主角/身材细节/体态" }
+    体脂率: { value: "<%= body.体脂率 %>", path: "/主角/身材细节/体脂率" }
+    肌肉线条: { value: "<%= body.肌肉线条 %>", path: "/主角/身材细节/肌肉线条" }
+    皮肤状态: { value: "<%= body.皮肤状态 %>", path: "/主角/身材细节/皮肤状态" }
+  
+  intimate_traits:
+    乳房形状: { value: "<%= sexual.乳房形状 %>", path: "/主角/性器官特征/乳房形状" }
+    乳晕与乳头: { value: "<%= sexual.乳晕与乳头颜色 %>", path: "/主角/性器官特征/乳晕与乳头颜色" }
+    阴唇形态: { value: "<%= sexual.阴唇形态 %>", path: "/主角/性器官特征/阴唇形态" }
+    体毛状况: { value: "<%= sexual.体毛状况 %>", path: "/主角/性器官特征/体毛状况" }
+    天生敏感度: { value: "<%= sexual.天生敏感度 %>", path: "/主角/性器官特征/天生敏感度" }
+    
+  context_reference:
+    当前受孕状态: "<%= pregState %>"
+    当前阴道容量: "<%= vagCapacity %>ml"
+
+execution_rules:
+  - 判定标准: 临时性的红晕、发情、疲惫或衣物破损【不属于】永久性变化，无需修改。
+  - 变量更新: 如果确需修改，请在 `<JSONPatch>` 中使用 `replace` 指令配合上方的 `path` 更新。如果没有发生永久改变，则不要生成多余的修改指令。
+  - 事件清理: 无论是否修改了生理数据，都【必须】在 `<JSONPatch>` 中包含以下操作以移除本事件：
+    { "op": "remove", "path": "/系统状态/待处理事件/状态演化事件" }
+<%_ }} _%>

@@ -1,0 +1,19 @@
+<%_
+var personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '善良');
+if (personality === '善良') {
+    if (
+      _.get(getvar('stat_data'), '进程.阶段') === '战斗回合' &&
+      _.get(getvar('stat_data'), '主角.核心状态.净化之力') < 100
+    ) {
+_%>
+
+purification_power_protocol:
+  objective: "在战斗中，主角通过以下方式积蓄【净化之力】。"
+  accumulation_methods:
+    - source: "玩家的主动攻击：主角成功对Boss进行了有效攻击或反击时。"
+    - source: "展现意志与韧性：AI描述敌人对主角造成伤害或施加负面效果时。"
+      action: "快感增加的同时，也为主角适当增加对应的【净化之力】，以此体现他的坚韧和不屈意志。"
+<%_
+    }
+}
+_%>

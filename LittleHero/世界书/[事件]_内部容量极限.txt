@@ -1,0 +1,27 @@
+﻿<%{
+%>
+<%_
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['体内满溢事件']) {
+_%>
+# 指令: 体内满溢
+event_handler:
+  event_name: "体内满溢事件"
+  description: "主角的能量核心/后穴已经无法容纳更多液体。"
+
+  ai_tasks:
+    - task1: "描绘满溢感"
+      instruction: "描绘主角能量核心和后庭通道被撑满、涨满的感受，小腹因为积攒的体液而鼓起。"
+    - task2: "描绘溢出与数值更新"
+      instruction: |
+        描绘拔出后液体喷涌而出，或被堵住无法排出的窘态。
+    - task: "3. 移除事件"
+      instruction: "在 Patch 数组的【最开始】移除本事件："
+      patch_code: |
+        [
+          { "op": "remove", "path": "/系统状态/待处理事件/体内满溢事件" },
+          { "op": "delta", "path": "/主角/生理状态/体液与分泌/能量核心内精液/存量", "value": [变动值] }
+        ]
+<%_
+} }
+_%>

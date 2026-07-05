@@ -1,0 +1,58 @@
+﻿<%_
+{
+const stat = getvar('stat_data');
+const currentPhase = _.get(stat, '进程.阶段', '创角阶段');
+const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+const corruption = _.get(stat, '主角.快感状态.侵蚀度', 0);
+const isFallen = personality === '反派';
+
+const eventsObj = _.get(stat, '系统状态.待处理事件', {});
+const activeEvents = Object.keys(eventsObj).filter(k => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+
+const phaseMode = {
+    '创角阶段': '角色创建',
+    '幕间休息': isFallen ? '巢穴经营/享乐' : '日常生活/剧情铺垫',
+    '战斗准备': '战前铺垫',
+    '战斗回合': '回合制战斗',
+    '终结回合': '终结演出',
+    '战斗胜利': '胜利结算',
+    '战斗败北': isFallen ? '败北受辱' : '败北受辱',
+    '战后处理': '战后过渡'
+}[currentPhase] || '未知';
+
+const hEventName = _.get(stat, '世界.幕间H事件.名称', '无');
+const hasHEvent = hEventName !== '无';
+const bossName = _.get(stat, '世界.当前关卡.名称', '无');
+const hasValidBoss = bossName !== '无' && bossName !== '预警威胁';
+_%>
+global_state_broadcast:
+  current_status:
+    phase: "<%= currentPhase %>"
+    mode: "<%= phaseMode %>"
+<%_ if (['战斗准备', '战斗回合', '终结回合'].includes(currentPhase) && hasValidBoss) { _%>
+    target_enemy: "<%= bossName %>"
+<%_ } _%>
+<%_ if (currentPhase === '幕间休息' && hasHEvent) { _%>
+    ongoing_h_event: "<%= hEventName %>"
+<%_ } _%>
+<%_ if (activeEvents.length > 0) { _%>
+    active_events: [ "<%= activeEvents.join('", "') %>" ]
+<%_ } _%>
+
+  system_reminders:
+    - "当前处于【<%= currentPhase %>】阶段，请严格遵循该阶段的叙事核心，【严禁】擅自跳跃到其他阶段。"
+<%_ if (activeEvents.length > 0) { _%>
+    - "有待处理事件，请在本次回复中推进或结算event的描写。"
+<%_ } _%>
+<%_ if (currentPhase === '幕间休息' && hasHEvent) { _%>
+    - "当前正在进行幕间H事件【<%= hEventName %>】，请专注于该色情情境的互动，暂缓其他日常主线探索。"
+<%_ } _%>
+<%_ if (['战斗准备', '战斗回合', '终结回合'].includes(currentPhase) && !hasValidBoss) { _%>
+    - "【警告】当前处于战斗阶段，但未检测到有效BOSS数据！请根据上下文合理圆场或继续当前互动。"
+<%_ } _%>
+<%_ if (personality === '英雄' && corruption >= 100) { _%>
+    - "【警报】侵蚀度已达100%！主角正处于黑化临界点，请在叙事中强烈展现他的精神与生理状态！"
+<%_ } _%>
+<%_
+}
+_%>

@@ -1,0 +1,581 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔法少女契约生成器 v3.0 (优化版)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap');
+        
+        :root {
+            --bg-color: transparent;
+            --card-bg: rgba(26, 27, 38, 0.75);
+            --text-color: #c0caf5;
+            --text-secondary: #787c99;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(0, 0, 0, 0.3);
+            
+            /* 默认善良主题色 (紫蓝) */
+            --accent-color: #bb9af7;
+            --accent-glow: rgba(187, 154, 247, 0.35);
+            --success-color: #9ece6a;
+            --error-color: #f7768e;
+            --font-family: 'Noto Serif SC', serif;
+        }
+
+        /* 堕落主题色 (猩红) */
+        .theme-fallen {
+            --accent-color: #f7768e;
+            --accent-glow: rgba(247, 118, 142, 0.35);
+            --border-color: rgba(247, 118, 142, 0.25);
+        }
+        
+        body, html { scroll-behavior: smooth; margin: 0; padding: 0; }
+        
+        .creator-card-container {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 15px 10px;
+            font-size: 14px;
+            max-width: 850px;
+            margin: auto;
+        }
+        
+        .creator-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px 35px;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.8), 0 0 25px -5px var(--accent-glow);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        /* --- 头部 --- */
+        .creator-card header { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); transition: border-color 0.5s ease; }
+        .creator-card h2 { margin: 0; font-size: 1.6em; font-weight: 600; color: var(--accent-color); text-shadow: 0 0 15px var(--accent-glow); transition: color 0.5s ease, text-shadow 0.5s ease; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 1px;}
+        .creator-card header p { margin: 8px 0 0; color: var(--text-secondary); font-size: 0.95em; }
+        
+        /* --- 存档管理器 --- */
+        .profile-manager {
+            margin-bottom: 25px; padding: 12px 18px; 
+            background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 10px;
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+            transition: border-color 0.5s ease;
+        }
+        .manager-left { display: flex; align-items: center; gap: 10px; flex-grow: 1; min-width: 250px;}
+        .profile-manager label { font-weight: 600; color: var(--accent-color); font-size: 0.95em; flex-shrink: 0; transition: color 0.5s ease;}
+        
+        #profile-select {
+            flex-grow: 1; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px;
+            padding: 8px 32px 8px 12px; color: var(--text-color); font-family: inherit; font-size: 0.95em; cursor: pointer;
+            transition: all 0.3s ease; outline: none;
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c0caf5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center; background-size: 1.2em;
+        }
+        #profile-select:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px var(--accent-glow); }
+        #profile-select option { background: #1a1b26; color: var(--text-color); }
+        
+        .manager-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .manager-btn {
+            font-size: 0.85em; padding: 8px 12px; border: 1px solid transparent; border-radius: 6px;
+            background: rgba(255,255,255,0.05); color: var(--text-color); cursor: pointer; 
+            transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .manager-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); transform: translateY(-1px); border-color: currentColor; }
+        .manager-btn:active:not(:disabled) { transform: translateY(0); }
+        .manager-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+        
+        #save-profile-btn { color: var(--success-color); }
+        #delete-profile-btn { color: var(--error-color); }
+        #import-profiles-btn { color: #7aa2f7; border-left: 1px solid rgba(255,255,255,0.1); border-radius: 0 6px 6px 0;}
+        #export-profiles-btn { color: #e0af68; margin-right: -8px;}
+
+        /* --- 表单布局 --- */
+        .form-section { margin-bottom: 25px; border: none; padding: 0; }
+        .form-section legend { font-size: 1.15em; font-weight: 600; color: var(--text-color); border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 16px; width: 100%; transition: border-color 0.5s ease; display: flex; align-items: center; gap: 8px;}
+        .form-section legend::before { content: ''; display: block; width: 4px; height: 16px; background: var(--accent-color); border-radius: 2px; transition: background 0.5s ease;}
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { color: var(--text-secondary); font-size: 0.9em; font-weight: 600; }
+        
+        /* --- 输入控件美化 --- */
+        input[type="text"], textarea {
+            background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 10px 14px; color: var(--text-color); font-family: inherit; font-size: 0.95em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; width: 100%;
+        }
+        input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--accent-color); background: rgba(0,0,0,0.5); box-shadow: 0 0 0 3px var(--accent-glow); }
+        input[type="text"]::placeholder, textarea::placeholder { color: rgba(120, 124, 153, 0.5); }
+                /* 文本框自适应高度与最大高度限制 */
+        textarea { 
+            resize: none; /* 关闭手动拖拽，交由JS自动控制 */
+            min-height: 42px; /* 初始单行高度 */
+            max-height: 160px; /* 超过此高度出现内部滚动条 */
+            line-height: 1.5; 
+            overflow-y: auto; 
+        }
+        
+        /* 现代化 Radio 按钮 */
+        .radio-group { display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); transition: border-color 0.5s ease; }
+        .radio-group label {
+            flex: 1; text-align: center; padding: 8px 10px; border-radius: 6px; cursor: pointer;
+            transition: all 0.3s ease; margin: 0; color: var(--text-secondary); font-weight: 600; font-size: 0.95em;
+        }
+        .radio-group input[type="radio"] { display: none; }
+        .radio-group input[type="radio"]:checked + label { background: var(--accent-color); color: #1a1b26; box-shadow: 0 2px 10px var(--accent-glow); }
+        
+        /* 颜色选择器组 */
+        .color-picker-group { display: flex; align-items: center; gap: 10px; }
+        .color-picker-group input[type="text"] { flex-grow: 1; }
+        .color-wrapper { position: relative; width: 42px; height: 42px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); flex-shrink: 0; transition: border-color 0.3s ease;}
+        .color-wrapper:focus-within { border-color: var(--accent-color); box-shadow: 0 0 0 2px var(--accent-glow); }
+        input[type="color"] { position: absolute; top: -10px; left: -10px; width: 62px; height: 62px; padding: 0; border: none; cursor: pointer; background: transparent; }
+        
+        /* 动态折叠特效 */
+        #master-field { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.5s ease, opacity 0.4s ease, margin-top 0.4s ease; margin-top: 0; }
+        #master-field.visible { max-height: 100px; opacity: 1; margin-top: 10px; }
+        
+        /* --- 底部操作区 --- */
+        .submit-area { text-align: center; margin-top: 35px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; align-items: center;}
+        .action-btn {
+            border: none; border-radius: 8px; padding: 12px 28px; font-size: 1.05em; font-family: inherit; font-weight: 600;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        
+        #generate-btn { background: var(--accent-color); color: #1a1b26; box-shadow: 0 4px 15px -3px var(--accent-glow); }
+        #generate-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px -5px var(--accent-glow); filter: brightness(1.1);}
+        #generate-btn:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 10px -2px var(--accent-glow); }
+        
+        #reset-form-btn { background: rgba(255, 255, 255, 0.05); color: var(--text-color); border: 1px solid var(--border-color); }
+        #reset-form-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.3); }
+        
+        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.5); transform: none; box-shadow: none; }
+        
+        #copy-notification { position: absolute; bottom: 15px; width: 100%; text-align: center; left: 0; font-size: 0.9em; font-weight: 600; opacity: 0; transition: opacity 0.3s ease; pointer-events: none;}
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; transition: background 0.3s ease; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+    </style>
+</head>
+<body>
+    <div class="creator-card-container">
+        <div class="creator-card" id="creator-card">
+            <header>
+                <h2><i class="fa-solid fa-file-contract"></i> 魔法少女契约 · 灵魂速写</h2>
+                <p>设定你的身份，开启命运的齿轮。所有内容均会自动保存。</p>
+            </header>
+
+            <div class="profile-manager">
+                <div class="manager-left">
+                    <label for="profile-select"><i class="fa-solid fa-box-archive"></i> 方案</label>
+                    <select id="profile-select">
+                        <option value="">-- 尚无已存方案 --</option>
+                    </select>
+                </div>
+                <div class="manager-group">
+                    <button id="load-profile-btn" class="manager-btn" title="读取所选方案"><i class="fa-solid fa-upload"></i> 读取</button>
+                    <button id="save-profile-btn" class="manager-btn" title="保存当前表单"><i class="fa-solid fa-save"></i> 保存</button>
+                    <button id="delete-profile-btn" class="manager-btn" title="删除所选方案"><i class="fa-solid fa-trash"></i> 删除</button>
+                    <div style="width: 1px; background: var(--border-color); margin: 0 4px;"></div>
+                    <button id="export-profiles-btn" class="manager-btn" title="导出文件"><i class="fa-solid fa-file-export"></i></button>
+                    <button id="import-profiles-btn" class="manager-btn" title="导入文件"><i class="fa-solid fa-file-import"></i></button>
+                </div>
+                <input type="file" id="import-file-input" accept=".json" style="display: none;">
+            </div>
+
+            <form id="creator-form" onsubmit="return false;">
+                <fieldset class="form-section">
+                    <legend>核心人格</legend>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="char-name">姓名</label><input type="text" id="char-name" placeholder="你的名字"></div>
+                        <div class="form-group">
+                            <label for="personality-state">人格状态</label>
+                            <div class="radio-group">
+                                <input type="radio" id="state-good" name="personality-state" value="善良" checked><label for="state-good">善良</label>
+                                <input type="radio" id="state-fallen" name="personality-state" value="堕落"><label for="state-fallen">堕落</label>
+                            </div>
+                        </div>
+                        <div class="form-group full-width"><label for="char-traits">性格特质</label><input type="text" id="char-traits" placeholder="例如：活泼开朗、外冷内热、傲娇..."></div>
+                        <div class="form-group full-width" id="master-field"><label for="char-master">【堕落路线专属】侍奉对象</label><input type="text" id="char-master" placeholder="第一只征服你的魔物/主人..."></div>
+                        <div class="form-group full-width"><label for="char-kinks">【可选】初始性癖 / 弱点</label><input type="text" id="char-kinks" placeholder="例如：触手、窒息；乳头敏感…"></div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend>魔法契约</legend>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="familiar-type">使魔种类</label><input type="text" id="familiar-type" placeholder="一只白鼬、一本古导书..."></div>
+                        <div class="form-group"><label for="familiar-personality">使魔性格</label><input type="text" id="familiar-personality" placeholder="温柔、忠诚、有点啰嗦..."></div>
+                        <div class="form-group full-width"><label for="familiar-relationship">与主角关系</label><input type="text" id="familiar-relationship" placeholder="绝对忠诚的守护者、充满关爱的兄长..."></div>
+                        <div class="form-group">
+                            <label for="char-color">代表色</label>
+                            <div class="color-picker-group">
+                                <input type="text" id="char-color-text" value="樱粉色">
+                                <div class="color-wrapper"><input type="color" id="char-color-picker" value="#FFB6C1"></div>
+                            </div>
+                        </div>
+                        <div class="form-group"><label for="char-ability">核心能力</label><input type="text" id="char-ability" value="操控光的能力"></div>
+                    </div>
+                </fieldset>
+
+<fieldset class="form-section">
+                    <legend>简要外貌 (AI扩写依据)</legend>
+                    <div class="form-grid">
+                        <div class="form-group full-width"><label for="appearance-keywords">外貌关键词</label><textarea id="appearance-keywords" placeholder="例如：身材高挑，银色长发，像人偶一样精致..."></textarea></div>
+                        <div class="form-group full-width"><label for="body-keywords">肉体关键词</label><textarea id="body-keywords" placeholder="例如：三围、体态、胸部形状..."></textarea></div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section" style="margin-bottom: 10px;">
+                    <legend>补充设定</legend>
+                    <div class="form-group full-width"><label for="extra-notes">其他要求</label><textarea id="extra-notes" placeholder="世界观补充、敌方设定或其他你想让AI知道的规则..."></textarea></div>
+                </fieldset>
+                
+                <div class="submit-area">
+                    <button id="generate-btn" type="button" class="action-btn"><i class="fa-solid fa-pen-fancy"></i> <span>签订契约并开始</span></button>
+                    <button id="reset-form-btn" type="button" class="action-btn" title="清除当前所有填写内容"><i class="fa-solid fa-rotate-right"></i></button>
+                </div>
+            </form>
+            <p id="copy-notification"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('creator-form');
+            const generateBtn = document.getElementById('generate-btn');
+            const resetFormBtn = document.getElementById('reset-form-btn');
+            const notification = document.getElementById('copy-notification');
+            const creatorCard = document.getElementById('creator-card');
+            const colorPicker = document.getElementById('char-color-picker');
+            const colorText = document.getElementById('char-color-text');
+            const personalityRadios = document.querySelectorAll('input[name="personality-state"]');
+            const masterField = document.getElementById('master-field');
+            const initialButtonHTML = generateBtn.innerHTML;
+            const allInputs = Array.from(form.querySelectorAll('input, textarea, select'));
+            
+            const profileSelect = document.getElementById('profile-select');
+            const loadProfileBtn = document.getElementById('load-profile-btn');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const deleteProfileBtn = document.getElementById('delete-profile-btn');
+            const exportProfilesBtn = document.getElementById('export-profiles-btn');
+            const importProfilesBtn = document.getElementById('import-profiles-btn');
+            const importFileInput = document.getElementById('import-file-input');
+
+            // --- 配置 ---
+            const AUTOSAVE_KEY = 'magicalGirl_AutoSave_v3';
+            const PROFILE_STORAGE_KEY = 'magicalGirl_ProfileManager_v3';
+            
+            // 兼容性 Key (用于读取旧版数据)
+            const OLD_KEYS = [
+                'magicalGirl_AutoSave',             
+                'magicalGirl_ProfileManager',       
+                'magicalGirl_AutoSave_v4',          
+                'magicalGirl_Profiles_v4',
+                'magicalGirl_AutoSave_v2',
+                'magicalGirl_ProfileManager_v2'
+            ];
+            
+            let saveTimeout;
+
+// --- 文本框高度自适应逻辑 ---
+            const textareas = document.querySelectorAll('textarea');
+            const autoResizeTextarea = (ta) => {
+                ta.style.height = 'auto'; // 先归零
+                ta.style.height = ta.scrollHeight + 'px'; // 根据内容撑开
+            };
+            textareas.forEach(ta => {
+                ta.addEventListener('input', () => autoResizeTextarea(ta));
+            });
+
+            const showNotification = (message, color = 'var(--success-color)') => {
+                notification.textContent = message;
+                notification.style.color = color;
+                notification.style.opacity = '1';
+                clearTimeout(notification.timeoutId);
+                notification.timeoutId = setTimeout(() => { notification.style.opacity = '0'; }, 3000);
+            };
+
+            const updateUIState = () => {
+                const selectedRadio = document.querySelector('input[name="personality-state"]:checked');
+                const isFallen = selectedRadio?.value === '堕落';
+                creatorCard.classList.toggle('theme-fallen', isFallen);
+                if (isFallen) {
+                    masterField.classList.add('visible');
+                } else {
+                    masterField.classList.remove('visible');
+                }
+            };
+            
+            const getCurrentFormData = () => {
+                const data = {};
+                allInputs.forEach(input => {
+                    if (input.type === 'radio') {
+                        if (input.checked) data[input.name] = input.value;
+                    } else if (input.id) {
+                        data[input.id] = input.value;
+                    }
+                });
+                return data;
+            };
+
+            const populateForm = (data) => {
+                if (!data) return;
+                allInputs.forEach(input => {
+                    const key = (input.type === 'radio') ? input.name : (input.id || input.name);
+                    if (data[key] !== undefined) {
+                        if (input.type === 'radio') {
+                           input.checked = (input.value === data[key]);
+                        } else {
+                           input.value = data[key];
+                        }
+                    } else {
+                        // 丢弃无效数据/赋默认值
+                        if (input.type === 'text' || input.tagName === 'TEXTAREA') {
+                            if (input.id === 'char-color-text') input.value = '樱粉色';
+                            else if (input.id === 'char-ability') input.value = '操控光的能力';
+                            else input.value = ''; 
+                        }
+                        else if (input.type === 'color') {
+                            input.value = '#FFB6C1';
+                        }
+                    }
+                });
+                updateUIState();
+                try { colorPicker.value = colorText.value; } catch (err) {}
+                setTimeout(() => { textareas.forEach(ta => autoResizeTextarea(ta)); }, 10);
+            };
+
+            const saveAutoSave = () => localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(getCurrentFormData()));
+            const debouncedAutoSave = () => { clearTimeout(saveTimeout); saveTimeout = setTimeout(saveAutoSave, 500); };
+            
+            const loadAutoSave = () => {
+                const autoSavedData = localStorage.getItem(AUTOSAVE_KEY);
+                if (autoSavedData) {
+                    populateForm(JSON.parse(autoSavedData));
+                } else {
+                    updateUIState();
+                }
+            };
+            
+            // --- 强化数据搜救 (兼容多版本旧档) ---
+            const rescueOldData = () => {
+                let rescuedCount = 0;
+                let currentProfiles = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || '{}');
+                
+                // 搜救 Profiles
+                ['magicalGirl_ProfileManager', 'magicalGirl_Profiles_v4', 'magicalGirl_ProfileManager_v2'].forEach(key => {
+                    const oldProfilesStr = localStorage.getItem(key);
+                    if (oldProfilesStr) {
+                        try {
+                            const oldProfiles = JSON.parse(oldProfilesStr);
+                            currentProfiles = { ...oldProfiles, ...currentProfiles }; // 新数据覆盖旧数据
+                            rescuedCount++;
+                        } catch(e){}
+                    }
+                });
+                if (Object.keys(currentProfiles).length > 0) {
+                    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(currentProfiles));
+                }
+
+                // 搜救 AutoSave
+                if (!localStorage.getItem(AUTOSAVE_KEY)) {
+                    for (const key of ['magicalGirl_AutoSave_v2', 'magicalGirl_AutoSave_v4', 'magicalGirl_AutoSave']) {
+                        const oldAuto = localStorage.getItem(key);
+                        if (oldAuto) {
+                            localStorage.setItem(AUTOSAVE_KEY, oldAuto);
+                            populateForm(JSON.parse(oldAuto));
+                            rescuedCount++;
+                            break;
+                        }
+                    }
+                }
+                if (rescuedCount > 0) console.log("Legacy data rescued successfully.");
+            };
+
+            const getProfiles = () => JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY)) || {};
+            const saveProfiles = (profiles) => localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+            
+            const populateDropdown = () => {
+                const profiles = getProfiles();
+                const profileNames = Object.keys(profiles);
+                
+                profileSelect.innerHTML = '';
+                if (profileNames.length === 0) {
+                    profileSelect.innerHTML = '<option value="">-- 尚无已存方案 --</option>';
+                    loadProfileBtn.disabled = true; deleteProfileBtn.disabled = true; exportProfilesBtn.disabled = true; 
+                } else {
+                    profileSelect.innerHTML = '<option value="">-- 选择方案 --</option>';
+                    profileNames.sort().forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name; option.textContent = name;
+                        profileSelect.appendChild(option);
+                    });
+                    loadProfileBtn.disabled = false; deleteProfileBtn.disabled = false; exportProfilesBtn.disabled = false;
+                }
+            };
+
+            // Event Listeners
+            form.addEventListener('input', debouncedAutoSave);
+            colorPicker.addEventListener('input', () => { colorText.value = colorPicker.value; debouncedAutoSave(); });
+            colorText.addEventListener('input', () => { try { colorPicker.value = colorText.value; } catch (err) {} debouncedAutoSave(); });
+            personalityRadios.forEach(radio => radio.addEventListener('change', () => { updateUIState(); debouncedAutoSave(); }));
+            
+            saveProfileBtn.addEventListener('click', () => {
+                const defaultName = document.getElementById('char-name').value || '未命名方案';
+                const profileName = prompt('请输入方案名称：', defaultName);
+                if (profileName && profileName.trim() !== '') {
+                    const profiles = getProfiles();
+                    profiles[profileName.trim()] = getCurrentFormData();
+                    saveProfiles(profiles); populateDropdown(); profileSelect.value = profileName.trim();
+                    showNotification(`保存成功: "${profileName.trim()}"`);
+                }
+            });
+
+            loadProfileBtn.addEventListener('click', () => {
+                const selectedName = profileSelect.value;
+                if (selectedName && getProfiles()[selectedName]) {
+                    populateForm(getProfiles()[selectedName]);
+                    debouncedAutoSave();
+                    showNotification(`已读取: "${selectedName}"`);
+                } else { showNotification('请先选择方案', 'var(--error-color)'); }
+            });
+
+            deleteProfileBtn.addEventListener('click', () => {
+                const selectedName = profileSelect.value;
+                if (selectedName && confirm(`确定要永久删除方案 "${selectedName}" 吗？`)) {
+                    const profiles = getProfiles();
+                    delete profiles[selectedName];
+                    saveProfiles(profiles); populateDropdown();
+                    showNotification(`已删除: "${selectedName}"`);
+                }
+            });
+
+            exportProfilesBtn.addEventListener('click', () => {
+                const profiles = getProfiles();
+                if (Object.keys(profiles).length === 0) return;
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(profiles, null, 2)], {type: 'application/json'}));
+                a.download = `magical-girl-profiles-${Date.now()}.json`;
+                a.click(); URL.revokeObjectURL(a.href);
+                showNotification('方案已导出');
+            });
+
+            importProfilesBtn.addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        let current = getProfiles(), count = 0;
+                        for (const name in imported) {
+                            if (!current[name] || confirm(`覆盖同名方案 "${name}" 吗？`)) { current[name] = imported[name]; count++; }
+                        }
+                        saveProfiles(current); populateDropdown();
+                        showNotification(`导入了 ${count} 个方案`);
+                    } catch (error) { showNotification('导入失败：文件格式错误', 'var(--error-color)'); }
+                    importFileInput.value = '';
+                };
+                reader.readAsText(file);
+            });
+            
+            resetFormBtn.addEventListener('click', () => {
+                if (confirm('确定要清空当前所有内容吗？')) {
+                    form.reset();
+                    document.getElementById('state-good').checked = true;
+                    document.getElementById('char-color-text').value = '樱粉色';
+                    document.getElementById('char-color-picker').value = '#FFB6C1';
+                    document.getElementById('char-ability').value = '操控光的能力';
+                    updateUIState(); debouncedAutoSave();
+                    showNotification('表单已重置');
+                }
+            });
+
+            generateBtn.addEventListener('click', () => {
+                saveAutoSave();
+                generateBtn.disabled = true;
+                generateBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>正在签订...</span>`;
+                notification.style.opacity = '0';
+                
+                const data = getCurrentFormData();
+                const formatValue = (value, placeholder = '[AI请填充]') => {
+                    const trimmedValue = (value || "").trim();
+                    return trimmedValue === '' ? placeholder : `"${trimmedValue}"`;
+                };
+
+                // 去除 开局状态 的 YAML 模板
+                const yamlString = `<init_data>
+\`\`\`yaml
+# AI任务指令：解析以下用户创角档案，生成开场白并初始化所有变量。
+# 对于值为 "[AI请填充]" 的字段，你【必须】基于已有设定进行富有想象力的、合理的填充。
+
+创角档案:
+  核心人格:
+    姓名: ${formatValue(data['char-name'], '')} 
+    初始性状态: ${formatValue(data['char-kinks'], '无')} 
+    人格状态: "${data['personality-state']}"
+    性格特质: ${formatValue(data['char-traits'])}
+    主人: ${data['personality-state'] === '堕落' ? formatValue(data['char-master']) : '无'}
+  魔法契约:
+    使魔伙伴种类: ${formatValue(data['familiar-type'])}
+    使魔伙伴性格: ${formatValue(data['familiar-personality'])}
+    使魔伙伴与主角关系: ${formatValue(data['familiar-relationship'])}
+    代表色: "${data['char-color-text']}"
+    核心能力: "${data['char-ability']}"
+  简要外貌:
+    外貌关键词: ${formatValue(data['appearance-keywords'])}
+    肉体关键词: ${formatValue(data['body-keywords'])}
+  额外备注: ${formatValue(data['extra-notes'], '无')}
+\`\`\`
+</init_data>`;
+                
+                setTimeout(() => {
+                    try {
+                        const inputArea = window.parent.document.querySelector('#send_textarea');
+                        const sendButton = window.parent.document.querySelector('#send_but');
+                        if (inputArea && sendButton) {
+                            inputArea.value = yamlString;
+                            inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                            sendButton.click();
+                            showNotification('契约已发送！等待AI回应...');
+                            generateBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>契约已发送</span>`;
+                        } else { throw new Error('SillyTavern UI not found.'); }
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                        generateBtn.innerHTML = `<i class="fa-solid fa-xmark"></i> <span>发送失败</span>`;
+                        navigator.clipboard.writeText(yamlString).then(() => {
+                            showNotification('自动发送失败！已复制到剪贴板。', 'var(--error-color)');
+                            alert('自动发送失败！角色信息已复制到您的剪贴板，请手动粘贴并发送。');
+                        });
+                    }
+                    setTimeout(() => {
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = initialButtonHTML;
+                    }, 4000);
+                }, 400);
+            });
+
+            // 初始化
+            rescueOldData(); 
+            populateDropdown(); 
+            loadAutoSave(); 
+        });
+    </script>
+</body>
+</html>
+```

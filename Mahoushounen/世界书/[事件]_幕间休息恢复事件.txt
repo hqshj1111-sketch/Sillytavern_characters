@@ -1,0 +1,25 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['幕间休息完全恢复']) {
+_%>
+# 指令: 幕间恢复事件
+handler:
+  event: "幕间休息完全恢复"
+  ai_task: "角色需要在幕间休息得到完全恢复，为其提供符合设定的叙事解释（如使魔治疗、魔法体质自愈、充足睡眠）。"
+  
+  status_recovery_instruction: |
+    在 <Analysis> 中读取 '体力值.最大' 和 '魔力值.最大'，并将 '体力值.当前' 和 '魔力值.当前' 恢复至满值。
+
+  mandatory_patch:
+    instruction: "在回复末尾输出以下 Patch 数组："
+    patch_code: |
+      [
+        // 1. 恢复状态
+        { "op": "replace", "path": "/主角/核心状态/体力值/当前", "value": [你的计算结果] },
+        { "op": "replace", "path": "/主角/核心状态/魔力值/当前", "value": [你的计算结果] },
+        // 2. 移除本事件
+        { "op": "remove", "path": "/系统状态/待处理事件/幕间休息完全恢复" }
+      ]
+<%_ 
+} }
+_%>

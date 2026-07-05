@@ -1,0 +1,37 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  
+  if (events['武装升级事件']) {
+      const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+      const currentWeapon = _.get(stat, '主角.个人信息.武装', '基础武装');
+      const currentSuit = _.get(stat, '主角.个人信息.变身服', '基础变身服');
+      
+      const direction = personality === '善良' 
+          ? "战斗的经验和身体的经历化作实体，结合在武装之中。" 
+          : "快乐和经历凝聚成实体，改变了武装的形态。";
+_%>
+event_handler:
+  event_name: "武装进化"
+  context: "主角的魔力与肉体强度跨越了新的台阶，旧的武装形态产生了蜕变。"
+  original_state:
+    weapon: "<%= currentWeapon %>"
+    suit: "<%= currentSuit %>"
+  narrative_directives:
+    - "<%= direction %>"
+    - "描绘武装与变身服发生的视觉变化。新的形态、材质、光泽，以及围绕在主角身边的光影效果。"
+    - "展现变化发生那一刻的感官细节：魔力在体内流动的温热感、武装重组时贴合皮肤的触感、力量充盈后的确信。"
+    - "尊重原本的设计，不大幅扭转或改变原设，在基础上进行延伸和变化。"
+  system_tasks:
+    instruction: "请构思新形态的名称和描述，并在 <JSONPatch> 中输出以下指令完成升级，并移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/主角/个人信息/武装", "value": "[由你构思的新武装描述]" },
+        { "op": "replace", "path": "/主角/个人信息/变身服", "value": "[由你构思的新变身服描述]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/武装升级事件" }
+      ]
+<%_ 
+  } 
+}
+_%>

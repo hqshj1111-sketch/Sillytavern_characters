@@ -1,0 +1,117 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['战后声望结算事件']) {
+  const personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '善良');
+																   
+
+  // ===================================================================
+  // --- 分支A：善良路线声望结算 ---
+  // ===================================================================
+  if (personality === '善良') {
+_%>
+   
+# 指令: 战后声望评估 (善良)
+post_battle_evaluation_protocol:
+
+  core_philosophy: |
+    作为AI，请像一位严苛的【舆论观察家】那样评估。
+    公众是视觉动物的。他们看不见主角的内心挣扎，主要看见结果和表象。
+    - 【风评上升】源于：胜利、守护、展现力量与可靠。
+    - 【风评下降】源于：败北、造成破坏、以及【被羞辱】（英雄形象的色情化/小丑化）。
+
+  ai_workflow:
+    - step: 1 - 判定目击等级
+      instruction: "首先，判定本次战斗的曝光程度。这决定了倍率。"
+      witness_levels:
+        - level: "[无人知晓]"
+          impact: "所有数值变化减半。羞耻类事件即使发生，也不会扣除风评。"
+        - level: "[都市流言]"
+          impact: "标准数值。"
+        - level: "[直播/围观]"
+          impact: "数值翻倍。"
+
+    - step: 2 - 确定数值变动
+      instruction: "根据战斗结果和发生的事件，计算出【变动值】。"
+      base_values:
+        - { outcome: "战斗胜利", fame: +5, reputation: +10 }
+        - { outcome: "战斗败北", fame: +8, reputation: -5 }
+      event_modifiers:
+        # --- 英雄行为 (加分参考) ---
+        - { name: "守护了平民/建筑",   fame: +3, reputation: +8 }
+        - { name: "帅气的必杀终结",    fame: +5, reputation: +5 }
+        - { name: "身负重伤仍坚持",    fame: +2, reputation: +4 }
+        # --- 破坏与失态 (扣分参考) ---
+        - { name: "造成严重环境破坏",  fame: +5, reputation: -10 }
+        - { name: "战斗严重拖延",      fame: +2, reputation: -3 }
+        # --- NSFW/尊严毁灭 (视目击等级严重扣分) ---
+        - { name: "爆衣/露出",         fame: +4, reputation: -3 }
+        - { name: "当众射精/失禁",     fame: +8, reputation: -10 }
+        - { name: "被公开骑乘/榨精",   fame: +12, reputation: -15 }
+    - step: 3 - 执行计算与输出
+      instruction: |
+        你必须在 <Analysis> 块中手动计算最终结果：
+        1. 读取当前知名度 (Old_Fame) 和 风评 (Old_Rep)。
+        2. 计算公式: Change = (Base + Modifiers) * Witness_Multiplier。
+        3. 生成 delta 指令。
+      
+      mandatory_patch_template: |
+        [
+          { "op": "delta", "path": "/名声/知名度", "value": [变动值] },
+          { "op": "delta", "path": "/名声/风评", "value": [变动值] },
+          { "op": "remove", "path": "/系统状态/待处理事件/战后声望结算事件" }
+        ]
+
+<%_
+  } else { // --- 堕落路线分支 ---
+_%>
+   
+# 指令: 战后恶名评估 (堕落)
+post_battle_evaluation_protocol:
+
+  core_philosophy: |
+    对于堕落者，【风评】代表着公众对她的态度。
+    - 【负值】代表恐惧、威慑与敬畏
+    - 【正值】代表轻视、嘲笑或被视为无害的玩物。
+
+  ai_workflow:
+    - step: 1 - 判定目击与传播
+      witness_levels:
+        - level: "[黑暗传闻]"
+          impact: "数值变化减半。主要增加神秘感。"
+        - level: "[公开场合]"
+          impact: "标准数值。直接影响公众认知。"
+        - level: "[同时进行直播/大范围活动]"
+          impact: "数值翻倍。将确立主角的都市传说地位。"
+
+    - step: 2 - 确定数值变动
+      base_values:
+        - { outcome: "战斗胜利", fame: +8, reputation: -10, note: "征服增加了恐惧。" }
+        - { outcome: "战斗败北", fame: +5, reputation: +8,  note: "败北暴露了丑态，人们转而嘲笑你。" }
+      event_modifiers:
+        # 增加威慑 (让风评更负)
+        - { name: "公开调教魔法少年", fame: +5, reputation: -8 }
+        - { name: "大规模破坏",     fame: +6, reputation: -5 }
+        - { name: "洗脑/俘虏平民",   fame: +8, reputation: -10 }
+        # 增加色气/娱乐化
+        - { name: "主动展示淫纹/身体", fame: +15, reputation: +5,  desc: "比起恐惧，人们更关注他的色情身材。" }
+        - { name: "主动的淫乱表演", fame: +8, reputation: +3 }
+        - { name: "被公开羞辱/高潮", fame: +10, reputation: +5 }
+        - { name: "向对手求饶/屈服", fame: +3,  reputation: +8 }
+
+    - step: 3 - 执行计算与输出
+      instruction: |
+        你必须在 <Analysis> 块中手动计算最终结果：
+        1. 读取当前知名度 (Old_Fame) 和 风评 (Old_Rep)。
+        2. 计算公式: Change = (Base + Modifiers) * Witness_Multiplier。
+        3. 生成 delta 指令。
+      
+      mandatory_patch_template: |
+        [
+          { "op": "delta", "path": "/名声/知名度", "value": [变动值] },
+          { "op": "delta", "path": "/名声/风评", "value": [变动值] },
+          { "op": "remove", "path": "/系统状态/待处理事件/战后声望结算事件" }
+        ]
+<%_
+  }
+}}
+_%>

@@ -1,0 +1,19 @@
+﻿<%_
+var personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '英雄');
+if (personality === '反派') {
+    if (
+      _.get(getvar('stat_data'), '进程.阶段') === '战斗回合' &&
+      _.get(getvar('stat_data'), '主角.核心状态.混沌充能') < 100
+    ) {
+_%>
+corruption_power_protocol:
+  objective: "在战斗中，主角通过以下方式积蓄【混沌充能】。"
+  accumulation_methods:
+    - source: "主动侵蚀：当主角成功诱惑了敌人，或是利用身体/能量让敌人陷入了快感、动摇了敌人的战意时。"
+      action: "适当增加混沌充能。"
+    - source: "汲取战斗的愉悦：当描述主角享受战斗、或从与强敌的交锋中获得满足感时。"
+      action: "为主角适当增加对应的【混沌充能】。"
+<%_
+    }
+}
+_%>

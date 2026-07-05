@@ -20,12 +20,18 @@ const scriptState = {
 // ============================================================
 (function setupInputCache() {
     function tryBind() {
-        var ta = window.parent.document.querySelector('#send_textarea');
-        if (ta) {
-            ta.addEventListener('input', function() { var v = ta.value; if (v.trim()) { window.__IDF_LAST_STREAM_INPUT = v; } });
-            window.__IDF_LAST_STREAM_INPUT = ta.value || '';
-            console.info('[' + SCRIPT_NAME + '] 输入缓存已绑定 send_textarea');
-        } else {
+        try {
+            var ta = window.parent.document.querySelector('#send_textarea');
+            if (ta) {
+                ta.addEventListener('input', function() { var v = ta.value; if (v.trim()) { window.top.__IDF_LAST_STREAM_INPUT = v; } });
+                window.top.__IDF_LAST_STREAM_INPUT = ta.value || '';
+                console.info('[' + SCRIPT_NAME + '] 输入缓存已绑定 send_textarea');
+            } else {
+                console.warn('[' + SCRIPT_NAME + '] 未找到 send_textarea，300ms后重试');
+                setTimeout(tryBind, 300);
+            }
+        } catch(e) {
+            console.warn('[' + SCRIPT_NAME + '] 访问父窗口失败:', e.message);
             setTimeout(tryBind, 300);
         }
     }
@@ -80,6 +86,7 @@ const eventNpcMap = {
   迅硬挑事件: "风见迅",
   迅偷衣事件: "风见迅",
   迅足扰事件: "风见迅",
+  迅身份发现事件: "风见迅",
   // 多人 / 其他
   海斗老师三人性爱事件: "多人",
   // 无特定 NPC 均映射为 '环境'
@@ -466,6 +473,11 @@ function processEventPush(variables, prevData) {
       if (key === "迅偷衣事件") {
         return (parseInt(jin.淫乱度) || 0) >= 25 && _.get(jin, "秘密发现", false);
       }
+      if (key === "迅身份发现事件") {
+        return (parseInt(eventCounters["快递错拿事件"] || 0) >= 1 &&
+                parseInt(eventCounters["迅共同上学事件"] || 0) >= 1 &&
+                !_.get(jin, "秘密发现", false));
+      }
 
       // 多 NPC
       if (key === "海斗老师三人性爱事件") {
@@ -492,10 +504,11 @@ function processEventPush(variables, prevData) {
       "妹妹深夜自慰事件",
       "妹妹白天自慰事件",
       "老师约炮偶遇事件",
-      "老师跳蛋掉落事件",
+      "教师跳蛋掉落事件",
       "老师自慰发现事件",
       "快递错拿事件",
       "迅共同上学事件",
+      "迅身份发现事件",
     ];
     const zeroCountDiscovery = discoveryEvents.filter((key) => {
       return selectedKeys.includes(key) && (eventCounters[key] || 0) === 0;
@@ -632,6 +645,38 @@ function processLewdIncreaseOnSexCount(variables, prevData) {
   }
 }
 
+// ---------- 模块：NPC淫乱度自动增长 ----------
+function processNpcLewdIncrease(variables, prevData) {
+  const prevNpc = _.get(prevData, 'NPC数据', {});
+  const curNpc = _.get(variables.stat_data, 'NPC数据', {});
+
+  // A. 性行为次数变化：与主角做爱次数每 +1 → 淫乱度 +15
+  Object.keys(curNpc).forEach(function(name) {
+    const prevCount = parseInt(_.get(prevNpc, name + '.与主角做爱次数', 0)) || 0;
+    const curCount = parseInt(_.get(curNpc, name + '.与主角做爱次数', 0)) || 0;
+    if (curCount > prevCount) {
+      const curLewd = parseInt(_.get(curNpc, name + '.淫乱度', 0)) || 0;
+      const delta = (curCount - prevCount) * 15;
+      _.set(variables, 'stat_data.NPC数据.' + name + '.淫乱度', Math.min(100, curLewd + delta));
+      console.log('[' + SCRIPT_NAME + '] NPC淫乱度: ' + name + ' +' + delta + ' (性行为' + (curCount - prevCount) + '次) → ' + Math.min(100, curLewd + delta));
+    }
+  });
+
+  // B. NPC特殊事件落幕：事件标记被移除 → 淫乱度 +5
+  const prevEvents = _.get(prevData, '系统状态.待处理事件', {});
+  const curEvents = _.get(variables.stat_data, '系统状态.待处理事件', {});
+  Object.keys(eventNpcMap).forEach(function(evtKey) {
+    if (_.has(prevEvents, evtKey) && !_.has(curEvents, evtKey)) {
+      var npcName = eventNpcMap[evtKey];
+      if (npcName && npcName !== '环境') {
+        const curLewd = parseInt(_.get(curNpc, npcName + '.淫乱度', 0)) || 0;
+        _.set(variables, 'stat_data.NPC数据.' + npcName + '.淫乱度', Math.min(100, curLewd + 5));
+        console.log('[' + SCRIPT_NAME + '] NPC淫乱度: ' + npcName + ' +5 (事件结束: ' + evtKey + ') → ' + Math.min(100, curLewd + 5));
+      }
+    }
+  });
+}
+
 // ---------- 模块：各种跨越阶段事件监测 (需求7) ----------
 function processThresholdEvents(variables, prevData) {
   const prevStats = prevData || {};
@@ -662,9 +707,9 @@ function processThresholdEvents(variables, prevData) {
 
   // 1. 身体开发度
   const devPaths = {
-    胸部: "/主角/开发度/胸部开发度",
-    肉棒: "/主角/开发度/肉棒开发度",
-    后穴: "/主角/开发度/后穴开发度",
+    胸部: "主角.开发度.胸部开发度",
+    肉棒: "主角.开发度.肉棒开发度",
+    后穴: "主角.开发度.后穴开发度",
   };
   const devStages = [3, 6, 10]; // 初步/中度/深度
   for (const [partLabel, path] of Object.entries(devPaths)) {
@@ -771,7 +816,7 @@ function processThresholdEvents(variables, prevData) {
   const fanMilestones = [100, 500, 2000, 10000, 100000, 1000000];
   for (const m of fanMilestones) {
     if (prevFans < m && curFans >= m) {
-      pushEvent(variables, "粉丝里程碑事件", m);
+      pushEvent(variables, "粉丝里程碑事件", String(m));
       console.log(`[露出直播监控] 粉丝里程碑: ${m}`);
       break;
     }
@@ -784,7 +829,7 @@ function processThresholdEvents(variables, prevData) {
   const jinMilestones = [100, 500, 2000, 10000, 100000, 1000000];
   for (const m of jinMilestones) {
     if (prevJinFans < m && curJinFans >= m) {
-      pushEvent(variables, "人气分享事件", m);
+      pushEvent(variables, "人气分享事件", String(m));
       console.log(`[露出直播监控] 迅的人气分享: 突破${m}粉丝`);
       break;
     }
@@ -864,10 +909,19 @@ function processFanSyncToJin(variables, prevData) {
 
 // ---------- PRE-生成：用户指令预解析 ----------
 function onBeforeGeneration() {
-    var cached = window.__IDF_LAST_STREAM_INPUT;
-    if (!cached || !cached.trim()) return;
-    window.__IDF_LAST_STREAM_INPUT = '';
+    var cached = window.top.__IDF_LAST_STREAM_INPUT;
+    if (!cached || !cached.trim()) {
+        console.info('[' + SCRIPT_NAME + '] PRE-GEN: 缓存为空，跳过');
+        return;
+    }
+    window.top.__IDF_LAST_STREAM_INPUT = '';
     var text = cached;
+    var lastLine = text.split('\n').pop().trim();
+    console.info('[' + SCRIPT_NAME + '] PRE-GEN 收到(len=' + text.length + '): ' + text.slice(0, 120));
+    console.info('[' + SCRIPT_NAME + '] PRE-GEN lastLine: ' + lastLine.slice(0, 80));
+
+    // 关播指令
+    var endMatch = text.match(/(关播|结束直播|下播)/);
 
     // 直播人数增长（移到 pre-generation，AI 生成时看到的就是最新数据）
     try {
@@ -877,7 +931,7 @@ function onBeforeGeneration() {
         if (isLv && lvPhase === '直播阶段') {
             var prevV = parseInt(_.get(vars, 'stat_data.直播状态.当前直播间人数', 0)) || 0;
             var curH = parseInt(_.get(vars, 'stat_data.直播状态.当前直播间热度', 0)) || 0;
-            var d = Math.floor((14 + curH * 2.2) * (0.8 + Math.random() * 0.4)) + _.random(0, 5);
+            var d = Math.floor((8 + curH * 2.5 + prevV * 0.08) * (0.8 + Math.random() * 0.4));
             _.set(vars, 'stat_data.直播状态.当前直播间人数', Math.max(0, prevV + d));
             replaceVariables(vars, { type: 'message', message_id: 'latest' });
             console.log('[' + SCRIPT_NAME + '] 直播人数更新: ' + prevV + ' -> ' + (prevV + d) + ' (delta:' + d + ')');
@@ -900,8 +954,23 @@ function onBeforeGeneration() {
         return;
     }
 
-    // 房产购买指令: 购买[房产名]房产[简述]，同居:[NPC]+[NPC]，
-    var houseMatch = text.match(/^购买(.+?)房产(.+?)，同居:(.+?)[，,]/);
+    // 休整指令: 休整，天数:N，
+    var restMatch = lastLine.match(/休整[，,]\s*天数[：:]\s*(\d+)/);
+    if (restMatch) {
+        var restDays = parseInt(restMatch[1]) || 1;
+        restDays = Math.min(Math.max(restDays, 1), 30);
+        console.info('[' + SCRIPT_NAME + '] 休整: ' + restDays + '天');
+        try {
+            var vars = getVariables({ type: 'message', message_id: 'latest' });
+            _.set(vars, 'stat_data.系统状态.待处理事件.休整事件', { 跳过天数: restDays });
+            replaceVariables(vars, { type: 'message', message_id: 'latest' });
+            if (window.toastr) toastr.success('休整 ' + restDays + ' 天');
+        } catch (e) { console.error('[' + SCRIPT_NAME + '] 休整失败:', e); }
+        return;
+    }
+
+    // 房产购买指令: 购买房产类物品：xxx（xxx），同居:[NPC]+[NPC]，
+    var houseMatch = lastLine.match(/^购买房产类物品：(.+?)（(.+?)），同居:(.+?)[，,]/);
     if (houseMatch) {
         var houseName = houseMatch[1].trim();
         var houseDesc = houseMatch[2].trim();
@@ -921,40 +990,47 @@ function onBeforeGeneration() {
         return;
     }
 
-    // 购买指令: 购买[物品名][类别][简述]，
-    var buyMatch = text.match(/^购买(.+?)(上衣|下衣|内衣|袜子|鞋子|套装|COS服|配饰|道具|家居)(.+?)[，,]/);
-    if (buyMatch) {
-        var itemName = buyMatch[1].trim();
-        var itemCat = buyMatch[2];
+    // 购买指令: 支持多行购买
+    var buyRe = /购买(上衣|下衣|内衣|袜子|鞋子|套装|COS服|配饰|道具|家居)类物品：(.+?)（(.+?)）[，,]/g;
+    var CAT_BASE = {
+        '上衣': '主角.衣橱.上衣', '下衣': '主角.衣橱.下衣',
+        '内衣': '主角.衣橱.内衣', '袜子': '主角.衣橱.袜子',
+        '鞋子': '主角.衣橱.鞋子', '套装': '主角.衣橱.套装',
+        'COS服': '主角.衣橱.COS服', '配饰': '主角.衣橱.配饰',
+        '道具': '主角.道具栏.已购道具列表', '家居': '主角.家居布置'
+    };
+    var buyMatch, hasBuy = false;
+    var vars = null;
+    while ((buyMatch = buyRe.exec(text)) !== null) {
+        hasBuy = true;
+        var itemCat = buyMatch[1];
+        var itemName = buyMatch[2].trim();
         var itemDesc = buyMatch[3].trim();
-        var CAT_PATH = {
-            '上衣': '/主角/衣橱/上衣/-', '下衣': '/主角/衣橱/下衣/-',
-            '内衣': '/主角/衣橱/内衣/-', '袜子': '/主角/衣橱/袜子/-',
-            '鞋子': '/主角/衣橱/鞋子/-', '套装': '/主角/衣橱/套装/-',
-            'COS服': '/主角/衣橱/COS服/-', '配饰': '/主角/衣橱/配饰/-',
-            '道具': '/主角/道具栏/已购道具列表/-', '家居': '/主角/家居布置/-'
-        };
-        var insertPath = CAT_PATH[itemCat];
-        if (insertPath) {
+        var basePath = CAT_BASE[itemCat];
+        if (basePath) {
             console.info('[' + SCRIPT_NAME + '] 购买: ' + itemName + ' → ' + itemCat);
-            try {
-                var vars = getVariables({ type: 'message', message_id: 'latest' });
-                _.set(vars, 'stat_data' + insertPath.replace(/\//g, '.'), itemName);
-                replaceVariables(vars, { type: 'message', message_id: 'latest' });
-                if (window.toastr) toastr.success('已购买: ' + itemName);
-            } catch (e) { console.error('[' + SCRIPT_NAME + '] 购买失败:', e); }
+            if (!vars) vars = getVariables({ type: 'message', message_id: 'latest' });
+            var arr = _.get(vars, 'stat_data.' + basePath, []);
+            if (!Array.isArray(arr)) arr = [];
+            arr.push(itemName);
+            _.set(vars, 'stat_data.' + basePath, arr);
         }
+    }
+    if (hasBuy) {
+        replaceVariables(vars, { type: 'message', message_id: 'latest' });
+        if (window.toastr) toastr.success('购买完成');
         return;
     }
 
     // 开播指令: 开播，地点:xxx·xxx，时段:xxx，穿着:xxx，道具:xxx，联动:xxx，
-    var streamMatch = text.match(/^开播，/);
+    var streamMatch = lastLine.match(/开播，/);
+    console.info('[' + SCRIPT_NAME + '] 开播匹配: ' + !!streamMatch);
     if (streamMatch) {
-        var locMatch = text.match(/地点:([^，]+)/);
-        var slotMatch = text.match(/时段:([^，]+)/);
-        var wearMatch = text.match(/穿着:([^，]+)/);
-        var propMatch = text.match(/道具:([^，]+)/);
-        var collabMatch = text.match(/联动:([^，]+)/);
+        var locMatch = lastLine.match(/地点:([^，]+)/);
+        var slotMatch = lastLine.match(/时段:([^，]+)/);
+        var wearMatch = lastLine.match(/穿着:([^，]+)/);
+        var propMatch = lastLine.match(/道具:([^，]+)/);
+        var collabMatch = lastLine.match(/联动:([^，]+)/);
         var eventData = {
             类型: '开播准备事件',
             地点: locMatch ? locMatch[1] : '',
@@ -966,8 +1042,10 @@ function onBeforeGeneration() {
         console.info('[' + SCRIPT_NAME + '] 预解析: 开播 → ' + JSON.stringify(eventData));
         try {
             var vars = getVariables({ type: 'message', message_id: 'latest' });
+            console.info('[' + SCRIPT_NAME + '] getVariables 成功');
             _.set(vars, 'stat_data.系统状态.待处理事件.开播准备事件', eventData);
             replaceVariables(vars, { type: 'message', message_id: 'latest' });
+            console.info('[' + SCRIPT_NAME + '] replaceVariables 成功');
             if (window.toastr) toastr.success('开播准备中: ' + (eventData.地点 || ''));
         } catch (e) { console.error('[' + SCRIPT_NAME + '] 开播解析失败:', e); }
         return;
@@ -1012,25 +1090,61 @@ function onVariableUpdateEnded(variables) {
   processDateTimeWeather(variables, scriptState.previousData);
   processSocialMedia(variables, scriptState.previousData);
 
-  // 2. 阶段切换
+  // 2. 直播结束记录（阶段切换前运行，此时数据尚未清零）
+  processStreamEndRecords(variables, scriptState.previousData);
+
+  // 3. 阶段切换
   processPhaseSwitch(variables, scriptState.previousData);
 
   // 3. 日常事件推送与队列管理
   processEventPush(variables, scriptState.previousData);
 
   processLewdIncreaseOnSexCount(variables, scriptState.previousData);
+  processNpcLewdIncrease(variables, scriptState.previousData);
 
   // 4. 跨越阈值事件
   processThresholdEvents(variables, scriptState.previousData);
 
-  // 6. 直播结束记录
-  processStreamEndRecords(variables, scriptState.previousData);
-
   // 7. 粉丝联动
   processFanSyncToJin(variables, scriptState.previousData);
 
+  // 数值边界维护
+  clampNumericValues(variables);
+
   // 保存当前快照
   scriptState.previousData = _.cloneDeep(variables.stat_data);
+}
+
+// ---------- 数值边界维护 ----------
+function clampNumericValues(variables) {
+  // 主角 0-100 字段
+  var mcStatus = _.get(variables.stat_data, '主角.当前状态', {});
+  var clampKeys = ['快感值', '性欲值', '羞耻度', '淫乱度'];
+  clampKeys.forEach(function(k) {
+    if (mcStatus[k] !== undefined) {
+      mcStatus[k] = Math.max(0, Math.min(100, Number(mcStatus[k]) || 0));
+    }
+  });
+
+  // 主角开发度 ≥0，无上限
+  var dev = _.get(variables.stat_data, '主角.开发度', {});
+  Object.keys(dev || {}).forEach(function(k) {
+    dev[k] = Math.max(0, Number(dev[k]) || 0);
+  });
+
+  // NPC 字段 0-100
+  var npcs = _.get(variables.stat_data, 'NPC数据', {});
+  Object.keys(npcs || {}).forEach(function(name) {
+    var npc = npcs[name];
+    if (npc.好感度 !== undefined) npc.好感度 = Math.max(0, Math.min(100, Number(npc.好感度) || 0));
+    if (npc.淫乱度 !== undefined) npc.淫乱度 = Math.max(0, Math.min(100, Number(npc.淫乱度) || 0));
+    if (npc.疑心 !== undefined) npc.疑心 = Math.max(0, Math.min(100, Number(npc.疑心) || 0));
+  });
+
+  // 直播人数/热度 ≥0
+  var live = _.get(variables.stat_data, '直播状态', {});
+  if (live.当前直播间人数 !== undefined) live.当前直播间人数 = Math.max(0, Number(live.当前直播间人数) || 0);
+  if (live.当前直播间热度 !== undefined) live.当前直播间热度 = Math.max(0, Number(live.当前直播间热度) || 0);
 }
 
 // ---------- 生命周期管理 ----------
@@ -1040,10 +1154,7 @@ function initializeEventListeners() {
     const Mvu = getMvuInstance();
     if (Mvu) {
       scriptState.listeners.onBeforeGeneration = onBeforeGeneration;
-      eventOn(
-        Mvu.events.BEFORE_GENERATION,
-        scriptState.listeners.onBeforeGeneration,
-      );
+      eventMakeFirst(tavern_events.GENERATION_AFTER_COMMANDS, scriptState.listeners.onBeforeGeneration);
       scriptState.listeners.onVariableUpdateEnded = onVariableUpdateEnded;
       eventOn(
         Mvu.events.VARIABLE_UPDATE_ENDED,
@@ -1068,9 +1179,9 @@ function initializeEventListeners() {
 function cleanup() {
   try {
     const Mvu = getMvuInstance();
-    if (Mvu && scriptState.listeners.onBeforeGeneration) {
+    if (scriptState.listeners.onBeforeGeneration) {
       eventRemoveListener(
-        Mvu.events.BEFORE_GENERATION,
+        tavern_events.GENERATION_AFTER_COMMANDS,
         scriptState.listeners.onBeforeGeneration,
       );
     }

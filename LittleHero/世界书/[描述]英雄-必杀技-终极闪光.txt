@@ -1,0 +1,22 @@
+﻿<%_
+var personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '英雄');
+if (personality === '英雄') {
+    if (
+      _.get(getvar('stat_data'), '主角.核心状态.正义充能') >= 100 &&
+      _.get(getvar('stat_data'), '世界.当前关卡.Boss状态') !== '濒死'
+    ) {
+_%>
+# 提示: 必杀准备完毕
+action_trigger:
+  event: "必杀准备完毕：主角已经积攒了足够的能量或是找到了致命的反击机会！"
+  narrative_guidance:
+    bad_example: "【系统提示】现在是绝佳的机会！输入 `必杀技`..."
+    good_example:
+      - "通过主角的感官的思路进行描写必杀的准备。"
+      - "在描写的结尾引导性地、自然地将行动权交给玩家。"
+
+
+<%_
+    }
+}
+_%>

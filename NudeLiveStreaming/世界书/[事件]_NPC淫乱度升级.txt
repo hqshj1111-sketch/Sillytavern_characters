@@ -47,10 +47,11 @@ npc_lewdness_evolution:
   affected_npcs: "<%- targetNames.join('、') %>"
   
   narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    - "将视角切换至 <%= targetNames.join('、') %>，用一个标志性事件展现其淫乱度的蜕变——不是逐渐累积，而是某件具体的事让前一个阶段的边界被清晰跨过。"
     <%_ targetsInfo.forEach(info => { _%>
-    - "【<%= info.name %>】(淫乱度 <%= info.lewdness %>)：从「<%= info.prevStage %>」蜕变为「<%= info.currentStage %>」。请在叙事中展现其行为或言辞上更放荡、更主动索取快感的微妙变化。"
+    - "【<%= info.name %>】(淫乱度 <%= info.lewdness %>)：从「<%= info.prevStage %>」蜕变为「<%= info.currentStage %>」。以他/她的视角展开一个事件——可以发生在与主角的互动中，也可以发生在主角不在场的独处时刻。前后差异必须通过具体的行动或选择来体现，而非内心独白或旁白概括。"
     <%_ }); _%>
-    - "这些转变是累积性的——NPC不会突然变成另一个人，而是在某个瞬间让主角察觉到他们比以往更不加掩饰的欲望。"
 
   mandatory_data_sync:
     instruction: "当蜕变已在叙事中体现后，移除事件标记："

@@ -1,0 +1,22 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['高潮事件']) {
+_%>
+# 指令: 高潮时刻
+event_handler:
+  event_name: "高潮事件"
+  description: "主角的身体积累了大量的快感，抵达高潮。后台脚本已自动结算了数值变化，你的任务是【描绘整个过程】。"
+
+  ai_tasks:
+    - task: "1. 描绘高潮的爆发"
+      instruction: "聚焦于感官细节。描绘主角因快感而产生的生理反应（痉挛、失神、射精等）。"
+      
+    - task: "2. 移除事件 (必须)"
+      instruction: "在 <UpdateVariable> 块的【最开始】，必须输出以下指令移除本事件，防止死循环："
+      patch_code: |
+        [
+          { "op": "remove", "path": "/系统状态/待处理事件/高潮事件" }
+        ]
+<%_ 
+} }
+_%>

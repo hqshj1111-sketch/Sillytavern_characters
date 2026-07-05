@@ -1,0 +1,172 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>温和行动指令 v4.0</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-family: 'Noto Serif SC', serif;
+            /* 莫兰迪/柔和色系 */
+            --color-rose: #eebebf;   /* 柔粉 */
+            --color-sky: #a8d8ea;    /* 雾霾蓝 */
+            --color-iris: #ccb7e5;   /* 鸢尾紫 */
+            --color-sand: #f2d0a9;   /* 暖沙 */
+            --text-main: #e0e0e0;
+            --text-dim: #aaa;
+        }
+        
+        body { margin: 0; padding: 0; background: transparent; }
+
+        .options-container {
+            font-family: var(--font-family); 
+            padding: 10px 5px; 
+            max-width: 95%; 
+            margin: 0 auto; 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 10px;
+            justify-content: center; /* 居中排列 */
+        }
+
+        .option-btn {
+            flex: 1 1 calc(50% - 10px); /* 双列布局 */
+            min-width: 200px;
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 12px 16px;
+            
+            /* 极简磨砂玻璃风格 */
+            background: rgba(40, 40, 45, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px; /* 柔和圆角 */
+            
+            color: var(--text-main); 
+            font-size: 14px;
+            cursor: pointer; 
+            position: relative; 
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+
+        /* 悬停效果：轻微上浮 + 边框亮起 */
+        .option-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(60, 60, 65, 0.6);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: var(--accent-color);
+        }
+
+        /* 点击效果 */
+        .option-btn:active {
+            transform: translateY(0);
+            background: rgba(30, 30, 35, 0.7);
+        }
+
+        /* 图标容器 */
+        .icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent-color);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn:hover .icon-box {
+            background: var(--accent-color);
+            color: #222; /* 图标反色 */
+        }
+
+        .option-text {
+            line-height: 1.4;
+            flex: 1;
+            opacity: 0.9;
+        }
+
+        /* --- 风格分类 --- */
+        .style-radical { --accent-color: var(--color-rose); } /* 激进/本能 */
+        .style-calm    { --accent-color: var(--color-sky); }  /* 冷静/智略 */
+        .style-magic   { --accent-color: var(--color-iris); } /* 魔法/特殊 */
+        .style-desire  { --accent-color: var(--color-sand); } /* 欲望/其他 */
+
+        @media (max-width: 500px) { 
+            .options-container { flex-direction: column; } 
+            .option-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="options-container" id="options-container" style="display:none;">$1</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawContainer = document.getElementById('options-container');
+            if (!rawContainer) return;
+            
+            const rawText = rawContainer.textContent;
+            rawContainer.innerHTML = '';
+            rawContainer.style.display = 'flex';
+
+            // 定义四种温和风格
+            const optionStyles = [
+                { type: 'Radical', className: 'style-radical', icon: 'fa-solid fa-feather-pointed' }, // 羽毛 (轻盈/行动)
+                { type: 'Calm',    className: 'style-calm',    icon: 'fa-regular fa-snowflake' },     // 雪花 (冷静/思考)
+                { type: 'Magic',   className: 'style-magic',   icon: 'fa-solid fa-wand-sparkles' },   // 魔杖 (魔法)
+                { type: 'Desire',  className: 'style-desire',  icon: 'fa-regular fa-heart' }          // 爱心 (情感/欲望)
+            ];
+
+            const options = rawText.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+
+            const handleSend = (text) => {
+                try {
+                    const inputArea = window.parent.document.querySelector('#send_textarea');
+                    if (inputArea) {
+                        inputArea.value = (inputArea.value.trim() ? inputArea.value + '\\n' : '') + text;
+                        inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                } catch (error) { console.error(error); }
+            };
+            
+            options.forEach((text, index) => {
+                // 循环使用样式 (如果选项超过4个)
+                const config = optionStyles[index % optionStyles.length]; 
+
+                const button = document.createElement('button');
+                button.className = 'option-btn ' + config.className;
+                
+                // 图标部分
+                const iconBox = document.createElement('div');
+                iconBox.className = 'icon-box';
+                const icon = document.createElement('i');
+                icon.className = config.icon;
+                iconBox.appendChild(icon);
+
+                // 文本部分
+                const textSpan = document.createElement('span');
+                textSpan.className = 'option-text';
+                textSpan.textContent = text;
+                
+                button.appendChild(iconBox);
+                button.appendChild(textSpan);
+                
+                button.onclick = () => handleSend(text);
+                rawContainer.appendChild(button);
+            });
+        });
+    </script>
+</body>
+</html>
+```

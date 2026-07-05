@@ -100,6 +100,19 @@ button:focus-visible{outline:2px solid var(--color-steel);outline-offset:2px}
 .social-post--风见迅{border-left:2px solid var(--color-copper)}
 .social-date-sep{font-size:11px;font-weight:700;color:var(--text-mut);padding:4px 14px;border-bottom:1px solid var(--border);margin:-2px 0 4px}
 
+.cart-float{position:fixed;bottom:16px;left:16px;width:44px;height:44px;background:var(--accent-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;box-shadow:0 2px 12px rgba(251,191,36,0.3)}
+.cart-float__icon{font-size:20px}
+.cart-float__badge{position:absolute;top:-4px;right:-4px;background:#e05555;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;min-width:18px;text-align:center}
+.cart-panel{position:fixed;bottom:64px;left:16px;width:300px;max-height:50vh;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:20;display:flex;flex-direction:column}
+.cart-panel__head{font-size:13px;font-weight:700;color:var(--accent-gold);padding:10px 14px;border-bottom:1px solid var(--border)}
+.cart-panel__body{flex:1;overflow-y:auto;padding:8px 14px;font-size:12px}
+.cart-panel__foot{display:flex;align-items:center;gap:6px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--text-mut)}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.cart-item__name{flex:1}
+.cart-item__cat{font-size:10px;color:var(--text-ter)}
+.cart-item__price{font-size:10px;color:var(--accent-gold);margin-left:8px}
+.cart-item__del{cursor:pointer;color:#e05555;margin-left:6px;font-size:14px}
+
 .physio-info{display:flex;flex-direction:column;gap:2px;padding:6px 12px;background:linear-gradient(135deg,var(--bg-card) 0%,rgba(74,144,217,0.04) 100%);border-radius:var(--radius-md);border:1px solid var(--border);border-left:2px solid var(--color-steel);font-size:var(--text-xs);flex-shrink:0}
 .physio-row{display:flex;align-items:flex-start;gap:4px;color:var(--text-ter)}
 .physio-row__dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:5px}
@@ -260,11 +273,11 @@ button:focus-visible{outline:2px solid var(--color-steel);outline-offset:2px}
 .shop-cat-title--open::after{content:'\2212'}
 .shop-grid{display:none;grid-template-columns:repeat(4,1fr);gap:var(--space-sm)}
 .shop-grid--open{display:grid}
-.shop-subcat{font-size:11px;font-weight:500;color:var(--text-mut);padding:3px 10px;margin:2px 0;cursor:pointer;user-select:none;border-left:2px solid transparent;transition:all .15s}
+.shop-subcat{font-size:11px;font-weight:500;color:var(--text-mut);padding:3px 10px;margin:2px 0;cursor:pointer;user-select:none;border-left:2px solid transparent;transition:all .15s;grid-column:1/-1}
 .shop-subcat:hover{color:var(--accent-gold);border-left-color:var(--accent-gold)}
 .shop-subcat::after{content:' +';font-size:12px;color:var(--text-ter)}
 .shop-subcat--open::after{content:' \2212'}
-.shop-subgrid{padding-left:6px;margin-bottom:4px}
+.shop-subgrid{padding-left:6px;margin-bottom:4px;grid-column:1/-1}
 .shop-card{background:var(--bg-card-alt);border-radius:var(--radius-sm);border:1px solid var(--border);padding:var(--space-sm);text-align:center;transition:all var(--t-fast);position:relative;overflow:hidden;cursor:pointer}
 .shop-card::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--color-brass-dim),transparent);opacity:0;transition:opacity var(--t-fast)}
 .shop-card:hover{border-color:var(--border-hvr);transform:translateY(-1px);box-shadow:0 2px 10px rgba(0,0,0,0.3)}
@@ -292,6 +305,20 @@ button:focus-visible{outline:2px solid var(--color-steel);outline-offset:2px}
 @keyframes toast-in{from{opacity:0;transform:translateX(40px) scale(0.9)}to{opacity:1;transform:translateX(0) scale(1)}}
 @keyframes toast-out{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(40px) scale(0.9)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+.gm-overlay{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,0.55)}
+.gm-panel__header{font-size:var(--text-sm);font-weight:700;color:var(--text-pri);padding:10px 14px;border-bottom:1px solid var(--border)}
+.gm-panel__body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.gm-panel__footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.gm-field{display:flex;flex-direction:column;gap:3px}
+.gm-field label{font-size:11px;color:var(--text-ter);font-weight:600}
+.gm-field select,.gm-field input{background:var(--bg-input);border:1px solid var(--border);color:var(--text-pri);padding:5px 8px;border-radius:var(--radius-sm);font-size:12px}
+.btn--action{background:var(--accent-gold);color:#000;font-weight:700}
+.btn--action:hover{background:#d4b04a}
+
+.rest-input{width:80px;padding:6px 10px;background:var(--bg-input);border:1px solid var(--border);color:var(--text-pri);border-radius:var(--radius-sm);font-size:var(--text-base);text-align:center;font-family:var(--font-mono);font-weight:700}
+.rest-input:focus{outline:none;border-color:var(--color-teal);box-shadow:0 0 6px rgba(61,158,139,0.2)}
+.rest-hint{font-size:11px;color:var(--text-mut);margin-top:4px}
 
 .hidden{display:none!important}
 .mt-sm{margin-top:var(--space-sm)}
@@ -611,6 +638,7 @@ button:focus-visible{outline:2px solid var(--color-steel);outline-offset:2px}
               <button class="btn btn--outline btn--sm" onclick="sendToInput('打开露出直播APP性经验统计')">性经验统计</button>
               <button class="btn btn--outline btn--sm" onclick="sendToInput('打开露出直播APP直播数据统计')">直播数据统计</button>
               <button class="btn btn--outline btn--sm" onclick="sendToInput('逛逛论坛，')">逛逛论坛</button>
+              <button class="btn btn--outline btn--sm" id="btn-rest" style="display:none;color:var(--color-teal);border-color:var(--color-teal)" onclick="openRestModal()">💤 休整</button>
               <button class="btn btn--outline btn--sm" id="btn-start-stream" style="display:none;color:var(--accent-green);border-color:var(--accent-green)" onclick="openStreamModal()">🎬 开播</button>
               <button class="btn btn--outline btn--sm" id="btn-end-stream" style="display:none;color:var(--color-red);border-color:var(--color-red)" onclick="sendToInput('关播，')">🔴 关播</button>
             </div>
@@ -640,6 +668,20 @@ button:focus-visible{outline:2px solid var(--color-steel);outline-offset:2px}
 
       <div class="tab-content" id="tab-social">
         <div class="card"><div class="sec-label">社交动态</div><div class="social-feed" id="social-feed"></div></div>
+      </div>
+
+      <div class="cart-float hidden" id="cart-float" onclick="toggleCart()">
+        <span class="cart-float__icon">🛒</span>
+        <span class="cart-float__badge" id="cart-badge">0</span>
+      </div>
+      <div class="cart-panel hidden" id="cart-panel">
+        <div class="cart-panel__head">🛒 购物车 <span style="float:right;cursor:pointer;font-size:14px" onclick="toggleCart()">✕</span></div>
+        <div class="cart-panel__body" id="cart-body"></div>
+        <div class="cart-panel__foot">
+          <span id="cart-total" style="flex:1"></span>
+          <button class="btn btn--sm" onclick="clearCart()">清空</button>
+          <button class="btn btn--action btn--sm" onclick="checkoutCart()">结算</button>
+        </div>
       </div>
 
     </div>
@@ -745,18 +787,18 @@ const DEFAULT_STAT = {
     当前状态:{当前区域:'文教区',当前地点:'自宅公寓',当前生理状态:'体温正常，呼吸平稳',当前着装:'汐望高中校服',当前性行为:[],当前佩戴:{},快感值:0,性欲值:0,羞耻度:100,淫乱度:0},
     性经验记录:{与陌生人做爱次数:0,总高潮次数:0,自慰次数:5,情趣玩具使用次数:1,主动手交次数:0,被动手交次数:0,主动足交次数:0,被动足交次数:0,主动口交次数:0,被动口交次数:0,被动乳交次数:0,小穴插入性爱次数:0,后穴插入性爱次数:0,后穴性爱次数:0},
     开发度:{口腔开发度:0,胸部开发度:0,双手开发度:3,双足开发度:0,肉棒开发度:2,后穴开发度:0},
-    主播信息:{主播名字:'蓮',直播总次数:0,单次直播最高人数:0,单次直播最高高潮次数:0,直播点数:0,粉丝数:0,主播态度:'对自己露出主播的身份尚无实感，感觉像一场荒诞的梦境。'},
-    道具栏:{已购道具列表:[]},
-    衣橱:[],
-    家居布置:[]
-  },
-  NPC数据:{
-    '汐见真帆':{身份信息:{...}秘密发现:false,社媒昵称:'满级色图鉴赏家'},
-    '黑崎海斗':{...秘密发现:false,社媒昵称:'刚射完一组还有两组'},
-    '冰室纱耶':{...秘密发现:false,社媒昵称:'文学院第一荡妇'},
-    '风见迅':{...秘密发现:false,社媒昵称:'银犬今天也没吃饱'}
-  }
-};
+    主播信息:{主播名字:'莲',直播总次数:0,单次直播最高人数:0,单次直播最高高潮次数:0,直播点数:0,粉丝数:0,主播态度:'对自己露出主播的身份尚无实感，感觉像一场荒诞的梦境。'},
+     道具栏:{已购道具列表:[]},
+     衣橱:{上衣:[],下衣:[],内衣:[],袜子:[],鞋子:[],套装:[],COS服:[],配饰:[]},
+     家居布置:[]
+   },
+   NPC数据:{
+    '汐见真帆':{身份信息:{年龄:'17岁',身份:'汐望高中高二学生',与主角关系:'同居的兄妹'},外貌:{脸型与发型:'褐色双马尾，眼角微挑',眼睛:'琥珀色瞳',皮肤:'白皙细腻'},身体:{身高:'160cm',三围:'B74(A)/W56/H78',体态:'纤细娇小',体毛:'四肢细软浅色绒毛',性器官描述:'小穴浅粉微外翻；乳头小颜色淡；后穴紧致粉嫩'},着装:{日常:'汐望高中制服，白色过膝袜'},性格:{外在:'抖S，毒舌，不懂性事',内在:'二次元老司机，网上爱说荤话，关心哥哥'},爱好:'刷二次元论坛、用荤话调戏网友、深夜看里番、自慰',偏好性行为:'足交、手交、后穴性爱',活跃区域:['文教区','住宅区','商业区'],好感度:15,淫乱度:15,疑心:0,秘密发现:false,社媒昵称:'满级色图鉴赏家'},
+    '黑崎海斗':{身份信息:{年龄:'20岁',身份:'汐望大学体育系学生',与主角关系:'青梅竹马的挚友'},外貌:{脸型与发型:'红色短碎发，清爽英俊脸',眼睛:'深棕色瞳',皮肤:'浅小麦色'},身体:{身高:'175cm',三围:'B98/W76/H92',体态:'肌肉结实',体毛:'体毛浓密',性器官描述:'鸡巴粗长颜色深；乳头深褐色；后穴肌肉紧实'},着装:{日常:'运动T恤与运动短裤或慢跑裤，球鞋'},性格:{外在:'阳光开朗，直率真诚',内在:'简单纯粹，对朋友忠诚尊重'},爱好:'晨跑与力量训练、足球、看热血漫画、自慰',偏好性行为:'手交、口交、插入性爱',活跃区域:['文教区','住宅区','海滨区'],好感度:15,淫乱度:5,疑心:0,秘密发现:false,社媒昵称:'刚射完一组还有两组'},
+    '冰室纱耶':{身份信息:{年龄:'30岁',身份:'汐望大学文学系选修课讲师',与主角关系:'选修课的师生'},外貌:{脸型与发型:'黑色长直发，知性温柔五官，戴银框眼镜',眼睛:'深蓝色瞳',皮肤:'白皙保养极好'},身体:{身高:'170cm',三围:'B98(H)/W63/H96',体态:'高挑丰腴',体毛:'精心打理',性器官描述:'小穴深红饱满；乳头深褐大而敏感；后穴因开发柔软能自然接纳'},着装:{日常:'知性风衬衫与过膝裙或阔腿裤'},性格:{外在:'知性温柔',内在:'极度淫乱——多名固定炮友'},爱好:'文学创作、音乐、做爱',偏好性行为:'乳交、口交、手交、小穴性爱、后穴性爱',活跃区域:['文教区','海滨区','商业区','湾区'],好感度:5,淫乱度:90,疑心:0,秘密发现:false,社媒昵称:'文学院第一荡妇'},
+    '风见迅':{身份信息:{年龄:'18岁',身份:'汐望高中高三学生，新入行露出系主播',与主角关系:'正常往来的邻居'},外貌:{脸型与发型:'银色短碎发，右耳戴银色耳钉',眼睛:'浅灰色瞳',皮肤:'偏白但健康'},身体:{身高:'165cm',三围:'B84/W70/H86',体态:'偏瘦但线条流畅',体毛:'体毛稀疏浅色',性器官描述:'鸡巴一般尺寸颜色浅，龟头有摩擦痕迹；乳头小敏感；后穴有使用痕迹微松弛'},着装:{日常:'改短的黑色校服衬衫与宽大长裤'},性格:{外在:'标准雄小鬼——嘴臭挑衅装凶',内在:'抖M——渴望被支配羞辱'},爱好:'露出直播、浏览辱骂弹幕、收藏情趣玩具',偏好性行为:'口交、后穴性爱',活跃区域:['文教区','住宅区','海滨区','远郊'],主播信息:{粉丝数:56,主播名字:'银犬'},好感度:0,淫乱度:35,疑心:0,秘密发现:false,社媒昵称:'银犬今天也没吃饱'}
+   }
+ };
 
 const SOCIAL_NICKS = { 主角: '', 汐见真帆: '满级色图鉴赏家', 黑崎海斗: '刚射完一组还有两组', 冰室纱耶: '文学院第一荡妇', 风见迅: '银犬今天也没吃饱' };
 
@@ -835,6 +877,8 @@ const U={
       const avatar=document.getElementById('idle-avatar-text');
       avatar.textContent=(getValue(globalData,'主角.主播信息.主播名字')||'蓮')[0];
     }
+    const btnRest=document.getElementById('btn-rest');
+    if(btnRest)btnRest.style.display=(!isLive&&phase==='日常阶段')?'':'none';
     // Timer
     this._updateTimer();
   },
@@ -873,12 +917,12 @@ const U={
     const msgs=getValue(globalData,'直播状态.当前直播间弹幕')||[];
     const box=document.getElementById('chat-box');
     if(!msgs.length){box.innerHTML='<div style="color:var(--text-mut);font-size:10px;text-align:center;padding:10px">暂无弹幕</div>';return;}
-    box.innerHTML=msgs.map(m=>{
+    box.innerHTML=[...msgs].reverse().map(m=>{
       const sender=m[0]||'未知';
       const txt=m[1]||'';
       return '<div class="chat-item"><span class="chat-item__name">'+sender+'</span><span class="chat-item__text">'+txt+'</span></div>';
     }).join('');
-    box.scrollTop=box.scrollHeight;
+    box.scrollTop=0;
   },
 
    _updateTimer(){
@@ -1040,8 +1084,9 @@ const U={
   },
   _archSelfPane(s){
     if(!s)return'';
+    const homeName = getValue(globalData,'主角.住所.名字')||'住宅区 - 单身公寓';
     return'<div class="arch-pane arch-pane--active" id="arch-self">'+
-      '<div class="arch-section"><div class="arch-section__title">基本信息</div>'+this._kv([['姓名',s.基本信息?.姓名],['年龄',s.基本信息?.年龄],['性格',s.基本信息?.性格],['背景',s.基本信息?.背景]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">基本信息</div>'+this._kv([['姓名',s.基本信息?.姓名],['年龄',s.基本信息?.年龄],['住所',homeName],['性格',s.基本信息?.性格],['背景',s.基本信息?.背景]])+'</div>'+
       '<div class="arch-section"><div class="arch-section__title">相貌特征</div>'+this._kv([['脸型',s.相貌特征?.脸型],['五官',s.相貌特征?.五官],['发型与发色',s.相貌特征?.发型与发色],['眼睛颜色',s.相貌特征?.眼睛颜色],['特殊记号',s.相貌特征?.特殊记号]])+'</div>'+
       '<div class="arch-section"><div class="arch-section__title">身材细节</div>'+this._kv([['身高',s.身材细节?.身高],['三围',s.身材细节?.三围],['体态',s.身材细节?.体态],['皮肤状态',s.身材细节?.皮肤状态],['肌肉线条',s.身材细节?.肌肉线条]])+'</div>'+
       '<div class="arch-section"><div class="arch-section__title">性器官特征</div>'+this._kv([['后穴形态',s.性器官特征?.后穴形态],['乳头形态',s.性器官特征?.乳头形态],['阴茎形态',s.性器官特征?.阴茎形态],['体毛状况',s.性器官特征?.体毛状况]])+'</div>'+
@@ -1072,7 +1117,11 @@ const U={
         posts.push({name:n,nick:nick,date:p.日期||'',slot:p.时段||'',content:p.内容||''});
       });
     });
-    posts.sort(function(a,b){return (a.date+a.slot).localeCompare(b.date+b.slot);});
+    posts.forEach(function(p){
+      var m=p.date.match(/(\d+)年(\d+)月(\d+)日/);
+      p._dn=m?parseInt(m[1])*10000+parseInt(m[2])*100+parseInt(m[3]):0;
+    });
+    posts.sort(function(a,b){return b._dn-a._dn||(b.slot||'').localeCompare(a.slot||'');});
     if(posts.length===0){el.innerHTML='<div style="color:var(--text-mut);padding:20px 14px;font-size:13px">还没有动态。随着剧情推进，角色们将在这里展现社交媒体上的真实想法。</div>';return;}
     let html='',lastDate='';
     posts.forEach(function(p){
@@ -1088,7 +1137,7 @@ const U={
   renderShop(){
     const el=document.getElementById('shop-container');if(!el)return;
     const cat=function(t,items){return'<div class="shop-cat-title" onclick="toggleShopCat(\'shop-cat-'+t.replace(/[^a-zA-Z一-鿿]/g,'')+'\')">'+t+'</div><div class="shop-grid" id="shop-cat-'+t.replace(/[^a-zA-Z一-鿿]/g,'')+'">'+items.join('')+'</div>';};
-    const card=function(n,p,d,cat){cat=cat||'道具';return'<div class="shop-card" onclick="sendToInput(\'购买'+n+cat+d+'，\')"><div class="shop-card__name">'+n+'</div><div class="shop-card__price" style="color:'+priceColor(parseInt(p))+'">'+p+'点</div><div class="shop-card__desc">'+d+'</div></div>';};
+    const card=function(n,p,d,cat){cat=cat||'道具';return'<div class="shop-card" onclick="addToCart(\''+n+'\',\''+p+'\',\''+d+'\',\''+cat+'\')"><div class="shop-card__name">'+n+'</div><div class="shop-card__price" style="color:'+priceColor(parseInt(p))+'">'+p+'点</div><div class="shop-card__desc">'+d+'</div></div>';};
     var C=function(c){return function(n,p,d){return card(n,p,d,c);};};
     var _内衣=C('内衣'),_袜子=C('袜子'),_上衣=C('上衣'),_下衣=C('下衣'),_鞋子=C('鞋子'),_套装=C('套装'),_COS=C('COS服'),_配饰=C('配饰'),_家居=C('家居');
     function estateCard(n,p,d,r){return'<div class="shop-card" onclick="openEstateModal(\''+n+'\',\''+p+'\',\''+d+'\',\''+r+'\')"><div class="shop-card__name">'+n+'</div><div class="shop-card__price" style="color:'+priceColor(parseInt(p))+'">'+p+'点</div><div class="shop-card__desc">'+d+'</div></div>';}
@@ -1099,17 +1148,17 @@ const U={
       cat('束缚类',[card('充气口球','30','可充气撑开嘴巴'),card('内置口球口罩','50','遮掩面部刺激口腔'),card('项圈与牵引绳套装','60','皮革项圈配金属链'),card('贞操锁','100','金属材质带钥匙'),card('自缚套装','150','手铐脚镣计时锁'),card('全覆式隔音束缚头套','120','眼耳口全封闭呼吸孔'),card('强制开腿杆','80','可调长度脚踝固定带')])+
       cat('装扮类',[
         '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-under\')">内衣/袜</div><div class="shop-grid shop-subgrid" id="shop-sub-under">'+[_内衣('黑色低腰三角裤','15','贴身低腰修身'),_内衣('白色运动平角裤','15','透气运动日常'),_内衣('灰色无痕内裤','20','莫代尔亲肤面料'),_内衣('黑色蕾丝三角裤','25','半透花卉蕾丝低腰'),_内衣('红色双丁裤','30','细带露臀高开叉'),_内衣('透视网纱三角裤','22','前片薄纱若隐若现'),_内衣('豹纹低腰内裤','20','弹力棉印花'),_袜子('黑色过膝袜','12','高筒弹性包裹小腿'),_袜子('白色短筒袜三双','10','纯棉日常短袜'),_袜子('网眼袜','18','镂空网眼透气'),_袜子('透明蕾丝过膝袜','28','半透蕾丝花边筒口'),_袜子('吊带袜套装','35','弹力吊带配黑色长筒')].join('')+'</div>',
-        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-top\')">上装</div><div class="shop-grid shop-subgrid" id="shop-sub-top">'+[_上衣('纯白重磅T恤','30','厚实纯棉质感'),_上衣('黑色亨利领长袖','40','三粒纽扣微修身'),_上衣('灰色连帽卫衣','55','宽松落肩毛圈棉'),_上衣('牛仔夹克','80','经典水洗靛蓝'),_上衣('宽松格子衬衫','45','棉麻混纺透气'),_上衣('亚麻短袖衬衫','50','米白透气凉爽'),_上衣('无袖背心两件装','25','白+黑纯棉'),_上衣('速干POLO衫','40','吸湿排汗领口挺括'),_上衣('条纹长袖T恤','30','蓝白细条纹棉质'),_上衣('薄款针织开衫','60','深灰混纺V领'),_上衣('灯芯绒衬衫','55','棕色细条纹保暖'),_上衣('高领针织衫','65','黑色美利奴羊毛'),_上衣('摇粒绒夹克','70','米白轻量保暖'),_上衣('羊毛混纺大衣','120','深灰切斯特版型')].join('')+'</div>',
-        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-bot\')">下装</div><div class="shop-grid shop-subgrid" id="shop-sub-bot">'+[_下衣('黑色修身牛仔裤','65','微弹力水洗黑'),_下衣('卡其工装短裤','40','多口袋机能风'),_下衣('灰色运动慢跑裤','35','抽绳束脚纯棉'),_下衣('黑色束脚卫裤','35','基本款侧拉链口袋'),_下衣('亚麻阔腿短裤','45','卡其色宽松透气'),_下衣('浅蓝破洞牛仔裤','55','轻度水洗膝盖破洞'),_下衣('卡其九分裤','50','直筒露踝棉质'),_下衣('羊毛混纺西裤','70','深灰垂感抗皱'),_下衣('加绒束脚卫裤','45','内里抓绒保暖')].join('')+'</div>',
-        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-shoe\')">鞋</div><div class="shop-grid shop-subgrid" id="shop-sub-shoe">'+[_鞋子('白色帆布鞋','50','低帮经典百搭'),_鞋子('黑色复古跑鞋','70','网面透气厚底'),_鞋子('户外马丁靴','90','牛皮防滑耐穿'),_鞋子('家居拖鞋','15','软底静音轻便'),_鞋子('帆布一脚蹬','40','浅灰懒人鞋免系带'),_鞋子('运动凉鞋','55','魔术贴快干户内外'),_鞋子('黑色乐福鞋','80','牛皮简约通勤'),_鞋子('切尔西短靴','100','深棕弹力踝收口'),_鞋子('雪地靴','75','内里羊毛保暖防滑')].join('')+'</div>',
-        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-suit\')">套装/场景</div><div class="shop-grid shop-subgrid" id="shop-sub-suit">'+[_套装('黑色西服三件套','180','修身西装马甲长裤'),_套装('日式甚平家居服','60','棉麻清凉居家'),_套装('浴衣','55','温泉祭典宽袖'),_套装('丝质睡袍','75','光泽柔滑及膝'),_套装('健身房三件套','90','速干T恤压缩裤护腕'),_套装('牛角扣大衣','140','藏青羊毛混纺连帽'),_套装('轻量羽绒服','160','黑色700蓬可收纳'),_套装('雨衣套装','70','防水透湿上下两件'),_套装('海滩三件套','65','泳裤拖鞋防晒衫')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-top\')">上装</div><div class="shop-grid shop-subgrid" id="shop-sub-top">'+[_上衣('纯白重磅T恤','30','厚实纯棉质感'),_上衣('黑色亨利领长袖','40','三粒纽扣微修身'),_上衣('灰色连帽卫衣','55','宽松落肩毛圈棉'),_上衣('牛仔夹克','80','经典水洗靛蓝'),_上衣('宽松格子衬衫','45','棉麻混纺透气'),_上衣('亚麻短袖衬衫','50','米白透气凉爽'),_上衣('无袖背心两件装','25','白+黑纯棉'),_上衣('速干POLO衫','40','吸湿排汗领口挺括'),_上衣('条纹长袖T恤','30','蓝白细条纹棉质'),_上衣('薄款针织开衫','60','深灰混纺V领'),_上衣('灯芯绒衬衫','55','棕色细条纹保暖'),_上衣('高领针织衫','65','黑色美利奴羊毛'),_上衣('摇粒绒夹克','70','米白轻量保暖'),_上衣('羊毛混纺大衣','120','深灰切斯特版型'),_上衣('宽松印花涂鸦T恤','35','落肩Oversize美式街头'),_上衣('Oversize连帽卫衣','60','黑色XL廓形重磅毛圈'),_上衣('机能战术马甲','90','多口袋尼龙透气网眼')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-bot\')">下装</div><div class="shop-grid shop-subgrid" id="shop-sub-bot">'+[_下衣('黑色修身牛仔裤','65','微弹力水洗黑'),_下衣('卡其工装短裤','40','多口袋机能风'),_下衣('灰色运动慢跑裤','35','抽绳束脚纯棉'),_下衣('黑色束脚卫裤','35','基本款侧拉链口袋'),_下衣('亚麻阔腿短裤','45','卡其色宽松透气'),_下衣('浅蓝破洞牛仔裤','55','轻度水洗膝盖破洞'),_下衣('卡其九分裤','50','直筒露踝棉质'),_下衣('羊毛混纺西裤','70','深灰垂感抗皱'),_下衣('加绒束脚卫裤','45','内里抓绒保暖'),_下衣('垂坠阔腿裤','55','黑色雪纺混纺宽松拖地'),_下衣('泡泡纱宽松长裤','50','褶皱纹理透气凉爽')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-shoe\')">鞋</div><div class="shop-grid shop-subgrid" id="shop-sub-shoe">'+[_鞋子('白色帆布鞋','50','低帮经典百搭'),_鞋子('黑色复古跑鞋','70','网面透气厚底'),_鞋子('户外马丁靴','90','牛皮防滑耐穿'),_鞋子('家居拖鞋','15','软底静音轻便'),_鞋子('帆布一脚蹬','40','浅灰懒人鞋免系带'),_鞋子('运动凉鞋','55','魔术贴快干户内外'),_鞋子('黑色乐福鞋','80','牛皮简约通勤'),_鞋子('切尔西短靴','100','深棕弹力踝收口'),_鞋子('雪地靴','75','内里羊毛保暖防滑'),_鞋子('经典滑板鞋','55','黑白硫化底耐磨翻毛皮'),_鞋子('高帮帆布鞋','60','酒红色复古金属孔眼'),_鞋子('复古篮球鞋','85','白绿八十年代高帮气垫'),_鞋子('轻量竞速跑鞋','80','超轻碳板回弹推进'),_鞋子('纯白运动跑鞋','60','网面透气减震软底'),_鞋子('粉色缓震慢跑鞋','70','泡棉中底轻盈回弹'),_鞋子('编织袜套运动鞋','75','一体飞织贴合透气'),_鞋子('黑色综训鞋','55','多向抓地稳定侧撑')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-suit\')">套装/场景</div><div class="shop-grid shop-subgrid" id="shop-sub-suit">'+[_套装('黑色西服三件套','180','修身西装马甲长裤'),_套装('日式甚平家居服','60','棉麻清凉居家'),_套装('浴衣','55','温泉祭典宽袖'),_套装('丝质睡袍','75','光泽柔滑及膝'),_套装('健身房三件套','90','速干T恤压缩裤护腕'),_套装('牛角扣大衣','140','藏青羊毛混纺连帽'),_套装('轻量羽绒服','160','黑色700蓬可收纳'),_套装('雨衣套装','70','防水透湿上下两件'),_套装('海滩三件套','65','泳裤拖鞋防晒衫'),_套装('缎面家居睡衣套装','70','深灰长袖长裤光泽柔滑'),_套装('羊绒混纺家居套装','120','浅灰圆领开衫配长裤')].join('')+'</div>',
         '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-cos\')">COS服</div><div class="shop-grid shop-subgrid" id="shop-sub-cos">'+[_COS('透明连帽雨衣','60','完全透视PVC'),_COS('透明泳裤','40','湿水后高度透明'),_COS('兔女郎装扮套装','200','兔耳连体衣网袜'),_COS('逆兔女郎套装','250','仅剩领结袖扣高跟'),_COS('女仆装扮套装','180','围裙蓬裙白丝'),_COS('木乃伊装扮套装','280','弹力绷带缠绕全身'),_COS('狼耳发饰','40','仿真狼耳可动'),_COS('JK制服装扮套装','150','白衬衫格裙领结'),_COS('死库水装扮','130','深蓝竞技泳衣可开合'),_COS('裸体围裙','80','仅围裙遮前身'),_COS('黑色紧身衣','120','高弹力勾勒轮廓'),_COS('透明紧身衣','180','远看整齐近看暴露'),_COS('隐身衣','600','完全隐形触感存在'),_COS('水手服','130','蓝白条纹大翻领短裤'),_COS('旗袍','140','黑色缎面侧开叉盘扣'),_COS('暴露巫女服','120','红白衣裤腰侧全开'),_COS('暴露修女服','130','黑纱头巾高开叉'),_COS('暴露忍者装束','140','渔网锁子甲配短裤'),_COS('玩偶服','100','毛绒连体拉链全包'),_COS('龟甲缚绳衣','70','红棉绳预编可调'),_COS('南瓜骷髅连体衣','75','万圣节荧光骨架')].join('')+'</div>',
-        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-acc\')">配饰</div><div class="shop-grid shop-subgrid" id="shop-sub-acc">'+[_配饰('纹身贴纸包','15','10张临时纹身'),_配饰('乳环','60','金属穿刺永久标志'),_配饰('全遮光眼罩','15','剥夺视觉增强敏感度'),_配饰('舌钉','50','钛合金球形穿刺'),_配饰('耳环','30','纯银圈式简约'),_配饰('耳钉','25','哑光黑钛钢单只'),_配饰('锁骨细链','35','925银极细蛇骨链'),_配饰('皮质手环','20','黑色双层编织'),_配饰('脚链','25','细银链脚踝贴合'),_配饰('脐钉','45','钛钢弯杆带闪钻'),_配饰('运动护腕','15','吸汗棉弹力加压'),_配饰('金属细框眼镜','40','平光钛架可配度')].join('')+'</div>'
-      ].join(''))+
-      cat('护理类',[card('男士洗面奶','15','清爽控油深层清洁'),card('保湿乳液','20','清爽不油腻锁水'),card('防晒霜','25','SPF50日常防护'),card('发蜡','25','哑光定型短发适用'),card('木质香调淡香水','40','前调柑橘后调雪松'),card('无香型手霜','10','快速吸收不油腻'),card('润唇膏','8','薄荷清凉滋润'),card('修眉刀','8','折叠便携安全'),card('指甲钳套装','15','含锉刀小剪刀')])+
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-acc\')">配饰</div><div class="shop-grid shop-subgrid" id="shop-sub-acc">'+[_配饰('纹身贴纸包','15','10张临时纹身'),_配饰('乳环','60','金属穿刺永久标志'),_配饰('全遮光眼罩','15','剥夺视觉增强敏感度'),_配饰('舌钉','50','钛合金球形穿刺'),_配饰('耳环','30','纯银圈式简约'),_配饰('耳钉','25','哑光黑钛钢单只'),_配饰('锁骨细链','35','925银极细蛇骨链'),_配饰('皮质手环','20','黑色双层编织'),_配饰('脚链','25','细银链脚踝贴合'),_配饰('脐钉','45','钛钢弯杆带闪钻'),_配饰('运动护腕','15','吸汗棉弹力加压'),_配饰('金属细框眼镜','40','平光钛架可配度'),_配饰('半指露指手套','25','黑色机车风露指透气'),_配饰('羊皮薄手套','45','黑色贴手正装弹性袖口'),_配饰('骑行全指手套','30','灰色防滑掌心透气网面'),_配饰('腰链','40','银质多层细链贴合腰线'),_配饰('十字背链','55','后颈到腰交叉垂坠'),_配饰('大腿环','35','可调节黑色皮革金属扣'),_配饰('臂环','30','银质上臂贴合弹性开口')].join('')+'</div>'
+      ])+
+      cat('护理类',[card('男士洗面奶','15','清爽控油深层清洁'),card('保湿乳液','20','清爽不油腻锁水'),card('防晒霜','25','SPF50日常防护'),card('发蜡','25','哑光定型短发适用'),card('木质香调淡香水','40','前调柑橘后调雪松'),card('无香型手霜','10','快速吸收不油腻'),card('润唇膏','8','薄荷清凉滋润'),card('修眉刀','8','折叠便携安全'),card('指甲钳套装','15','含锉刀小剪刀'),card('清爽沐浴露','12','薄荷淡香泡沫绵密'),card('保湿身体乳','18','乳木果润肤不黏腻'),card('脱毛膏','30','温和配方敏感肌适用'),card('电动修毛器','55','三档刀头防水充电')])+
       cat('家居类',[_家居('蓝牙小音箱','50','便携防水重低音'),_家居('桌面暖光台灯','35','三档调光暖黄光'),_家居('无火香薰','25','白檀柚子海盐可选'),_家居('小型冰箱','120','静音冷藏两用'),_家居('懒人豆袋沙发','90','人体工学可拆洗'),_家居('投影仪','180','白墙即幕布1080P'),_家居('加厚瑜伽垫','35','防滑双面加长'),_家居('落地镜','70','全身镜简约边框'),_家居('ns游戏机','180','掌机双摇杆经典游戏'),_家居('日式将棋套装','50','磁吸棋盘折合便携'),_家居('记忆棉枕头','55','慢回弹颈椎支撑'),_家居('多肉植物组合盆栽','30','六种多肉陶瓷盆'),_家居('毛绒地毯','65','浅灰短毛卧室适用')])+
       cat('房产类',[estateCard('独栋民宅','8000','两层带小院独立出入','住宅区'),estateCard('学区公寓','3500','近学校安静便利','文教区'),estateCard('海景公寓','6000','落地窗面朝大海','海滨区'),estateCard('海滨别墅','15000','私人泳池独栋二层','海滨区'),estateCard('高层公寓','5500','城市夜景落地窗','商业区'),estateCard('阁楼Loft','7000','挑高开放工业风','商业区'),estateCard('湾区独栋别墅','25000','顶级社区私人码头','湾区'),estateCard('林间木屋','1500','被树林环绕安静隐蔽','远郊'),estateCard('农家小院','3000','宽敞院落隐私极好','远郊')])+
-      cat('规则类',[card('常识篡改手电','450','照射修改常识认知'),card('认知洗脑麦克风','500','声音被接受为想法'),card('快感同步项圈','300','佩戴者同步主角快感'),card('替身人偶','250','被观众误认主播本人'),card('羞耻心剥离贴纸','300','羞耻感暂时剥离'),card('敏感度提升喷雾','150','轻微触碰即引强烈快感'),card('暂时性变性药水','350','持续24小时性别逆转'),card('乳汁分泌诱导胶囊','150','男女可用持续一天'),card('高潮指令胶囊','280','听到关键词即强制高潮'),card('临时主仆契约印章','350','盖章后24小时主仆关系')])+
+      cat('规则类',[card('常识篡改手电','450','照射修改常识认知'),card('认知洗脑麦克风','500','声音被接受为想法'),card('快感同步项圈','300','佩戴者同步主角快感'),card('替身人偶','450','被观众误认主播本人'),card('羞耻心剥离贴纸','300','羞耻感暂时剥离'),card('敏感度提升喷雾','150','轻微触碰即引强烈快感'),card('暂时性变性药水','350','持续24小时性别逆转'),card('乳汁分泌诱导胶囊','150','男女可用持续一天'),card('高潮指令胶囊','280','听到关键词即强制高潮'),card('临时主仆契约印章','350','盖章后24小时主仆关系')])+
       cat('辅助类',[card('热感润滑液','10','随摩擦升温灼热快感'),card('冰感润滑液','10','产生清凉刺激快感'),card('完全恢复药水','10','消除一切身体疲惫'),card('清洗套装','10','清洁液刷子收纳袋')]);
   },
 };
@@ -1158,16 +1207,20 @@ function openStreamModal(){
   sm_fillWear('sm-under',wd.内衣||[]);
   sm_fillWear('sm-socks',wd.袜子||[]);
   sm_fillWear('sm-shoes',wd.鞋子||[]);
-  // Reset suit/cos to 无
-  document.getElementById('sm-suit').value='无';document.getElementById('sm-cos').value='无';
+  // Reset suit to 默认穿着，cos to 无
+  document.getElementById('sm-suit').value='默认穿着';document.getElementById('sm-cos').value='无';
+  // Default 上装/下装 to 无, 内衣/袜子/鞋子 to 默认穿着
+  document.getElementById('sm-top').value='无';document.getElementById('sm-bot').value='无';
+  document.getElementById('sm-under').value='默认穿着';document.getElementById('sm-socks').value='默认穿着';document.getElementById('sm-shoes').value='默认穿着';
   var props=getValue(globalData,'主角.道具栏.已购道具列表')||[];
   var pH='';props.forEach(function(p){pH+='<label style="margin-right:8px;font-size:12px"><input type="checkbox" value="'+p+'">'+p+'</label>';});
   document.getElementById('sm-props').innerHTML=pH||'暂无可选道具';
   var npcs=getValue(globalData,'NPC数据')||{};
-  var nH='';Object.keys(npcs).forEach(function(k){var n=npcs[k];if(n.秘密发现){nH+='<label style="margin-right:8px;font-size:12px"><input type="checkbox" value="'+k+'">'+k+'</label>';}});
+  var nH='';Object.keys(npcs).forEach(function(k){var n=npcs[k];if((parseInt(n.疑心)||0)>=100){nH+='<label style="margin-right:8px;font-size:12px"><input type="checkbox" value="'+k+'">'+k+'</label>';}});
   document.getElementById('sm-npcs').innerHTML=nH||'暂无知晓秘密的NPC';
   document.getElementById('stream-modal-overlay').classList.remove('hidden');
   document.getElementById('stream-modal').classList.remove('hidden');
+  document.getElementById('stream-modal').classList.add('show');
 }
 function sm_fillWear(id,arr){var el=document.getElementById(id);var keep=el.value;el.innerHTML='<option value="无">无</option><option value="默认穿着">默认穿着</option>';arr.forEach(function(v){el.innerHTML+='<option value="'+v+'">'+v+'</option>';});el.value=(arr.indexOf(keep)>=0)?keep:((keep==='无'||keep==='默认穿着')?keep:'默认穿着');}
 function sm_wearChange(src){
@@ -1187,17 +1240,76 @@ function startStream(){
   var wear=[];
   var top=document.getElementById('sm-top').value,bot=document.getElementById('sm-bot').value,under=document.getElementById('sm-under').value,socks=document.getElementById('sm-socks').value,shoes=document.getElementById('sm-shoes').value;
   var suit=document.getElementById('sm-suit').value,cos=document.getElementById('sm-cos').value;
-  if(top!=='无')wear.push(top);if(bot!=='无')wear.push(bot);
-  if(suit!=='无')wear.push(suit);if(cos!=='无')wear.push(cos);
-  if(under!=='无')wear.push(under);if(socks!=='无')wear.push(socks);if(shoes!=='无')wear.push(shoes);
+  if(suit!=='无'){wear.push('(套装)'+suit);}
+  else if(cos!=='无'){wear.push('(COS)'+cos);}
+  else{wear.push('(上衣)'+top);wear.push('(下衣)'+bot);}
+  wear.push('(内衣)'+under);wear.push('(袜子)'+socks);wear.push('(鞋子)'+shoes);
   var props=[],pChecks=document.querySelectorAll('#sm-props input:checked');pChecks.forEach(function(c){props.push(c.value);});
   var npcs=[],nChecks=document.querySelectorAll('#sm-npcs input:checked');nChecks.forEach(function(c){npcs.push(c.value);});
-  var cmd='开播，地点:'+r+'·'+l+'，时段:'+slot+'，穿着:'+wear.join('+')+'，道具:'+props.join('+')+'，联动:'+npcs.join('+')+'，';
-  sendToInput(cmd);closeStreamModal();
+  var allNone = (top==='无'&&bot==='无'&&suit==='无'&&cos==='无'&&under==='无'&&socks==='无'&&shoes==='无');
+  var allDef = (top==='默认穿着'&&bot==='默认穿着'&&suit==='默认穿着'&&cos==='默认穿着'&&under==='默认穿着'&&socks==='默认穿着'&&shoes==='默认穿着');
+  var wearStr = allNone ? '全裸' : (allDef ? '日常着装' : wear.join('+'));
+  var propStr = props.length > 0 ? props.join('+') : '无';
+  var npcStr = npcs.length > 0 ? npcs.join('+') : '无';
+  var cmd='开播，地点:'+r+'·'+l+'，时段:'+slot+'，穿着:'+wearStr;
+  if(propStr!=='无')cmd+='，道具:'+propStr;
+  if(npcStr!=='无')cmd+='，联动:'+npcStr;
+  sendToInput(cmd+'，');closeStreamModal();
 }
 function sm_fillSelect(id,arr){var el=document.getElementById(id);el.innerHTML='<option value="">默认</option>';arr.forEach(function(v){el.innerHTML+='<option value="'+v+'">'+v+'</option>';});}
 function sm_updateLocs(){var r=document.getElementById('sm-region').value;var locs=MAP_DATA[r]||[];var lEl=document.getElementById('sm-loc');lEl.innerHTML='<option value="">--选地点--</option>';locs.forEach(function(l){lEl.innerHTML+='<option value="'+l+'">'+l+'</option>';});}
-function closeStreamModal(){document.getElementById('stream-modal-overlay').classList.add('hidden');document.getElementById('stream-modal').classList.add('hidden');}
+function closeStreamModal(){document.getElementById('stream-modal-overlay').classList.add('hidden');document.getElementById('stream-modal').classList.add('hidden');document.getElementById('stream-modal').classList.remove('show');}
+
+let _cart = [];
+function addToCart(name,price,desc,cat){
+  _cart.push({name:name,price:price,desc:desc,cat:cat});
+  document.getElementById('cart-badge').textContent = _cart.length;
+  document.getElementById('cart-float').classList.remove('hidden');
+  renderCart();
+}
+function removeFromCart(idx){
+  _cart.splice(idx,1);
+  document.getElementById('cart-badge').textContent = _cart.length;
+  if(_cart.length===0)document.getElementById('cart-float').classList.add('hidden');
+  renderCart();
+}
+function clearCart(){
+  _cart=[];
+  document.getElementById('cart-badge').textContent='0';
+  document.getElementById('cart-float').classList.add('hidden');
+  document.getElementById('cart-panel').classList.add('hidden');
+}
+function renderCart(){
+  var total=0,html='';
+  _cart.forEach(function(item,i){
+    total+=parseInt(item.price)||0;
+    html+='<div class="cart-item"><span class="cart-item__name">'+item.name+'</span><span class="cart-item__cat">'+item.cat+'</span><span class="cart-item__price">'+item.price+'</span><span class="cart-item__del" onclick="removeFromCart('+i+')">✕</span></div>';
+  });
+  document.getElementById('cart-body').innerHTML=html||'<span style="color:var(--text-mut)">购物车是空的</span>';
+  var pts=getValue(globalData,'主角.主播信息.直播点数')||0;
+  var btn=document.querySelector('#cart-panel .btn--action');
+  if(total>pts){
+    btn.disabled=true; btn.style.opacity='0.3';
+    document.getElementById('cart-total').innerHTML='共 <b style="color:#e05555">'+total+'</b> 点 / 持有 '+pts+' 点（不足）';
+  }else{
+    btn.disabled=false; btn.style.opacity='1';
+    document.getElementById('cart-total').textContent='共 '+total+' 点 / 持有 '+pts+' 点';
+  }
+}
+function toggleCart(){
+  var p=document.getElementById('cart-panel');
+  p.classList.toggle('hidden');
+  if(!p.classList.contains('hidden'))renderCart();
+}
+function checkoutCart(){
+  if(_cart.length===0)return;
+  var total=0;
+  _cart.forEach(function(item){total+=parseInt(item.price)||0;});
+  var lines = _cart.map(function(item){return '购买'+item.cat+'类物品：'+item.name+'（'+item.desc+'），';}).join('\n');
+  lines += '\n共计花费' + total + '直播点数，';
+  sendToInput(lines);
+  clearCart();
+}
 
 // ---- 房产弹窗 ----
 let _estateName = '', _estateDesc = '';
@@ -1213,16 +1325,36 @@ function openEstateModal(name,price,desc,region){
   document.getElementById('estate-npcs').innerHTML = nH || '无可选NPC';
   document.getElementById('estate-modal-overlay').classList.remove('hidden');
   document.getElementById('estate-modal').classList.remove('hidden');
+  document.getElementById('estate-modal').classList.add('show');
 }
 function closeEstateModal(){
   document.getElementById('estate-modal-overlay').classList.add('hidden');
   document.getElementById('estate-modal').classList.add('hidden');
+  document.getElementById('estate-modal').classList.remove('show');
 }
 function confirmEstate(){
   var npcs = [], checks = document.querySelectorAll('#estate-npcs input:checked');
   checks.forEach(function(c){npcs.push(c.value);});
-  var cmd = '购买' + _estateName + '房产' + _estateDesc + '，同居:' + npcs.join('+') + '，';
+  var cmd = '购买房产类物品：' + _estateName + '（' + _estateDesc + '），同居:' + npcs.join('+') + '，';
   sendToInput(cmd); closeEstateModal();
+}
+function openRestModal(){
+  document.getElementById('rest-modal-overlay').classList.remove('hidden');
+  document.getElementById('rest-modal').classList.remove('hidden');
+  document.getElementById('rest-modal').classList.add('show');
+  document.getElementById('rest-days').value=3;
+  setTimeout(function(){document.getElementById('rest-days').focus();},100);
+}
+function closeRestModal(){
+  document.getElementById('rest-modal-overlay').classList.add('hidden');
+  document.getElementById('rest-modal').classList.add('hidden');
+  document.getElementById('rest-modal').classList.remove('show');
+}
+function confirmRest(){
+  var days=parseInt(document.getElementById('rest-days').value)||3;
+  days=Math.min(Math.max(days,1),30);
+  sendToInput('休整，天数:'+days+'，');
+  closeRestModal();
 }
 function toggleInventory(){const p=document.getElementById('inv-panel');if(p.classList.contains('inv-panel--open')){p.classList.remove('inv-panel--open');}else{U.renderInventory();p.classList.add('inv-panel--open');}}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay--open').forEach(m=>m.classList.remove('modal-overlay--open'));});
@@ -1234,6 +1366,7 @@ function sendToInput(text){
     if(inputArea){
       inputArea.value=(inputArea.value.trim()?inputArea.value+'\n':'')+text;
       inputArea.dispatchEvent(new Event('input',{bubbles:true}));
+      try{window.top.__IDF_LAST_STREAM_INPUT=text;console.log('[前端] 缓存已写入(len='+text.length+'): '+text.slice(0,60)+'...');}catch(e){console.error('[前端] 缓存写入失败:',e);}
     }
   }catch(e){console.error(e);}
 }
@@ -1701,7 +1834,7 @@ async function renderGM() {
             sexContainer.innerHTML = sexActs.map((act, index) => {
                 const target = act.对象 || '?';
                 const gender = act.性别 || '';
-                const part   = act.部位 || '?';
+                const part   = act.主角部位 || '?';
                 const action = act.行为 || '?';
                 const desc = `${target}${gender ? '('+gender+')' : ''} · ${part} · ${action}`;
                 return `
@@ -1773,7 +1906,7 @@ async function addSexAct() {
     const action = document.getElementById('new-act-action')?.value || '';
     if (!part || !action) return alert('请选择部位和行为');
 
-    const newAct = { 对象: target, 部位: part, 行为: action };
+    const newAct = { 对象: target, 主角部位: part, 行为: action };
     if (gender) newAct.性别 = gender;
 
     try {
@@ -1903,7 +2036,7 @@ window.addEventListener('load', () => {
 </script>
 
 <div class="gm-overlay hidden" id="stream-modal-overlay" onclick="closeStreamModal()"></div>
-<div class="gm-panel hidden" id="stream-modal" style="max-width:480px">
+<div class="gm-panel hidden" id="stream-modal" style="max-width:480px;position:fixed;z-index:100002;top:50%;left:50%;transform:translate(-50%,-50%);bottom:auto;right:auto">
   <div class="gm-panel__header">🎬 准备开播 <span style="float:right;cursor:pointer;font-size:18px" onclick="closeStreamModal()">✕</span></div>
   <div class="gm-panel__body" style="max-height:70vh;overflow-y:auto">
     <div class="gm-field"><label>地点</label>
@@ -1927,13 +2060,27 @@ window.addEventListener('load', () => {
 </div>
 
 <div class="gm-overlay hidden" id="estate-modal-overlay" onclick="closeEstateModal()"></div>
-<div class="gm-panel hidden" id="estate-modal" style="max-width:420px">
+<div class="gm-panel hidden" id="estate-modal" style="max-width:420px;position:fixed;z-index:100002;top:50%;left:50%;transform:translate(-50%,-50%);bottom:auto;right:auto">
   <div class="gm-panel__header">🏠 <span id="estate-title">购置房产</span> <span style="float:right;cursor:pointer;font-size:18px" onclick="closeEstateModal()">✕</span></div>
   <div class="gm-panel__body">
     <div id="estate-detail" style="font-size:13px;color:var(--text-sec);margin-bottom:12px"></div>
     <div class="gm-field"><label>同居邀请（妹妹默认同住，无需勾选）</label><div id="estate-npcs"></div></div>
   </div>
   <div class="gm-panel__footer"><button class="btn btn--action" onclick="confirmEstate()">确认购买</button></div>
+</div>
+
+<div class="gm-overlay hidden" id="rest-modal-overlay" onclick="closeRestModal()"></div>
+<div class="gm-panel hidden" id="rest-modal" style="max-width:360px;position:fixed;z-index:100002;top:50%;left:50%;transform:translate(-50%,-50%);bottom:auto;right:auto">
+  <div class="gm-panel__header">💤 休整 <span style="float:right;cursor:pointer;font-size:18px" onclick="closeRestModal()">✕</span></div>
+  <div class="gm-panel__body">
+    <div style="font-size:13px;color:var(--text-sec);margin-bottom:10px">让时间向前跳跃，为角色留出一段平静的过渡期。</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="number" class="rest-input" id="rest-days" value="3" min="1" max="30" onkeydown="if(event.key==='Enter')confirmRest()">
+      <span style="font-size:var(--text-base);color:var(--text-pri)">天</span>
+    </div>
+    <div class="rest-hint">1 - 30 天，默认 3 天</div>
+  </div>
+  <div class="gm-panel__footer"><button class="btn btn--outline" onclick="closeRestModal()">取消</button><button class="btn btn--action" onclick="confirmRest()">确认休整</button></div>
 </div>
 </body>
 </html>

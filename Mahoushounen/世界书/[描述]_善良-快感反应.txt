@@ -1,0 +1,92 @@
+<%
+{
+// --- [系统] 善良动态快感响应 v4.0 (三态全境版) ---
+// 逻辑: 根据 [战斗] / [幕间H] / [日常] 三种状态，输出截然不同的生理反应指导。
+
+const stat = getvar('stat_data');
+const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+
+if (personality === '善良') {
+  const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
+  const phase = _.get(stat, '进程.阶段');
+  const eventName = _.get(stat, '世界.幕间H事件.名称', '无');
+  
+  // 状态判定
+  const isCombat = ['战斗回合', '终结回合', '战斗败北'].includes(phase);
+  const isHEvent = (phase === '幕间休息' && eventName !== '无');
+  const isDaily = (phase === '幕间休息' && eventName === '无');
+
+  // 只有快感大于0时才激活
+  if (pleasure > 0) {
+_%>
+<pleasure_response_guide>
+# 主角当前快感状态：
+<%_ if (isDaily) { // === 场景 A: 日常隐忍模式 === _%>
+  mode: "【日常状态】"
+  core_instruction: "剧情属于幕间和日常状态，谨慎描写快感的影响。"
+  stage_guidance:
+<%_     if (pleasure <= 25) { _%>
+    - stage: 1/5
+      reaction: "主角安宁平静地处于幕间休息状态，快感没有对他造成任何影响。"
+<%_     } else if (pleasure <= 50) { _%>
+    - stage: 2/5
+      reaction: "体内积蓄的快感让他有点无法集中精神。"
+<%_     } else if (pleasure <= 75) { _%>
+    - stage: 3/5
+      reaction: "身体的燥热难以压抑，吐息变得灼热。"
+<%_     } else if (pleasure < 100) { _%>
+    - stage: 4/5
+      reaction: "快感的积累越来越明显，对行动造成了很大影响。"
+<%_     } else { _%>
+    - stage: 5/5 
+      reaction: "主角抵达了甜蜜的高潮。"
+<%_     } _%>
+
+<%_ } else if (isCombat) { // === 场景 B: 战斗受阻模式 === _%>
+  mode: "【战斗状态】"
+  core_instruction: "这是快感对主角在战斗中的影响的描写指导。"
+  stage_guidance:
+<%_     if (pleasure <= 25) { _%>
+    - stage: 1/5 
+      reaction: "快感没有影响主角的身心，他能保持平常作战。"
+<%_     } else if (pleasure <= 50) { _%>
+    - stage: 2/5 
+      reaction: "快感开始影响主角的呼吸节奏。激烈的动作会让他分神。"
+<%_     } else if (pleasure <= 75) { _%>
+    - stage: 3/5 
+      reaction: "行动变得艰难。原本能躲开的攻击，因为膝盖瞬间的酸软而只能勉强防御。"
+<%_     } else if (pleasure < 100) { _%>
+    - stage: 4/5 
+      reaction: "大口大口地漏出沉重喘息，快感的积累效果明显。"
+<%_     } else { _%>
+    - stage: 5/5 
+      reaction: "高潮，主角因为高潮而无法动弹。这是最危险的时刻。"
+<%_     } _%>
+
+<%_ } else { // === 场景 C: 幕间H事件模式 === _%>
+  mode: "【幕间H事件进行中】"
+  core_instruction: "遭遇了具体的色情事件。这是对应快感状态的描写指导。"
+  stage_guidance:
+<%_     if (pleasure <= 25) { _%>
+    - stage: 1/5 
+      reaction: "身体没有明显的反应，保持理智。"
+<%_     } else if (pleasure <= 50) { _%>
+    - stage: 2/5 
+      reaction: "嘴上抗拒，身体刚刚开始发热变软。"
+<%_     } else if (pleasure <= 75) { _%>
+    - stage: 3/5 
+      reaction: "理智和欲望正在斗争的阶段。"
+<%_     } else if (pleasure < 100) { _%>
+    - stage: 4/5 
+      reaction: "羞耻心被快感冲垮，身体不由自主地迎合。"
+<%_     } else { _%>
+    - stage: 5/5 
+      reaction: "主角抵达了甜蜜的高潮。"
+<%_     } _%>
+<%_ } _%>
+</pleasure_response_guide>
+<%_
+  } // End if pleasure > 0
+} // End personality check
+} // --- [作用域隔离结束] ---
+_%>

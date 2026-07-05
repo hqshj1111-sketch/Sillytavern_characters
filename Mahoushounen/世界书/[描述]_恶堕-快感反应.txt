@@ -1,0 +1,96 @@
+<%
+{
+// --- [系统] 恶堕动态快感响应 v4.1 (修复作用域冲突) ---
+// 逻辑: 根据 [战斗] / [幕间H] / [日常] 三种状态，输出符合堕落者心态的生理反应指导。
+
+// 【修复点】将 var 改为 const，防止变量泄露导致报错
+const stat = getvar('stat_data');
+const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+
+if (personality === '堕落') {
+  const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
+  const phase = _.get(stat, '进程.阶段');
+  const eventName = _.get(stat, '世界.幕间H事件.名称', '无');
+  
+  // 状态判定
+  const isCombat = ['战斗回合', '终结回合', '战斗败北'].includes(phase);
+  const isHEvent = (phase === '幕间休息' && eventName !== '无');
+  const isDaily = (phase === '幕间休息' && eventName === '无');
+
+  // 只有快感大于0时才激活
+  if (pleasure > 0) {
+%>
+<pleasure_response_guide_fallen>
+# 主角当前快感状态：
+<%_ if (isDaily) { // === 场景 A: 日常享乐模式 === _%>
+  mode: "【日常状态】"
+  core_instruction: "主角正处于幕间休息。这是对应他目前快感阶段的描写指导。"
+  stage_guidance:
+<%_     if (pleasure <= 5) { _%>
+    - stage: 0/5 
+      reaction: "身体完全没有快感反应，让他不禁觉得有点无聊。"
+<%_     } else if (pleasure <= 25) { _%>
+    - stage: 1/5 
+      reaction: "心情愉悦，身体残留的余韵让他感到放松和惬意。"
+<%_     } else if (pleasure <= 50) { _%>
+    - stage: 2/5 
+      reaction: "眼神变得有些拉丝，偶尔会做出舔嘴唇或抚摸自己身体的小动作。"
+<%_     } else if (pleasure <= 75) { _%>
+    - stage: 3/5 
+      reaction: "毫不掩饰身体的燥热，像发情的野兽一样散发着雄性的诱人气息。"
+<%_     } else if (pleasure < 100) { _%>
+    - stage: 4/5 
+      reaction: "主动渴望着刺激，可能会用摩擦或寻找慰藉来缓解这份焦躁。"
+<%_     } else { _%>
+    - stage: 5/5 
+      reaction: "在日常中迎来高潮，并享受这种感觉。"
+<%_     } _%>
+
+<%_ } else if (isCombat) { _%>
+  mode: "【战斗状态】"
+  core_instruction: "战斗阶段，快感与魔力混合在一起。这是对应他目前快感阶段的描写指导。"
+  stage_guidance:
+<%_     if (pleasure <= 25) { _%>
+    - stage: 1/5 
+      reaction: "战斗的刺激唤醒了感官，他露出了享受的微笑。"
+<%_     } else if (pleasure <= 50) { _%>
+    - stage: 2/5 
+      reaction: "呼吸变得急促，但这让他更加兴奋，攻击中夹杂着调情。"
+<%_     } else if (pleasure <= 75) { _%>
+    - stage: 3/5 
+      reaction: "面色潮红，魔力随着快感一同高涨，享受着快感。"
+<%_     } else if (pleasure < 100) { _%>
+    - stage: 4/5 
+      reaction: "已经积累了大量的快感，粗重的吐息压抑不住地流露。"
+<%_     } else { _%>
+    - stage: 5/5 
+      reaction: "高潮。伴随着魔力的爆发，他享受着瞬间。"
+<%_     } _%>
+
+<%_ } else { // === 场景 C: 幕间H事件模式 === _%>
+  mode: "【幕间H事件进行中】"
+  core_instruction: "遭遇了具体的色情事件。这是对应他目前快感阶段的描写指导。"
+  stage_guidance:
+<%_     if (pleasure <= 25) { _%>
+    - stage: 1/5 
+      reaction: "身体涌动着隐约的快感，期待着乐趣。"
+<%_     } else if (pleasure <= 50) { _%>
+    - stage: 2/5 
+      reaction: "快感开始涌起，他会积极配合主动。"
+<%_     } else if (pleasure <= 75) { _%>
+    - stage: 3/5 
+      reaction: "他沉浸在快感中，主动地呻吟，索求更多。"
+<%_     } else if (pleasure < 100) { _%>
+    - stage: 4/5 
+      reaction: "快感的大量积累让他感到幸福和满足。"
+<%_     } else { _%>
+    - stage: 5/5 
+      reaction: "在高潮中露出幸福的表情。"
+<%_     } _%>
+<%_ } _%>
+</pleasure_response_guide_fallen>
+<%_
+  } // 结束 pleasureValue > 0
+} // 结束 personality === 堕落
+}
+_%>

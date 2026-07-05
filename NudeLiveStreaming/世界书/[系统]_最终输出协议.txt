@@ -30,10 +30,17 @@ master_protocol: "你已阅读上方的【当前阶段】和各类【事件指�
       - 强制指令检查：上文中是否明确提供了 `mandatory_patch` 或 `patch_code`？（如果有，且根据对应指示需要添加，你必须直接复制它们，并跳过对这些字段的手动计算）。
       - 时间流逝：评估本回合是否有日期或时段的跨越。
       - 主角状态：检查主角的当前区域、地点、着装、生理状态是否发生变化。评估快感值和性欲值的增减。
-      <%_ if (isStreaming) { _%>
-      - 直播间动态：根据直播互动内容评估热度变化。
-      <%_ } _%>
-      - NPC好感度与淫乱度：根据互动内容决定增减。
+  <%_ if (isStreaming) { _%>
+  - 直播间动态：根据直播互动内容评估热度变化。
+  <%_ const missionEvent = pendingEvents['观众任务事件'];
+    const intruderEvent = pendingEvents['外人闯入事件'];
+    if (missionEvent) { _%>
+  - 观众任务评估：当前存在观众任务「<%= typeof missionEvent === 'string' ? missionEvent : '进行中' %>」。判断本回合叙事中该任务是否已完成或失败——如果是，应该移除事件标记。
+  <%_ } if (intruderEvent) { _%>
+  - 外人闯入评估：当前存在外人闯入事件。判断闯入者是否已在叙事中离开或互动已结束——如果是，应该移除事件标记。
+  <%_ } _%>
+  <%_ } _%>
+      - NPC好感度：根据互动内容决定增减。
 <%_ const npcDataCheck = _.get(stat, 'NPC数据', {});
           const hasSuspicionUnder100 = Object.values(npcDataCheck).some(n => (parseInt(n.疑心) || 0) < 100);
       if (hasSuspicionUnder100) { _%>

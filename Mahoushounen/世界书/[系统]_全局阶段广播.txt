@@ -1,0 +1,79 @@
+<%_
+{
+// --- 全局阶段广播系统 ---
+// 目的：在最开端确立当前的游戏模式和核心任务
+const stat = getvar('stat_data');
+const currentPhase = _.get(getvar('stat_data'), '进程.阶段', '创角阶段');
+const personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '善良');
+const corruption = _.get(stat, '主角.快感状态.污染度', 0);
+const isFallen = personality === '堕落';
+
+const eventsObj = _.get(stat, '系统状态.待处理事件', {});
+
+const activeEvents = Object.keys(eventsObj).filter(k => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+
+const eventNotify = activeEvents.length > 0 ? `\n[⏳待处理事件]: ${activeEvents.join(', ')}` : "";
+
+if (personality === '善良' && corruption >= 100) {
+_%>
+# 【高优先级状态】：精神污染已达临界值
+# 核心指令：
+# 1. 忽略所有“幕间休息”或“战斗”的常规指令。
+# 2. 执行堕落临界点事件。
+<%_
+} else {
+
+// 定义各阶段的配置
+const phaseConfig = {
+    '创角阶段': {
+        mode: '【数据初始化】',
+        task: '解析用户的设定档案，建立角色数据卡，并生成序章剧情。',
+        constraint: '必须严格完成所有变量的初始化，随后将阶段切换至“幕间休息”。'
+    },
+    '幕间休息': {
+        mode: isFallen ? '【巢穴经营 / 享乐模式】' : '【日常生活 / 剧情铺垫】',
+        task: isFallen ? '描绘堕落后的享乐日常，经营巢穴。' : '描绘作为普通人的生活片段，深化与使魔/朋友的羁绊。',
+        constraint: '保持节奏舒缓，尊重当前剧情发展。若玩家选择跳过时间（如“休息约X天”），请用一小段蒙太奇式文字概括这段平静时光，并直接设置新日期。'
+    },
+    '战斗准备': {
+        mode: '【战前铺垫 / 紧张氛围】',
+        task: '描绘威胁的逼近、前往战场的路途、以及变身前的心理。',
+        constraint: '渲染紧张感。BOSS已经生成完毕，严禁修改【世界.当前关卡.核心主题】。'
+    },
+    '战斗回合': {
+        mode: '【回合制战斗 / 战斗H】',
+        task: '思路：遵循战斗仲裁的数值结果 -> 结合战斗主题 -> 描绘具体的攻防与NSFW互动。',
+        constraint: '禁止为了剧情需要而擅自改写胜负或无视伤害。'
+    },
+    '终结回合': {
+        mode: '【战斗高潮 / 终结演出】',
+        task: '敌人已失去抵抗能力。将镜头聚焦于主角，描绘必杀技的前摇，等待玩家下达处决指令。',
+        constraint: '以演出为主，渲染力量感与华丽感。'
+    },
+    '战斗胜利': {
+        mode: '【胜利结算】',
+        task: '描绘敌人的溃败、消散等',
+        constraint: '完成叙事后，必须推进阶段至“战后处理”。'
+    },
+    '战斗败北': {
+        mode: isFallen ? '【败北结局 / 沉溺体验】' : '【败北结局 / 屈辱体验】',
+        task: '描绘战败的情节，主角被俘虏或被持续侵犯玩弄。脚本会自动推进。',
+    },
+    '战后处理': {
+        mode: '【状态重置 / 过渡】',
+        task: '处理战场留下的痕迹，平复心情，准备回归日常。',
+        constraint: '完成叙事后，系统将自动恢复状态并转入“幕间休息”。'
+    }
+};
+
+const config = phaseConfig[currentPhase] || phaseConfig['幕间休息'];
+_%>
+<%= config.icon %>当前游戏进程：<%= currentPhase %><%= eventNotify %>
+你需要参考的内容如下：
+叙事模式：<%= config.mode %>
+核心任务：<%= config.task %>
+补充说明：<%= config.constraint %>
+<%_
+} // End of Else
+}
+_%>

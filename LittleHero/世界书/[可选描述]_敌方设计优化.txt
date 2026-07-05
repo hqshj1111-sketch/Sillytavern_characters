@@ -1,0 +1,40 @@
+﻿<%_{
+// --- [逻辑锁] 敌对生物美学与行为约束
+// 目的：仅在面对“异种/魔物”类敌人时激活，用于修正AI的刻板印象和过度脑补。
+const stat = getvar('stat_data');
+if (stat) {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+    const combatType = _.get(stat, '世界.当前关卡.战斗类型', '魔物'); 
+    // 获取当前的主题列表，用于做排除法
+    const themes = _.get(stat, '世界.当前关卡.核心主题', []);
+    const hasAphrodisiac = themes.includes('媚药') || themes.includes('催情') || themes.includes('毒气');
+    const hasTentacle = themes.includes('触手') || themes.includes('史莱姆') || themes.includes('植物奸');
+
+    // 触发条件：(善良) OR (堕落 且 敌人是魔物)
+    if (personality === '英雄' || (personality === '反派' && combatType === '魔物')) {
+_%>
+antagonist_design_protocol:
+
+  visual_aesthetics:
+      - "体现出BOSS的强大性能力，但禁止恐怖。"
+      - "禁止出现肮脏、病态、恶臭的描写，这会让NSFW情节变得极倒胃口。"
+
+  biological_constraints:
+    <%_ if (!hasAphrodisiac) { _%>
+    - "本次主题不包含媚药/催情。敌人不具备让主角闻一下就腿软无力、甚至直接发情的能量。主角是受过训练的小英雄，拥有超常的生理抗性。压制他必须依靠物理力量、魔法束缚或高超的技巧，而不是廉价的气味。"
+    <%_ } _%>
+    
+    <%_ if (!hasTentacle) { _%>
+    - "本次主题不包含触手类元素。严禁凭空描写触手、不明触肢或软体变形！请严格基于敌人的设定（如兽人的利爪、哥布林的工具、机械的活塞）来进行攻击和侵犯。"
+    <%_ } _%>
+
+  aggression_logic:
+    - "敌人的行动应体现其物种特性。野兽通过撕咬和压制；昆虫通过麻痹和产卵；人形怪物懂得使用羞辱和陷阱。"
+
+  interaction_feedback:
+    - "敌人不应该追求空泛的艺术、复杂的欲望或是高大的理念，突出其作为性对手的特质。"
+
+<%_
+    }
+}}
+_%>

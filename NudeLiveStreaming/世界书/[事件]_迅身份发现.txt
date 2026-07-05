@@ -1,0 +1,43 @@
+<%_
+{
+  const stat = getvar('stat_data') || {};
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const currentPhase = _.get(stat, '进程.阶段', '日常阶段');
+  const isDaily = currentPhase === '日常阶段';
+  const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+  const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+  if (events['迅身份发现事件'] && isDaily && !isSexActive) {
+    const jin = _.get(stat, 'NPC数据.风见迅', {});
+    const eventCount = parseInt(_.get(stat, '进程.事件计数.迅身份发现事件', 0)) || 0;
+    const affection = parseInt(_.get(jin, '好感度', 0)) || 0;
+_%>
+# 事件：迅的直播发现
+event_initiator:
+  event_name: "银犬的真面目"
+  character: "风见迅"
+  location: "不限"
+  time: "夜间"
+
+  narrative_guidance:
+    - "若其他事件在进行中，快速结束并自然推进至本事件开端。"
+    <%_ if (eventCount > 0) { _%>
+    - "深夜，主角又刷到了银犬的直播间，还是熟悉的雄小鬼面容，和比观众的羞辱指令更先行动的发情身体。主角知道，这只抖M小狗又爽到不行了。"
+    - "结合好感度(<%= affection %>)调整主角观看时的心态。结尾留给主角选择：默默看他表演完、在弹幕里用只有他能懂的暗示挑逗、或直接循着蛛丝马迹去直播现场找他。"
+    <%_ } else { _%>
+    - "深夜，主角百无聊赖地刷着露出直播平台的推荐列表，随手点进了一个热度不错的直播间。"
+    - "屏幕里的主播正在对着弹幕骂骂咧咧——嘴上凶狠狡辩不服软，身体却被弹幕的羞辱命令一轮轮驱使着，主动做出露骨淫荡的举动。弹幕滚动刷着一个名字：银犬。"
+    - "主角越看越觉得不对劲——那嚣张又经不起挑拨的反应、那线条和身形、那双隐约熟悉的浅灰色眼睛——他猛然意识到，这个在镜头前被观众当作抖M母狗玩弄的主播，就是住在隔壁的迅。"
+    - "结合好感度(<%= affection %>)描写主角认出迅时的内心震荡和联想到之前快递、上学种种的恍然，以及迅此刻在镜头前模样与平日嘴硬形象的巨大反差。"
+    - "结尾留给主角选择：默默退出装作没看到、继续观看下去、或在弹幕里打出一句只有迅能认出来的话。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "事件展示完毕后，若秘密尚未被发现则标记，移除事件标记："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/NPC数据/风见迅/秘密发现", "value": true },
+        { "op": "remove", "path": "/系统状态/待处理事件/迅身份发现事件" }
+      ]
+
+<%_ } } _%>

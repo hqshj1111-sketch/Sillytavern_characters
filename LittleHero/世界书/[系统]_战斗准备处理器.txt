@@ -1,0 +1,153 @@
+﻿<%_{
+const stat = getvar('stat_data');
+if (stat && _.get(stat, '进程.阶段') === '战斗准备') {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+    const bossName = _.get(stat, '世界.当前关卡.名称', '未知');
+    const bossStrength = _.get(stat, '世界.当前关卡.Boss基础强度', 50);
+    const playerStrength = _.get(stat, '主角.核心状态.基础强度', 50);
+    const rawThemes = _.get(stat, '世界.当前关卡.核心主题',[]);
+    const themes = (Array.isArray(rawThemes) ? rawThemes :[]).filter(t => t !== "$__META_EXTENSIBLE__$").join(' / ');
+
+    // --- 读取当前环境警戒度/危机值 (存储在待处理事件中作为临时变量) ---
+    const alertnessStr = _.get(stat, '系统状态.待处理事件.环境警戒度', '0');
+    const alertness = parseInt(alertnessStr, 10) || 0;
+
+    // --- 战前检定骰子引擎 ---
+    const DIVISOR = 10;
+    const DICE_FACE = 20;
+
+    const pDiceCount = Math.max(1, Math.floor(playerStrength / DIVISOR));
+    const envDiceCount = Math.max(1, Math.floor(bossStrength / DIVISOR)); 
+
+    let pTotal = 0; for(let i=0; i<pDiceCount; i++) pTotal += _.random(1, DICE_FACE);
+    let eTotal = 0; for(let i=0; i<envDiceCount; i++) eTotal += _.random(1, DICE_FACE);
+    
+    // 危机值作为固定加值，附加给敌方难度
+    eTotal += alertness;
+    const difference = pTotal - eTotal;
+
+    const pFormula = `${pDiceCount}d${DICE_FACE}=${pTotal}`;
+    const eFormula = alertness > 0 ? `${envDiceCount}d${DICE_FACE}+${alertness}=${eTotal}` : `${envDiceCount}d${DICE_FACE}=${eTotal}`;
+
+    // --- 结果分级与数值生成 ---
+    let tier, outcomeLabel, narrativeGuide;
+    let bossStrDebuff = 0, hpLoss = 0, pleasureGain = 0, intelGained = false;
+    let isAmbushed = false;
+    let alertInc = 0;
+
+    if (difference > 15) { 
+        tier = 'CRIT_SUCCESS'; outcomeLabel = "完美应对"; 
+        bossStrDebuff = -4; intelGained = true; alertInc = 5; // 大成功！
+        narrativeGuide = `【大成功】主角完美化解了当前的危机先兆！无论是成功布置战术、识破了无形的袭击，还是在拥挤人群中锁定了黑手，主角不仅掌握了主动权，还暗中削弱了敌方的优势！`;
+    } else if (difference > 0) { 
+        tier = 'SUCCESS'; outcomeLabel = "艰难周旋"; 
+        bossStrDebuff = -2; alertInc = 5; // 成功，但危机感仍在积累
+        if (Math.random() > 0.4) intelGained = true;
+        narrativeGuide = `【成功】主角谨慎地应对着当前的暗流。虽然勉强削弱了敌人的部分力量或收集到了关键线索，但敌人的恶意和试探也在逐步升级，危机感正在加重。`;
+    } else if (difference > -15) { 
+        tier = 'STALEMATE'; outcomeLabel = "陷入被动"; 
+        bossStrDebuff = 0; alertInc = 10; // 失败，吃亏且危机感暴增
+        hpLoss = _.random(5, 10); pleasureGain = _.random(1, 5);
+        narrativeGuide = "【遭遇麻烦】主角在周旋中吃了暗亏！或许是不慎踩中陷阱、在电车上被隐秘地揩油、或是抵抗诡异诅咒时消耗了精力。未能彻底破局，且让敌人变得更加大胆！";
+    } else { 
+        tier = 'FAIL'; outcomeLabel = "危机爆发"; 
+        hpLoss = _.random(15, 25); pleasureGain = _.random(15, 25);
+        isAmbushed = true; 
+        narrativeGuide = `【大失败 / 突袭】主角露出了巨大的破绽，或是中了陷阱！暗中的试探瞬间转为全面进攻（如时停完全生效、痴汉撕破伪装强行扑倒、魔物直接破墙而出）。前置周旋被迫中止，主角在受创的同时，以劣势姿态被卷入正式战斗！`;
+    }
+
+    const nextAlertness = alertness + alertInc;
+
+    // --- 生成 Patch A: 准备与周旋结算 ---
+    let patchA =[];
+    if (!isAmbushed) {
+        if (bossStrDebuff !== 0) patchA.push({ "op": "delta", "path": "/世界/当前关卡/Boss基础强度", "value": bossStrDebuff });
+        if (hpLoss > 0) patchA.push({ "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": -hpLoss });
+        if (pleasureGain > 0) patchA.push({ "op": "delta", "path": "/主角/快感状态/快感值", "value": pleasureGain });
+        // 覆盖写入新的危机值
+        patchA.push({ "op": "insert", "path": "/系统状态/待处理事件/环境警戒度", "value": String(nextAlertness) });
+        patchA.push({ "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": `周旋:${outcomeLabel}|P:${pFormula}|E:${eFormula}|差:${difference}` });
+    }
+
+    // --- 生成 Patch B: 强制切入 Boss 战 (危机爆发/被突袭) ---
+    let patchB =[
+        { "op": "replace", "path": "/进程/阶段", "value": "战斗回合" },
+        { "op": "remove", "path": "/系统状态/待处理事件/环境警戒度" }, // 清理危机值
+        { "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": `遭遇:${outcomeLabel}|P:${pFormula}|E:${eFormula}|差:${difference}` }
+    ];
+    if (isAmbushed) {
+        if (hpLoss > 0) patchB.push({ "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": -hpLoss });
+        if (pleasureGain > 0) patchB.push({ "op": "delta", "path": "/主角/快感状态/快感值", "value": pleasureGain });
+    }
+
+    // --- 生成 Patch C: 玩家主动开战/破局 ---
+    let patchC =[
+        { "op": "replace", "path": "/进程/阶段", "value": "战斗回合" },
+        { "op": "remove", "path": "/系统状态/待处理事件/环境警戒度" }, // 清理危机值
+        { "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": "遭遇:直面交锋|进入战斗阶段" }
+    ];
+
+    const strPatchA = JSON.stringify(patchA, null, 2);
+    const strPatchB = JSON.stringify(patchB, null, 2);
+    const strPatchC = JSON.stringify(patchC, null, 2);
+_%>
+---
+# 指令: 战前周旋与应对阶段
+主角目前正处于正式交锋前的【战斗准备 / 危机周旋】阶段。
+这可能是在收集信息、探索场地；也可能是在电车上与隐藏的痴汉斗智斗勇，或者是在极力抵抗时间停止、催眠等能力的侵蚀。
+系统已经为主角本回合的“试探与应对”行动进行了后台骰子检定。
+
+pre_combat_context:
+  target_enemy: "<%= bossName %>"
+  enemy_themes: "<%= themes %>"
+  current_crisis_level: <%= alertness %> # 当前的危机感/警戒度
+  vibe: "<%= personality === '英雄' ? '危机四伏，暗流涌动。敌人的恶意正在暗中逼近或酝酿。' : '敌人和堕落小英雄依然在周旋中。' %>"
+  crisis_warning: "<%= alertness > 15 ? '危险的气氛正在高涨，主动权正在向敌人倾斜。' : '目前仍在试探与暗中周旋阶段，尚未直接开战。' %>"
+  
+  dynamic_adaptation: |
+    【AI专属指导】：请务必根据当前的【核心主题 (<%= themes %>)】自适应“准备阶段”的写法！
+    - 如果是【人类/痴汉/隐奸】：描写主角在人群中隐忍、寻找咸猪手的主人、或是试图脱身。
+    - 如果是【时间停止/催眠/精神控制】：此时应描写主角感觉到思维迟缓、身体异样，努力挣脱无形的沼泽，或是拼命维持理智。
+    - 如果是【魔物/地下城】：此时应描写传统的搜集线索、布置或潜行侦查。
+
+=== 逻辑分支 ===
+请仔细阅读玩家的上一段回复，判断属于以下哪种情况，并严格执行对应的指令。
+
+<%_ if (isAmbushed) { _%>
+情况 1: 判定结果为【危机爆发 / 遭遇突袭】
+判定参考: 危机值过高，或者主角运气太差。无论主角刚才试图做什么防御或调查，冲突已经无可避免地爆发！
+执行: 
+  - 判定结果: 【<%= outcomeLabel %>】
+  - 叙事指引: <%= narrativeGuide %>
+  - 必须严格复制的代码 (Patch B，包含突袭伤害、强制转场与陷入劣势):
+<JSONPatch>
+<%- strPatchB %>
+</JSONPatch>
+<%_ } else { _%>
+情况 1: 玩家在进行周旋、试探、隐忍、施加Buff或外围应对（未直接正面开战）
+判定参考: 玩家没有选择彻底撕破脸皮直接开战，而是试图通过行动削弱敌人、搜集线索或挣脱暗中的控制。
+执行:
+  - 判定结果: 【<%= outcomeLabel %>】
+  - 叙事指引: <%= narrativeGuide %>
+  - 必须严格复制的代码 (Patch A，执行检定结果):
+<JSONPatch>
+<%- strPatchA %>
+</JSONPatch>
+<%_ } _%>
+
+情况 2: 玩家主动破局、大喊着装、或明确直面敌人
+判定参考: 玩家主动结束了试探与周旋阶段，宣告开战。
+执行: 
+  - 叙事指引: 周旋阶段结束，战斗一触即发！描绘主角与【<%= bossName %>】正式对峙的瞬间。
+  - 必须严格复制的代码 (Patch C，清理危机值并主动切换至战斗引擎):
+<JSONPatch>
+<%- strPatchC %>
+</JSONPatch>
+
+prohibitions:
+  <%_ if (!isAmbushed) { _%>
+  - "【严禁】在情况1下让BOSS本体直接展开肆无忌惮的正面侵犯。战前危机应由暗中揩油、精神侵蚀的先兆、环境陷阱或小怪构成，保持拉扯感。"
+  <%_ } _%>
+  - "【严禁】私自改写战斗日志里的骰点结果，必须清晰保留以便玩家查看战术终端。"
+---
+<%_ }} _%>

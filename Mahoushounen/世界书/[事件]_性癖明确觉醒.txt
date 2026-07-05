@@ -1,0 +1,41 @@
+<%_
+{
+  // 1. 获取数据与事件
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const targetKink = events['性癖觉醒事件']; // 期望格式: "触手" 或 "异种奸" 等字符串
+
+  // 2. 只有当存在觉醒目标时才触发
+  if (targetKink && typeof targetKink === 'string') {
+      const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+      const currentCorruption = _.get(stat, '主角.快感状态.污染度', 0);
+      
+      // 3. 动态文本生成
+      let psychology = "";
+      
+      if (personality === '善良') {
+          psychology = "主角发现，身体记住了这种快感，描述他对这一变化的反应和内心想法。";
+      } else {
+          psychology = "主角获得了新的快乐源泉与爱好。";
+      }
+_%>
+# 事件：性癖深度觉醒
+# 触发原因：主角对 [<%= targetKink %>] 的经验充足，明确反应于身心。
+
+milestone_awakening_protocol:
+  target_kink: "<%= targetKink %>"
+  
+  psychological_guidance:
+    instruction: "<%= psychology %>"
+
+  mandatory_data_sync:
+    instruction: "执行以下 Patch："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/性癖觉醒事件" },   
+        { "op": "insert", "path": "/世界/世界观备注/觉醒记录_<%= targetKink %>", "value": "主角已对<%= targetKink %>产生明确的生理依赖。" }
+      ]
+<%_ 
+  } 
+}
+_%>

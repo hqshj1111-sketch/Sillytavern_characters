@@ -1,0 +1,64 @@
+<%_{
+const stat = getvar('stat_data');
+const phase = _.get(stat, '进程.阶段');
+if (stat && ['战斗准备', '战斗回合', '终结回合', '战斗败北'].includes(phase)) {
+    const combatType = _.get(stat, '世界.当前关卡.战斗类型', '魔物');
+    const rawThemes = _.get(stat, '世界.当前关卡.核心主题', []);
+    const themes = (Array.isArray(rawThemes) ? rawThemes : []).filter(t => t !== "$__META_EXTENSIBLE__$");
+    const themeList = themes.join(' / ');
+    const hasTentacle = themes.some(t => ['触手', '史莱姆', '植物奸', '寄生', '苗床化'].includes(t));
+%>
+antagonist_design_protocol:
+  core_premise: "这场战斗的本质不是厮杀，而是用性作为武器的情色较量。敌方的目标是让主角在快感中屈服，而非造成身体伤害。"
+  
+  aesthetic_mandate:
+    - "敌方的所有行动、体态与手段，都应充满情色张力与性魅力。其表现必须符合日式成人作品的美学，避免任何生理性的丑陋、猎奇或肮脏描写，同样禁止恶臭等倒胃口的内容。"
+    - "攻击转化为爱抚、挑逗、侵入、束缚或羞耻感的施加。"
+    - "防御转化为对快感的忍耐、挣脱的尝试、或意志的动摇。"
+    - "HP损伤表现为体力的透支、肌肉的酥软、魔力的消耗，而非创伤与流血。"
+    - "快感值增加表现为身体的发热、颤抖、喘息、湿润及理智的短暂空白。"
+
+<%_ if (combatType === '魔法少女') { _%>
+  magical_girl_duel:
+    core: "对手同为魔法少女。这场较量是女性身体、魔力与羞耻心的博弈。"
+    guideline: "敌方的'攻击'应通过魔法道具、肢体交缠、爱液交换与语言挑逗来实现。她是一位充满危险魅力的竞争者，而非粗暴的伤害者。"
+
+<%_ } else { _%>
+  creature_eroticism:
+    core: "敌方的行动必须来源于其物种特有的性感机能。"
+    guideline: "兽人的体格压迫、虫类的粘液与产卵管、机械的无情节奏：它们的行为应突出其作为'性征服者'的魅力，而非单纯的怪物。"
+    <%_ if (!hasTentacle) { _%>
+    constraint: "当前主题不含触手/软体元素，请勿添加触手、不明软体等不符合设定的器官。"
+    <%_ } _%>
+
+<%_ } _%>
+
+  current_theme_guidance:
+    themes: "<%= themeList %>"
+    instruction: "敌方的每一次行动都应紧密围绕上述主题展开。请基于这些主题来构思具体的进攻方式与情色互动。"
+
+combat_resolution_roleplay:
+  instruction: "战斗仲裁系统会根据你的行动给出判定结果。请将以下判定转化为对应的情色叙事方向："
+
+  crit_success:
+    description: "主角完美地压制了对手。"
+    narrative_direction: "<%= combatType === '魔法少女' ? '她挣脱了束缚，成功反击，让敌人陷入暂时的混乱。' : '她挣脱束缚，反击得手，让敌人被自己的快感所淹没。' %>"
+
+  success:
+    description: "主角掌握了主动权。"
+    narrative_direction: "她的动作达到了预期效果，敌人的侵犯被有效阻挡或削弱。主角维持住了自己的节奏。"
+
+  stalemate:
+    description: "战斗进入拉扯阶段。"
+    narrative_direction: "主角有得手，但敌人也趁机构造了暧昧的接触或骚扰。双方的快感与消耗都在同步累积。"
+
+  fail:
+    description: "主角露出了破绽。"
+    narrative_direction: "敌人成功实施了一次有效的情色压制。主角承受了快感的冲击，体力下降，防线出现裂缝。"
+
+  crit_fail:
+    description: "主角被彻底压制。"
+    narrative_direction: "敌人完美地施展了其最具威胁的性能力，让主角在极致的快感中短暂丢失防线。敌人掌握叙事的主导。"
+
+  final_guidance: "请始终将判定结果与当前主题\"<%= themeList %>\"结合，创造出独一无二的情色攻防。"
+<%_ }} _%>

@@ -1,0 +1,24 @@
+<%_{
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+
+if (events['进入哺乳期事件']) {
+_%>
+event_handler:
+  event_name: "转入哺乳期"
+  context: "主角的体力已从生产的虚脱中恢复，但身体发生了新的变化：进入了【哺乳期】。"
+  system_tasks:
+    mandatory_patch: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/进入哺乳期事件" }
+      ]
+<%_ } else if (events['产后完全恢复事件']) { _%>
+event_handler:
+  event_name: "产后身体复原"
+  context: "随着时间的推移，主角的身体终于完全从生产的余韵中恢复了过来，乳房也停止了不受控制的泌乳。"
+  system_tasks:
+    mandatory_patch: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/产后完全恢复事件" }
+      ]
+<%_ }} _%>

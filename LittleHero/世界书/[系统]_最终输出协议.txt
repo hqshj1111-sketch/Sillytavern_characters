@@ -1,0 +1,96 @@
+﻿<%_
+// 仅在主角创建完毕后（进入正式游戏）激活此全局输出协议
+if (_.get(getvar('stat_data'), '系统状态.主角创建完毕') === true) {
+_%>
+master_protocol: "你已阅读上方的【当前任务】和各类【状态监控】。现在，请将所有分散的逻辑汇总，并严格按照以下结构，按顺序进行输出：1. 故事正文，2. <UpdateVariable> 块。"
+
+  story: 
+    instruction: "根据当前阶段和人设，进行丰富、生动的故事演绎。"
+
+  UpdateVariable_block:
+    instruction: "基于本次最新的故事输出，使用 JSON Patch (RFC 6902) 标准更新系统变量。"
+    
+    strict_rules:
+      - context_isolation: "仅根据你【刚刚输出的这一段最新剧情】进行变量更新。"
+      - no_meta: "变量更新块的内容应该完全包裹，不允许在精彩的正文中出现代码、系统、数据。"
+      - array_append: "向数组(Array)末尾添加新元素时，必须使用 `/-` 作为路径末尾，例如: `/世界/当前关卡/核心主题/-`。"
+    
+    prohibitions:
+      - "更新性癖经验和身体部位状态时，只能使用变量表中已有的名称。"
+
+    structure_protocol: |-
+      你的 <UpdateVariable> 块必须严格包含以下两部分，且顺序不可颠倒：
+      
+      1. <Analysis> 块 (思考过程): 
+      $(IN CHINESE)
+      - 指令与事件：确认是否有要求移除或添加的系统事件？是否明确提供了直接复制使用的 `mandatory_patch` 或 `patch_code`？
+      - 状态检查：评估时间流逝；确认没有违规修改高潮次数和游戏阶段。
+      - 身体与体液更新：检查正文是否有衣物破损？是否被注入了体液？
+      - 变量与设定检查：分析HP/MP变动；评估快感值增加；是否有新的道具获得？是否有新的世界观需要确定？
+
+      2. <JSONPatch> 块 (执行区):
+      一个标准的 JSON 数组，支持以下操作：
+      - { "op": "replace", "path": "/path/to/var", "value": new_value }
+      - { "op": "delta", "path": "/path/to/number_var", "value": positive_or_negative_delta }
+      - { "op": "insert", "path": "/path/to/array/-", "value": "new_item" }
+      - { "op": "insert", "path": "/path/to/object/new_key", "value": new_value }
+      - { "op": "remove", "path": "/path/to/object/key_to_delete" }
+
+  examples_library:
+    - scenario: "【正文中出现战斗受损与性癖体验】（适用于战斗中遭遇侵犯、衣物破损）"
+      format: |
+        <UpdateVariable>
+          <Analysis>
+            - 强制指令：无。
+            - 状态检查：战斗进行中，HP下降，快感上升。
+            - 身体更新：胸部被触手撕裂衣物。
+            - 变量检查：涉及触手缠绕，积累经验。
+          </Analysis>
+          <JSONPatch>[
+            { "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": -15 },
+            { "op": "replace", "path": "/主角/身体部位状况/胸部", "value": "衣料破损，布满凌乱的红印与粘液。" },
+            { "op": "delta", "path": "/主角/快感状态/快感值", "value": 35 },
+            { "op": "delta", "path": "/主角/快感状态/性癖/触手play/经验", "value": 20 }
+          ]
+          </JSONPatch>
+        </UpdateVariable>
+
+    - scenario: "【正文中出现体液注入，系统要求事件清理】（适用于体内被射精、处理高潮等强制系统事件）"
+      format: |
+        <UpdateVariable>
+          <Analysis>
+            - 强制指令：移除了系统要求处理的【高潮事件】。
+            - 状态检查：未操作高潮次数。
+            - 身体更新：体内被大量注入，能量核心状态改变。
+            - 变量检查：精液存量上升，记录来源。
+          </Analysis>
+          <JSONPatch>[
+           { "op": "remove", "path": "/系统状态/待处理事件/高潮事件" },
+           { "op": "delta", "path": "/主角/生理状态/体液与分泌/能量核心内精液/存量", "value": 40 },
+           { "op": "insert", "path": "/主角/生理状态/体液与分泌/能量核心内精液/来源/触手魔", "value": "腥臭浓浊" },
+           { "op": "insert", "path": "/主角/永久性身体改造/黑暗印记", "value": { "部位": "小腹", "详情": "散发粉光的刺青，呈现魅惑的纹路", "来源": "触手魔" } }
+          ]
+          </JSONPatch>
+        </UpdateVariable>
+
+    - scenario: "【正文为幕间日常与世界观录入】（适用于非战斗状态、获得道具、发现情报）"
+      format: |
+        <UpdateVariable>
+          <Analysis>
+            - 强制指令：无。
+            - 状态检查：日常探索，生理平稳。
+            - 身体更新：暂无破损，主角从体内把跳蛋取出了。
+            - 变量检查：主角使用了工具，捡到了道具。
+            - 备注登记：有值得确定为世界观的情报备注。
+          </Analysis>
+          <JSONPatch>[
+            { "op": "replace", "path": "/主角/生理状态/当前生理动态", "value": "呼吸平稳，正警惕地探索着巢穴。" },
+            { "op": "insert", "path": "/世界/世界观备注/习性_史莱姆", "value": "会压倒目标并含入体内吮吸，喜欢主角的体液。" },
+            { "op": "insert", "path": "/主角/道具栏/药水", "value": 1 },
+            { "op": "remove", "path": "/主角/生理状态/后穴状态/内部异物/震动跳蛋" },
+            { "op": "remove", "path": "/主角/道具栏/驱虫剂", "value": 1 }
+          ]
+          </JSONPatch>
+        </UpdateVariable>
+---
+<%_ } _%>

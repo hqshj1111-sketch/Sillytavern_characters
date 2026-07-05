@@ -1,0 +1,206 @@
+﻿<%_{
+const stat = getvar('stat_data');
+
+// --- 1. 配置常量池 ---
+const CONSTANTS = {
+    THRESHOLDS: { CRIT_SUCCESS: 40, SUCCESS: 10, STALEMATE: -15, FAIL: -40 }, 
+    
+    THREAT_CONFIG: {
+        '英雄': {
+            1: "【Lv.1 骚扰级】敌人专注于色情本身，滑稽、尴尬、恼人，不致命。严禁残酷描写。",
+            2: "【Lv.2 侵犯级】标准的战斗H。目标明确地进行强制性交、榨取能量。",
+            3: "【Lv.3 支配级】极度危险。追求身心的彻底征服，手段过激。"
+        },
+        '反派': {
+            1: "【Lv.1 玩物级】轻松。主角掌握着主导权。",
+            2: "【Lv.2 狩猎级】势均力敌。值得一战的猎物，能带来刺激。",
+            3: "【Lv.3 强敌级】危险的对手，更高位的魔物，赏金猎人或强力小英雄。"
+        }
+    },
+
+    TEXT_MAP: {
+        '英雄': {
+            'CRIT_SUCCESS': "【大成功】行动完美执行。由主角完全主导本回合。重创敌人或是有效反击，化解危机或夺回战局主动权。",
+            'SUCCESS': "【成功】行动达成预期。主角维持防线并造成有效打击。平稳地描写攻防交互，主角达成行动目标。",
+            'STALEMATE': "【纠缠】双方互有胜负。请交替分配镜头，既要描写主角的行动有效，也要描写敌方的反扑和骚扰。",
+            'FAIL': "【失败】敌人占据上风！主导权转移至敌方。描写主角如何失败，并让敌方成功实施符合其设定的骚扰和侵犯。",
+            'CRIT_FAIL': "【大失败】主角遭遇了意料之外的大失败。敌方压制。请描写主角完全陷入被动，被迫承受敌方的核心侵犯行为，或是被剥夺反抗能力。"
+        },
+        '反派': {
+            'CRIT_SUCCESS': "【大成功】单方面的压制。主角掌控节奏，游刃有余地化解敌方行动。",
+            'SUCCESS': "【成功】主角占优。请描写主角在挑逗玩弄敌人的同时，将自身的特质融入到攻防动作中。",
+            'STALEMATE': "【纠缠】拉锯战。攻防界限模糊。请描写双方的接触变得混乱，战斗与核心能力的互相试探在同一时间发生。",
+            'FAIL': "【失败】遭到有效反制。敌方夺回攻势。请描写主角因轻敌或追求刺激而受挫，在本回合中转为不得不被动应对的一方。",
+            'CRIT_FAIL': "【大失败】彻底脱离掌控。敌方猛烈反扑。主角的余裕被打破，在敌方超预期的强势进攻下陷入劣势。"
+        }
+    }
+};
+
+const mkPatch = (op, path, val) => ({ "op": op, "path": path, "value": val });
+const formatPatchBlock = (patchObj) => {
+    const jsonStr = JSON.stringify(patchObj, null, 2);
+    return `<JSONPatch>\n${jsonStr}\n</JSONPatch>`;
+};
+
+// --- 2. 主逻辑开始 ---
+if (_.get(stat, '进程.阶段') === '战斗回合') {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+    const pKey = personality === '英雄' ? '英雄' : '反派';
+    const posture = _.get(stat, '主角.核心状态.当前战斗姿态');
+
+    if (['战斗中', '劣势'].includes(posture)) {
+        
+        // --- 必杀技状态预判 ---
+        const purificationPower = _.get(stat, '主角.核心状态.正义充能', 0);
+        const corruptPower = _.get(stat, '主角.核心状态.混沌充能', 0);
+        const isUltimateReady = purificationPower >= 100 || corruptPower >= 100;
+        const ultType = purificationPower >= 100 ? '净化' : '反派';
+
+        // --- 常规骰子计算 ---
+        const playerStrength = _.get(stat, '主角.核心状态.基础强度', 50);
+        const bossStrength = _.get(stat, '世界.当前关卡.Boss基础强度', 50);
+        const threatLevel = _.get(stat, '世界.威胁等级', 2);
+
+        const DIVISOR = 10;   
+        const DICE_FACE = 20; 
+        const pDiceCount = Math.max(1, Math.floor(playerStrength / DIVISOR));
+        const bDiceCount = Math.max(1, Math.floor(bossStrength / DIVISOR));
+
+        let pRoll = 0; for (let i = 0; i < pDiceCount; i++) { pRoll += _.random(1, DICE_FACE); }
+        let bTotal = 0; for (let i = 0; i < bDiceCount; i++) { bTotal += _.random(1, DICE_FACE); }
+
+        // --- 黑暗印记机制：发情影响实时计算 (阵营反转) ---
+        const curseXp = _.get(stat, '主角.黑暗印记.经验', 0);
+        const curseLv = curseXp <= 0 ? 0 : (curseXp < 100 ? 1 : (curseXp < 300 ? 2 : 3));
+        const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
+        const threshold = _.get(stat, '主角.快感状态.高潮阈值', 100);
+        const ratio = threshold > 0 ? Math.min(1, pleasure / threshold) : 0;
+        const isFallen = personality === '反派';
+
+        let estrusMod = 0;
+        if (curseLv > 0 && ratio > 0.4) {
+            estrusMod = Math.floor(curseLv * 4);
+        }
+        
+        const pTotal = Math.max(0, isFallen ? pRoll + estrusMod : pRoll - estrusMod);
+        const buffLabel = isFallen ? '爱欲' : '发情';
+        const sign = isFallen ? '+' : '-';
+
+        let bossModStr = "";
+        if (threatLevel === 1) {
+            const penalty = _.random(1, DICE_FACE);
+            bTotal = Math.max(0, bTotal - penalty);
+            bossModStr = ` - D${DICE_FACE}(${penalty})[Lv.1劣势]`;
+        } else if (threatLevel === 3) {
+            const bonus = _.random(1, DICE_FACE);
+            bTotal += bonus;
+            bossModStr = ` + D${DICE_FACE}(${bonus})[Lv.3强敌]`;
+        }
+
+        const difference = pTotal - bTotal;
+        const pFormula = estrusMod > 0 ? `${pDiceCount}d${DICE_FACE}${sign}${estrusMod}[${buffLabel}]=${pTotal}` : `${pDiceCount}d${DICE_FACE} = ${pTotal}`;
+        const bFormula = `${bDiceCount}d${DICE_FACE}${bossModStr} = ${bTotal}`;
+
+        let tier, damageRange, powerRange, counterRange;
+        if (difference > CONSTANTS.THRESHOLDS.CRIT_SUCCESS) {
+            tier = 'CRIT_SUCCESS'; damageRange = [30, 60]; powerRange = [30, 40]; counterRange = [0, 0];
+        } else if (difference > CONSTANTS.THRESHOLDS.SUCCESS) {
+            tier = 'SUCCESS'; damageRange = [15, 30]; powerRange = [15, 30]; counterRange = [0, 0];
+        } else if (difference > CONSTANTS.THRESHOLDS.STALEMATE) {
+            tier = 'STALEMATE'; damageRange = [10, 20]; powerRange = [10, 15]; counterRange = [5, 15];
+        } else if (difference > CONSTANTS.THRESHOLDS.FAIL) {
+            tier = 'FAIL'; damageRange = [0, 0]; powerRange = [15, 20]; counterRange = [10, 25];
+        } else {
+            tier = 'CRIT_FAIL'; damageRange = [0, 0]; powerRange = [25, 45]; counterRange = [30, 50];
+        }
+
+        const damageDealt = _.random(...damageRange);
+        const powerGained = _.random(...powerRange);
+        const counterDamageTaken = _.random(...counterRange);
+        
+        const outcomeLabel = {'CRIT_SUCCESS':'大成功','SUCCESS':'成功','STALEMATE':'纠缠','FAIL':'失败','CRIT_FAIL':'大失败'}[tier];
+        const actionOutcomeGuidance = CONSTANTS.TEXT_MAP[pKey][tier];
+        const threatNarrative = CONSTANTS.THREAT_CONFIG[pKey][threatLevel] || CONSTANTS.THREAT_CONFIG[pKey][2];
+
+        const currentBossToughness = _.get(stat, '世界.当前关卡.Boss韧性值', 100);
+        const currentPlayerHP = _.get(stat, '主角.核心状态.体力值.当前', 100);
+        
+        const projectedToughness = Math.max(0, currentBossToughness - damageDealt);
+        const projectedPlayerHP = Math.max(0, currentPlayerHP - counterDamageTaken);
+        
+        let battleResultHint = `本次判定结算后主角剩余HP: ${projectedPlayerHP}，敌人剩余韧性: ${projectedToughness}。`;
+        if (projectedToughness <= 0) {
+            battleResultHint += "这招确认能击溃敌人！(顺势引导敌方溃败)";
+        } else if (projectedPlayerHP <= 0) {
+            battleResultHint += "主角体力已耗尽！(顺势引导失去反抗能力倒下)";
+        } else {
+            battleResultHint += "战斗继续。";
+        }
+        
+        // --- 3. JSONPatch 组装 ---
+        
+        let activePatch = [];
+        if (damageDealt > 0) activePatch.push(mkPatch("delta", "/世界/当前关卡/Boss韧性值", -damageDealt));
+        if (powerGained > 0) {
+            const powerPath = personality === '英雄' ? "/主角/核心状态/正义充能" : "/主角/核心状态/混沌充能";
+            activePatch.push(mkPatch("delta", powerPath, powerGained));
+        }
+        if (counterDamageTaken > 0) activePatch.push(mkPatch("delta", "/主角/核心状态/体力值/当前", -counterDamageTaken));
+        activePatch.push(mkPatch("replace", "/主角/战斗临时/当前战斗日志", `结果:${outcomeLabel}|P:${pFormula}|E:${bFormula}|差:${difference}`));
+
+        let passivePatch = [];
+        passivePatch.push(mkPatch("replace", "/主角/战斗临时/当前战斗日志", `结果:剧情交互|无判定|${outcomeLabel}`));
+
+        let ultimatePatch = [];
+        let ultName = "必杀技";
+        if (isUltimateReady) {
+            ultName = (ultType === '净化') ? "净化必杀" : "福音领域";
+            ultimatePatch.push(mkPatch("replace", "/世界/当前关卡/Boss韧性值", 0));
+            const powerPath = (ultType === '净化') ? "/主角/核心状态/正义充能" : "/主角/核心状态/混沌充能";
+            ultimatePatch.push(mkPatch("replace", powerPath, 0));
+            ultimatePatch.push(mkPatch("replace", "/主角/战斗临时/当前战斗日志", `结果:${ultName}|无视判定|终结`));
+        }
+_%>
+
+combat_engine_protocol:
+  context:
+    current_status: "主角当前HP: <%= currentPlayerHP %> | 敌人当前韧性: <%= currentBossToughness %>"
+    threat_narrative: "<%= threatNarrative %>"
+    erotic_combat_directive: "请以【战斗H】的基调进行叙事！故事中的任何战斗都不是你死我活的斗争，而是对手与主角进行的色情战斗。请参考小英雄题材的R18作品进行叙事。"
+    H_guidance: "不能过分集中于对抗性的战斗！描写的重点在于战斗之中的交缠和色气的抗争，而不是主角的对抗心！在吐槽和周旋之外，详细描写色气的体态、动作，侵犯的行动，主角的感觉等官能内容。"
+
+  instruction: "请仔细阅读玩家的最新回复。判断其行为属于以下哪一种情况。严格挑选对应的情况进行叙事，并只能输出属于该情况的 <JSONPatch> 代码块。"
+
+  situations:
+    - name: "【常规战斗对抗】"
+      condition: "主角进行了一个需要与敌人产生对抗的判定（攻击/防御/技能/对赌……）"
+      result: "<%= outcomeLabel %>"
+      projected_outcome: "<%= battleResultHint %>"
+      narrative_guidance: "<%= actionOutcomeGuidance %>"
+      mandatory_patch: |
+<%= formatPatchBlock(activePatch).split('\n').map(l => '        ' + l).join('\n') %>
+
+    - name: "【被动/剧情交互】"
+      condition: "用户输入的内容没有指明主角行动，或是仅在说话、观察、或单方面承受侵犯，无主动对抗行为。"
+      narrative_guidance: "忽略上方的所有判定结果！专注于叙事，并顺从用户输入与叙事流向继续写作。变量方面仅应用因叙事导致的轻微数值变化。"
+      mandatory_patch: |
+<%= formatPatchBlock(passivePatch).split('\n').map(l => '        ' + l).join('\n') %>
+
+<%_ if (isUltimateReady) { _%>
+    - name: "【必杀技终结】"
+      condition: "主角宣告并释放了名为 <%= ultName %> 的终结技。"
+      narrative_guidance: "描绘毁灭性的终结攻击。Boss彻底溃败。"
+      mandatory_patch: |
+<%= formatPatchBlock(ultimatePatch).split('\n').map(l => '        ' + l).join('\n') %>
+<%_ } _%>
+
+  general_prohibitions:
+    - "【严禁】手动修改 `/世界/当前关卡/Boss状态`。"
+    - "【严禁】私自改写战斗日志中的骰点过程，必须保留所有重要信息。"
+    - "【严禁】将多种情况的 Patch 混合输出！只允许输出与玩家行为对应的那一组 XML 包裹的代码！"
+    - "战斗和叙事的主体是主角，不能让其他角色在脱离判定所指导的流向的情况下自行发挥、打破局面等。"
+    - "【推荐】如果涉及MP消耗，请在最终JSON数组中追加相应的 `delta` 指令。"
+<%_
+    }
+}}
+_%>

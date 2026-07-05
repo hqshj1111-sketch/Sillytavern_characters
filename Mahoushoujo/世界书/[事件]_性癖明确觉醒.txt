@@ -1,0 +1,30 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const targetKink = events['性癖觉醒事件'];
+
+  if (targetKink && typeof targetKink === 'string') {
+      const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+_%>
+event_handler:
+  event_name: "性癖深度觉醒"
+  context: "主角对【<%= targetKink %>】的体验已经累积到足以影响身心的程度。她的身体记住了这种快感，这一倾向正从单纯的肉体反应深化为明确的身心偏好。"
+  narrative_directives:
+<%_ if (personality === '善良') { _%>
+    - "主角察觉到了自己身体的变化：每当与【<%= targetKink %>】相关的场景浮现于脑海，或是现实中遭遇类似刺激时，身体的反应总是先于理智一步。身体已有了自己的记忆。"
+<%_ } else { _%>
+    - "主角接纳了这份新的快乐源泉。对【<%= targetKink %>】的喜好已经刻入身心。她可能会主动寻找与此相关的刺激，或是回顾那些让她的身体记住这一切的瞬间。"
+<%_ } _%>
+  system_tasks:
+    instruction: "请根据上述心理转变，在 <JSONPatch> 中完成觉醒记录的登记、经验奖励并发放清理指令："
+    mandatory_patch: |
+      [
+        { "op": "insert", "path": "/世界/世界观备注/觉醒记录_<%= targetKink %>", "value": "[简述主角因该性癖觉醒而发生的变化及全新喜好]" },
+        { "op": "delta", "path": "/主角/淫纹/经验", "value": 30 },
+        { "op": "remove", "path": "/系统状态/待处理事件/性癖觉醒事件" }
+      ]
+<%_ 
+  } 
+}
+_%>

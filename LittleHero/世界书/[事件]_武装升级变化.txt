@@ -1,0 +1,37 @@
+﻿<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  
+  if (events['武装升级事件']) {
+      const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+      const currentWeapon = _.get(stat, '主角.个人信息.武装', '基础武装');
+      const currentSuit = _.get(stat, '主角.个人信息.紧身战衣', '基础紧身战衣');
+      
+      let direction = "";
+      if (personality === '英雄') {
+          direction = "经历和经验化作力量，改变了主角武装的形态。";
+      } else {
+          direction = "快乐和经历化作实体，改变了主角武装的形态。。";
+      }
+_%>
+# 事件：魔导武装进化
+主角的能量与肉体强度跨越了新的台阶，旧的武装形态发生了蜕变。
+
+weapon_evolution_protocol:
+  current_weapon: "<%= currentWeapon %>"
+  evolution_direction: "<%= direction %>"
+  instruction: "描绘武装以及紧身战衣发生改变，以及新形态带来的感觉。"
+
+  mandatory_data_sync:
+    instruction: "执行以下 Patch："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/武装升级事件" },
+        { "op": "replace", "path": "/主角/个人信息/武装", "value": "[新武装的简短名称/描述]" },
+        { "op": "replace", "path": "/主角/个人信息/紧身战衣", "value": "[新紧身战衣的简短描述]" }
+      ]
+<%_ 
+  } 
+}
+_%>

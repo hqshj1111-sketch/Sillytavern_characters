@@ -22,11 +22,12 @@ secret_exposed:
   relationship: "<%= relationship %>"
   prior_suspicion: <%= currentSuspicion %>
   streamer_identity: "<%= isStreamer ? '露出主播 ' + streamerName : '有露出癖好的普通人' %>"
-  
+
   narrative_guidance:
     - "<%= npcName %>的怀疑终于化为确信——他/她已经知道了主角就是<%= isStreamer ? '镜头前那个放荡的「' + streamerName + '」' : '那个在暗处偷偷裸露的人' %>。"
-    - "根据他/她的性格（外在<%= npcPersonality.外在 || '未知' %>，内在<%= npcPersonality.内在 || '未知' %>）与二人之间的<%= relationship %>关系，描写这一刻被发现时的反应——是震惊、沉默、愤怒、失望、兴奋、还是意料之外的接纳？让<%= npcName %>的主导反应取决于人设，而非道德评判。"
-    - "根据该NPC的性格与淫乱度，将暴露的紧张直接导向肉欲冲突，让发现秘密成为肉体接触的导火索。"
+    - "创造一个自然的场景让<%= npcName %>与主角不可避免地正面相对。时间、地点与契机由你自由发挥，只要让这层窗户纸在此刻被捅破。"
+    - "<%= npcName %>当着主角的面，直接指出主角的露出主播身份。不要暗示或绕弯子，要让主角明确地听到那句话从对方口中说出来。语气和措辞取决于<%= npcName %>的性格。"
+    - "根据他/她的性格（外在<%= npcPersonality.外在 || '未知' %>，内在<%= npcPersonality.内在 || '未知' %>）与二人之间的<%= relationship %>关系，描写主角被当面揭穿时的冲击与反应，以及<%= npcName %>揭穿后的下一步举动。将暴露的紧张自然导向适合该NPC身份的情欲发展方向。"
 
   mandatory_data_sync:
     instruction: "事件推进到发现确认后，更新疑心为100并移除事件标记："

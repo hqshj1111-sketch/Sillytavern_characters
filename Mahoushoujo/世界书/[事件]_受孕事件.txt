@@ -1,0 +1,18 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['受孕事件']) {
+    const personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '善良');
+_%>
+event_handler:
+  event_name: "受孕时刻"
+  context: "在刚才的内射中，生命的种子已在主角体内着床。魔法少女的体质让胎儿迅速发育，小腹已经微微隆起。后台脚本已自动更新了生理状态。"
+  narrative_directives:
+    - "生理感受: 描绘身体内部涌动的异样感。温热蔓延、小腹被生命撑开的微胀，伴随身体不再完全属于自己控制的恍惚。"
+    - "心理反应: 基于当前的人格状态（<%= personality %>）描绘她对于受孕的反应。"
+  system_tasks:
+    instruction: "请在 <JSONPatch> 中输出以下指令，移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/受孕事件" }
+      ]
+<%_ } } _%>

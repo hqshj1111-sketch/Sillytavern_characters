@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -53,6 +54,7 @@ body{background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft
 <div id="posts"></div>
 </div>
 
+<script type="text/plain" id="__forum_data">$1</script>
 <script>
 (function(){
   var raw = document.getElementById('__forum_data');
@@ -211,6 +213,6 @@ body{background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft
   });
 })();
 </script>
-<script type="text/plain" id="__forum_data">$1</script>
 </body>
 </html>
+```

@@ -1,0 +1,68 @@
+<%_{
+const s = getvar('stat_data');
+const phase = _.get(s, '进程.阶段');
+
+if (s && s.主角 && s.世界 && phase !== '创角阶段') {    
+    // 提取静态模块 (Entry 47 会删除这些，所以必须在这里输出)
+    const basic = s.主角.基本信息 || {}; 
+    const appearance = s.主角.身材细节 || {};
+    const face = s.主角.相貌特征 || {};
+    const sexual = s.主角.性器官特征 || {};
+    const info = s.主角.个人信息 || {};
+
+    // 日期与季节计算 (将形如 305 的数据转换为 3月5日)
+    const rawDate = parseInt(_.get(s, '世界.日期', 305), 10);
+    const dMonth = Math.floor(rawDate / 100);
+    const dDay = rawDate % 100;
+    
+    const notes = s.世界.世界观备注 || {};
+    const noteEntries = Object.entries(notes).filter(([k,v]) => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+    const noteStr = noteEntries.length > 0 
+        ? noteEntries.map(([k, v]) => `    ${k}: "${String(v).replace(/"/g, '\\"')}"`).join('\n') 
+        : "    说明: \"当前无特殊补充设定。\"";
+
+    // 名字动态映射 (帮AI省去从'变身状态'推导名字的逻辑步骤)
+    const isTransformed = _.get(s, '主角.核心状态.变身状态') === true;
+    const currentName = isTransformed ? (basic.魔法少年名 || basic.姓名) : (basic.姓名 || '未知');
+    const alignment = _.get(s, '主角.核心状态.人格状态') || '善良';
+_%>
+character_core_profile:
+  identity:
+    当前应使用称呼: "<%= currentName %>"
+    真实姓名: "<%= basic.姓名 || '未知' %>"
+    魔法少年名: "<%= basic.魔法少年名 || '未命名' %>"
+    人格阵营: "<%= alignment %>"
+    年龄: "<%= basic.年龄 || '未知' %>"
+    日常身份: "<%= info['身份&职业'] || info['身份/职业'] || '普通人' %>"
+    性格特质: "<%= info.性格特质 || '未知' %>"
+    
+  physical_appearance:
+    面容: "<%= face.五官 || '清秀' %>，<%= face.眼睛颜色 || '普通' %>"
+    发型: "<%= face.发型与发色 || '普通' %>"
+    体态: "身高<%= appearance.身高 || '未知' %>，<%= appearance.体态 || '匀称' %>。三围：<%= appearance.三围 || '未知' %>"
+    肌肤: "<%= appearance.皮肤状态 || '光滑' %>，<%= appearance.肌肉线条 || '无明显肌肉' %> (体脂率: <%= appearance.体脂率 || '标准' %>)"
+    特殊记号: "<%= face.特殊记号 || '无' %>"
+
+  intimate_traits:
+    胸部特征: "<%= sexual.胸部形态 || '未设定' %>，乳首：<%= sexual.乳头颜色 || '未设定' %>"
+    私密特征: "<%= sexual.阴茎形态 || '未设定' %>，体毛：<%= sexual.体毛状况 || '未设定' %>"
+    天生敏感度: "<%= sexual.天生敏感度 || '标准' %>"
+
+  magical_contract:
+    代表色: "<%= info.代表色 || '无' %>"
+    核心能力: "<%= info.核心能力 || '未觉醒' %>"
+    专属武装: "<%= info.武装 || '暂无' %>"
+    变身服饰: "<%= info.变身服 || '无' %>"
+    
+  familiar_companion:
+    使魔种类: "<%= info.使魔伙伴种类 || '无' %>"
+    使魔性格: "<%= info.使魔伙伴性格 || '未知' %>"
+    使魔外观: "<%= info.使魔伙伴外观 || '未知' %>"
+    羁绊关系: "<%= info.使魔伙伴与主角关系 || '守护者' %>"
+
+current_environment:
+  当前日期: "<%= dMonth %>月<%= dDay %>日"
+
+world_lore_and_notes:
+<%- noteStr %>
+<%_ }} _%>

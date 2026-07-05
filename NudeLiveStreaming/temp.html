@@ -1,0 +1,2202 @@
+<html lang="zh-CN" style="--TH-viewport-height: 822px;" data-immersive-translate-page-theme="dark"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0!important;padding:0;overflow:hidden!important;max-width:100%!important;}
+.user_avatar,.user-avatar{background-image:url('./User Avatars/1751998446588-.png')}
+.char_avatar,.char-avatar{background-image:url('/characters/%E9%9C%B2%E5%87%BA%E7%9B%B4%E6%92%AD.png')}
+</style>
+<link rel="stylesheet" href="https://testingcf.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+<script src="/scripts/extensions/third-party/JS-Slash-Runner/lib/tailwindcss.min.js"></script><style>/*! tailwindcss v4.1.12 | MIT License | https://tailwindcss.com */
+@layer theme, base, components, utilities;
+@layer theme {
+  :root, :host {
+    --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+    --default-font-family: var(--font-sans);
+    --default-mono-font-family: var(--font-mono);
+  }
+}
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
+  html, :host {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-family: var(--default-font-family, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji');
+    font-feature-settings: var(--default-font-feature-settings, normal);
+    font-variation-settings: var(--default-font-variation-settings, normal);
+    -webkit-tap-highlight-color: transparent;
+  }
+  hr {
+    height: 0;
+    color: inherit;
+    border-top-width: 1px;
+  }
+  abbr:where([title]) {
+    -webkit-text-decoration: underline dotted;
+    text-decoration: underline dotted;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  a {
+    color: inherit;
+    -webkit-text-decoration: inherit;
+    text-decoration: inherit;
+  }
+  b, strong {
+    font-weight: bolder;
+  }
+  code, kbd, samp, pre {
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace);
+    font-feature-settings: var(--default-mono-font-feature-settings, normal);
+    font-variation-settings: var(--default-mono-font-variation-settings, normal);
+    font-size: 1em;
+  }
+  small {
+    font-size: 80%;
+  }
+  sub, sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  sub {
+    bottom: -0.25em;
+  }
+  sup {
+    top: -0.5em;
+  }
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+  :-moz-focusring {
+    outline: auto;
+  }
+  progress {
+    vertical-align: baseline;
+  }
+  summary {
+    display: list-item;
+  }
+  ol, ul, menu {
+    list-style: none;
+  }
+  img, svg, video, canvas, audio, iframe, embed, object {
+    display: block;
+    vertical-align: middle;
+  }
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+  button, input, select, optgroup, textarea, ::file-selector-button {
+    font: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 1;
+  }
+  :where(select:is([multiple], [size])) optgroup {
+    font-weight: bolder;
+  }
+  :where(select:is([multiple], [size])) optgroup option {
+    padding-inline-start: 20px;
+  }
+  ::file-selector-button {
+    margin-inline-end: 4px;
+  }
+  ::placeholder {
+    opacity: 1;
+  }
+  @supports (not (-webkit-appearance: -apple-pay-button))  or (contain-intrinsic-size: 1px) {
+    ::placeholder {
+      color: currentcolor;
+      @supports (color: color-mix(in lab, red, red)) {
+        color: color-mix(in oklab, currentcolor 50%, transparent);
+      }
+    }
+  }
+  textarea {
+    resize: vertical;
+  }
+  ::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+  ::-webkit-date-and-time-value {
+    min-height: 1lh;
+    text-align: inherit;
+  }
+  ::-webkit-datetime-edit {
+    display: inline-flex;
+  }
+  ::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+  ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {
+    padding-block: 0;
+  }
+  ::-webkit-calendar-picker-indicator {
+    line-height: 1;
+  }
+  :-moz-ui-invalid {
+    box-shadow: none;
+  }
+  button, input:where([type='button'], [type='reset'], [type='submit']), ::file-selector-button {
+    appearance: button;
+  }
+  ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
+    height: auto;
+  }
+  [hidden]:where(:not([hidden='until-found'])) {
+    display: none !important;
+  }
+}
+@layer utilities {
+  .hidden {
+    display: none;
+  }
+}
+</style>
+<script src="https://testingcf.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="https://testingcf.jsdelivr.net/npm/jquery-ui/dist/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://testingcf.jsdelivr.net/npm/jquery-ui/themes/base/theme.min.css">
+<script src="https://testingcf.jsdelivr.net/npm/jquery-ui-touch-punch"></script>
+<script src="https://testingcf.jsdelivr.net/npm/vue/dist/vue.runtime.global.prod.min.js"></script>
+<script src="https://testingcf.jsdelivr.net/npm/vue-router/dist/vue-router.global.prod.min.js"></script>
+
+<script src="blob:http://127.0.0.1:8000/1ee58e64-d3df-4540-9699-7472422f46aa"></script>
+<script src="https://testingcf.jsdelivr.net/gh/N0VI028/JS-Slash-Runner/src/iframe/node_modules/log.js"></script>
+<script src="blob:http://127.0.0.1:8000/ad7911e6-34b3-4264-af66-d996bbb6adee"></script>
+<script src="blob:http://127.0.0.1:8000/960393c3-736d-4df8-a640-fb8333c9dcd8"></script>
+<style data-id="immersive-translate-input-injected-css"></style></head>
+<body>
+
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NudeLiveStreaming</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&amp;family=Inter:wght@300;400;500;600;700;900&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-base:#16191f;--bg-card:#1c1f27;--bg-card-alt:#21242d;--bg-input:#242730;
+  --color-steel:#4a90d9;--color-steel-dim:rgba(74,144,217,0.15);--color-steel-glow:rgba(74,144,217,0.22);
+  --color-brass:#c4a24a;--color-brass-dim:rgba(196,162,74,0.15);
+  --color-teal:#3d9e8b;--color-teal-dim:rgba(61,158,139,0.15);
+  --color-copper:#e07040;--color-copper-dim:rgba(224,112,64,0.15);
+  --color-red:#e05555;--color-green:#4aab73;
+  --text-pri:#e2e4e8;--text-sec:#959aa3;--text-ter:#6b6f78;--text-mut:#4a4d55;
+  --border:rgba(255,255,255,0.06);--border-hvr:rgba(255,255,255,0.12);
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.3);--shadow-md:0 4px 16px rgba(0,0,0,0.4);--shadow-lg:0 8px 32px rgba(0,0,0,0.5);
+  --space-xs:3px;--space-sm:6px;--space-md:12px;--space-lg:18px;--space-xl:24px;
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-full:9999px;
+  --font-cn:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-latin:'Inter',-apple-system,sans-serif;--font-mono:'JetBrains Mono','Fira Code',monospace;
+  --text-xs:14px;--text-sm:15.5px;--text-base:17px;--text-lg:19px;--text-xl:22px;
+  --ease-smooth:cubic-bezier(0.4,0,0.2,1);--ease-out:cubic-bezier(0.16,1,0.3,1);
+  --t-fast:0.15s var(--ease-smooth);--t-norm:0.28s var(--ease-smooth);
+  --z-header:50;--z-toast:200;--z-modal-back:300;--z-modal:310;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:17px;-webkit-font-smoothing:antialiased;background:var(--bg-base);color:var(--text-pri);font-family:var(--font-cn);line-height:1.5;overflow:hidden}
+body{height:810px;background:linear-gradient(180deg,#16191f 0%,#1a1d26 40%,#16191f 100%);display:flex;justify-content:center;overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;outline:none;transition:all var(--t-fast)}
+button:focus-visible{outline:2px solid var(--color-steel);outline-offset:2px}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:var(--radius-full)}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.06) transparent}
+::selection{background:var(--color-steel-dim);color:var(--color-steel)}
+
+/* ============================================================
+   APP, HEADER, LEFT COL, CONTENT — same as before
+   ============================================================ */
+.app-wrap{width:100%;max-width:750px;padding:var(--space-md) var(--space-sm);display:flex;flex-direction:column;gap:var(--space-sm);position:relative;height:100%}
+.main-row{flex:1;min-height:0;display:flex;gap:var(--space-sm);margin:0 var(--space-sm);position:relative}
+.header{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);margin:0 var(--space-sm);margin-right:-36px}
+.header__left{display:flex;align-items:center;gap:10px}
+.header__brand{font-weight:900;font-size:var(--text-base);font-family:var(--font-latin);letter-spacing:-0.02em;color:var(--color-steel)}
+.header__brand span{color:var(--color-brass)}
+.header__date{font-size:var(--text-xs);color:var(--text-ter);font-family:var(--font-cn);font-weight:500;letter-spacing:0.02em}
+.header__clock{font-family:var(--font-mono);font-size:var(--text-sm);font-weight:600}
+.header__weather{display:flex;align-items:center;gap:3px;font-size:var(--text-xs);color:var(--text-sec)}
+.header__weather svg{width:14px;height:14px;color:var(--color-brass)}
+.header__loc{font-size:var(--text-xs);color:var(--text-ter)}
+.phase-tag{padding:3px 12px;border-radius:var(--radius-full);font-size:10px;font-weight:700;letter-spacing:0.05em}
+.phase-tag--daily{background:var(--color-steel-dim);color:var(--color-steel);border:1px solid rgba(74,144,217,0.2)}
+.phase-tag--live{background:var(--color-copper-dim);color:var(--color-copper);border:1px solid rgba(224,112,64,0.2);animation:soft-pulse 1s ease-in-out infinite}
+.phase-tag--create{background:rgba(255,255,255,0.04);color:var(--text-mut);border:1px solid var(--border)}
+
+.left-col{display:flex;flex-direction:column;align-items:center;gap:var(--space-sm);padding:var(--space-md) var(--space-sm);background:linear-gradient(180deg,#1e212b 0%,var(--bg-card) 40%,var(--bg-card) 60%,#1a1d26 100%);border-radius:var(--radius-lg);border:1px solid var(--border);width:92px;flex-shrink:0;position:relative;overflow-y:auto}
+.left-col::before{content:'';position:absolute;top:0;left:8px;right:8px;height:1px;background:linear-gradient(90deg,transparent,var(--color-steel),transparent);opacity:0.4}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;transition:filter 0.5s var(--ease-out)}
+.gauge-wrap--hot{filter:drop-shadow(0 0 6px currentColor)}
+.gauge__lbl-h{font-size:10px;font-weight:700;color:var(--text-sec);letter-spacing:0.06em;writing-mode:horizontal-tb;text-transform:uppercase;font-family:var(--font-latin)}
+.gauge{position:relative;width:50px;height:50px}
+.gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+.gauge__track{fill:none;stroke:rgba(255,255,255,0.05);stroke-width:5}
+.gauge__fill{fill:none;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 0.8s var(--ease-out)}
+.gauge__fill--steel{stroke:var(--color-steel)}.gauge__fill--brass{stroke:var(--color-brass)}
+.gauge__glow{fill:none;stroke-width:11;stroke-linecap:round;opacity:0.06;filter:blur(5px);transition:stroke-dashoffset 0.8s var(--ease-out),opacity 0.6s var(--ease-out)}
+.gauge__glow--steel{stroke:var(--color-steel)}.gauge__glow--brass{stroke:var(--color-brass)}
+.gauge__center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.gauge__val{font-size:14px;font-weight:900;font-family:var(--font-mono);line-height:1;transition:color 0.5s var(--ease-out),text-shadow 0.5s var(--ease-out)}
+.gauge__val--steel{color:var(--color-steel)}.gauge__val--brass{color:var(--color-brass)}
+@keyframes gauge-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.gauge--pulse{animation:gauge-pulse 0.6s ease-in-out infinite}
+
+.si-row{display:flex;flex-direction:column;gap:1px;padding:3px 0}
+.si-row__lbl{font-size:9px;color:var(--text-mut);letter-spacing:0.04em;font-family:var(--font-latin);text-transform:uppercase}
+.si-row__val{color:var(--text-sec);font-weight:700;font-family:var(--font-mono);font-size:11px;letter-spacing:-0.02em}
+.left-divider{width:70%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);flex-shrink:0}
+
+.content-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:var(--space-sm);position:relative;overflow:hidden}
+.tab-content{display:none;flex-direction:column;gap:var(--space-sm);overflow-y:auto;overflow-x:hidden;height:100%}
+.tab-content--active{display:flex}
+.tab-content .card{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+#tab-status{overflow-y:visible}
+
+.social-feed{display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding:8px 0}
+.social-post{background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);padding:10px 14px;display:flex;flex-direction:column;gap:4px}
+.social-post__head{display:flex;align-items:center;gap:8px}
+.social-post__author{font-weight:700;font-size:var(--text-sm)}
+.social-post__time{font-size:11px;color:var(--text-mut)}
+.social-post__body{font-size:var(--text-xs);color:var(--text-sec);line-height:1.55;white-space:pre-wrap}
+.social-post--主角{border-left:2px solid var(--color-steel)}
+.social-post--汐见真帆{border-left:2px solid #e07090}
+.social-post--黑崎海斗{border-left:2px solid #d09050}
+.social-post--冰室纱耶{border-left:2px solid #a070c0}
+.social-post--风见迅{border-left:2px solid var(--color-copper)}
+.social-date-sep{font-size:11px;font-weight:700;color:var(--text-mut);padding:4px 14px;border-bottom:1px solid var(--border);margin:-2px 0 4px}
+
+.cart-float{position:fixed;bottom:16px;right:16px;width:44px;height:44px;background:var(--accent-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;box-shadow:0 2px 12px rgba(251,191,36,0.3)}
+.cart-float__icon{font-size:20px}
+.cart-float__badge{position:absolute;top:-4px;right:-4px;background:#e05555;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;min-width:18px;text-align:center}
+.cart-panel{position:fixed;bottom:64px;right:16px;width:300px;max-height:50vh;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:20;display:flex;flex-direction:column}
+.cart-panel__head{font-size:13px;font-weight:700;color:var(--accent-gold);padding:10px 14px;border-bottom:1px solid var(--border)}
+.cart-panel__body{flex:1;overflow-y:auto;padding:8px 14px;font-size:12px}
+.cart-panel__foot{display:flex;align-items:center;gap:6px;padding:8px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--text-mut)}
+.cart-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.cart-item__name{flex:1}
+.cart-item__cat{font-size:10px;color:var(--text-ter)}
+.cart-item__price{font-size:10px;color:var(--accent-gold);margin-left:8px}
+.cart-item__del{cursor:pointer;color:#e05555;margin-left:6px;font-size:14px}
+
+.physio-info{display:flex;flex-direction:column;gap:2px;padding:6px 12px;background:linear-gradient(135deg,var(--bg-card) 0%,rgba(74,144,217,0.04) 100%);border-radius:var(--radius-md);border:1px solid var(--border);border-left:2px solid var(--color-steel);font-size:var(--text-xs);flex-shrink:0}
+.physio-row{display:flex;align-items:flex-start;gap:4px;color:var(--text-ter)}
+.physio-row__dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.physio-row__dot--s{background:var(--color-green)}.physio-row__dot--o{background:var(--color-steel)}
+.physio-row__dot--e{background:var(--color-teal)}.physio-row__dot--a{background:var(--color-brass)}
+.physio-row__lbl{flex-shrink:0}.physio-row__val{color:var(--text-sec);font-weight:500}
+.physio-row__list{color:var(--text-sec);font-weight:500;display:flex;flex-direction:column;gap:1px}
+
+.stream-card{background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border);border-top:2px solid var(--color-brass);overflow:hidden;flex:1;display:flex;flex-direction:column;box-shadow:0 0 20px rgba(196,162,74,0.04)}
+.stream-video{position:relative;flex:1;overflow:hidden;background:linear-gradient(135deg,#1a1d28 0%,#1e2230 25%,#1c1f2a 50%,#1e2230 75%,#1a1d28 100%);background-size:300% 300%;animation:bg-shift 15s ease infinite}
+.stream-video::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(22,25,31,0.7) 100%);pointer-events:none;z-index:1}
+.stream-video__lines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(74,144,217,0.015) 2px,rgba(74,144,217,0.015) 4px);z-index:2;pointer-events:none}
+
+.stream-idle{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-lg)}
+.idle-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--color-steel),var(--color-teal));display:flex;align-items:center;justify-content:center;font-size:var(--text-xl);font-weight:900;color:#fff;box-shadow:0 4px 22px var(--color-steel-glow);font-family:var(--font-cn)}
+.idle-text{font-size:var(--text-sm);color:var(--text-ter);letter-spacing:0.05em}
+
+.stream-live{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;padding:var(--space-sm) var(--space-md)}
+.stream-live__title-row{display:flex;align-items:flex-start;gap:var(--space-sm);margin-bottom:var(--space-sm)}
+.stream-live__title{font-size:var(--text-base);font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,0.6);flex:1;min-width:0}
+.intruder-alert{font-size:10px;font-weight:700;color:#e05060;background:rgba(224,80,96,0.12);padding:4px 10px;border-radius:var(--radius-sm);border:1px solid rgba(224,80,96,0.25);white-space:nowrap;animation:soft-pulse 0.8s ease-in-out infinite;flex-shrink:0}
+.tags-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.tag{font-size:9px;padding:2px 8px;border-radius:var(--radius-full);font-weight:600}
+.tag--steel{background:var(--color-steel-dim);color:var(--color-steel);border:1px solid rgba(74,144,217,0.2)}
+.tag--brass{background:var(--color-brass-dim);color:var(--color-brass);border:1px solid rgba(196,162,74,0.2)}
+.tag--teal{background:var(--color-teal-dim);color:var(--color-teal);border:1px solid rgba(61,158,139,0.2)}
+.tag--copper{background:var(--color-copper-dim);color:var(--color-copper);border:1px solid rgba(224,112,64,0.2)}
+
+.metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm);margin-bottom:var(--space-sm)}
+.met{text-align:center;padding:6px 4px;background:rgba(0,0,0,0.35);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.met__val{font-size:var(--text-lg);font-weight:900;font-family:var(--font-mono);line-height:1}
+.met__val--steel{color:var(--color-steel)}.met__val--brass{color:var(--color-brass)}.met__val--copper{color:var(--color-copper)}
+.met__lbl{font-size:9px;color:var(--text-ter);margin-top:1px}
+.task-current{font-size:var(--text-xs);color:var(--text-sec);padding:6px 10px;background:rgba(0,0,0,0.3);border-radius:var(--radius-sm);margin-bottom:var(--space-sm);min-height:28px;display:flex;align-items:center;gap:var(--space-sm)}
+.chat-box{flex:1;min-height:0;overflow-y:auto;padding:var(--space-xs) var(--space-sm);background:rgba(0,0,0,0.25);border-radius:var(--radius-sm);border:1px solid var(--border);font-size:var(--text-xs)}
+.chat-item{display:flex;gap:5px;align-items:baseline;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.02);font-size:10px}
+.chat-item__name{font-weight:600;color:var(--color-steel);white-space:nowrap;flex-shrink:0;font-size:16px}
+.chat-item__text{color:var(--text-sec);word-break:break-all;font-size:16px}
+.chat-item--gift .chat-item__name{color:var(--color-brass)}
+.chat-item--gift{background:var(--color-brass-dim);border-radius:3px;padding:3px 5px}
+
+.stream-footer{display:flex;align-items:center;justify-content:space-between;padding:var(--space-xs) var(--space-md);background:var(--bg-card-alt);border-top:1px solid var(--border)}
+.stream-footer__time{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-ter)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 18px;border-radius:var(--radius-full);font-size:var(--text-sm);font-weight:600;letter-spacing:0.02em;transition:all var(--t-fast)}
+.btn:active{transform:scale(0.96)}
+.btn--outline{border:1.5px solid var(--border);color:var(--text-sec);background:transparent}
+.btn--outline:hover{border-color:var(--color-steel);color:var(--color-steel)}
+.btn--sm{padding:5px 12px;font-size:11px}
+.btn svg{width:15px;height:15px;flex-shrink:0}
+
+/* --- Modal --- */
+.modal-overlay{position:fixed;inset:0;z-index:var(--z-modal-back);background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:var(--space-lg);opacity:0;pointer-events:none;transition:opacity 0.3s var(--ease-smooth)}
+.modal-overlay--open{opacity:1;pointer-events:auto}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:var(--space-xl);width:100%;max-width:440px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(10px) scale(0.97);transition:transform 0.3s var(--ease-out)}
+.modal-overlay--open .modal{transform:translateY(0) scale(1)}
+.modal__head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-xl)}
+.modal__title{font-size:var(--text-xl);font-weight:700}
+.modal__close{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-ter);transition:all var(--t-fast)}
+.modal__close:hover{background:rgba(255,255,255,0.05);color:var(--text-pri)}
+.modal__body{display:flex;flex-direction:column;gap:var(--space-lg)}
+.modal__footer{display:flex;justify-content:flex-end;gap:var(--space-sm);margin-top:var(--space-xl)}
+
+.inv-wrap{position:relative}
+.inv-panel{display:none;position:absolute;bottom:100%;right:0;margin-bottom:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-sm);min-width:180px;max-height:260px;overflow-y:auto;box-shadow:var(--shadow-lg);z-index:10}
+.inv-panel--open{display:block;animation:fadeIn 0.2s var(--ease-smooth)}
+.inv-item{display:flex;align-items:center;gap:var(--space-sm);padding:4px 6px;border-radius:var(--radius-sm);font-size:10px;color:var(--text-sec);border-bottom:1px solid var(--border)}
+
+/* Right tabs */
+.side-tabs{position:absolute;right:-42px;top:0;bottom:0;width:36px;display:flex;flex-direction:column;gap:2px;list-style:none;z-index:5}
+.side-tab{flex:1;display:flex;align-items:center;justify-content:center;writing-mode:vertical-lr;letter-spacing:3px;font-weight:700;font-size:11px;cursor:pointer;transition:all 0.25s var(--ease-smooth);border-radius:0 var(--radius-sm) var(--radius-sm) 0;background:var(--bg-card-alt);border:1px solid var(--border);color:var(--text-ter);border-left:none;font-family:var(--font-cn);min-height:28px}
+.side-tab:hover{color:var(--text-sec);filter:brightness(1.15)}
+.side-tab--active{width:48px;margin-left:-12px;z-index:6;color:#fff;box-shadow:-3px 0 14px rgba(0,0,0,0.3);border-color:transparent;background:var(--color-steel)}
+
+/* Cards & common */
+.sec-label{display:flex;align-items:center;gap:var(--space-sm);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--color-steel);margin-bottom:var(--space-md);font-family:var(--font-latin);text-shadow:0 0 8px var(--color-steel-dim)}
+.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.card{background:var(--bg-card);border-radius:var(--radius-md);border:1px solid var(--border);padding:var(--space-md);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--color-steel-dim),transparent);opacity:0.6}
+.card:hover::before{opacity:1}
+
+/* --- Dynamics --- */
+.dyn-main{display:flex;flex-direction:column;gap:var(--space-sm);padding:var(--space-sm) var(--space-md);background:var(--bg-card-alt);border-radius:var(--radius-md);border:1px solid var(--border);margin-bottom:var(--space-sm)}
+.dyn-triple{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-md)}
+.dyn-block{display:flex;flex-direction:column;gap:0;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden}
+.dyn-block__head{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;gap:var(--space-sm);background:rgba(255,255,255,0.015)}
+.dyn-block__lbl{font-size:10px;font-weight:500;color:var(--text-mut);white-space:nowrap;font-family:var(--font-latin);letter-spacing:0.05em;text-transform:uppercase;position:relative;padding-left:9px}
+.dyn-block__lbl::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:10px;border-radius:2px}
+.dyn-block__lbl--shame::before{background:var(--color-copper)}.dyn-block__lbl--lewd::before{background:var(--color-steel)}.dyn-block__lbl--ident::before{background:var(--color-brass)}.dyn-block__lbl--skill::before{background:var(--color-teal)}
+.dyn-block__badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);white-space:nowrap;font-family:var(--font-mono);letter-spacing:-0.02em}
+.dyn-block__badge--steel{background:var(--color-steel-dim);color:var(--color-steel);border:1px solid rgba(74,144,217,0.2)}
+.dyn-block__badge--brass{background:var(--color-brass-dim);color:var(--color-brass);border:1px solid rgba(196,162,74,0.2)}
+.dyn-block__badge--copper{background:var(--color-copper-dim);color:var(--color-copper);border:1px solid rgba(224,112,64,0.2)}
+.dyn-block__gauge{padding:2px 8px 4px;display:flex;align-items:center;gap:var(--space-sm)}
+.dyn-block__gauge-val{font-size:var(--text-lg);font-weight:900;font-family:var(--font-mono);color:var(--text-pri);letter-spacing:-0.03em;line-height:1}
+.dyn-block__gauge-bar{flex:1;height:5px;background:var(--border);border-radius:var(--radius-full);overflow:hidden}
+.dyn-block__gauge-bar-fill{height:100%;border-radius:var(--radius-full);transition:width 0.8s var(--ease-out)}
+.dyn-block__gauge-bar-fill--copper{background:var(--color-copper)}.dyn-block__gauge-bar-fill--steel{background:var(--color-steel)}
+.dyn-block__divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 8px}
+.dyn-block__desc{padding:5px 8px 7px;font-size:var(--text-xs);color:var(--text-sec);line-height:1.45;min-height:30px;font-weight:500}
+.dyn-wide{display:flex;flex-direction:column;gap:0;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden}
+.dyn-wide__head{display:flex;align-items:center;justify-content:space-between;padding:4px 10px;gap:var(--space-sm);background:rgba(255,255,255,0.015)}
+.dyn-wide__lbl{font-size:10px;font-weight:500;color:var(--text-mut);white-space:nowrap;font-family:var(--font-latin);letter-spacing:0.05em;text-transform:uppercase;position:relative;padding-left:9px}
+.dyn-wide__lbl::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:10px;border-radius:2px;background:var(--color-teal)}
+.dyn-wide__badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);white-space:nowrap;font-family:var(--font-mono);letter-spacing:-0.02em;background:var(--color-teal-dim);color:var(--color-teal);border:1px solid rgba(61,158,139,0.2)}
+.dyn-wide__divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 10px}
+.dyn-wide__desc{padding:5px 10px 7px;font-size:var(--text-xs);color:var(--text-sec);line-height:1.45;font-weight:500}
+
+.dyn-npc-card{background:var(--bg-card-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:4px;overflow:hidden;transition:all var(--t-fast)}
+.dyn-npc-card:hover{box-shadow:0 3px 10px rgba(0,0,0,0.25)}
+.dyn-npc-card .dyn-row{padding:3px 10px;margin-bottom:0;border:none;border-radius:0;background:transparent}
+.dyn-npc-card .dyn-row+.dyn-row{border-top:1px solid rgba(255,255,255,0.02)}
+.dyn-row{display:flex;align-items:center;gap:var(--space-sm);padding:5px 10px;background:var(--bg-card-alt);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:3px;font-size:var(--text-xs)}
+.dyn-row__name{font-weight:700;color:var(--text-pri);white-space:nowrap;min-width:36px}
+.dyn-row__rel{color:var(--text-ter);white-space:nowrap;font-size:9px;padding:2px 7px;border-radius:var(--radius-full);border:1px solid var(--border);background:rgba(255,255,255,0.02)}
+.dyn-row__stat{display:flex;align-items:center;gap:3px;white-space:nowrap;color:var(--text-sec)}
+.dyn-row__stat-val{font-family:var(--font-mono);font-weight:600;font-size:10px}
+.dyn-row__stat-txt{font-size:var(--text-xs);color:var(--text-ter)}
+.dyn-row__bar{width:36px;height:3px;background:var(--border);border-radius:var(--radius-full);overflow:hidden;flex-shrink:0}
+.dyn-row__bar-fill{height:100%;border-radius:var(--radius-full)}
+.dyn-row__tag{font-size:12px;padding:1px 6px;border-radius:var(--radius-full);font-weight:600;white-space:nowrap}
+.dyn-row__tag--yes{background:rgba(224,85,85,0.12);color:var(--color-red)}
+.dyn-row__tag--no{background:rgba(255,255,255,0.04);color:var(--text-mut)}
+
+/* --- Records --- */
+.rec-section{margin-bottom:var(--space-lg)}
+.rec-section__title{font-size:10px;font-weight:600;color:var(--text-ter);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--space-sm);font-family:var(--font-latin)}
+.rec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-sm)}
+.rec-cell{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);border-left:2px solid transparent;font-size:var(--text-xs);transition:all var(--t-fast)}
+.rec-cell:nth-child(odd){border-left-color:rgba(74,144,217,0.15)}
+.rec-cell:nth-child(even){border-left-color:rgba(61,158,139,0.15)}
+.rec-cell:hover{border-color:var(--border-hvr)}
+.rec-cell__lbl{color:var(--text-ter);font-weight:500}
+.rec-cell__val{font-weight:700;font-family:var(--font-mono);color:var(--text-pri);letter-spacing:-0.01em}
+.rec-dev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-sm)}
+.rec-dev-cell{text-align:center;padding:var(--space-sm);background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.rec-dev-cell__lbl{font-size:10px;color:var(--text-ter);margin-bottom:2px}
+.rec-dev-cell__val{font-size:var(--text-base);font-weight:700;font-family:var(--font-mono);color:var(--color-steel)}
+.rec-dev-cell__bar{height:3px;background:var(--border);border-radius:var(--radius-full);margin-top:3px;overflow:hidden}
+.rec-dev-cell__bar-fill{height:100%;background:var(--color-steel);border-radius:var(--radius-full)}
+
+/* --- Archive --- */
+.arch-tabs{display:flex;gap:2px;margin-bottom:var(--space-md);flex-wrap:wrap}
+.arch-tab{padding:5px 12px;border-radius:var(--radius-full);font-size:10px;font-weight:600;color:var(--text-ter);cursor:pointer;transition:all var(--t-fast);border:1px solid transparent;font-family:var(--font-cn);letter-spacing:0.03em}
+.arch-tab:hover{color:var(--text-sec);background:var(--bg-card-alt);border-color:var(--border)}
+.arch-tab--active{background:linear-gradient(135deg,var(--color-steel-dim),rgba(74,144,217,0.08));color:var(--color-steel);border-color:rgba(74,144,217,0.25);box-shadow:0 0 10px var(--color-steel-dim);font-weight:700}
+.arch-pane{display:none;flex-direction:column;gap:var(--space-md)}
+.arch-pane--active{display:flex}
+.arch-section{margin-bottom:var(--space-sm)}
+.arch-section__title{font-size:10px;font-weight:600;color:var(--text-ter);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--space-sm);padding-bottom:4px;border-bottom:1px solid var(--border);font-family:var(--font-latin)}
+.arch-kv{display:grid;grid-template-columns:80px 1fr;gap:2px var(--space-md);font-size:var(--text-xs);padding:1px 0}
+.arch-kv__k{color:var(--text-ter);white-space:nowrap}.arch-kv__v{color:var(--text-sec)}
+
+/* --- Shop --- */
+.shop-cat-title{font-size:var(--text-xs);font-weight:600;color:var(--color-brass);margin:var(--space-md) 0 var(--space-sm);padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);letter-spacing:0.04em;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all var(--t-fast);user-select:none;background:var(--bg-card)}
+.shop-cat-title:hover{border-color:var(--border-hvr);background:var(--bg-card-alt)}
+.shop-cat-title::after{content:'+';font-size:var(--text-base);font-weight:400;color:var(--text-ter);transition:transform var(--t-fast)}
+.shop-cat-title--open::after{content:'\2212'}
+.shop-grid{display:none;grid-template-columns:repeat(4,1fr);gap:var(--space-sm)}
+.shop-grid--open{display:grid}
+.shop-subcat{font-size:11px;font-weight:500;color:var(--text-mut);padding:3px 10px;margin:2px 0;cursor:pointer;user-select:none;border-left:2px solid transparent;transition:all .15s}
+.shop-subcat:hover{color:var(--accent-gold);border-left-color:var(--accent-gold)}
+.shop-subcat::after{content:' +';font-size:12px;color:var(--text-ter)}
+.shop-subcat--open::after{content:' \2212'}
+.shop-subgrid{padding-left:6px;margin-bottom:4px}
+.shop-card{background:var(--bg-card-alt);border-radius:var(--radius-sm);border:1px solid var(--border);padding:var(--space-sm);text-align:center;transition:all var(--t-fast);position:relative;overflow:hidden;cursor:pointer}
+.shop-card::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,var(--color-brass-dim),transparent);opacity:0;transition:opacity var(--t-fast)}
+.shop-card:hover{border-color:var(--border-hvr);transform:translateY(-1px);box-shadow:0 2px 10px rgba(0,0,0,0.3)}
+.shop-card:hover::after{opacity:1}
+.shop-card__name{font-size:var(--text-xs);font-weight:700;color:var(--text-pri);margin-bottom:2px;line-height:1.2}
+.shop-card__price{font-size:10px;color:var(--color-brass);font-family:var(--font-mono);font-weight:600;margin-bottom:2px}
+.shop-card__desc{font-size:9px;color:var(--text-ter);line-height:1.3}
+.shop-container{overflow-y:auto;max-height:calc(100vh - 140px)}
+
+/* Toast */
+#toast-container{position:fixed;top:14px;right:14px;z-index:var(--z-toast);display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:300px}
+.toast{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);pointer-events:auto;position:relative;overflow:hidden;animation:toast-in 0.35s var(--ease-out);transform-origin:right center}
+.toast--out{animation:toast-out 0.28s var(--ease-smooth) forwards}
+.toast__icon{width:18px;height:18px;flex-shrink:0;margin-top:1px}.toast__content{flex:1;min-width:0}
+.toast__title{font-size:var(--text-sm);font-weight:600;color:var(--text-pri);margin-bottom:1px}
+.toast__msg{font-size:var(--text-xs);color:var(--text-sec);line-height:1.4}
+.toast__close{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-mut);flex-shrink:0}
+.toast__close:hover{background:rgba(255,255,255,0.05);color:var(--text-pri)}
+.toast__bar{position:absolute;bottom:0;left:0;height:2px;width:100%}
+.toast--info .toast__icon{color:var(--color-steel)}.toast--success .toast__icon{color:var(--color-green)}.toast--event .toast__icon{color:var(--color-copper)}
+
+/* Animations */
+@keyframes bg-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes soft-pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes toast-in{from{opacity:0;transform:translateX(40px) scale(0.9)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes toast-out{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(40px) scale(0.9)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+.hidden{display:none!important}
+.mt-sm{margin-top:var(--space-sm)}
+
+@media(max-width:660px){.side-tabs{right:-34px;width:30px}.side-tab{font-size:10px;letter-spacing:2px}.side-tab--active{width:40px;margin-left:-10px}.left-col{width:64px;padding:var(--space-sm)}.gauge{width:42px;height:42px}.gauge__val{font-size:12px}}
+@media(max-width:480px){.rec-grid{grid-template-columns:1fr}.rec-dev-grid{grid-template-columns:repeat(2,1fr)}.dyn-triple{grid-template-columns:1fr}.arch-kv{grid-template-columns:60px 1fr}}
+@media(hover:none){.btn:active{transform:none}}
+
+/* ========== GM 控制台（露出直播风格融合版） ========== */
+#gm-debug-wrapper {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 99999;
+  font-family: var(--font-cn), 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  user-select: none;
+  opacity: 0.25;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+#gm-debug-wrapper:hover,
+#gm-debug-wrapper:has(.gm-panel.show) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 触发器 */
+.gm-trigger {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--color-steel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(4px);
+  font-size: 18px;
+  transition: transform 0.2s, color 0.2s, background 0.2s;
+}
+.gm-trigger:hover {
+  transform: scale(1.1);
+  color: #fff;
+  background: var(--color-steel);
+  border-color: var(--color-steel);
+}
+
+/* 面板容器 */
+.gm-panel {
+  display: none;
+  position: absolute;
+  bottom: 56px;
+  right: 0;
+  width: 370px;
+  height: 580px;
+  min-width: 300px;
+  min-height: 300px;
+  max-width: 90vw;
+  max-height: 90vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  flex-direction: column;
+  overflow: hidden;
+  resize: both;
+  transform-origin: bottom right;
+}
+.gm-panel.show {
+  display: flex;
+  animation: gmSlideIn 0.25s var(--ease-spring);
+}
+
+@keyframes gmSlideIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 头部 */
+.gm-header {
+  padding: 10px 14px;
+  background: var(--bg-card-alt);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-pri);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.gm-header i { color: var(--color-steel); }
+.gm-close { font-size: 1.3em; cursor: pointer; }
+.gm-close:hover { color: var(--color-red); }
+
+/* 导航 */
+.gm-nav {
+  display: flex;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+.gm-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  cursor: pointer;
+  color: var(--text-ter);
+  font-weight: 600;
+  font-size: 0.95em;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.gm-tab:hover { color: var(--text-sec); }
+.gm-tab.active {
+  color: var(--color-steel);
+  border-bottom-color: var(--color-steel);
+  background: var(--color-steel-dim);
+}
+
+/* 内容区 */
+.gm-content {
+  display: none;
+  flex-grow: 1;
+  height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  background: var(--bg-base);
+}
+.gm-content.active { display: block; }
+.gm-content::-webkit-scrollbar { width: 5px; }
+.gm-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* 区块标题 */
+.gm-label {
+  color: var(--color-steel);
+  font-size: 0.85em;
+  margin-bottom: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 输入框 */
+.gm-input {
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  color: var(--text-pri);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.gm-input:focus {
+  border-color: var(--color-steel);
+  outline: none;
+}
+.gm-input.num { text-align: center; font-weight: bold; }
+
+/* 控件行 */
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.control-row .label {
+  flex: 1;
+  color: var(--text-sec);
+  font-size: 0.9em;
+}
+.control-row .gm-input.num { width: 70px; }
+
+/* 按钮组 */
+.gm-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  transition: all var(--t-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.gm-btn:hover {
+  color: #fff;
+  background: var(--color-steel);
+  border-color: var(--color-steel);
+}
+.gm-btn.full-width { width: 100%; }
+
+/* 快捷动作按钮 */
+.mini-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-ter);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+.mini-btn:hover {
+  background: var(--color-steel);
+  color: #fff;
+  border-color: var(--color-steel);
+}
+
+/* 事件列表 */
+.event-list { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+.event-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.event-item .del { color: var(--color-red); cursor: pointer; opacity: 0.6; }
+.event-item .del:hover { opacity: 1; }
+</style>
+
+
+
+<div class="app-wrap">
+
+  <header class="header">
+    <div class="header__left">
+      <div class="header__brand">N<span>L</span>S</div>
+      <span class="header__date" id="hdr-date"></span>
+      <span class="header__clock" id="hdr-time"></span>
+      <span class="header__events" id="hdr-events" style="color:var(--color-brass);font-weight:700;font-size:var(--text-xs);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="header__weather" id="hdr-weather"></span>
+      <span class="header__loc" id="hdr-loc"></span>
+      <span class="phase-tag" id="phase-tag"></span>
+    </div>
+  </header>
+
+  <div class="main-row" id="main-row">
+
+    <div class="left-col">
+      <div class="gauge-wrap">
+        <div class="gauge__lbl-h">快感</div>
+        <div class="gauge" id="gauge-pleasure">
+          <svg viewBox="0 0 50 50"><circle class="gauge__track" cx="25" cy="25" r="21"></circle><circle class="gauge__glow gauge__glow--steel" cx="25" cy="25" r="21" id="pleasure-glow"></circle><circle class="gauge__fill gauge__fill--steel" cx="25" cy="25" r="21" id="pleasure-fill"></circle></svg>
+          <div class="gauge__center"><div class="gauge__val gauge__val--steel" id="pleasure-val">0</div></div>
+        </div>
+      </div>
+      <div class="gauge-wrap">
+        <div class="gauge__lbl-h">性欲</div>
+        <div class="gauge" id="gauge-arousal">
+          <svg viewBox="0 0 50 50"><circle class="gauge__track" cx="25" cy="25" r="21"></circle><circle class="gauge__glow gauge__glow--brass" cx="25" cy="25" r="21" id="arousal-glow"></circle><circle class="gauge__fill gauge__fill--brass" cx="25" cy="25" r="21" id="arousal-fill"></circle></svg>
+          <div class="gauge__center"><div class="gauge__val gauge__val--brass" id="arousal-val">0</div></div>
+        </div>
+      </div>
+      <div class="left-divider"></div>
+      <div class="streamer-info" id="streamer-info"></div>
+    </div>
+
+    <div class="content-col" id="content-col">
+
+      <!-- TAB: 状态 -->
+      <div class="tab-content tab-content--active" id="tab-status">
+        <div class="physio-info" id="physio-info">
+          <div class="physio-row"><span class="physio-row__dot physio-row__dot--s"></span><span class="physio-row__lbl">生理：</span><span class="physio-row__val" id="ps-status"></span></div>
+          <div class="physio-row"><span class="physio-row__dot physio-row__dot--o"></span><span class="physio-row__lbl">着装：</span><span class="physio-row__val" id="ps-outfit"></span></div>
+          <div class="physio-row"><span class="physio-row__dot physio-row__dot--e"></span><span class="physio-row__lbl">佩戴：</span><span class="physio-row__list" id="ps-equipped"></span></div>
+          <div class="physio-row"><span class="physio-row__dot physio-row__dot--a"></span><span class="physio-row__lbl">行为：</span><span class="physio-row__list" id="ps-act-list"></span></div>
+        </div>
+
+        <section class="stream-card">
+          <div class="stream-video" id="stream-video">
+            <div class="stream-video__lines"></div>
+            <div class="stream-idle" id="stream-idle">
+              <div class="idle-avatar" id="idle-avatar-text"></div>
+              <div class="idle-text">主播休息中</div>
+            </div>
+            <div class="stream-live hidden" id="stream-live">
+              <div class="stream-live__title-row">
+                <div class="stream-live__title" id="stream-title-disp"></div>
+                <div class="intruder-alert hidden" id="intruder-alert"></div>
+              </div>
+              <div class="tags-row" id="stream-tags-disp"></div>
+              <div class="metrics-row">
+                <div class="met"><div class="met__val met__val--steel" id="m-viewers">0</div><div class="met__lbl">观众</div></div>
+                <div class="met"><div class="met__val met__val--brass" id="m-heat">0</div><div class="met__lbl">热度</div></div>
+                <div class="met"><div class="met__val met__val--copper" id="m-orgasms">0</div><div class="met__lbl">高潮</div></div>
+              </div>
+              <div class="task-current" id="task-current"></div>
+              <div class="chat-box" id="chat-box"></div>
+            </div>
+          </div>
+          <div class="stream-footer">
+            <span class="stream-footer__time" id="stream-time">00:00</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="inv-wrap">
+                <button class="btn btn--outline btn--sm" id="btn-inv" onclick="toggleInventory()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>道具
+                </button><div class="inv-panel" id="inv-panel"></div>
+              </div>
+              <button class="btn btn--outline btn--sm" onclick="sendToInput('打开露出直播APP性经验统计')">性经验统计</button>
+              <button class="btn btn--outline btn--sm" onclick="sendToInput('打开露出直播APP直播数据统计')">直播数据统计</button>
+              <button class="btn btn--outline btn--sm" onclick="sendToInput('逛逛论坛，')">逛逛论坛</button>
+              <button class="btn btn--outline btn--sm" id="btn-start-stream" style="display:none;color:var(--accent-green);border-color:var(--accent-green)" onclick="openStreamModal()">🎬 开播</button>
+              <button class="btn btn--outline btn--sm" id="btn-end-stream" style="display:none;color:var(--color-red);border-color:var(--color-red)" onclick="sendToInput('关播，')">🔴 关播</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB: 角色动态 -->
+      <div class="tab-content" id="tab-dyn">
+        <div class="card"><div class="sec-label">主角动态</div><div class="dyn-main" id="dyn-main"></div><div class="sec-label mt-sm">NPC 动态</div><div id="dyn-npc"></div></div>
+      </div>
+
+      <!-- TAB: 记录 -->
+      <div class="tab-content" id="tab-recs">
+        <div class="card"><div class="sec-label">性经验记录</div><div class="rec-section"><div class="rec-section__title">总览</div><div class="rec-grid" id="rec-overview"></div></div><div class="rec-section"><div class="rec-section__title">性行为次数</div><div class="rec-grid" id="rec-acts"></div></div><div class="rec-section"><div class="rec-section__title">身体开发度</div><div class="rec-dev-grid" id="rec-dev"></div></div></div>
+      </div>
+
+      <!-- TAB: 档案 -->
+      <div class="tab-content" id="tab-arch">
+        <div class="card"><div class="arch-tabs" id="arch-tabs"></div><div id="arch-panes"></div></div>
+      </div>
+
+      <!-- TAB: 商城 -->
+      <div class="tab-content" id="tab-shop">
+        <div class="card"><div class="sec-label">道具商城</div><div class="shop-container" id="shop-container"></div></div>
+      </div>
+
+      <div class="tab-content" id="tab-social">
+        <div class="card"><div class="sec-label">社交动态</div><div class="social-feed" id="social-feed"></div></div>
+      </div>
+
+      <div class="cart-float hidden" id="cart-float" onclick="toggleCart()">
+        <span class="cart-float__icon">🛒</span>
+        <span class="cart-float__badge" id="cart-badge">0</span>
+      </div>
+      <div class="cart-panel hidden" id="cart-panel">
+        <div class="cart-panel__head">🛒 购物车 <span style="float:right;cursor:pointer;font-size:14px" onclick="toggleCart()">✕</span></div>
+        <div class="cart-panel__body" id="cart-body"></div>
+        <div class="cart-panel__foot">
+          <span id="cart-total" style="flex:1"></span>
+          <button class="btn btn--sm" onclick="clearCart()">清空</button>
+          <button class="btn btn--action btn--sm" onclick="checkoutCart()">结算</button>
+        </div>
+      </div>
+
+    </div>
+
+    <ul class="side-tabs" id="side-tabs">
+      <li class="side-tab side-tab--active" data-tab="tab-status" onclick="switchTab('tab-status')">状态</li>
+      <li class="side-tab" data-tab="tab-dyn" onclick="switchTab('tab-dyn')">动态</li>
+      <li class="side-tab" data-tab="tab-recs" onclick="switchTab('tab-recs')">记录</li>
+      <li class="side-tab" data-tab="tab-arch" onclick="switchTab('tab-arch')">档案</li>
+      <li class="side-tab" data-tab="tab-shop" onclick="switchTab('tab-shop')">商城</li>
+      <li class="side-tab" data-tab="tab-social" onclick="switchTab('tab-social')">社交</li>
+    </ul>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-buy">
+  <div class="modal" style="max-width:400px">
+    <div class="modal__head"><h3 class="modal__title" id="buy-title"></h3><button class="modal__close" onclick="closeModal('modal-buy')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+    <div class="modal__body" id="buy-body"></div>
+    <div class="modal__footer">
+      <button class="btn btn--outline" onclick="closeModal('modal-buy')">取消</button>
+      <button class="btn btn--primary" id="buy-confirm">确认购买</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+/* ============================================================
+   ICONS
+   ============================================================ */
+const IC={
+  heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  xIcon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  cloud:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>',
+  cloudRain:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="16" y1="19" x2="16" y2="21"/></svg>',
+  camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  trendingUp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+  dollar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+};
+
+/* ============================================================
+   STAGE FUNCTIONS (from reference.txt)
+   ============================================================ */
+function pleasureStage(v){if(v<20)return['平静','身体放松，呼吸平稳'];if(v<40)return['微热','身体深处泛起一丝不易察觉的酥麻'];if(v<60)return['兴奋','快感逐渐累积，呼吸略微加快'];if(v<80)return['亢奋','全身被快感裹挟，思维开始模糊'];return['临界','濒临高潮边缘，身体紧绷到极点'];}
+function desireStage(v){if(v<20)return['心如止水','脑中清明，没有特别的绮念'];if(v<40)return['心猿意马','视线偶尔掠过某些画面时停顿'];if(v<60)return['想入非非','脑海闪过香艳画面，对肢体接触的渴望滋长'];if(v<80)return['春心荡漾','妄想挥之不去，对身边一切异常敏感'];return['欲火中烧','满脑子色情念头，理智与本能在拉扯'];}
+function shameStage(v){if(v>=75)return['极易羞耻','任何裸露或被注视都会脸红心跳'];if(v>=50)return['仍有羞耻','底线尚在，面对过分要求仍会犹豫'];if(v>=25)return['羞耻渐褪','曾经面红耳赤的事变得平常'];return['不知羞耻','羞耻心几乎荡然无存，以挑战禁忌为乐'];}
+function lewdStage(v){if(v<25)return['青涩','对性事陌生而懵懂'];if(v<50)return['入门','开始习惯身体接触，偶尔主动尝试'];if(v<75)return['淫乱','熟练运用身体取悦自己和他人'];return['极度淫乱','沉沦于肉欲深渊，追寻极致快感'];}
+function identityStage(n){if(n<=3)return'割裂：两个世界截然分开，日常与镜头前判若两人';if(n<=6)return'渗透：镜头前的放荡开始偶尔闪回日常';if(n<=10)return'模糊：日常与直播的边界消融，面对熟人偶尔忘记收起主播姿态';return'融合：已分不清哪个才是真实的自己，镜头内外彻底合一';}
+function skillStage(n){if(n<=3)return'新人：镜头前仍显笨拙羞涩，每个大胆举动都伴随心跳加速';if(n<=6)return'熟练：开始掌握互动节奏，羞涩感减退，表演欲上升';if(n<=10)return'老手：开播即入状态，能用肢体和话术精准煽动热度';return'沉沦：镜头是唯一归宿，弹幕是饥渴燃料，表演成为本能';}
+function popStage(n){if(n<100)return['新人主播','默默无闻的新人'];if(n<500)return['小透明','开始拥有零星固定观众'];if(n<2000)return['崭露头角','圈内小有讨论'];if(n<10000)return['小有名气','露出系红人，粉丝群活跃'];if(n<100000)return['人气新星','平台头部主播之一'];if(n<1000000)return['现象级主播','全网皆知的露出传奇'];return['TOP1','色情直播界的绝对王者'];}
+function npcLewdStageText(v,stages){if(!stages)return'';if(v<25)return stages.阶段1||'';if(v<50)return stages.阶段2||'';if(v<75)return stages.阶段3||'';return stages.阶段4||'';}
+function secretText(v){if(v<25)return'毫不知情';if(v<50)return'略有怀疑';if(v<75)return'基本确认';return'完全知晓';}
+
+// Stage colors
+function heatColor(v){if(v<0)return'#6b6f78';if(v<=5)return'#959aa3';if(v<=10)return'#4a90d9';if(v<=20)return'#c4a24a';return'#e07040';}
+function sexCountColor(v){if(v===0)return'#6b6f78';if(v<=5)return'#4a90d9';if(v<=10)return'#c4a24a';return'#e07040';}
+function actDevColor(v){if(v===0)return'#6b6f78';if(v<=3)return'#4a90d9';if(v<=6)return'#5bbfb5';if(v<=10)return'#c4a24a';return'#e07040';}
+function orgasmColor(v){if(v===0)return'#6b6f78';if(v<=10)return'#4a90d9';if(v<=20)return'#c4a24a';if(v<=50)return'#e07040';return'#e05060';}
+function viewerColor(v){if(v<50)return'#6b6f78';if(v<200)return'#4a90d9';if(v<500)return'#c4a24a';return'#e07040';}
+function priceColor(v){if(v<=50)return'#4aab73';if(v<=150)return'#4a90d9';if(v<=300)return'#c4a24a';return'#e07040';}
+function fanColor(v){if(v<100)return'#6b6f78';if(v<500)return'#4a90d9';if(v<2000)return'#3d9e8b';if(v<10000)return'#c4a24a';if(v<100000)return'#e07040';return'#e05060';}
+function streamCountCol(n){if(n<=3)return'#6b6f78';if(n<=6)return'#4a90d9';if(n<=10)return'#c4a24a';return'#e07040';}
+function gaugePleasureCol(v){if(v<20)return'#6b6f78';if(v<40)return'#5bbfb5';if(v<60)return'#4a90d9';if(v<80)return'#c4a24a';return'#e07040';}
+function gaugeDesireCol(v){if(v<20)return'#6b6f78';if(v<40)return'#7a8a9a';if(v<60)return'#4a90d9';if(v<80)return'#e07040';return'#e05060';}
+function stageColor(v){if(v<25)return'#6b6f78';if(v<50)return'#d4a84a';if(v<75)return'#e08840';return'#e05060';}
+function stageColorLewd(v){if(v<25)return'#7a8a9a';if(v<50)return'#5bbfb5';if(v<75)return'#f08840';return'#d04050';}
+function stageColorSec(v){if(v<25)return'#6e7a8a';if(v<50)return'#c4a24a';if(v<75)return'#d06838';return'#c83848';}
+const NPC_COLORS={汐见真帆:'#5b9bd5',黑崎海斗:'#e07040',冰室纱耶:'#b347ea',风见迅:'#4aab73'};
+
+/* ============================================================
+   MVU VARIABLE INTERFACE (summertown.html pattern)
+   ============================================================ */
+function getMvuInstance(){
+  try{return window.Mvu||(window.parent&&window.parent.Mvu)||(window.top&&window.top.Mvu)||null;}catch(e){return null;}
+}
+
+const getValue=(data,path,defaultValue=null)=>{
+  const value=path.split('.').reduce((acc,part)=>acc&&acc[part],data);
+  return(value===undefined||value===null)?defaultValue:value;
+};
+
+let globalData={};
+
+/* Default data — only used in standalone mode when MVU is absent */
+const DEFAULT_STAT = {
+  进程:{阶段:'日常阶段',当前年份:2025,当前月份:10,当前日份:15,当前时段:'晚上',当前天气:'晴',当前假期:'否',当前周几:3},
+  系统状态:{主角创建完毕:false,同名事件队列:{},事件等待处理中:false,待处理事件:{}},
+  直播状态:{是否正在直播:false,当前直播间标题:'',当前直播间标签:[],当前直播间人数:0,当前直播间热度:0,当次直播高潮次数:0,当前直播开始回合:0,当前直播间弹幕:[]},
+  主角:{
+    基本信息:{姓名:'待设定',年龄:'18岁',性格:'内向但对亲密之人放得开',背景:'汐望高中高三学生，独居'},
+    相貌特征:{脸型:'清秀少年脸型',五官:'眉眼温和',发型与发色:'黑色短碎发',眼睛颜色:'深棕色',特殊记号:'左耳有一颗小痣'},
+    身材细节:{身高:'175cm',三围:'B88/W72/H90',体态:'匀称偏瘦',皮肤状态:'白皙光滑',肌肉线条:'腹部浅层肌肉线条'},
+    性器官特征:{后穴形态:'未经开发，颜色浅粉',乳头形态:'小巧浅褐色',阴茎形态:'中等尺寸，颜色偏浅',体毛状况:'四肢体毛稀疏浅色'},
+    当前状态:{当前区域:'文教区',当前地点:'自宅公寓',当前生理状态:'体温正常，呼吸平稳',当前着装:'汐望高中校服',当前性行为:[],当前佩戴:{},快感值:0,性欲值:0,羞耻度:100,淫乱度:0},
+    性经验记录:{与陌生人做爱次数:0,总高潮次数:0,自慰次数:5,情趣玩具使用次数:1,主动手交次数:0,被动手交次数:0,主动足交次数:0,被动足交次数:0,主动口交次数:0,被动口交次数:0,被动乳交次数:0,小穴插入性爱次数:0,后穴插入性爱次数:0,后穴性爱次数:0},
+    开发度:{口腔开发度:0,胸部开发度:0,双手开发度:3,双足开发度:0,肉棒开发度:2,后穴开发度:0},
+    主播信息:{主播名字:'蓮',直播总次数:0,单次直播最高人数:0,单次直播最高高潮次数:0,直播点数:0,粉丝数:0,主播态度:'对自己露出主播的身份尚无实感，感觉像一场荒诞的梦境。'},
+    道具栏:{已购道具列表:[]},
+    衣橱:[],
+    家居布置:[]
+  },
+  NPC数据:{
+    '汐见真帆':{身份信息:{...}秘密发现:false,社媒昵称:'满级色图鉴赏家'},
+    '黑崎海斗':{...秘密发现:false,社媒昵称:'刚射完一组还有两组'},
+    '冰室纱耶':{...秘密发现:false,社媒昵称:'文学院第一荡妇'},
+    '风见迅':{...秘密发现:false,社媒昵称:'银犬今天也没吃饱'}
+  }
+};
+
+const SOCIAL_NICKS = { 主角: '', 汐见真帆: '满级色图鉴赏家', 黑崎海斗: '刚射完一组还有两组', 冰室纱耶: '文学院第一荡妇', 风见迅: '银犬今天也没吃饱' };
+
+/* ============================================================
+   NOTIFICATION
+   ============================================================ */
+class Notif{
+  show(type,title,msg,dur){
+    dur=dur||4000;const c=document.getElementById('toast-container');
+    const t=document.createElement('div');t.className='toast toast--'+type;
+    const icons={info:IC.info,success:IC.check,event:IC.star};
+    t.innerHTML='<div class="toast__icon">'+icons[type]+'</div><div class="toast__content"><div class="toast__title">'+title+'</div><div class="toast__msg">'+msg+'</div></div><button class="toast__close" onclick="this.closest(\'.toast\').remove()">'+IC.xIcon+'</button><div class="toast__bar"></div>';
+    c.appendChild(t);
+    requestAnimationFrame(()=>{const b=t.querySelector('.toast__bar');b.style.transition='width '+dur+'ms linear';requestAnimationFrame(()=>{b.style.width='0%';});});
+    setTimeout(()=>{t.classList.add('toast--out');setTimeout(()=>{if(t.parentNode)t.remove();},280);},dur);
+  }
+}
+
+/* ============================================================
+   UI RENDERERS
+   ============================================================ */
+const U={
+  initGauge(id,val){
+    const c=document.getElementById(id+'-fill');if(!c)return;const r=c.r.baseVal.value,circ=2*Math.PI*r;
+    c.style.strokeDasharray=circ;c.style.strokeDashoffset=circ;
+    const g=document.getElementById(id+'-glow');if(g){g.style.strokeDasharray=circ;g.style.strokeDashoffset=circ;}
+    this.updGauge(id,val);
+  },
+  updGauge(id,val,max){
+    max=max||100;const c=document.getElementById(id+'-fill');if(!c)return;
+    const r=c.r.baseVal.value,circ=2*Math.PI*r,off=circ*(1-Math.min(val,max)/max);
+    c.style.strokeDasharray=circ;c.style.strokeDashoffset=off;
+    const g=document.getElementById(id+'-glow');if(g){g.style.strokeDasharray=circ;g.style.strokeDashoffset=off;g.style.opacity=Math.max(0.06,val/100*0.35);}
+    const ve=document.getElementById(id+'-val');if(ve){ve.textContent=Math.round(val);ve.style.textShadow=val>=60?'0 0 '+(6+(val-60)/8)+'px currentColor':'';}
+    const wrap=document.getElementById('gauge-'+id)?.parentElement?.parentElement;
+    if(wrap){wrap.classList.toggle('gauge-wrap--hot',val>=75);}
+    const gaugeEl=document.getElementById('gauge-'+id);
+    if(gaugeEl){gaugeEl.classList.toggle('gauge--pulse',val>=85);}
+  },
+  animNum(el,target,dur){
+    dur=dur||450;if(!el)return;
+    const start=parseFloat(el.textContent.replace(/[^0-9.]/g,''))||0;
+    if(Math.abs(target-start)<0.5){el.textContent=target>=1000?target.toLocaleString('zh-CN'):String(target);return;}
+    const st=performance.now();
+    const anim=ts=>{const p=Math.min((ts-st)/dur,1),e=1-Math.pow(2,-10*p),c=start+(target-start)*e;el.textContent=target>=1000?Math.round(c).toLocaleString('zh-CN'):String(Math.round(c));if(p<1)requestAnimationFrame(anim);else el.textContent=target>=1000?target.toLocaleString('zh-CN'):String(target);};
+    requestAnimationFrame(anim);
+  },
+
+  renderAll(){
+    this.renderPhysio();
+    this.renderStreamerInfo();
+    this.renderPhase();
+    this.renderStreamState();
+  },
+
+  renderPhase(){
+    const phase=getValue(globalData,'进程.阶段');
+    const tag=document.getElementById('phase-tag');
+    tag.textContent=phase||'日常';
+    tag.className='phase-tag';
+    if(phase==='直播阶段')tag.className='phase-tag phase-tag--live';
+    else if(phase==='创角阶段')tag.className='phase-tag phase-tag--create';
+    else tag.className='phase-tag phase-tag--daily';
+  },
+
+  renderStreamState(){
+    const phase=getValue(globalData,'进程.阶段');
+    const isLive=phase==='直播阶段';
+    const idle=document.getElementById('stream-idle');
+    const live=document.getElementById('stream-live');
+    if(isLive){
+      idle.classList.add('hidden');live.classList.remove('hidden');
+      this._renderStreamLive();
+    }else{
+      idle.classList.remove('hidden');live.classList.add('hidden');
+      const avatar=document.getElementById('idle-avatar-text');
+      avatar.textContent=(getValue(globalData,'主角.主播信息.主播名字')||'蓮')[0];
+    }
+    // Timer
+    this._updateTimer();
+  },
+
+  _renderStreamLive(){
+    // Title
+    document.getElementById('stream-title-disp').textContent=getValue(globalData,'直播状态.当前直播间标题')||'未命名直播';
+    // Tags
+    const tags=getValue(globalData,'直播状态.当前直播间标签')||[];
+    const cs=['tag--steel','tag--brass','tag--teal','tag--copper'];
+    document.getElementById('stream-tags-disp').innerHTML=tags.map((t,i)=>'<span class="tag '+cs[i%4]+'">'+t+'</span>').join('');
+    // Metrics
+    this._updateMetrics();
+    // Task from 系统状态.待处理事件.观众任务事件
+    const taskText=getValue(globalData,'系统状态.待处理事件.观众任务事件');
+    document.getElementById('task-current').innerHTML=taskText?'<span style="color:var(--color-brass)">●</span> '+taskText:'<span style="color:var(--text-mut)">无</span>';
+    // Chat from 直播状态.当前直播间弹幕
+    this._renderChatFull();
+    // Intruder
+    const intruder=getValue(globalData,'系统状态.待处理事件.外人闯入事件');
+    const ia=document.getElementById('intruder-alert');
+    if(intruder){ia.textContent='外人闯入:'+intruder+'!!!';ia.classList.remove('hidden');}
+    else{ia.classList.add('hidden');}
+  },
+
+  _updateMetrics(){
+    const v=getValue(globalData,'直播状态.当前直播间人数')||0;
+    const h=getValue(globalData,'直播状态.当前直播间热度')||0;
+    const o=getValue(globalData,'直播状态.当次直播高潮次数')||0;
+    const ve=document.getElementById('m-viewers');ve.textContent=v;ve.style.color=viewerColor(v);
+    const he=document.getElementById('m-heat');he.textContent=h.toFixed?h.toFixed(0):h;he.style.color=heatColor(h);
+    const oe=document.getElementById('m-orgasms');oe.textContent=o;oe.style.color=o===0?'#6b6f78':o<=2?'#4a90d9':o<=4?'#e07040':'#e05060';
+  },
+
+  _renderChatFull(){
+    const msgs=getValue(globalData,'直播状态.当前直播间弹幕')||[];
+    const box=document.getElementById('chat-box');
+    if(!msgs.length){box.innerHTML='<div style="color:var(--text-mut);font-size:10px;text-align:center;padding:10px">暂无弹幕</div>';return;}
+    box.innerHTML=msgs.map(m=>{
+      const sender=m[0]||'未知';
+      const txt=m[1]||'';
+      return '<div class="chat-item"><span class="chat-item__name">'+sender+'</span><span class="chat-item__text">'+txt+'</span></div>';
+    }).join('');
+    box.scrollTop=box.scrollHeight;
+  },
+
+   _updateTimer(){
+    const phase=getValue(globalData,'进程.阶段');
+    if(phase!=='直播阶段'){document.getElementById('stream-time').textContent='--:--';return;}
+    const startTurn=getValue(globalData,'直播状态.当前直播开始回合')||0;
+    const curTurn=getValue(globalData,'进程.当前回合数')||0;
+    const elapsed=Math.max(0,curTurn-startTurn);
+    document.getElementById('stream-time').textContent='已播 '+elapsed+' 轮';
+  },
+
+  renderPhysio(){
+    const cs=getValue(globalData,'主角.当前状态');
+    if(!cs)return;
+    document.getElementById('ps-status').textContent=cs.当前生理状态||'体温正常，呼吸平稳';
+    document.getElementById('ps-outfit').textContent=cs.当前着装||'待设定';
+    // Equipped: key 位于 位置，描述
+    const eq=cs.当前佩戴||{};
+    const eqEl=document.getElementById('ps-equipped');
+    const eqKeys=Object.keys(eq);
+    if(eqKeys.length===0){eqEl.innerHTML='<span>无</span>';}
+    else{eqEl.innerHTML=eqKeys.map(k=>'<span>'+k+' 位于 '+eq[k].位置+'，'+eq[k].描述+'</span>').join('');}
+    // Activity: 正在与 对象 进行 行为
+    const acts=cs.当前性行为||[];
+    const actEl=document.getElementById('ps-act-list');
+    if(acts.length===0){actEl.innerHTML='<span>无</span>';}
+    else{actEl.innerHTML=acts.map(a=>'<span>正在与 '+a.对象+' 进行 '+a.行为+'</span>').join('');}
+  },
+
+  renderStreamerInfo(){
+    const s=getValue(globalData,'主角.主播信息');
+    if(!s)return;
+    const pop=popStage(s.粉丝数||0);
+    const fc=fanColor(s.粉丝数||0);
+    document.getElementById('streamer-info').innerHTML=
+      '<div class="si-row"><span class="si-row__lbl">主播</span><span class="si-row__val">'+(s.主播名字||'')+'</span></div>'+
+      '<div class="si-row"><span class="si-row__lbl">直播次数</span><span class="si-row__val" style="color:'+streamCountCol(s.直播总次数||0)+'">'+(s.直播总次数||0)+'</span></div>'+
+      '<div class="si-row"><span class="si-row__lbl">粉丝</span><span class="si-row__val" style="color:'+fc+'">'+(s.粉丝数||0)+'</span></div>'+
+      '<div class="si-row"><span class="si-row__lbl">知名度</span><span class="si-row__val" style="color:'+fc+'">'+pop[0]+'</span></div>'+
+      '<div class="si-row"><span class="si-row__lbl">点数</span><span class="si-row__val" style="color:'+sexCountColor(s.直播点数||0)+'">'+(s.直播点数||0)+'</span></div>';
+  },
+
+  renderInventory(){
+    const items=getValue(globalData,'主角.道具栏.已购道具列表')||[];
+    const closet=getValue(globalData,'主角.衣橱')||{};
+    const home=getValue(globalData,'主角.家居布置')||[];
+    const el=document.getElementById('inv-panel');
+    var h='';
+    if(items.length>0)h+='<div style="font-size:10px;color:var(--text-mut);padding:2px 0">道具</div>'+items.map(n=>'<div class="inv-item"><span>'+n+'</span></div>').join('');
+    var cParts=[['上衣',closet.上衣],['下衣',closet.下衣],['内衣',closet.内衣],['袜子',closet.袜子],['鞋子',closet.鞋子],['套装',closet.套装],['COS服',closet.COS服],['配饰',closet.配饰]];
+    cParts.forEach(function(p){var arr=p[1]||[];if(arr.length>0)h+='<div style="font-size:10px;color:var(--text-mut);padding:2px 0;margin-top:4px">'+p[0]+'</div>'+arr.map(n=>'<div class="inv-item"><span>'+n+'</span></div>').join('');});
+    if(home.length>0)h+='<div style="font-size:10px;color:var(--text-mut);padding:2px 0;margin-top:6px">家居</div>'+home.map(n=>'<div class="inv-item"><span>'+n+'</span></div>').join('');
+    if(!h){el.innerHTML='<div class="inv-item"><span style="color:var(--text-mut)">暂无道具</span></div>';return;}
+    el.innerHTML=h;
+  },
+
+  // Dynamics
+  renderDynamics(){
+    const cs=getValue(globalData,'主角.当前状态');
+    const si=getValue(globalData,'主角.主播信息');
+    if(!cs||!si)return;
+    const sh=shameStage(cs.羞耻度||100),lw=lewdStage(cs.淫乱度||0);
+    const idSt=identityStage(si.直播总次数||0),skSt=skillStage(si.直播总次数||0);
+    const idParts=idSt.split('：'),skParts=skSt.split('：');
+    const idCol=streamCountCol(si.直播总次数||0),skCol=streamCountCol(si.直播总次数||0);
+    document.getElementById('dyn-main').innerHTML=
+      '<div class="dyn-triple">'+
+        '<div class="dyn-block">'+
+          '<div class="dyn-block__head"><span class="dyn-block__lbl dyn-block__lbl--shame">羞耻度</span></div>'+
+          '<div class="dyn-block__gauge"><span class="dyn-block__gauge-val">'+(cs.羞耻度||100)+'</span><div class="dyn-block__gauge-bar"><div class="dyn-block__gauge-bar-fill dyn-block__gauge-bar-fill--copper" style="width:'+Math.min(100,cs.羞耻度||100)+'%"></div></div><span class="dyn-block__badge dyn-block__badge--copper" style="flex-shrink:0">'+sh[0]+'</span></div>'+
+          '<div class="dyn-block__divider"></div><div class="dyn-block__desc">'+sh[1]+'</div></div>'+
+        '<div class="dyn-block">'+
+          '<div class="dyn-block__head"><span class="dyn-block__lbl dyn-block__lbl--lewd">淫乱度</span></div>'+
+          '<div class="dyn-block__gauge"><span class="dyn-block__gauge-val">'+(cs.淫乱度||0)+'</span><div class="dyn-block__gauge-bar"><div class="dyn-block__gauge-bar-fill dyn-block__gauge-bar-fill--steel" style="width:'+Math.min(100,cs.淫乱度||0)+'%"></div></div><span class="dyn-block__badge dyn-block__badge--steel" style="flex-shrink:0">'+lw[0]+'</span></div>'+
+          '<div class="dyn-block__divider"></div><div class="dyn-block__desc">'+lw[1]+'</div></div>'+
+        '<div class="dyn-block">'+
+          '<div class="dyn-block__head"><span class="dyn-block__lbl dyn-block__lbl--ident">身份平衡</span><span class="dyn-block__badge" style="background:'+idCol+'20;color:'+idCol+';border:1px solid '+idCol+'40">'+(idParts[0]||'')+'</span></div>'+
+          '<div class="dyn-block__divider"></div><div class="dyn-block__desc">'+(idParts[1]||idSt)+'</div></div>'+
+      '</div>'+
+      '<div class="dyn-wide">'+
+        '<div class="dyn-wide__head"><span class="dyn-wide__lbl">主播熟练度</span><span class="dyn-wide__badge" style="background:'+skCol+'20;color:'+skCol+';border:1px solid '+skCol+'40">'+(skParts[0]||'')+'</span></div>'+
+        '<div class="dyn-wide__divider"></div><div class="dyn-wide__desc">'+(skParts[1]||skSt)+'</div></div>'+
+      '<div class="dyn-wide">'+
+        '<div class="dyn-wide__head"><span class="dyn-wide__lbl">主播态度</span></div>'+
+        '<div class="dyn-wide__divider"></div><div class="dyn-wide__desc">'+(si.主播态度||'')+'</div></div>';
+    // NPCs
+    const npcs=getValue(globalData,'NPC数据')||{};
+    let html='';
+    Object.entries(npcs).forEach(([name,d])=>{
+      const rel=d.身份信息?.与主角关系||'';
+      const aff=d.好感度||0;
+      const lewd=d.淫乱度||0;
+      const lwTxt=npcLewdStageText(lewd,d.淫乱度阶段);
+      const sec=d.疑心||0;
+      const secTxt=secretText(sec);
+      const secretRevealed = d.秘密发现 === true;
+      const barW=Math.min(100,aff);
+      const fanCount=(d.主播信息&&d.主播信息.粉丝数)?d.主播信息.粉丝数:null;
+      const npcCol=NPC_COLORS[name]||'#959aa3';
+      const affCol=stageColor(aff);
+      const lewdCol=stageColorLewd(lewd);
+      const secCol=stageColorSec(sec);
+      html+='<div class="dyn-npc-card" style="border-left:2px solid '+npcCol+'">'+
+        '<div class="dyn-row">'+
+          '<span class="dyn-row__name" style="color:'+npcCol+'">'+name+'</span>'+
+          '<span class="dyn-row__rel" style="border-color:'+affCol+'40;color:'+affCol+'">'+rel+'</span>'+
+          '<span class="dyn-row__stat">好感 <span class="dyn-row__stat-val" style="color:'+affCol+'">'+aff+'</span><span class="dyn-row__bar"><span class="dyn-row__bar-fill" style="width:'+barW+'%;background:'+affCol+'"></span></span></span>';
+      if (name !== '黑崎海斗') {
+        html += '<span class="dyn-row__tag ' + (secretRevealed ? 'dyn-row__tag--yes' : 'dyn-row__tag--no') + '">' + (secretRevealed ? '秘密已揭晓' : '秘密未觉') + '</span>';
+      }
+        html+='</div>'+
+        '<div class="dyn-row"><span class="dyn-row__stat" style="flex:1">淫乱 <span class="dyn-row__stat-val" style="color:'+lewdCol+'">'+lewd+'</span> <span class="dyn-row__stat-txt">'+lwTxt+'</span></span></div>'+
+        '<div class="dyn-row"><span class="dyn-row__stat" style="flex:1">察觉 <span class="dyn-row__stat-val" style="color:'+secCol+'">'+sec+'</span> <span class="dyn-row__stat-txt">'+secTxt+'</span></span></div>'+
+        (fanCount!==null?'<div class="dyn-row"><span class="dyn-row__stat" style="flex:1">粉丝 <span class="dyn-row__stat-val">'+fanCount+'</span></span></div>':'')+
+      '</div>';
+    });
+    document.getElementById('dyn-npc').innerHTML=html;
+  },
+
+  // Records
+  renderRecords(){
+    const rec=getValue(globalData,'主角.性经验记录');const dev=getValue(globalData,'主角.开发度');const npcs=getValue(globalData,'NPC数据')||{};
+    if(!rec||!dev)return;
+    let totalSex=0;Object.values(npcs).forEach(n=>totalSex+=n.与主角做爱次数||0);
+    totalSex+=rec.与陌生人做爱次数||0;
+    const rv=function(v,fn){return'<span class="rec-cell__val" style="color:'+fn(v)+'">'+v+'</span>';};
+    document.getElementById('rec-overview').innerHTML=
+      '<div class="rec-cell"><span class="rec-cell__lbl">总做爱次数</span>'+rv(totalSex,sexCountColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">与陌生人做爱</span>'+rv(rec.与陌生人做爱次数||0,sexCountColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">总高潮次数</span>'+rv(rec.总高潮次数||0,orgasmColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">自慰次数</span>'+rv(rec.自慰次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">情趣玩具使用</span>'+rv(rec.情趣玩具使用次数||0,actDevColor)+'</div>'+
+      Object.entries(npcs).map(([n,d])=>'<div class="rec-cell"><span class="rec-cell__lbl">与'+n+'做爱</span>'+rv(d.与主角做爱次数||0,sexCountColor)+'</div>').join('');
+    document.getElementById('rec-acts').innerHTML=
+      '<div class="rec-cell"><span class="rec-cell__lbl">主动手交</span>'+rv(rec.主动手交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">被动手交</span>'+rv(rec.被动手交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">主动足交</span>'+rv(rec.主动足交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">被动足交</span>'+rv(rec.被动足交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">主动口交</span>'+rv(rec.主动口交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">被动口交</span>'+rv(rec.被动口交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">被动乳交</span>'+rv(rec.被动乳交次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">小穴插入性爱</span>'+rv(rec.小穴插入性爱次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">后穴插入性爱</span>'+rv(rec.后穴插入性爱次数||0,actDevColor)+'</div>'+
+      '<div class="rec-cell"><span class="rec-cell__lbl">后穴性爱</span>'+rv(rec.后穴性爱次数||0,actDevColor)+'</div>';
+    const devItems=[{k:'口腔开发度',v:dev.口腔开发度||0},{k:'胸部开发度',v:dev.胸部开发度||0},{k:'双手开发度',v:dev.双手开发度||0},{k:'双足开发度',v:dev.双足开发度||0},{k:'肉棒开发度',v:dev.肉棒开发度||0},{k:'后穴开发度',v:dev.后穴开发度||0}];
+    document.getElementById('rec-dev').innerHTML=devItems.map(di=>{const dc=actDevColor(di.v);return'<div class="rec-dev-cell"><div class="rec-dev-cell__lbl">'+di.k+'</div><div class="rec-dev-cell__val" style="color:'+dc+'">'+di.v+'</div><div class="rec-dev-cell__bar"><div class="rec-dev-cell__bar-fill" style="width:'+Math.min(100,di.v)+'%;background:'+dc+'"></div></div></div>';}).join('');
+  },
+
+  // Archive
+  renderArchive(){
+    const self=getValue(globalData,'主角');const npcs=getValue(globalData,'NPC数据')||{};
+    const allChars=[{key:'self',name:self?.主播信息?.主播名字||'主角'}];
+    Object.keys(npcs).forEach(k=>allChars.push({key:k,name:k}));
+    const archCol=function(key){return key==='self'?'#f0b84d':(NPC_COLORS[key]||'#959aa3');};
+    document.getElementById('arch-tabs').innerHTML=allChars.map((c,i)=>{const col=archCol(c.key);return'<span class="arch-tab'+(i===0?' arch-tab--active':'')+'" data-arch="'+c.key+'" onclick="switchArchTab(\''+c.key+'\')" style="'+(i===0?'background:'+col+'20;color:'+col+';border-color:'+col+'40;box-shadow:0 0 10px '+col+'30':'')+'">'+c.name+'</span>';}).join('');
+    let panes=this._archSelfPane(self);
+    Object.entries(npcs).forEach(([name,d])=>{panes+=this._archNpcPane(name,d);});
+    document.getElementById('arch-panes').innerHTML=panes;
+  },
+  _archSelfPane(s){
+    if(!s)return'';
+    const homeName = getValue(globalData,'主角.住所.名字')||'住宅区 - 单身公寓';
+    return'<div class="arch-pane arch-pane--active" id="arch-self">'+
+      '<div class="arch-section"><div class="arch-section__title">基本信息</div>'+this._kv([['姓名',s.基本信息?.姓名],['年龄',s.基本信息?.年龄],['住所',homeName],['性格',s.基本信息?.性格],['背景',s.基本信息?.背景]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">相貌特征</div>'+this._kv([['脸型',s.相貌特征?.脸型],['五官',s.相貌特征?.五官],['发型与发色',s.相貌特征?.发型与发色],['眼睛颜色',s.相貌特征?.眼睛颜色],['特殊记号',s.相貌特征?.特殊记号]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">身材细节</div>'+this._kv([['身高',s.身材细节?.身高],['三围',s.身材细节?.三围],['体态',s.身材细节?.体态],['皮肤状态',s.身材细节?.皮肤状态],['肌肉线条',s.身材细节?.肌肉线条]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">性器官特征</div>'+this._kv([['后穴形态',s.性器官特征?.后穴形态],['乳头形态',s.性器官特征?.乳头形态],['阴茎形态',s.性器官特征?.阴茎形态],['体毛状况',s.性器官特征?.体毛状况]])+'</div>'+
+    '</div>';
+  },
+  _archNpcPane(name,d){
+    const hasStreamer=d.主播信息?'<div class="arch-section"><div class="arch-section__title">主播信息</div>'+this._kv([['主播名字',d.主播信息.主播名字],['粉丝数',d.主播信息.粉丝数]])+'</div>':'';
+    return'<div class="arch-pane" id="arch-'+name+'">'+
+      '<div class="arch-section"><div class="arch-section__title">身份信息</div>'+this._kv([['年龄',d.身份信息?.年龄],['身份',d.身份信息?.身份],['与主角关系',d.身份信息?.与主角关系]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">外貌</div>'+this._kv([['脸型与发型',d.外貌?.脸型与发型],['眼睛',d.外貌?.眼睛],['皮肤',d.外貌?.皮肤]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">身体</div>'+this._kv([['身高',d.身体?.身高],['三围',d.身体?.三围],['体态',d.身体?.体态],['体毛',d.身体?.体毛],['性器官',d.身体?.性器官描述]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">着装与性格</div>'+this._kv([['日常着装',d.着装?.日常],['外在性格',d.性格?.外在],['内在性格',d.性格?.内在]])+'</div>'+
+      '<div class="arch-section"><div class="arch-section__title">爱好与偏好</div>'+this._kv([['爱好',d.爱好],['偏好性行为',d.偏好性行为],['活跃区域',(d.活跃区域||[]).join('、')]])+'</div>'+
+      hasStreamer+'</div>';
+  },
+  _kv(pairs){return pairs.map(p=>'<div class="arch-kv"><span class="arch-kv__k">'+(p[0]||'')+'</span><span class="arch-kv__v">'+(p[1]||'')+'</span></div>').join('');},
+
+  // Social feed
+  renderSocial(){
+    const el=document.getElementById('social-feed');if(!el)return;
+    const sm=getValue(globalData,'社交媒体')||{};
+    const names=Object.keys(sm);
+    let posts=[];
+    names.forEach(function(n){
+      const list=sm[n]?.动态列表||[];
+      const nick=(n==='主角'?(getValue(globalData,'主角.主播信息.主播名字')||'主播'):(SOCIAL_NICKS[n]||n));
+      list.forEach(function(p){
+        posts.push({name:n,nick:nick,date:p.日期||'',slot:p.时段||'',content:p.内容||''});
+      });
+    });
+    posts.sort(function(a,b){return (a.date+a.slot).localeCompare(b.date+b.slot);});
+    if(posts.length===0){el.innerHTML='<div style="color:var(--text-mut);padding:20px 14px;font-size:13px">还没有动态。随着剧情推进，角色们将在这里展现社交媒体上的真实想法。</div>';return;}
+    let html='',lastDate='';
+    posts.forEach(function(p){
+      const cName='主角 汐见真帆 黑崎海斗 冰室纱耶 风见迅'.split(' ');
+      const dateLabel=p.date+(p.slot?' · '+p.slot:'');
+      if(dateLabel!==lastDate){html+='<div class="social-date-sep">'+dateLabel+'</div>';lastDate=dateLabel;}
+      html+='<div class="social-post social-post--'+p.name+'"><div class="social-post__head"><span class="social-post__author">'+p.nick+'</span></div><div class="social-post__body">'+p.content.replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>')+'</div></div>';
+    });
+    el.innerHTML=html;
+  },
+
+  // Shop
+  renderShop(){
+    const el=document.getElementById('shop-container');if(!el)return;
+    const cat=function(t,items){return'<div class="shop-cat-title" onclick="toggleShopCat(\'shop-cat-'+t.replace(/[^a-zA-Z一-鿿]/g,'')+'\')">'+t+'</div><div class="shop-grid" id="shop-cat-'+t.replace(/[^a-zA-Z一-鿿]/g,'')+'">'+items.join('')+'</div>';};
+    const card=function(n,p,d,cat){cat=cat||'道具';return'<div class="shop-card" onclick="addToCart(\''+n+'\',\''+p+'\',\''+d+'\',\''+cat+'\')"><div class="shop-card__name">'+n+'</div><div class="shop-card__price" style="color:'+priceColor(parseInt(p))+'">'+p+'点</div><div class="shop-card__desc">'+d+'</div></div>';};
+    var C=function(c){return function(n,p,d){return card(n,p,d,c);};};
+    var _内衣=C('内衣'),_袜子=C('袜子'),_上衣=C('上衣'),_下衣=C('下衣'),_鞋子=C('鞋子'),_套装=C('套装'),_COS=C('COS服'),_配饰=C('配饰'),_家居=C('家居');
+    function estateCard(n,p,d,r){return'<div class="shop-card" onclick="openEstateModal(\''+n+'\',\''+p+'\',\''+d+'\',\''+r+'\')"><div class="shop-card__name">'+n+'</div><div class="shop-card__price" style="color:'+priceColor(parseInt(p))+'">'+p+'点</div><div class="shop-card__desc">'+d+'</div></div>';}
+    el.innerHTML=
+      cat('自慰与榨精类',[card('入门级飞机杯','30','柔软硅胶内壁颗粒'),card('螺旋纹理飞机杯','50','多层螺旋吸吮感强'),card('透明伸缩飞机杯','70','全透明配伸缩功能'),card('双人共享飞机杯','120','U型双口联动直播'),card('电动发声飞机杯','200','内置振动与音频'),card('电动榨精器','300','强力旋转伸缩榨精'),card('多功能震动棒','120','弯头设计多频震动'),card('静音震动棒','200','超低噪音强劲马力'),card('直播弹幕控制型震动棒','250','弹幕关键词触发震动')])+
+      cat('插入与扩张类',[card('基础款假鸡巴','40','仿真造型吸盘底座'),card('双头龙假鸡巴','100','双端插入双人互动'),card('震动伸缩假鸡巴','180','电动伸缩配遥控器'),card('射精功能假鸡巴','250','内藏储液囊模拟射精'),card('肛门拉珠','50','6颗渐变硅胶珠'),card('心跳肛塞','80','金属材质可震动'),card('狼尾巴肛塞','140','毛茸尾巴金属肛塞'),card('模拟产卵器','350','明胶卵推入后穴'),card('肛门扩张器','150','可调节撑开幅度'),card('活性史莱姆触手','300','自主蠕动温控可塑形'),card('后穴三阶训练套件','120','小中大三种直径渐变'),card('口腔扩张训练环','60','三档可调硅胶软垫'),card('犬形带结假鸡巴','220','根部膨大成结拟真犬科'),card('触手造型假鸡巴','200','吸盘纹理可弯曲定型'),card('异形纹理假鸡巴','280','不规则棱脊外星仿生'),card('龙形鳞片假鸡巴','260','仿鳞纹理锥形头部')])+
+      cat('调教类',[card('迷你遥控跳蛋','20','无线遥控适合塞入'),card('双蛋联动跳蛋','60','两枚独立控制'),card('带夹跳蛋','80','附带可调乳夹'),card('可调乳夹链','30','金属链软垫夹'),card('震动乳夹','70','内置微小马达震动'),card('窗边吸盘假鸡巴','90','强力吸盘可吸附玻璃'),card('磁吸手铐','100','强力磁吸单手固定')])+
+      cat('束缚类',[card('充气口球','30','可充气撑开嘴巴'),card('内置口球口罩','50','遮掩面部刺激口腔'),card('项圈与牵引绳套装','60','皮革项圈配金属链'),card('贞操锁','100','金属材质带钥匙'),card('自缚套装','150','手铐脚镣计时锁'),card('全覆式隔音束缚头套','120','眼耳口全封闭呼吸孔'),card('强制开腿杆','80','可调长度脚踝固定带')])+
+      cat('装扮类',[
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-under\')">内衣/袜</div><div class="shop-grid shop-subgrid" id="shop-sub-under">'+[_内衣('黑色低腰三角裤','15','贴身低腰修身'),_内衣('白色运动平角裤','15','透气运动日常'),_内衣('灰色无痕内裤','20','莫代尔亲肤面料'),_内衣('黑色蕾丝三角裤','25','半透花卉蕾丝低腰'),_内衣('红色双丁裤','30','细带露臀高开叉'),_内衣('透视网纱三角裤','22','前片薄纱若隐若现'),_内衣('豹纹低腰内裤','20','弹力棉印花'),_袜子('黑色过膝袜','12','高筒弹性包裹小腿'),_袜子('白色短筒袜三双','10','纯棉日常短袜'),_袜子('网眼袜','18','镂空网眼透气'),_袜子('透明蕾丝过膝袜','28','半透蕾丝花边筒口'),_袜子('吊带袜套装','35','弹力吊带配黑色长筒')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-top\')">上装</div><div class="shop-grid shop-subgrid" id="shop-sub-top">'+[_上衣('纯白重磅T恤','30','厚实纯棉质感'),_上衣('黑色亨利领长袖','40','三粒纽扣微修身'),_上衣('灰色连帽卫衣','55','宽松落肩毛圈棉'),_上衣('牛仔夹克','80','经典水洗靛蓝'),_上衣('宽松格子衬衫','45','棉麻混纺透气'),_上衣('亚麻短袖衬衫','50','米白透气凉爽'),_上衣('无袖背心两件装','25','白+黑纯棉'),_上衣('速干POLO衫','40','吸湿排汗领口挺括'),_上衣('条纹长袖T恤','30','蓝白细条纹棉质'),_上衣('薄款针织开衫','60','深灰混纺V领'),_上衣('灯芯绒衬衫','55','棕色细条纹保暖'),_上衣('高领针织衫','65','黑色美利奴羊毛'),_上衣('摇粒绒夹克','70','米白轻量保暖'),_上衣('羊毛混纺大衣','120','深灰切斯特版型'),_上衣('宽松印花涂鸦T恤','35','落肩Oversize美式街头'),_上衣('Oversize连帽卫衣','60','黑色XL廓形重磅毛圈'),_上衣('机能战术马甲','90','多口袋尼龙透气网眼')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-bot\')">下装</div><div class="shop-grid shop-subgrid" id="shop-sub-bot">'+[_下衣('黑色修身牛仔裤','65','微弹力水洗黑'),_下衣('卡其工装短裤','40','多口袋机能风'),_下衣('灰色运动慢跑裤','35','抽绳束脚纯棉'),_下衣('黑色束脚卫裤','35','基本款侧拉链口袋'),_下衣('亚麻阔腿短裤','45','卡其色宽松透气'),_下衣('浅蓝破洞牛仔裤','55','轻度水洗膝盖破洞'),_下衣('卡其九分裤','50','直筒露踝棉质'),_下衣('羊毛混纺西裤','70','深灰垂感抗皱'),_下衣('加绒束脚卫裤','45','内里抓绒保暖'),_下衣('垂坠阔腿裤','55','黑色雪纺混纺宽松拖地'),_下衣('泡泡纱宽松长裤','50','褶皱纹理透气凉爽')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-shoe\')">鞋</div><div class="shop-grid shop-subgrid" id="shop-sub-shoe">'+[_鞋子('白色帆布鞋','50','低帮经典百搭'),_鞋子('黑色复古跑鞋','70','网面透气厚底'),_鞋子('户外马丁靴','90','牛皮防滑耐穿'),_鞋子('家居拖鞋','15','软底静音轻便'),_鞋子('帆布一脚蹬','40','浅灰懒人鞋免系带'),_鞋子('运动凉鞋','55','魔术贴快干户内外'),_鞋子('黑色乐福鞋','80','牛皮简约通勤'),_鞋子('切尔西短靴','100','深棕弹力踝收口'),_鞋子('雪地靴','75','内里羊毛保暖防滑'),_鞋子('经典滑板鞋','55','黑白硫化底耐磨翻毛皮'),_鞋子('高帮帆布鞋','60','酒红色复古金属孔眼'),_鞋子('复古篮球鞋','85','白绿八十年代高帮气垫')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-suit\')">套装/场景</div><div class="shop-grid shop-subgrid" id="shop-sub-suit">'+[_套装('黑色西服三件套','180','修身西装马甲长裤'),_套装('日式甚平家居服','60','棉麻清凉居家'),_套装('浴衣','55','温泉祭典宽袖'),_套装('丝质睡袍','75','光泽柔滑及膝'),_套装('健身房三件套','90','速干T恤压缩裤护腕'),_套装('牛角扣大衣','140','藏青羊毛混纺连帽'),_套装('轻量羽绒服','160','黑色700蓬可收纳'),_套装('雨衣套装','70','防水透湿上下两件'),_套装('海滩三件套','65','泳裤拖鞋防晒衫'),_套装('缎面家居睡衣套装','70','深灰长袖长裤光泽柔滑'),_套装('羊绒混纺家居套装','120','浅灰圆领开衫配长裤')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-cos\')">COS服</div><div class="shop-grid shop-subgrid" id="shop-sub-cos">'+[_COS('透明连帽雨衣','60','完全透视PVC'),_COS('透明泳裤','40','湿水后高度透明'),_COS('兔女郎装扮套装','200','兔耳连体衣网袜'),_COS('逆兔女郎套装','250','仅剩领结袖扣高跟'),_COS('女仆装扮套装','180','围裙蓬裙白丝'),_COS('木乃伊装扮套装','280','弹力绷带缠绕全身'),_COS('狼耳发饰','40','仿真狼耳可动'),_COS('JK制服装扮套装','150','白衬衫格裙领结'),_COS('死库水装扮','130','深蓝竞技泳衣可开合'),_COS('裸体围裙','80','仅围裙遮前身'),_COS('黑色紧身衣','120','高弹力勾勒轮廓'),_COS('透明紧身衣','180','远看整齐近看暴露'),_COS('隐身衣','600','完全隐形触感存在'),_COS('水手服','130','蓝白条纹大翻领短裤'),_COS('旗袍','140','黑色缎面侧开叉盘扣'),_COS('暴露巫女服','120','红白衣裤腰侧全开'),_COS('暴露修女服','130','黑纱头巾高开叉'),_COS('暴露忍者装束','140','渔网锁子甲配短裤'),_COS('玩偶服','100','毛绒连体拉链全包'),_COS('龟甲缚绳衣','70','红棉绳预编可调'),_COS('南瓜骷髅连体衣','75','万圣节荧光骨架')].join('')+'</div>',
+        '<div class="shop-subcat" onclick="toggleShopCat(\'shop-sub-acc\')">配饰</div><div class="shop-grid shop-subgrid" id="shop-sub-acc">'+[_配饰('纹身贴纸包','15','10张临时纹身'),_配饰('乳环','60','金属穿刺永久标志'),_配饰('全遮光眼罩','15','剥夺视觉增强敏感度'),_配饰('舌钉','50','钛合金球形穿刺'),_配饰('耳环','30','纯银圈式简约'),_配饰('耳钉','25','哑光黑钛钢单只'),_配饰('锁骨细链','35','925银极细蛇骨链'),_配饰('皮质手环','20','黑色双层编织'),_配饰('脚链','25','细银链脚踝贴合'),_配饰('脐钉','45','钛钢弯杆带闪钻'),_配饰('运动护腕','15','吸汗棉弹力加压'),_配饰('金属细框眼镜','40','平光钛架可配度'),_配饰('半指露指手套','25','黑色机车风露指透气'),_配饰('羊皮薄手套','45','黑色贴手正装弹性袖口'),_配饰('骑行全指手套','30','灰色防滑掌心透气网面'),_配饰('腰链','40','银质多层细链贴合腰线'),_配饰('十字背链','55','后颈到腰交叉垂坠'),_配饰('大腿环','35','可调节黑色皮革金属扣'),_配饰('臂环','30','银质上臂贴合弹性开口')].join('')+'</div>'
+      ].join(''))+
+      cat('护理类',[card('男士洗面奶','15','清爽控油深层清洁'),card('保湿乳液','20','清爽不油腻锁水'),card('防晒霜','25','SPF50日常防护'),card('发蜡','25','哑光定型短发适用'),card('木质香调淡香水','40','前调柑橘后调雪松'),card('无香型手霜','10','快速吸收不油腻'),card('润唇膏','8','薄荷清凉滋润'),card('修眉刀','8','折叠便携安全'),card('指甲钳套装','15','含锉刀小剪刀'),card('清爽沐浴露','12','薄荷淡香泡沫绵密'),card('保湿身体乳','18','乳木果润肤不黏腻'),card('脱毛膏','30','温和配方敏感肌适用'),card('电动修毛器','55','三档刀头防水充电')])+
+      cat('家居类',[_家居('蓝牙小音箱','50','便携防水重低音'),_家居('桌面暖光台灯','35','三档调光暖黄光'),_家居('无火香薰','25','白檀柚子海盐可选'),_家居('小型冰箱','120','静音冷藏两用'),_家居('懒人豆袋沙发','90','人体工学可拆洗'),_家居('投影仪','180','白墙即幕布1080P'),_家居('加厚瑜伽垫','35','防滑双面加长'),_家居('落地镜','70','全身镜简约边框'),_家居('ns游戏机','180','掌机双摇杆经典游戏'),_家居('日式将棋套装','50','磁吸棋盘折合便携'),_家居('记忆棉枕头','55','慢回弹颈椎支撑'),_家居('多肉植物组合盆栽','30','六种多肉陶瓷盆'),_家居('毛绒地毯','65','浅灰短毛卧室适用')])+
+      cat('房产类',[estateCard('独栋民宅','8000','两层带小院独立出入','住宅区'),estateCard('学区公寓','3500','近学校安静便利','文教区'),estateCard('海景公寓','6000','落地窗面朝大海','海滨区'),estateCard('海滨别墅','15000','私人泳池独栋二层','海滨区'),estateCard('高层公寓','5500','城市夜景落地窗','商业区'),estateCard('阁楼Loft','7000','挑高开放工业风','商业区'),estateCard('湾区独栋别墅','25000','顶级社区私人码头','湾区'),estateCard('林间木屋','1500','被树林环绕安静隐蔽','远郊'),estateCard('农家小院','3000','宽敞院落隐私极好','远郊')])+
+      cat('规则类',[card('常识篡改手电','450','照射修改常识认知'),card('认知洗脑麦克风','500','声音被接受为想法'),card('快感同步项圈','300','佩戴者同步主角快感'),card('替身人偶','450','被观众误认主播本人'),card('羞耻心剥离贴纸','300','羞耻感暂时剥离'),card('敏感度提升喷雾','150','轻微触碰即引强烈快感'),card('暂时性变性药水','350','持续24小时性别逆转'),card('乳汁分泌诱导胶囊','150','男女可用持续一天'),card('高潮指令胶囊','280','听到关键词即强制高潮'),card('临时主仆契约印章','350','盖章后24小时主仆关系')])+
+      cat('辅助类',[card('热感润滑液','10','随摩擦升温灼热快感'),card('冰感润滑液','10','产生清凉刺激快感'),card('完全恢复药水','10','消除一切身体疲惫'),card('清洗套装','10','清洁液刷子收纳袋')]);
+  },
+};
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+function switchTab(tabId){
+  document.querySelectorAll('.tab-content').forEach(p=>p.classList.remove('tab-content--active'));
+  document.getElementById(tabId).classList.add('tab-content--active');
+  document.querySelectorAll('.side-tab').forEach(t=>t.classList.remove('side-tab--active'));
+  document.querySelector('.side-tab[data-tab="'+tabId+'"]').classList.add('side-tab--active');
+  if(tabId==='tab-dyn')U.renderDynamics();
+  if(tabId==='tab-recs')U.renderRecords();
+  if(tabId==='tab-arch')U.renderArchive();
+  if(tabId==='tab-social')U.renderSocial();
+  if(tabId==='tab-shop')U.renderShop();
+}
+function switchArchTab(key){
+  document.querySelectorAll('.arch-pane').forEach(p=>p.classList.remove('arch-pane--active'));
+  document.querySelectorAll('.arch-tab').forEach(t=>{t.classList.remove('arch-tab--active');t.style.background='';t.style.color='';t.style.borderColor='';t.style.boxShadow='';});
+  document.getElementById('arch-'+key).classList.add('arch-pane--active');
+  const activeTab=document.querySelector('.arch-tab[data-arch="'+key+'"]');
+  activeTab.classList.add('arch-tab--active');
+  const col=key==='self'?'#f0b84d':(NPC_COLORS[key]||'#959aa3');
+  activeTab.style.background=col+'20';activeTab.style.color=col;activeTab.style.borderColor=col+'40';activeTab.style.boxShadow='0 0 10px '+col+'30';
+}
+function toggleShopCat(id){const g=document.getElementById(id);const t=g.previousElementSibling;g.classList.toggle('shop-grid--open');const cl=t.classList.contains('shop-subcat')?'shop-subcat--open':'shop-cat-title--open';t.classList.toggle(cl);}
+
+/* ============================================================
+   STREAM MODAL
+   ============================================================ */
+const MAP_DATA={文教区:['汐望大学','汐望高中','市立图书馆','学府路商业街','水族馆','河畔公园','汐望体育场','汐望体育馆'],海滨区:['汐望海滩','滨海景观步道','游艇码头','防波堤与灯塔','海滨购物中心'],商业区:['中央车站','繁华交叉口','城市观景塔','地下商业街','商务酒店','风俗街','多屏电影院','二次元文化区'],住宅区:['单身公寓','独栋民宅','便利店','投币洗衣房','社区泳池','社区健身房','社区公园'],湾区:['汐望游艇会','海景餐厅','湾区美术馆','度假酒店'],远郊:['森林公园','废弃工厂','矿山遗迹','风车山丘']};
+
+function openStreamModal(){
+  var rEl=document.getElementById('sm-region');
+  rEl.innerHTML='<option value="">--选区域--</option>';
+  Object.keys(MAP_DATA).forEach(function(r){rEl.innerHTML+='<option value="'+r+'">'+r+'</option>';});
+  document.getElementById('sm-loc').innerHTML='<option value="">--选地点--</option>';
+  document.getElementById('sm-slot').value='现在';
+  var wd=getValue(globalData,'主角.衣橱')||{};
+  sm_fillWear('sm-top',wd.上衣||[]);
+  sm_fillWear('sm-bot',wd.下衣||[]);
+  sm_fillWear('sm-suit',wd.套装||[]);
+  sm_fillWear('sm-cos',wd.COS服||[]);
+  sm_fillWear('sm-under',wd.内衣||[]);
+  sm_fillWear('sm-socks',wd.袜子||[]);
+  sm_fillWear('sm-shoes',wd.鞋子||[]);
+  // Reset suit/cos to 无
+  document.getElementById('sm-suit').value='无';document.getElementById('sm-cos').value='无';
+  var props=getValue(globalData,'主角.道具栏.已购道具列表')||[];
+  var pH='';props.forEach(function(p){pH+='<label style="margin-right:8px;font-size:12px"><input type="checkbox" value="'+p+'">'+p+'</label>';});
+  document.getElementById('sm-props').innerHTML=pH||'暂无可选道具';
+  var npcs=getValue(globalData,'NPC数据')||{};
+  var nH='';Object.keys(npcs).forEach(function(k){var n=npcs[k];if(n.秘密发现){nH+='<label style="margin-right:8px;font-size:12px"><input type="checkbox" value="'+k+'">'+k+'</label>';}});
+  document.getElementById('sm-npcs').innerHTML=nH||'暂无知晓秘密的NPC';
+  document.getElementById('stream-modal-overlay').classList.remove('hidden');
+  document.getElementById('stream-modal').classList.remove('hidden');
+}
+function sm_fillWear(id,arr){var el=document.getElementById(id);var keep=el.value;el.innerHTML='<option value="无">无</option><option value="默认穿着">默认穿着</option>';arr.forEach(function(v){el.innerHTML+='<option value="'+v+'">'+v+'</option>';});el.value=(arr.indexOf(keep)>=0)?keep:((keep==='无'||keep==='默认穿着')?keep:'默认穿着');}
+function sm_wearChange(src){
+  var top=document.getElementById('sm-top').value,bot=document.getElementById('sm-bot').value;
+  var suit=document.getElementById('sm-suit'),cos=document.getElementById('sm-cos');
+  if(src==='top'||src==='bot'){
+    if(top!=='无'||bot!=='无'){suit.value='无';cos.value='无';suit.disabled=true;cos.disabled=true;}
+    else{suit.disabled=false;cos.disabled=false;}
+  }else{
+    if(suit.value!=='无'||cos.value!=='无'){document.getElementById('sm-top').value='无';document.getElementById('sm-bot').value='无';document.getElementById('sm-top').disabled=true;document.getElementById('sm-bot').disabled=true;}
+    else{document.getElementById('sm-top').disabled=false;document.getElementById('sm-bot').disabled=false;}
+  }
+}
+function startStream(){
+  var r=document.getElementById('sm-region').value,l=document.getElementById('sm-loc').value;
+  var slot=document.getElementById('sm-slot').value;
+  var wear=[];
+  var top=document.getElementById('sm-top').value,bot=document.getElementById('sm-bot').value,under=document.getElementById('sm-under').value,socks=document.getElementById('sm-socks').value,shoes=document.getElementById('sm-shoes').value;
+  var suit=document.getElementById('sm-suit').value,cos=document.getElementById('sm-cos').value;
+  if(top!=='无')wear.push(top);if(bot!=='无')wear.push(bot);
+  if(suit!=='无')wear.push(suit);if(cos!=='无')wear.push(cos);
+  if(under!=='无')wear.push(under);if(socks!=='无')wear.push(socks);if(shoes!=='无')wear.push(shoes);
+  var props=[],pChecks=document.querySelectorAll('#sm-props input:checked');pChecks.forEach(function(c){props.push(c.value);});
+  var npcs=[],nChecks=document.querySelectorAll('#sm-npcs input:checked');nChecks.forEach(function(c){npcs.push(c.value);});
+  var cmd='开播，地点:'+r+'·'+l+'，时段:'+slot+'，穿着:'+wear.join('+')+'，道具:'+props.join('+')+'，联动:'+npcs.join('+')+'，';
+  sendToInput(cmd);closeStreamModal();
+}
+function sm_fillSelect(id,arr){var el=document.getElementById(id);el.innerHTML='<option value="">默认</option>';arr.forEach(function(v){el.innerHTML+='<option value="'+v+'">'+v+'</option>';});}
+function sm_updateLocs(){var r=document.getElementById('sm-region').value;var locs=MAP_DATA[r]||[];var lEl=document.getElementById('sm-loc');lEl.innerHTML='<option value="">--选地点--</option>';locs.forEach(function(l){lEl.innerHTML+='<option value="'+l+'">'+l+'</option>';});}
+function closeStreamModal(){document.getElementById('stream-modal-overlay').classList.add('hidden');document.getElementById('stream-modal').classList.add('hidden');}
+
+let _cart = [];
+function addToCart(name,price,desc,cat){
+  _cart.push({name:name,price:price,desc:desc,cat:cat});
+  document.getElementById('cart-badge').textContent = _cart.length;
+  document.getElementById('cart-float').classList.remove('hidden');
+  renderCart();
+}
+function removeFromCart(idx){
+  _cart.splice(idx,1);
+  document.getElementById('cart-badge').textContent = _cart.length;
+  if(_cart.length===0)document.getElementById('cart-float').classList.add('hidden');
+  renderCart();
+}
+function clearCart(){
+  _cart=[];
+  document.getElementById('cart-badge').textContent='0';
+  document.getElementById('cart-float').classList.add('hidden');
+  document.getElementById('cart-panel').classList.add('hidden');
+}
+function renderCart(){
+  var total=0,html='';
+  _cart.forEach(function(item,i){
+    total+=parseInt(item.price)||0;
+    html+='<div class="cart-item"><span class="cart-item__name">'+item.name+'</span><span class="cart-item__cat">'+item.cat+'</span><span class="cart-item__price">'+item.price+'</span><span class="cart-item__del" onclick="removeFromCart('+i+')">✕</span></div>';
+  });
+  document.getElementById('cart-body').innerHTML=html||'<span style="color:var(--text-mut)">购物车是空的</span>';
+  var pts=getValue(globalData,'主角.主播信息.直播点数')||0;
+  var btn=document.querySelector('#cart-panel .btn--action');
+  if(total>pts){
+    btn.disabled=true; btn.style.opacity='0.3';
+    document.getElementById('cart-total').innerHTML='共 <b style="color:#e05555">'+total+'</b> 点 / 持有 '+pts+' 点（不足）';
+  }else{
+    btn.disabled=false; btn.style.opacity='1';
+    document.getElementById('cart-total').textContent='共 '+total+' 点 / 持有 '+pts+' 点';
+  }
+}
+function toggleCart(){
+  var p=document.getElementById('cart-panel');
+  p.classList.toggle('hidden');
+  if(!p.classList.contains('hidden'))renderCart();
+}
+function checkoutCart(){
+  if(_cart.length===0)return;
+  var total=0;
+  _cart.forEach(function(item){total+=parseInt(item.price)||0;});
+  var lines = _cart.map(function(item){return '购买'+item.name+item.cat+item.desc+'，';}).join('\n');
+  lines += '\n共计花费' + total + '直播点数，';
+  sendToInput(lines);
+  clearCart();
+}
+
+// ---- 房产弹窗 ----
+let _estateName = '', _estateDesc = '';
+function openEstateModal(name,price,desc,region){
+  _estateName = name; _estateDesc = desc;
+  document.getElementById('estate-title').textContent = name + ' · ' + region + ' · ' + price + '点';
+  document.getElementById('estate-detail').innerHTML = '<div style="font-size:12px;color:var(--text-mut)">' + desc + '</div><div style="margin-top:8px;font-size:11px;color:var(--accent-gold)">价格: ' + price + '点</div>';
+  var npcs = getValue(globalData,'NPC数据')||{};
+  var nH = ''; Object.keys(npcs).forEach(function(k){
+    if(k==='汐见真帆') return;
+    nH += '<label style="margin-right:8px;font-size:12px"><input type="checkbox" value="'+k+'">'+k+'</label>';
+  });
+  document.getElementById('estate-npcs').innerHTML = nH || '无可选NPC';
+  document.getElementById('estate-modal-overlay').classList.remove('hidden');
+  document.getElementById('estate-modal').classList.remove('hidden');
+}
+function closeEstateModal(){
+  document.getElementById('estate-modal-overlay').classList.add('hidden');
+  document.getElementById('estate-modal').classList.add('hidden');
+}
+function confirmEstate(){
+  var npcs = [], checks = document.querySelectorAll('#estate-npcs input:checked');
+  checks.forEach(function(c){npcs.push(c.value);});
+  var cmd = '购买' + _estateName + '房产' + _estateDesc + '，同居:' + npcs.join('+') + '，';
+  sendToInput(cmd); closeEstateModal();
+}
+function toggleInventory(){const p=document.getElementById('inv-panel');if(p.classList.contains('inv-panel--open')){p.classList.remove('inv-panel--open');}else{U.renderInventory();p.classList.add('inv-panel--open');}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay--open').forEach(m=>m.classList.remove('modal-overlay--open'));});
+function openModal(id){document.getElementById(id).classList.add('modal-overlay--open');}
+function closeModal(id){document.getElementById(id).classList.remove('modal-overlay--open');}
+function sendToInput(text){
+  try{
+    const inputArea=window.parent.document.querySelector('#send_textarea');
+    if(inputArea){
+      inputArea.value=(inputArea.value.trim()?inputArea.value+'\n':'')+text;
+      inputArea.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+  }catch(e){console.error(e);}
+}
+document.addEventListener('click',e=>{
+  const p=document.getElementById('inv-panel'),b=document.getElementById('btn-inv');
+  if(p&&b&&!b.contains(e.target)&&!p.contains(e.target))p.classList.remove('inv-panel--open');
+});
+
+/* ============================================================
+   CLOCK
+   ============================================================ */
+function updClock(){
+  const y=getValue(globalData,'进程.当前年份'),mo=getValue(globalData,'进程.当前月份'),d=getValue(globalData,'进程.当前日份'),slot=getValue(globalData,'进程.当前时段')||'晚上',w=getValue(globalData,'进程.当前周几');
+  const mNames=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  let season='';const mn=mo||10;if(mn>=3&&mn<=5)season='春季';else if(mn>=6&&mn<=8)season='夏季';else if(mn>=9&&mn<=11)season='秋季';else season='冬季';
+  const wNames=['周一','周二','周三','周四','周五','周六','周日'];
+  document.getElementById('hdr-date').textContent=(y||2025)+'-'+String(mn).padStart(2,'0')+'-'+String(d||15).padStart(2,'0')+' '+season+' '+(wNames[w-1]||'周三');
+  document.getElementById('hdr-time').textContent=slot;
+  // Weather
+  const weather=getValue(globalData,'进程.当前天气')||'晴';
+  const wh=document.getElementById('hdr-weather');
+  if(weather==='晴')wh.innerHTML=IC.sun+' <span>'+weather+'</span>';
+  else if(weather.includes('雨'))wh.innerHTML=IC.cloudRain+' <span>'+weather+'</span>';
+  else wh.innerHTML=IC.cloud+' <span>'+weather+'</span>';
+  // Location
+  const area=getValue(globalData,'主角.当前状态.当前区域')||'';const loc=getValue(globalData,'主角.当前状态.当前地点')||'';
+  document.getElementById('hdr-loc').textContent=area+(loc?' · '+loc:'');
+  // Update timer
+  U._updateTimer();
+}
+
+/* ============================================================
+   POLL & INIT
+   ============================================================ */
+function renderApp(){
+  const cs=getValue(globalData,'主角.当前状态');
+  if(cs){
+    U.updGauge('pleasure',cs.快感值||0);
+    const pv=document.getElementById('pleasure-val');if(pv)pv.style.color=gaugePleasureCol(cs.快感值||0);
+    U.updGauge('arousal',cs.性欲值||0);
+    const av=document.getElementById('arousal-val');if(av)av.style.color=gaugeDesireCol(cs.性欲值||0);
+  }
+  U.renderPhase();
+  U.renderStreamState();
+  U.renderPhysio();
+  U.renderStreamerInfo();
+  if(document.getElementById('tab-dyn').classList.contains('tab-content--active'))U.renderDynamics();
+  if(document.getElementById('tab-recs').classList.contains('tab-content--active'))U.renderRecords();
+  if(document.getElementById('tab-arch').classList.contains('tab-content--active'))U.renderArchive();
+  if(document.getElementById('tab-social').classList.contains('tab-content--active'))U.renderSocial();
+  updClock();
+  const pendingEvt = getValue(globalData,'系统状态.待处理事件',{});
+  const evtEl = document.getElementById('hdr-events');
+  if(evtEl){
+    const keys = Object.keys(pendingEvt).filter(k=>k!=='观众任务事件' && k!=='外人闯入事件'); // 可选：过滤掉已在直播面板展示的任务/闯入
+    if(keys.length>0){
+      evtEl.style.display = '';
+      evtEl.textContent = '⚡'+keys.join('、');
+    } else {
+      evtEl.style.display = 'none';
+    }
+  }
+}
+
+const init=async()=>{
+  const Mvu=getMvuInstance();
+  if(Mvu&&Mvu.events){
+    document.addEventListener(Mvu.events.VARIABLE_UPDATE_ENDED,(e)=>{
+      if(e.detail&&e.detail.stat_data){
+        globalData=e.detail.stat_data;
+        renderApp();
+      }
+    });
+    const wrapper=Mvu.getMvuData({type:'message',message_id:-1});
+    if(wrapper){
+      globalData=wrapper.stat_data||wrapper;
+      renderApp();
+    }
+  }else{
+    // Standalone: use default data
+    globalData=JSON.parse(JSON.stringify(DEFAULT_STAT));
+    renderApp();
+    setTimeout(init,1000);
+  }
+};
+
+const startApp = () => {
+  // Load default to init gauges before MVU connects
+  globalData=JSON.parse(JSON.stringify(DEFAULT_STAT));
+  window.notif=new Notif();
+  U.initGauge('pleasure',getValue(globalData,'主角.当前状态.快感值')||0);
+  U.initGauge('arousal',getValue(globalData,'主角.当前状态.性欲值')||0);
+  U.renderAll();
+  U.renderDynamics();U.renderRecords();U.renderArchive();U.renderShop();U.renderInventory();U.renderSocial();
+  const name=getValue(globalData,'主角.主播信息.主播名字');
+  document.getElementById('idle-avatar-text').textContent=(name||'蓮')[0];
+  updClock();
+  // Begin MVU connection
+  init();
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
+</script>
+
+<!-- ===== GM控制台 (Director Studio Pro) ===== -->
+<div id="gm-debug-wrapper">
+    <!-- GM触发器按钮 -->
+    <div class="gm-trigger" onclick="toggleGM()" title="GM控制台">
+        <i class="fa-solid fa-clapperboard"></i>
+    </div>
+    <!-- ===== GM 控制台主面板（替换原有 .gm-panel 内容） ===== -->
+    <div class="gm-panel" id="gm-panel">
+        <!-- 头部 -->
+        <div class="gm-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span><i class="fa-solid fa-terminal"></i> DIRECTOR_MODE</span>
+                <span id="save-status" style="font-size:0.8em; font-weight:normal; opacity:0.5;"></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="gm-icon-btn" onclick="restoreSnapshot()" title="撤销全部修改">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+                <button class="gm-icon-btn" onclick="toggleGMMaximize()" title="最大化/还原">
+                    <i class="fa-regular fa-square" id="gm-max-icon"></i>
+                </button>
+                <span class="gm-close" onclick="toggleGM()">×</span>
+            </div>
+        </div>
+
+        <!-- 导航标签 -->
+        <div class="gm-nav">
+            <div class="gm-tab active" onclick="switchGmTab(this, 'gm-tab-narrative')">叙事</div>
+            <div class="gm-tab" onclick="switchGmTab(this, 'gm-tab-stats')">状态</div>
+        </div>
+
+        <!-- Tab 1: 叙事 -->
+        <div id="gm-tab-narrative" class="gm-content active">
+            <!-- 阶段切换 -->
+            <div class="gm-section">
+                <div class="gm-label">
+                    <span><i class="fa-solid fa-forward"></i> 强制转场 (Phase)</span>
+                    <span id="current-phase-display" style="color:#7aa2f7; font-weight:normal;"></span>
+                </div>
+                <select id="phase-selector" class="gm-input full" onchange="gm_update('stat_data.进程.阶段', this.value)">
+                    <option value="日常阶段">☕ 日常阶段</option>
+                    <option value="直播阶段">🔴 直播阶段</option>
+                </select>
+            </div>
+
+            <!-- 直播状态快速查看 (新增) -->
+            <div class="gm-section">
+                <div class="gm-label">
+                    <span><i class="fa-solid fa-tower-broadcast"></i> 直播状态</span>
+                    <span id="live-status-display" style="color:#e0af68; font-weight:normal;"></span>
+                </div>
+                <div class="control-row">
+                    <span class="label">观看人数</span>
+                    <input type="number" id="inp-viewers" class="gm-input num" onchange="gm_update('stat_data.直播状态.当前直播间人数', Number(this.value))">
+                </div>
+                <div class="control-row">
+                    <span class="label">直播间热度</span>
+                    <input type="number" id="inp-heat" class="gm-input num" onchange="gm_update('stat_data.直播状态.当前直播间热度', Number(this.value))">
+                </div>
+            </div>
+
+            <!-- 待处理事件队列 -->
+            <div class="gm-section">
+                <div class="gm-label">
+                    <span><i class="fa-solid fa-list-check"></i> 待处理事件</span>
+                    <i class="fa-solid fa-rotate-right" onclick="renderGM()" title="刷新" style="cursor:pointer"></i>
+                </div>
+                <div id="event-list-container" class="event-list"></div>
+                    <div class="input-group" style="margin-top:6px; display:flex; gap:4px;">
+                        <input type="text" id="new-event-input" class="gm-input" placeholder="事件名称" style="flex:1;">
+                        <input type="text" id="new-event-value" class="gm-input" placeholder="值（可选）" style="width:40%;">
+                        <button class="gm-btn-icon" onclick="addCustomEvent()" title="添加事件">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                <button class="gm-btn gray full-width" style="margin-top:5px;" onclick="gm_update('stat_data.系统状态.待处理事件', {})">
+                    <i class="fa-solid fa-eraser"></i> 清空所有事件
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab 2: 状态 -->
+        <div id="gm-tab-stats" class="gm-content">
+            <div class="gm-section">
+                <div class="gm-label"><i class="fa-solid fa-sliders"></i> 主角核心数值</div>
+
+                <div class="control-row">
+                    <span class="label">快感值</span>
+                    <input type="number" id="inp-pleasure" class="gm-input num" onchange="gm_update('stat_data.主角.当前状态.快感值', Number(this.value))">
+                    <div class="quick-actions">
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.快感值', -10, 'add')">-10</button>
+                        <button class="mini-btn pink" onclick="gm_update('stat_data.主角.当前状态.快感值', 0)">归零</button>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <span class="label">性欲值</span>
+                    <input type="number" id="inp-desire" class="gm-input num" onchange="gm_update('stat_data.主角.当前状态.性欲值', Number(this.value))">
+                    <div class="quick-actions">
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.性欲值', -10, 'add')">-10</button>
+                        <button class="mini-btn pink" onclick="gm_update('stat_data.主角.当前状态.性欲值', 0)">归零</button>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <span class="label">羞耻度</span>
+                    <input type="number" id="inp-shame" class="gm-input num" onchange="gm_update('stat_data.主角.当前状态.羞耻度', Number(this.value))">
+                    <div class="quick-actions">
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.羞耻度', -10, 'add')">-10</button>
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.羞耻度', 100)">满</button>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <span class="label">淫乱度</span>
+                    <input type="number" id="inp-lewd" class="gm-input num" onchange="gm_update('stat_data.主角.当前状态.淫乱度', Number(this.value))">
+                    <div class="quick-actions">
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.淫乱度', 10, 'add')">+10</button>
+                        <button class="mini-btn" onclick="gm_update('stat_data.主角.当前状态.淫乱度', 0)">归零</button>
+                    </div>
+                </div>
+
+                <!-- 当前性行为管理 -->
+                <div class="gm-section" style="margin-top:12px;">
+                    <div class="gm-label"><i class="fa-solid fa-heart-circle-bolt"></i> 当前性行为管理</div>
+
+                    <!-- 行为列表展示 -->
+                    <div id="sex-acts-list" class="event-list" style="max-height:160px;"></div>
+
+                    <!-- 快速添加表单 -->
+                    <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
+                        <input type="text" id="new-act-target" class="gm-input" placeholder="对象" style="flex:1; min-width:80px;" list="act-target-list">
+                        <datalist id="act-target-list">
+                            <option value="自己">
+                            <!-- 其余选项将在 renderGM 中动态填充 -->
+                        </option></datalist>
+                        <select id="new-act-gender" class="gm-input" style="width:60px;">
+                            <option value="">性别</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                        <select id="new-act-part" class="gm-input" style="width:80px;">
+                            <option value="">部位</option>
+                            <option value="肉棒">肉棒</option>
+                            <option value="后穴">后穴</option>
+                            <option value="胸部">胸部</option>
+                            <option value="嘴巴">嘴巴</option>
+                        </select>
+                        <select id="new-act-action" class="gm-input" style="width:100px;">
+                            <option value="">行为</option>
+                            <option value="自慰">自慰</option>
+                            <option value="使用情趣玩具">使用情趣玩具</option>
+                            <option value="主动手交">主动手交</option>
+                            <option value="被动手交">被动手交</option>
+                            <option value="主动足交">主动足交</option>
+                            <option value="被动足交">被动足交</option>
+                            <option value="主动口交">主动口交</option>
+                            <option value="被动口交">被动口交</option>
+                            <option value="被动乳交">被动乳交</option>
+                            <option value="小穴插入性爱">小穴插入性爱</option>
+                            <option value="后穴插入性爱">后穴插入性爱</option>
+                            <option value="后穴性爱">后穴性爱</option>
+                        </select>
+                        <button class="gm-btn-icon" onclick="addSexAct()" title="添加行为">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    <small style="color:var(--text-ter);">添加后请点击「应用修改」保存到变量</small>
+                </div>
+
+                <div class="gm-label" style="margin-top:12px;"><i class="fa-solid fa-coins"></i> 直播事业</div>
+
+                <div class="control-row">
+                    <span class="label">直播点数</span>
+                    <input type="number" id="inp-points" class="gm-input num" onchange="gm_update('stat_data.主角.主播信息.直播点数', Number(this.value))">
+                </div>
+                <div class="control-row">
+                    <span class="label">粉丝数</span>
+                    <input type="number" id="inp-fans" class="gm-input num" onchange="gm_update('stat_data.主角.主播信息.粉丝数', Number(this.value))">
+                </div>
+                <div class="control-row">
+                    <span class="label">直播总次数</span>
+                    <input type="number" id="inp-stream-count" class="gm-input num" onchange="gm_update('stat_data.主角.主播信息.直播总次数', Number(this.value))">
+                </div>
+
+                <div class="gm-label" style="margin-top:12px;"><i class="fa-solid fa-wand-magic-sparkles"></i> 快捷操作</div>
+                <div class="gm-btn-group">
+                    <button class="gm-btn green" onclick="resetDailyStatus()">
+                        <i class="fa-solid fa-sun"></i> 重置日常状态
+                    </button>
+                    <button class="gm-btn" onclick="forceEndStream()">
+                        <i class="fa-solid fa-stop"></i> 强制结束直播
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ===== GM控制台 结束 ===== -->
+
+<script>
+/* ============================================================
+   GM 控制台核心逻辑（Director Mode）
+   适配“露出直播”变量路径，请确保此脚本在状态面板主体JS之后加载
+   ============================================================ */
+let _gmSnapshot = null;       // 用于撤销的快照
+let _currentMvuData = null;   // 当前完整MVU数据
+
+// ------------------- 工具函数（若原脚本未提供，则再次定义） -------------------
+const getDeep = (obj, path, def) => path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? def;
+
+const showToast = (msg, selector) => {
+  const el = document.querySelector(selector);
+  if (el) {
+    el.innerText = msg;
+    el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 2000);
+  }
+};
+
+const setInp = (id, val) => {
+  const el = document.getElementById(id);
+  if (el && document.activeElement !== el) el.value = (typeof val === 'number') ? Math.round(val) : val;
+};
+
+const setTxt = (id, val) => {
+  const el = document.getElementById(id);
+  if (el) el.innerText = val;
+};
+
+// ------------------- 面板显示/隐藏 -------------------
+function toggleGM() {
+  const panel = document.getElementById('gm-panel');
+  if (!panel) return;
+  if (!panel.classList.contains('show')) {
+    panel.style.display = 'flex';
+    requestAnimationFrame(() => {
+      panel.classList.add('show');
+      renderGM(); // 打开时刷新所有数据
+      if (_currentMvuData) {
+        _gmSnapshot = JSON.parse(JSON.stringify(_currentMvuData));
+        showToast('快照已保存，可撤销', '#save-status');
+      }
+    });
+  } else {
+    panel.classList.remove('show');
+    setTimeout(() => { panel.style.display = 'none'; }, 250);
+  }
+}
+
+function toggleGMMaximize() {
+  const panel = document.getElementById('gm-panel');
+  const icon = document.getElementById('gm-max-icon');
+  if (panel) {
+    panel.classList.toggle('maximized');
+    icon.className = panel.classList.contains('maximized') ? 'fa-regular fa-clone' : 'fa-regular fa-square';
+  }
+}
+
+function switchGmTab(btn, targetId) {
+  document.querySelectorAll('.gm-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.gm-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(targetId).classList.add('active');
+}
+
+// ------------------- 主渲染函数：读取所有变量并填充控件 -------------------
+async function renderGM() {
+  try {
+    const Mvu = getMvuInstance();
+    if (!Mvu) return;
+    const wrapper = Mvu.getMvuData({ type: 'message', message_id: -1 });
+    if (!wrapper) return;
+    _currentMvuData = wrapper.stat_data || wrapper;
+    const d = _currentMvuData;
+
+    // --- 阶段显示 ---
+    const phase = getDeep(d, '进程.阶段', '日常阶段');
+    setTxt('current-phase-display', phase);
+    setInp('phase-selector', phase);
+
+    // --- 核心数值 ---
+    setInp('inp-pleasure', getDeep(d, '主角.当前状态.快感值', 0));
+    setInp('inp-desire', getDeep(d, '主角.当前状态.性欲值', 0));
+    setInp('inp-shame', getDeep(d, '主角.当前状态.羞耻度', 100));
+    setInp('inp-lewd', getDeep(d, '主角.当前状态.淫乱度', 0));
+    setInp('inp-points', getDeep(d, '主角.主播信息.直播点数', 0));
+    setInp('inp-fans', getDeep(d, '主角.主播信息.粉丝数', 0));
+    setInp('inp-stream-count', getDeep(d, '主角.主播信息.直播总次数', 0));
+
+    // --- 直播状态 ---
+    const isStreaming = getDeep(d, '直播状态.是否正在直播', false);
+    document.getElementById('live-status-display').innerText = isStreaming ? '直播中' : '未开播';
+    const btnEnd = document.getElementById('btn-end-stream');
+    const btnStart = document.getElementById('btn-start-stream');
+    if (btnEnd) btnEnd.style.display = isStreaming ? 'inline-flex' : 'none';
+    if (btnStart) btnStart.style.display = isStreaming ? 'none' : 'inline-flex';
+    setInp('inp-viewers', getDeep(d, '直播状态.当前直播间人数', 0));
+    setInp('inp-heat', getDeep(d, '直播状态.当前直播间热度', 0));
+
+    // --- 待处理事件队列 ---
+    const events = getDeep(d, '系统状态.待处理事件', {});
+    const eventKeys = Object.keys(events).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+    const eventContainer = document.getElementById('event-list-container');
+    if (eventKeys.length > 0) {
+        eventContainer.innerHTML = eventKeys.map(k => {
+        const val = events[k];
+        let displayVal = '';
+        if (typeof val === 'string') {
+          displayVal = val;
+        } else if (typeof val === 'boolean') {
+          displayVal = val.toString();
+        } else if (typeof val === 'object') {
+          displayVal = JSON.stringify(val, null, 1);
+        } else if (val !== undefined) {
+          displayVal = String(val);
+        }
+        return `<div class="event-item">
+          <div style="flex:1; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <span style="font-weight:600; color:#c0caf5;">${k}</span>
+            ${displayVal ? `<span style="font-size:0.85em; color:#787c99; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${displayVal}</span>` : ''}
+          </div>
+          <i class="fa-solid fa-xmark del" onclick="gm_update('stat_data.系统状态.待处理事件.${k.replace(/'/g, "\\'")}', null, 'remove')"></i>
+        </div>`;
+      }).join('');
+    } else {
+      eventContainer.innerHTML = '<div style="text-align:center; opacity:0.5; padding:4px;">(空)</div>';
+    }
+
+    // 动态更新“对象”候选列表
+    const targetList = document.getElementById('act-target-list');
+    if (targetList) {
+        const defaultTargets = ['自己', '路人', '陌生人', '汐见真帆', '黑崎海斗', '冰室纱耶', '风见迅'];
+        const npcs = _.get(d, 'stat_data.NPC数据') || {};
+        const npcNames = Object.keys(npcs).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+
+        const allTargets = [...new Set([...defaultTargets, ...npcNames])];
+        targetList.innerHTML = allTargets.map(name => `<option value="${name}">`).join('');
+    }
+
+    // ===== 渲染当前性行为列表 =====
+    const sexActs = _.get(d, '主角.当前状态.当前性行为') || [];
+    const sexContainer = document.getElementById('sex-acts-list');
+    if (sexContainer) {
+        if (!Array.isArray(sexActs) || sexActs.length === 0) {
+            sexContainer.innerHTML = '<div style="text-align:center; opacity:0.5; padding:4px;">(无)</div>';
+        } else {
+            sexContainer.innerHTML = sexActs.map((act, index) => {
+                const target = act.对象 || '?';
+                const gender = act.性别 || '';
+                const part   = act.部位 || '?';
+                const action = act.行为 || '?';
+                const desc = `${target}${gender ? '('+gender+')' : ''} · ${part} · ${action}`;
+                return `
+                <div class="event-item" style="justify-content:space-between;">
+                    <span style="font-size:12px;">${desc}</span>
+                    <div>
+                        <button class="mini-btn blue" onclick="editSexAct(${index})" title="编辑">✎</button>
+                        <i class="fa-solid fa-xmark del" onclick="removeSexAct(${index})" style="margin-left:4px;"></i>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // 这里可以根据需要继续扩展其他控件……
+
+  } catch (e) {
+    console.error('[GM Render]', e);
+  }
+}
+
+// ------------------- 核心变量修改函数 -------------------
+async function gm_update(path, value, mode = 'set') {
+  try {
+    const Mvu = getMvuInstance();
+    if (!Mvu) return showToast('未连接到MVU系统', '#save-status');
+    const mvuData = Mvu.getMvuData({ type: 'message', message_id: -1 });
+    if (!mvuData) return;
+
+    if (typeof _ !== 'undefined' && _.set) {
+      if (mode === 'remove') {
+        _.unset(mvuData, path);
+      } else if (mode === 'add') {
+        const old = _.get(mvuData, path) || 0;
+        _.set(mvuData, path, Number(old) + Number(value));
+      } else {
+        _.set(mvuData, path, value);
+      }
+    }
+
+    await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: -1 });
+    const cleanData = JSON.parse(JSON.stringify(mvuData.stat_data || mvuData));
+    document.dispatchEvent(new CustomEvent(Mvu.events.VARIABLE_UPDATE_ENDED, { detail: { stat_data: cleanData }, bubbles: true }));
+    setTimeout(renderGM, 50);
+    showToast('变量已更新', '#save-status');
+  } catch (e) {
+    console.error('[GM Update]', e);
+    showToast('更新失败', '#save-status');
+  }
+}
+
+// ========== 性行为管理函数（MVU直读直写） ==========
+
+async function _getCurrentActs() {
+    const Mvu = getMvuInstance();
+    if (!Mvu) throw new Error('MVU未连接');
+    const mvuData = Mvu.getMvuData({ type: 'message', message_id: -1 });
+    if (!mvuData) throw new Error('无法获取MVU数据');
+    let acts = _.get(mvuData, 'stat_data.主角.当前状态.当前性行为') || [];
+    if (!Array.isArray(acts)) acts = [];
+    return acts;
+}
+
+async function addSexAct() {
+    const target = document.getElementById('new-act-target')?.value.trim();
+    if (!target) return alert('请填写对象名称');
+    const gender = document.getElementById('new-act-gender')?.value || '';
+    const part   = document.getElementById('new-act-part')?.value || '';
+    const action = document.getElementById('new-act-action')?.value || '';
+    if (!part || !action) return alert('请选择部位和行为');
+
+    const newAct = { 对象: target, 部位: part, 行为: action };
+    if (gender) newAct.性别 = gender;
+
+    try {
+        const acts = await _getCurrentActs();
+        acts.push(newAct);
+        await gm_update('stat_data.主角.当前状态.当前性行为', acts);
+        // 清空输入框
+        ['new-act-target', 'new-act-gender', 'new-act-part', 'new-act-action'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+    } catch (e) { console.error('[addSexAct]', e); }
+}
+
+async function removeSexAct(index) {
+    try {
+        const acts = await _getCurrentActs();
+        if (index < 0 || index >= acts.length) return;
+        if (!confirm('确定删除这个性行为？')) return;
+        acts.splice(index, 1);
+        await gm_update('stat_data.主角.当前状态.当前性行为', acts);
+    } catch (e) { console.error('[removeSexAct]', e); }
+}
+
+async function editSexAct(index) {
+    try {
+        const acts = await _getCurrentActs();
+        if (index < 0 || index >= acts.length) return;
+        const act = acts[index];
+        const newJson = prompt('编辑性行为 (JSON格式)', JSON.stringify(act, null, 2));
+        if (!newJson) return;
+        const parsed = JSON.parse(newJson);
+        acts[index] = parsed;
+        await gm_update('stat_data.主角.当前状态.当前性行为', acts);
+    } catch (e) { console.error('[editSexAct]', e); }
+}
+
+// ------------------- 快捷操作 -------------------
+// 添加自定义事件到待处理队列
+async function addCustomEvent() {
+    const nameInput = document.getElementById('new-event-input');
+    const valueInput = document.getElementById('new-event-value');
+    const eventName = nameInput.value.trim();
+    if (!eventName) return;
+
+    let eventValue = true; // 默认布尔值
+    const rawVal = valueInput.value.trim();
+    if (rawVal !== '') {
+        // 尝试解析为布尔/数字/JSON，失败则保留字符串
+        if (rawVal === 'true') eventValue = true;
+        else if (rawVal === 'false') eventValue = false;
+        else if (!isNaN(rawVal)) eventValue = Number(rawVal);
+        else {
+            try { eventValue = JSON.parse(rawVal); } catch (e) { eventValue = rawVal; }
+        }
+    }
+
+    await gm_update(`stat_data.系统状态.待处理事件.${eventName}`, eventValue);
+    nameInput.value = '';
+    valueInput.value = '';
+    showToast(`已添加事件: ${eventName}`, '#save-status');
+}
+
+// 一键重置日常状态（示例）
+async function resetDailyStatus() {
+  if (confirm('重置快感、性欲、心跳等临时状态？')) {
+    await gm_update('stat_data.主角.当前状态.快感值', 0);
+    await gm_update('stat_data.主角.当前状态.性欲值', 0);
+    await gm_update('stat_data.主角.当前状态.当前生理状态', '体温正常，呼吸平稳');
+    showToast('日常状态已重置', '#save-status');
+  }
+}
+
+// 强制结束当前直播
+async function forceEndStream() {
+  if (confirm('强制结束当前直播？这将重置直播间数据并进入结算。')) {
+    // 具体操作可根据实际变量路径调整，这里仅示例
+    await gm_update('stat_data.直播状态.是否正在直播', false);
+    await gm_update('stat_data.直播状态.当前直播间人数', 0);
+    await gm_update('stat_data.系统状态.待处理事件.直播结算事件', true);
+    showToast('直播已结束，结算事件已加入队列', '#save-status');
+  }
+}
+
+// 恢复到打开面板时的快照
+async function restoreSnapshot() {
+  if (!_gmSnapshot) {
+    alert('没有快照可供恢复！');
+    return;
+  }
+  if (confirm('恢复到打开控制台前的状态？所有修改将丢失。')) {
+    await gm_update('stat_data', _gmSnapshot, 'set');
+    showToast('已恢复快照', '#save-status');
+  }
+}
+
+// ------------------- 键盘快捷键支持 -------------------
+document.addEventListener('keydown', (e) => {
+  // Ctrl+Shift+G 打开/关闭 GM 面板
+  if (e.ctrlKey && e.shiftKey && e.key === 'G') {
+    e.preventDefault();
+    toggleGM();
+  }
+});
+
+// 初始化：尝试在页面加载完毕后自动渲染一次
+window.addEventListener('load', () => {
+  setTimeout(async () => {
+    try {
+      const Mvu = getMvuInstance();
+      if (Mvu) {
+        // 监听变量更新，实时刷新GM面板
+        if (Mvu.events) {
+          document.addEventListener(Mvu.events.VARIABLE_UPDATE_ENDED, () => {
+            // 避免频繁刷新，仅在面板打开时更新
+            const panel = document.getElementById('gm-panel');
+            if (panel && panel.classList.contains('show')) {
+              renderGM();
+            }
+          });
+        }
+        await renderGM();
+      }
+    } catch (e) { console.log('GM控制台初始化延迟，等待MVU就绪'); }
+  }, 1500);
+});
+</script>
+
+<div class="gm-overlay hidden" id="stream-modal-overlay" onclick="closeStreamModal()"></div>
+<div class="gm-panel hidden" id="stream-modal" style="max-width:480px">
+  <div class="gm-panel__header">🎬 准备开播 <span style="float:right;cursor:pointer;font-size:18px" onclick="closeStreamModal()">✕</span></div>
+  <div class="gm-panel__body" style="max-height:70vh;overflow-y:auto">
+    <div class="gm-field"><label>地点</label>
+      <select id="sm-region" onchange="sm_updateLocs()"><option value="">--选区域--</option></select>
+      <select id="sm-loc" style="margin-top:4px"><option value="">--选地点--</option></select>
+    </div>
+    <div class="gm-field"><label>时段</label>
+      <select id="sm-slot"><option value="现在">现在</option><option value="凌晨">凌晨</option><option value="早上">早上</option><option value="上午">上午</option><option value="中午">中午</option><option value="下午">下午</option><option value="傍晚">傍晚</option><option value="晚上">晚上</option><option value="深夜">深夜</option></select>
+    </div>
+    <div class="gm-field"><label>上装</label><select id="sm-top" onchange="sm_wearChange('top')"><option value="无">无</option><option value="默认穿着">默认穿着</option></select></div>
+    <div class="gm-field"><label>下装</label><select id="sm-bot" onchange="sm_wearChange('bot')"><option value="无">无</option><option value="默认穿着">默认穿着</option></select></div>
+    <div class="gm-field"><label>套装</label><select id="sm-suit" onchange="sm_wearChange('suit')"><option value="无" selected="">无</option><option value="默认穿着">默认穿着</option></select></div>
+    <div class="gm-field"><label>COS服</label><select id="sm-cos" onchange="sm_wearChange('cos')"><option value="无" selected="">无</option><option value="默认穿着">默认穿着</option></select></div>
+    <div class="gm-field"><label>内衣</label><select id="sm-under"><option value="无">真空</option><option value="默认穿着">默认穿着</option></select></div>
+    <div class="gm-field"><label>袜子</label><select id="sm-socks"><option value="无">无</option><option value="默认穿着">默认穿着</option></select></div>
+    <div class="gm-field"><label>鞋</label><select id="sm-shoes"><option value="">默认</option></select></div>
+    <div class="gm-field"><label>道具</label><div id="sm-props"></div></div>
+    <div class="gm-field"><label>联动NPC</label><div id="sm-npcs"></div></div>
+  </div>
+  <div class="gm-panel__footer"><button class="btn btn--action" onclick="startStream()">开播</button></div>
+</div>
+
+<div class="gm-overlay hidden" id="estate-modal-overlay" onclick="closeEstateModal()"></div>
+<div class="gm-panel hidden" id="estate-modal" style="max-width:420px">
+  <div class="gm-panel__header">🏠 <span id="estate-title">购置房产</span> <span style="float:right;cursor:pointer;font-size:18px" onclick="closeEstateModal()">✕</span></div>
+  <div class="gm-panel__body">
+    <div id="estate-detail" style="font-size:13px;color:var(--text-sec);margin-bottom:12px"></div>
+    <div class="gm-field"><label>同居邀请（妹妹默认同住，无需勾选）</label><div id="estate-npcs"></div></div>
+  </div>
+  <div class="gm-panel__footer"><button class="btn btn--action" onclick="confirmEstate()">确认购买</button></div>
+</div>
+
+
+
+
+
+</body></html>

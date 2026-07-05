@@ -11,6 +11,9 @@ const pleasure = parseInt(_.get(stat, '主角.当前状态.快感值', 0)) || 0;
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
 const hasMission = !!pendingEvents['观众任务事件'];
 const hasIntruder = !!pendingEvents['外人闯入事件'];
+const holiday = _.get(stat, '进程.当前假期', '否');
+const dayOfWeek = parseInt(_.get(stat, '进程.当前周几', 3)) || 3;
+const isSchoolDay = (dayOfWeek >= 1 && dayOfWeek <= 5) && holiday === '否';
 
 if (_.get(stat, '系统状态.主角创建完毕') === true) {
 _%>
@@ -49,7 +52,11 @@ options_generator_protocol:
     <%_ } else { _%>
     3. [交流]: "和身边的人搭话，聊聊日常或试探他们的态度。"
     <%_ } _%>
-    4. [独处]: "回到自己的房间或找个没人的地方，整理思绪或做些私事。"
+    <%_ if (isSchoolDay) { _%>
+    4. [锻炼]: "去学校体育馆跑跑步、举举铁，保持身体状态。"
+    <%_ } else { _%>
+    4. [锻炼]: "去健身房锻炼或到户外跑上几公里，保持身体状态。"
+    <%_ } _%>
   
   <%_ } else if (isStreaming && hasMission) { _%>
     

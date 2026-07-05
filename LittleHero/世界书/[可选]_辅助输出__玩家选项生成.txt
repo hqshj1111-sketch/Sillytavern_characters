@@ -1,0 +1,91 @@
+﻿<%
+// [系统] 动态选项生成器 v3.1 (XML结构版)
+// 仅当角色创建完毕后激活
+if (_.get(getvar('stat_data'), '系统状态.主角创建完毕') === true) {
+    const phase = _.get(getvar('stat_data'), '进程.阶段');
+    const isCombat = ['战斗回合', '战斗准备', '终结回合'].includes(phase);
+    const corruption = _.get(getvar('stat_data'), '主角.快感状态.侵蚀度', 0);
+    const pleasure = _.get(getvar('stat_data'), '主角.快感状态.快感值', 0);
+    const isFallen = _.get(getvar('stat_data'), '主角.核心状态.人格状态') === '反派';
+    
+    let desireType = "本能";
+    let desireGuide = "";
+    
+    if (isCombat) {
+        if (isFallen || corruption > 80) { desireType = "嗜虐"; desireGuide = "【堕落】戏弄对手、故意破绽、享受痛楚。"; }
+        else if (pleasure > 50) { desireType = "动摇"; desireGuide = "【失态】因快感而呻吟、腿软求饶、拼命压抑。"; }
+        else { desireType = "爆发"; desireGuide = "【情感】愤怒的吼叫、守护的决心、绝境的爆发。"; }
+    } else { 
+        if (isFallen) { desireType = "享乐"; desireGuide = "【放纵】追求感官刺激、经营巢穴的堕落日常。"; }
+        else { desireType = "私欲"; desireGuide = "【个人】普通少年的爱好、小秘密或放松行为。"; }
+    }
+
+    let skipTimeOption = "";
+    let skipDays = 0;
+    let targetNewDate = null;
+
+    const isIdle = phase === '幕间休息';
+    const hasNoActiveHEvent = _.get(getvar('stat_data'), '世界.幕间H事件.名称', '无') === '无';
+    const hasNoPendingCriticalEvent = Object.keys(_.get(getvar('stat_data'), '系统状态.待处理事件', {})).length === 0;
+
+    if (isIdle && hasNoActiveHEvent && hasNoPendingCriticalEvent) {
+        const turnCount = _.get(getvar('stat_data'), '系统状态.幕间回合计数', 0);
+        const skipChance = Math.min(0.8, 0.1 + (turnCount * 0.05));
+        if (Math.random() < skipChance) {
+            skipDays = Math.floor(Math.random() * 10) + 3; // 3~12天
+
+            // 获取当前日期并计算新日期
+            const rawDate = _.get(getvar('stat_data'), '世界.日期', 20260305);
+            let y = Math.floor(rawDate / 10000), m = Math.floor((rawDate % 10000) / 100), d = rawDate % 100;
+            let rd = skipDays;
+            while (rd > 0) {
+                const isLeap = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+                const dim = [0,31,isLeap ? 29 : 28,31,30,31,30,31,31,30,31,30,31];
+                const daysLeft = dim[m] - d;
+                if (rd > daysLeft) { rd -= (daysLeft + 1); d = 1; if (++m > 12) { m = 1; y++; } }
+                else { d += rd; rd = 0; }
+            }
+            targetNewDate = y * 10000 + m * 100 + d;
+            skipTimeOption = `休息约 ${skipDays} 天，让身心彻底恢复……\n`;
+        }
+    }
+%>
+# 指令: 快速对话选项
+options_generator_protocol:
+  objective: "在正文的末尾（变量更新块之前），生成玩家的可选行动列表。"
+  
+  # --- 格式 ---
+  format_strict:
+    - "必须且只能使用以下 XML 格式包裹："
+    - |
+      <行动选项>
+      选项1的具体内容
+      选项2的具体内容
+      选项3的具体内容
+      选项4的具体内容
+      <%= skipTimeOption ? '选项5的具体内容（跳过时间）' : '' %>
+      </行动选项>
+    - "每一行代表一个选项。不要加编号（1.），不要加方括号（[]），只写纯文本。"
+    - "选项内容应为【第一人称】的【一句话】行动描述，字数控制在 10-20 字之间。"
+
+  # --- 选项设计 (<%= isCombat ? '战斗模式' : '日常模式' %>) ---
+  option_matrix:
+  <%_ if (isCombat) { _%>
+    1. [勇猛]: "发起高风险、高收益的直接攻击。针对弱点。"
+    2. [智略]: "观察战局，利用地形、道具，和同伴配合或采取防御姿态。"
+    3. [魔导]: "使用招牌魔法、必杀技前置或召唤使魔协助。"
+    4. [<%= desireType %>]: "<%= desireGuide %>"
+  <%_ } else { _%>
+    1. [行动]: "直奔目标地点，或开启新话题，推进主线。"
+    2. [交互]: "与身边角色（使魔、朋友）互动，或检查身体。"
+    3. [探索]: "调查环境、研究道具、整理状况。"
+    4. [<%= desireType %>]: "<%= desireGuide %>"
+  <%_ } _%>
+
+  
+
+  trigger: "现在，基于上述矩阵，生成 <行动选项> 块。如果有额外的'跳过时间'选项，请将其作为第五个选项附加在末尾。"
+  extra_option_hint: "<%= skipTimeOption ? '本次包含"跳过时间"选项：' + skipTimeOption : '' %>"
+<%
+} 
+%>

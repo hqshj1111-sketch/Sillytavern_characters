@@ -27,7 +27,7 @@
     }
 
     // 涨粉计算
-    const baseConversion = 0.55 * (200 / (200 + currentFans)) + 0.07;
+    const baseConversion = 0.40 * (200 / (200 + currentFans)) + 0.05;
     const randomFactor = 0.9 + Math.random() * 0.2;
     const newFansGained = Math.floor(peakViewers * baseConversion * randomFactor);
     const newTotalFans = currentFans + newFansGained;

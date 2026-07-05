@@ -1,0 +1,19 @@
+﻿<%_
+var personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '英雄');
+if (personality === '反派') {
+    if (
+      _.get(getvar('stat_data'), '主角.核心状态.混沌充能') >= 100 &&
+      _.get(getvar('stat_data'), '世界.当前关卡.Boss状态') !== '濒死'
+    ) {
+_%>
+# 提示: 必杀技准备完毕
+action_trigger:
+  event: "暗黑降临：主角积蓄的黑暗力量已达临界点，下一次攻击就能彻底击溃眼前的敌人！"
+  narrative_guidance:
+    bad_example: "【系统提示】现在是最佳时机！输入 `必杀技`..."
+    good_example:
+      - "通过主角的感官来描写。例如：'黑暗力量在他体内达到了临界点，即将化为实质的黑色光芒满溢而出。'"
+<%_
+    }
+}
+_%>

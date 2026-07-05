@@ -1,0 +1,127 @@
+<%_
+// --- [MVU] 智能变量快照 ---
+// 核心逻辑: 隐藏静态设定 + 将状态相同的身体部位合并显示。
+
+let s = JSON.parse(JSON.stringify(getvar("stat_data") || {}));
+const isEmpty = (obj) => Object.keys(obj).length === 0;
+
+// 1. 基础清理 (移除静态设定)
+
+if (s.主角) {
+    delete s.主角.基本信息;
+    delete s.主角.个人信息;
+    delete s.主角.相貌特征; 
+    delete s.主角.身材细节; 
+    delete s.主角.性器官特征;
+    delete s.主角["战斗临时"]; 
+}
+
+if (s.系统状态) {
+    const events = s.系统状态.待处理事件 || {};
+    const activeEvents = Object.keys(events).filter(k => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+    if (activeEvents.length === 0) {
+        delete s.系统状态;
+    } else {
+        s.系统状态 = { "待处理事件": events };
+    }
+}
+
+// 2. [世界] 模块 (幕间隐藏关卡信息)
+
+if (s.世界) {
+    delete s.世界.世界观备注; 
+
+    // 如果没有激活关卡，直接移除
+    if (s.世界.当前关卡 && (s.世界.当前关卡.名称 === "无" || s.世界.当前关卡.名称 === "未知的威胁")) {
+        delete s.世界.当前关卡;
+    } else if (s.进程 && s.进程.阶段 === "幕间休息" && s.世界.当前关卡) {
+        // 幕间休息时不显示BOSS数值，防止AI误读
+       delete s.世界.当前关卡.Boss韧性值;
+       delete s.世界.当前关卡.Boss基础强度;
+       delete s.世界.当前关卡.Boss状态;
+       delete s.世界.当前关卡.战斗类型;
+       delete s.世界.威胁等级;
+    }
+
+    if (s.世界.幕间H事件 && s.世界.幕间H事件.名称 === "无") {
+        delete s.世界.幕间H事件;
+    }
+}
+
+// 3. [生理状态] 细节优化
+
+if (s.主角 && s.主角.生理状态) {
+
+    // 移除空的异物列表
+    if (s.主角.生理状态.魔力腔内异物 && isEmpty(s.主角.生理状态.魔力腔内异物.异物列表)) {
+        delete s.主角.生理状态.魔力腔内异物;
+    }
+    if (s.主角.生理状态.阴茎状态 && isEmpty(s.主角.生理状态.阴茎状态.表面附着)) {
+        delete s.主角.生理状态.阴茎状态.表面附着;
+    }
+}
+
+
+// 5. [性癖] 系统压缩
+
+if (s.主角 && s.主角.快感状态 && s.主角.快感状态.性癖) {
+    const originalKinks = s.主角.快感状态.性癖;
+    const activeKinks = {};
+    const pendingKeys = [];
+
+    Object.keys(originalKinks).forEach(key => {
+        if (key === '$meta' || key === "$__META_EXTENSIBLE__$") return;
+        const val = originalKinks[key];
+        if ((val.经验 && val.经验 > 0) || (val.等级 && val.等级 > 0)) {
+            activeKinks[key] = val;
+        } else {
+            pendingKeys.push(key);
+        }
+    });
+    s.主角.快感状态.性癖 = activeKinks;
+    if (pendingKeys.length > 0) s.主角.快感状态.性癖["[待觉醒列表]"] = pendingKeys.join(", ");
+}
+
+    if (s.主角 && s.主角.快感状态) {
+        delete s.主角.快感状态.高潮阈值;
+    }
+
+// 杂项清理
+if (s.记录) {
+    if (s.记录.已击败Boss计数 === 0) {
+        delete s.记录.已击败的Boss;
+    } else if (s.记录.已击败的Boss) {
+        const historyObj = s.记录.已击败的Boss;
+        const optimizedHistory = {};
+        
+        // 兼容遍历
+        Object.keys(historyObj).forEach(key => {
+            const bossData = historyObj[key];
+            if (bossData && typeof bossData === 'object' && bossData.名称 && bossData.名称 !== "$__META_EXTENSIBLE__$") {
+                optimizedHistory[bossData.名称] = {
+                    "核心主题": bossData.核心主题 ||[],
+                    "结果": bossData.结果 || "WIN"
+                };
+            }
+        });
+        
+        s.记录.已击败的Boss = optimizedHistory;
+    }
+
+    if (s.记录.总战败次数 === 0) delete s.记录.总战败次数;
+    
+
+}
+if (s.主角 && s.主角.核心状态) {
+    if (s.主角.核心状态.主人 === "无") delete s.主角.核心状态.主人;
+}
+if (s.主角 && isEmpty(s.主角.永久性身体改造)) delete s.主角.永久性身体改造;
+
+const cleanMeta = (arr) => Array.isArray(arr) ? arr.filter(x => x !== "$__META_EXTENSIBLE__$") : arr;
+if (s.世界 && s.世界.当前关卡) s.世界.当前关卡.核心主题 = cleanMeta(s.世界.当前关卡.核心主题);
+
+_%>
+#当前剧情变量状态:
+<status_current_variables>
+<%- JSON.stringify(s, null, 2) %>
+</status_current_variables>

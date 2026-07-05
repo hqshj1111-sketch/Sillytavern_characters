@@ -1,0 +1,158 @@
+﻿<%#
+  [系统] 幕间遭遇管理器
+%>
+<%_
+{
+    const stat = getvar('stat_data');
+    const phase = _.get(stat, '进程.阶段');
+    const rawEventCompleted = _.get(stat, '系统状态.幕间事件完成', true);
+    const eventCompleted = String(rawEventCompleted) === 'true';
+    const currentEventName = _.get(stat, '世界.幕间H事件.名称', '无');
+    const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+
+    const dailyKinkMechanics = {
+        "屈服&败北": "条件反射式的弱势。身体记住了'无法反抗'的感觉。表现为在日常对抗中（如体育课、争论、拥挤人群）极易放弃抵抗，稍微遇到强硬的态度或不可抗力就会腿软、下意识地摆出顺从姿势或是感到快感。",
+        "背德感": "在【绝对不该色色】的场合感觉到了快感。张力来自于'维持表面的帅气'与'底下的淫乱'同时进行。",
+        "言语羞辱": "对粗暴的言语产生快感反应，或是误读了他人的言语，产生色情的误解和快感。",
+        "精神控制": "催眠的余波对主角造成了影响。表现为主角对某些逻辑深信不疑，并以自然的常识态度去执行它（通常是色情事件）。",
+        "NTR": "参考主角的社会关系进行描写。",
+        "偷奸&隐奸": "追求在表象下默默忍受快感的刺激和愉悦。",
+        "疼痛&M属性": "对痛楚与刺激的渴求。皮肤渴望粗糙的摩擦或撞击。会无意识地通过一些小动作来获取痛感。",
+        "快感寸止": "身体始终处于'差一点点'的饥渴中。在日常生活中表现为坐立难安、无法集中注意力，胯下始终硬着，渴望打破这种临界状态。",
+        "感官遮断": "向内的过度专注。对外界反应变得迟钝，仿佛感官被切断。此时身体对自身的触觉（衣物摩擦、心跳）会异常放大，陷入自闭的快感循环。",
+        "群交&轮奸": "对雄性群体的极度敏感和隐秘的期待。",
+        "拘束&紧缚": "行动受阻的渴望。环境制造意外的束缚（如被耳机线缠绕、卡在狭窄空间）。身体渴望被紧密的束缚，在无法动弹时感到安心与兴奋。",
+        "爱抚&前戏": "普通的日常接触都会引发过激的颤抖。",
+        //"露出&服装破损": "服装破损遭遇的窥视或评判会使主角感到快感；全裸露出，在公共场合展示自己的身体也会带来快感。",
+        "露出": "对在他人视线中展示自己赤裸或缺乏遮蔽的身体感到兴奋。在公共场合刻意暴露肌肤、不穿内衣，或是处于随时可能被发现的半裸/全裸状态，会给主角带来背德快感与生理反应。",
+        "情趣玩具": "主角对情趣玩具（震动环/肛塞/前列腺按摩器）有了更明显的反应。",
+        "触手play": "环境的活性化。粘滑的缠绕和拘束感。它可以是潜伏的弱小魔物，也可以是仿佛有了生命的日常线缆。重点是甩不掉、越缠越紧的触感。",
+        "口腔开发": "嘴里不含着东西就无法安心。咬笔头、吃棒棒糖的方式过于色情。看到柱状物体会下意识张开嘴，唾液分泌异常丰富。",
+        "乳头开发": "乳头的自我主张。觉得胸前比平时更敏感、乳头在色情地摩擦衣物。总是下意识地想要托住或揉捏胸肌。",
+        "阴茎开发": "下体的空虚感。渴望被套弄，或者因为不知名的液体弄湿了内裤，导致坐立难安，不得不频繁夹紧双腿。",
+        "后庭开发": "后庭的空虚感。",
+        "腔内射精": "能量核心或肠道的空虚感涌动，渴望一次浓厚温热的注入。",
+        "身体改造": "异化的生活适应。新长出的器官（如黑暗印记、穿孔）在日常中带来了不便。主角试图用宽大衣物遮掩，却反而因为摩擦而产生快感，欲盖弥彰。",
+        "体格差&压制": "对力量的生理性屈服。面对体型巨大的人或物时，本能地感到畏惧与湿润。被笼罩在阴影中时，会感到一种安心的被压迫感。",
+        "主动侍奉": "心中潜移默化地将自己摆在低人一等的位置。从侍奉中获得安心感和快感。",
+        "异种奸": "面对非人生物（甚至是普通的狗或昆虫）时产生臣服感。表现为被动物压制时的僵硬和生理上的屈服。",
+        "机械奸": "冰冷的互动。日常家电（手机震动、洗衣机摇晃、体检仪器）变成了性暗示的来源。对无机物的震动声产生条件反射般的勃起。",
+        "睡眠奸": "梦境与现实的模糊。醒来时身体的异样感（酸痛、痕迹、屁股里的粘腻感），让人怀疑昨晚发生了什么。或者在打瞌睡时做出的无意识下流动作。",
+        "产卵&排出": "腹部的异物蠕动。异物（卵）在体内活动的错觉（或真实），对产卵产生快感。",
+        "榨乳&泌乳": "胸部沉甸甸的涨奶感。衣服轻微摩擦乳头就会溢出汁水，日常中必须时刻紧绷，担心胸前湿透走光。",
+        "兽人化": "野性的残留。身上残留着兽耳、尾巴或部分毛发。对气味异常敏感，会下意识地做出标记地盘或嗅闻他人的动作。发情期的周期性燥热让他像发情的公狗一样渴望交配，难以维持人类的体面。",
+        "蔷薇": "距离感失调。同性间的边界感模糊，对男性朋友或表现出异常的亲昵和粘稠的视线，对同性的接触产生不纯洁的联想。",
+        "精液成瘾": "特殊的食欲。对白色、粘稠液体的异常执着。喝牛奶或吃酸奶时，表情和吞咽动作会让人产生误会。或者在饥饿时下意识地看向男性的胯下。",
+        "榨精&溢液": "身体的溢出感。阴茎的涨感成了计时的闹钟。必须中断日常事务去处理生理问题，或者因为前列腺失控而漏出体液，担心腥味飘散被旁人闻到的羞耻。",
+        "媚药浸染": "发情期的忍耐。没有具体的敌人，敌人是体内的热度。在写作业或工作时，突然袭来的燥热和恍惚，必须靠意志力勉强维持理智。",
+        "自慰": "对快感或释放的渴望影响了主角，这种时候最方便的选择就是自慰。",
+        "胶兽化": "同化后遗症。日常中极度渴求被温热胶液再次紧紧包裹，自己被逐渐转化为胶兽（Transfur）。思维被兽性侵蚀，甚至会下意识产生想要‘同化’他人的危险本能。",
+        "自攻自受": "对着镜子里的自己发情。日常中看到反光映出的自己就会产生不纯洁的幻想，陷入难堪的自我迷恋。"
+    };
+
+    // 获取预锁定主题
+    const themesRaw = _.get(stat, '世界.幕间H事件.核心主题',[]);
+    const themesArray = Array.isArray(themesRaw) ? themesRaw : Object.keys(themesRaw);
+    const preLockedThemes = themesArray.filter(t => t !== "$__META_EXTENSIBLE__$" && t !== "$meta");
+    const lockedTheme = preLockedThemes.length > 0 ? preLockedThemes[0] : null;
+
+    // 辅助函数：根据当前主题生成对应的玩法指导文本
+    const getMechanicsText = (themes) => {
+        let instructions =[];
+        themes.forEach(theme => {
+            if (dailyKinkMechanics[theme]) {
+                instructions.push(`    - Theme: "${theme}"\n      Mechanism: "${dailyKinkMechanics[theme]}"`);
+            }
+        });
+        return instructions.length > 0 ? "\n  intermission_mechanics_guide:\n" + instructions.join("\n") : "";
+    };
+
+    if (phase === '幕间休息' && eventCompleted === false) {
+
+        const turnCount = _.get(stat, '系统状态.幕间回合计数', 0);
+        const H_EVENT_COOLDOWN = 6;
+
+        // --- 状态 A: 事件初始化 ---
+        if (currentEventName === '无' && lockedTheme) {
+            if (turnCount >= H_EVENT_COOLDOWN) {
+
+            const allKinks = _.get(stat, '主角.快感状态.性癖', {});
+            const validSecondaryKinks = Object.keys(allKinks).filter(k => {
+                const d = allKinks[k];
+                return k !== "$meta" && k !== lockedTheme && (d.等级 >= 1 || d.经验 >= 50);
+            });
+
+            const selectedSecondaryKinks = _.sampleSize(validSecondaryKinks, 4);
+            const optionsList = selectedSecondaryKinks.length > 0 ? selectedSecondaryKinks.map(k => `      - "${k}"`).join('\n') : '      - (无)';
+
+            // 获取核心主题的指导文本
+            const mechanicsGuide = getMechanicsText([lockedTheme]);
+_%>
+
+# 指令：幕间H事件预告
+event_initiator:
+  objective: "主角的身体已经被开发出一定性癖。请引入一场与主角经历相关的H事件。"
+
+  theme_configuration:
+    primary_theme: "必须包含的核心元素：<%= lockedTheme %>"
+    secondary_option:
+      instruction: "你可以从下方已觉醒性癖中自由选择进行搭配，以增强核心主题的表现力（可选）："
+      pool:
+<%= optionsList %>
+<%- mechanicsGuide %>
+<%_ if (personality === '反派') { _%>
+  fallen_adaptation_override:
+    - "【修正】：主角是享受自由的堕落小英雄。请对上方描述中的'抗拒'、'窘迫'与'羞耻'进行适当取舍。"
+<%_ } _%>
+
+  narrative_guidance:
+    - "请发挥创造力，根据【<%= lockedTheme %>】的特性，自适应地设计一个能够引入该玩法的情节。它可以是日常的笨拙意外、小型的魔物骚扰、环境的恶作剧、或者是主角自身发情。"
+    - "流畅地引入事件的导入部分，保留剧情发展的余地。无论发生什么，这都不应是一场你死我活的战斗，而是一场'难堪'或'享受'的经历。"
+    - "避免引入复杂的剧情线、新的人物设定或宏大的幕后势力。"
+
+  mandatory_data_sync:
+    instruction: "You MUST include the following operations inside your final <JSONPatch> array:"
+    patch_code: |
+      [
+        { "op": "replace", "path": "/世界/幕间H事件/名称", "value": "EVENT：[你设计的标题]" },
+        { "op": "insert", "path": "/世界/幕间H事件/核心主题/-", "value": "[需要额外登记的主题]" }
+      ]
+
+<%_
+            }
+        } else if (currentEventName !== '无') {
+            // --- 状态 B: 事件进行中 ---
+            const themesDisplay = preLockedThemes.join(' + ');
+            // 获取所有已锁定主题的指导文本
+            const mechanicsGuide = getMechanicsText(preLockedThemes);
+_%>
+# 幕间遭遇进行中 (<%= currentEventName %>)
+event_ongoing:
+  status: "事件正在进行。当前主题:[<%= themesDisplay %>]"
+
+  data_lock_protocol:
+    - "请专注于挖掘 [<%= themesDisplay %>] 的互动。"
+    - "此时严禁再向 '/世界/幕间H事件/核心主题' 添加新标签。"
+<%- mechanicsGuide %>
+<%_ if (personality === '反派') { _%>
+  fallen_adaptation_override:
+    - "【修正】：主角是享受自由的堕落小英雄。请对上方描述中的'抗拒'、'窘迫'与'羞耻'进行适当取舍。"
+<%_ } _%>
+
+  narrative_branch:
+    - condition: "玩家反抗失败/犹豫"
+      instruction: "推进H行为，增加快感，并根据行为加深对应性癖的经验。"
+    - condition: "玩家沉溺/高潮/成功逃脱"
+      instruction: "描绘结局，并在下方执行清理指令。"
+
+  end_protocol:
+    instruction: "只有当事件完结时，输出以下这条指令。后台脚本会自动清理所有相关数据，解锁后续流程。You MUST include this inside your final <JSONPatch> array:"
+    mandatory_cleanup_patch: |
+      [
+        { "op": "replace", "path": "/系统状态/幕间事件完成", "value": true }
+      ]
+<%_
+        }
+    }
+}
+_%>

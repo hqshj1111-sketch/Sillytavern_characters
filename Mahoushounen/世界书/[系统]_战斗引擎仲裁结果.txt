@@ -1,0 +1,233 @@
+<%_{
+// --- EJS 战斗引擎 V3.0 (骰子池版) ---
+const stat = getvar('stat_data');
+
+// 1. 配置常量池
+const CONSTANTS = {
+    // 判定阈值
+    THRESHOLDS: { CRIT_SUCCESS: 40, SUCCESS: 10, STALEMATE: -15, FAIL: -40 }, 
+    
+    // [新增] 威胁等级叙事指导 (提取自生成器逻辑)
+    THREAT_CONFIG: {
+        '善良': {
+            1: "【Lv.1 骚扰级】敌人专注于色情本身，滑稽、尴尬、恼人，不致命。严禁残酷描写。",
+            2: "【Lv.2 侵犯级】标准的战斗H。目标明确地进行强制性交、榨取魔力。",
+            3: "【Lv.3 支配级】极度危险。追求身心的彻底征服，手段过激。"
+        },
+        '堕落': {
+            1: "【Lv.1 玩物级】轻松。主角掌握着主导权。",
+            2: "【Lv.2 狩猎级】势均力敌。值得一战的猎物，能带来刺激。",
+            3: "【Lv.3 强敌级】危险的对手，更高位的魔物或强力魔法少年。"
+        }
+    },
+
+    // 人格与结果对应的文案库
+    TEXT_MAP: {
+        '善良': {
+            'CRIT_SUCCESS': "【大成功】行动完美执行。叙事流向：由主角完全主导本回合。有效反击，化解危机或夺回战局主动权。",
+            'SUCCESS': "【成功】行动达成预期。叙事流向：主角维持防线并造成有效打击。平稳地描写攻防交互，主角顺利完成当前动作。",
+            'STALEMATE': "【纠缠】双方互有胜负。叙事流向：战况陷入泥滞。请交替分配镜头，既要描写主角的攻击奏效，也要描写敌方趁机拉近距离或施加的轻度干扰。",
+            'FAIL': "【失败】行动产生破绽。叙事流向：主导权转移至敌方。请将描写重心放在主角的失误如何被敌人利用，并让敌方成功实施其特性的攻击或侵扰。",
+            'CRIT_FAIL': "【大失败】防线崩溃。叙事流向：敌方压制。请描写主角完全陷入被动，被迫承受敌方最核心、最具威胁性的动作。"
+        },
+        '堕落': {
+            'CRIT_SUCCESS': "【大成功】单方面的压制。叙事流向：主角掌控节奏，游刃有余地化解敌方行动。",
+            'SUCCESS': "【成功】顺利的交锋。叙事流向：主角占优。请描写主角在有效打击敌人的同时，将自身的特质融入到攻防动作中。",
+            'STALEMATE': "【纠缠】拉锯战。叙事流向：攻防界限模糊。请描写双方的接触变得混乱，战斗与核心能力的互相试探在同一时间发生。",
+            'FAIL': "【失败】遭到有效反制。叙事流向：敌方夺回攻势。请描写主角因轻敌或追求刺激而受挫，在本回合中转为不得不被动应对的一方。",
+            'CRIT_FAIL': "【大失败】彻底脱离掌控。叙事流向：敌方展开猛烈反扑。请描写主角的余裕被打破，在敌方超预期的强势进攻下陷入无法组织有效防守的劣势。"
+        }
+    }
+};
+
+// 辅助函数: 生成 Patch 对象
+const mkPatch = (op, path, val) => ({ "op": op, "path": path, "value": val });
+// --- 主逻辑开始 ---
+if (_.get(stat, '进程.阶段') === '战斗回合') {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+    const pKey = personality === '善良' ? '善良' : '堕落';
+    const posture = _.get(stat, '主角.核心状态.当前战斗姿态');
+
+    // 仅在有效战斗姿态下计算
+    if (['战斗中', '劣势'].includes(posture)) {
+        
+        // --- 1. 必杀技状态预判 (EJS逻辑注入) ---
+        const purificationPower = _.get(stat, '主角.核心状态.净化之力', 0);
+        const corruptPower = _.get(stat, '主角.核心状态.污秽魔力', 0);
+        // 判断是否有任意一种能量槽全满
+        const isUltimateReady = purificationPower >= 100 || corruptPower >= 100;
+        const ultType = purificationPower >= 100 ? '净化' : '堕落';
+
+        // --- 2. 常规骰子计算 ---
+        const playerStrength = _.get(stat, '主角.核心状态.基础强度', 50);
+        const bossStrength = _.get(stat, '世界.当前关卡.Boss基础强度', 50);
+        const threatLevel = _.get(stat, '世界.威胁等级', 2);
+
+        // 骰子池算法: 每 10 点强度换取一个 D20
+        const DIVISOR = 10;   
+        const DICE_FACE = 20; 
+        const pDiceCount = Math.max(1, Math.floor(playerStrength / DIVISOR));
+        const bDiceCount = Math.max(1, Math.floor(bossStrength / DIVISOR));
+
+        // 执行投掷
+        let pTotal = 0; for (let i = 0; i < pDiceCount; i++) { pTotal += _.random(1, DICE_FACE); }
+        let bTotal = 0; for (let i = 0; i < bDiceCount; i++) { bTotal += _.random(1, DICE_FACE); }
+
+        let bossModStr = "";
+        if (threatLevel === 1) {
+            const penalty = _.random(1, DICE_FACE);
+            bTotal = Math.max(0, bTotal - penalty);
+            bossModStr = ` - D${DICE_FACE}(${penalty})[Lv.1劣势]`;
+        } else if (threatLevel === 3) {
+            const bonus = _.random(1, DICE_FACE);
+            bTotal += bonus;
+            bossModStr = ` + D${DICE_FACE}(${bonus})[Lv.3强敌]`;
+        }
+
+        // 结算
+        const difference = pTotal - bTotal;
+        const pFormula = `${pDiceCount}d${DICE_FACE} = ${pTotal}`;
+        const bFormula = `${bDiceCount}d${DICE_FACE}${bossModStr} = ${bTotal}`;
+
+        // 判定结果层级
+        let tier, damageRange, powerRange, counterRange;
+        if (difference > CONSTANTS.THRESHOLDS.CRIT_SUCCESS) {
+            tier = 'CRIT_SUCCESS'; damageRange = [30, 60]; powerRange = [30, 40]; counterRange = [0, 0];
+        } else if (difference > CONSTANTS.THRESHOLDS.SUCCESS) {
+            tier = 'SUCCESS'; damageRange = [15, 30]; powerRange = [15, 30]; counterRange = [0, 0];
+        } else if (difference > CONSTANTS.THRESHOLDS.STALEMATE) {
+            tier = 'STALEMATE'; damageRange = [10, 20]; powerRange = [10, 15]; counterRange = [5, 15];
+        } else if (difference > CONSTANTS.THRESHOLDS.FAIL) {
+            tier = 'FAIL'; damageRange = [0, 0]; powerRange = [15, 20]; counterRange = [10, 25];
+        } else {
+            tier = 'CRIT_FAIL'; damageRange = [0, 0]; powerRange = [25, 45]; counterRange = [30, 50];
+        }
+
+        // 生成数值
+        const damageDealt = _.random(...damageRange);
+        const powerGained = _.random(...powerRange);
+        const counterDamageTaken = _.random(...counterRange);
+        
+        // 叙事指导获取
+        const outcomeLabel = {'CRIT_SUCCESS':'大成功','SUCCESS':'成功','STALEMATE':'纠缠','FAIL':'失败','CRIT_FAIL':'大失败'}[tier];
+        const actionOutcomeGuidance = CONSTANTS.TEXT_MAP[pKey][tier];
+        const threatNarrative = CONSTANTS.THREAT_CONFIG[pKey][threatLevel] || CONSTANTS.THREAT_CONFIG[pKey][2];
+
+        // --- 战局前瞻判定计算 ---
+        const currentBossToughness = _.get(stat, '世界.当前关卡.Boss韧性值', 100);
+        const currentPlayerHP = _.get(stat, '主角.核心状态.体力值.当前', 100);
+        
+        const projectedToughness = Math.max(0, currentBossToughness - damageDealt);
+        const projectedPlayerHP = Math.max(0, currentPlayerHP - counterDamageTaken);
+        
+        let battleResultHint = `结算后主角剩余HP: ${projectedPlayerHP}，敌人剩余韧性: ${projectedToughness}。`;
+        if (projectedToughness <= 0) {
+            battleResultHint += "这招确认能击败敌人！";
+        } else if (projectedPlayerHP <= 0) {
+            battleResultHint += "主角体力耗尽，失去反抗能力！";
+        } else {
+            battleResultHint += "战斗继续。";
+        }
+
+        // Boss 阶段预测
+        let bossPhase;
+        if (projectedToughness > 70) bossPhase = 'P1-战斗展开';
+        else if (projectedToughness > 30) bossPhase = 'P2-拿出真本事';
+        else if (projectedToughness > 0) bossPhase = 'P3-垂死挣扎';
+        else bossPhase = 'P4-溃败';
+
+        // --- 3. 生成 Patch A (常规战斗) ---
+        let activePatch = [];
+        if (damageDealt > 0) activePatch.push(mkPatch("delta", "/世界/当前关卡/Boss韧性值", -damageDealt));
+        if (powerGained > 0) {
+            const powerPath = personality === '善良' ? "/主角/核心状态/净化之力" : "/主角/核心状态/污秽魔力";
+            activePatch.push(mkPatch("delta", powerPath, powerGained));
+        }
+        if (counterDamageTaken > 0) activePatch.push(mkPatch("delta", "/主角/核心状态/体力值/当前", -counterDamageTaken));
+        activePatch.push(mkPatch("replace", "/主角/战斗临时/当前战斗日志", `结果:${outcomeLabel}|P:${pFormula}|E:${bFormula}|差:${difference}`));
+
+        // --- 4. 生成 Patch B (被动/剧情) ---
+        let passivePatch = [];
+        passivePatch.push(mkPatch("replace", "/主角/战斗临时/当前战斗日志", `结果:剧情交互|无判定|${outcomeLabel}`));
+
+        // --- 5. 生成 Patch C (必杀技 - 仅当就绪时生成) ---
+        let ultimatePatch = [];
+        let ultName = "必杀技";
+        if (isUltimateReady) {
+            ultName = (ultType === '净化') ? "净化必杀" : "福音领域";
+            // 必杀效果：Boss韧性归零
+            ultimatePatch.push(mkPatch("replace", "/世界/当前关卡/Boss韧性值", 0));
+            // 消耗能量：归零
+            const powerPath = (ultType === '净化') ? "/主角/核心状态/净化之力" : "/主角/核心状态/污秽魔力";
+            ultimatePatch.push(mkPatch("replace", powerPath, 0));
+            // 写入日志
+            ultimatePatch.push(mkPatch("replace", "/主角/战斗临时/当前战斗日志", `结果:${ultName}|无视判定|终结`));
+        }
+
+        // 序列化
+        const strPatchA = JSON.stringify(activePatch, null, 2);
+        const strPatchB = JSON.stringify(passivePatch, null, 2);
+        const strPatchC = JSON.stringify(ultimatePatch, null, 2);
+        
+        // 状态显示
+        const hp_cur = _.get(stat, '主角.核心状态.体力值.当前');
+        const mp_cur = _.get(stat, '主角.核心状态.魔力值.当前');
+        const corr_cur = _.get(stat, '主角.快感状态.污染度');
+_%>
+-- -
+  #【最高逻辑指令】: 战斗仲裁
+ 本回合冲突判定已完成。请根据玩家的实际输入内容，在下方方案中选择【一个】执行。
+
+combat_context:
+  status: "HP: <%= hp_cur %> | MP: <%= mp_cur %> | 污染: <%= corr_cur %>%"
+  boss_phase: "<%= bossPhase %>"
+  threat_guide: "<%= threatNarrative %>"
+
+ === 逻辑分支 ===
+ 请仔细阅读玩家的上一段回复，判断属于以下哪种情况，并严格执行对应的指令，按照指引进行叙事描写。
+
+ 情况 1: 主角主动进行交互，有需要判定的对抗（战斗/博弈/游戏等）
+ 判定参考: 主角试图达成自己的目的，执行预计的行动。
+ 执行:
+   - 结果: 【<%= outcomeLabel %>】
+   - 指引: <%= actionOutcomeGuidance %>
+   - 战局判定: <%= battleResultHint %>
+   - 必须严格复制的代码 (Patch A):
+ <JSONPatch>
+ <%- strPatchA %>
+ </JSONPatch>
+
+ 情况 2: 完全不对抗 / 纯叙事 / 单方面遭遇侵犯
+ 判定参考: 主角仅在说话、观察、没有动作，或者是完全没有抵抗/单方面遭遇侵犯。
+ 执行: 无视骰子结果。适当给出数值伤害。重点描写对话或被侵犯的细节。
+   - 参考代码块 (Patch B):
+ <JSONPatch>
+ <%- strPatchB %>
+ </JSONPatch>
+
+<%_ if (isUltimateReady) { _%>
+ 情况 3: 【<%= ultName %>】解放！
+ 判定标准: 玩家明确宣告释放必杀、终结战斗，或描述了释放全部力量的意图。
+ 执行结果: 
+   - 结果: 【无视判定，直接处决】
+   - 指引: 描绘华丽的终结一击。能量全部释放，Boss彻底溃败。
+   - 战局判定: 结算后敌人剩余韧性: 0。这招确认能击败敌人，请描绘敌人的倒下！
+   - 必须严格复制的代码块 (Patch C):
+ <JSONPatch>
+ <%- strPatchC %>
+ </JSONPatch>
+<%_ } _%>
+
+optional_mp_costs:
+  instruction: "如涉及魔法使用，请在 Analysis 中写明MP消耗，并追加 delta 操作。"
+  example: `{ "op": "delta", "path": "/主角/核心状态/魔力值/当前", "value": -15 }`
+
+prohibitions:
+  - "【严禁】自行修改 `/世界/当前关卡/Boss状态`。"
+  - "【严禁】混用 Patch A / B / C 的内容。"
+  - "【严禁】私自改写 Patch A 战斗日志里的骰点结果，清晰保留。"
+-- -
+<%_
+    }
+}}
+_%>

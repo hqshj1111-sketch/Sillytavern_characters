@@ -1,0 +1,45 @@
+<%_{
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+if (events['线索整理事件']) {
+    const worldNotes = _.get(stat, '世界.世界观备注', {});
+    const notesString = JSON.stringify(worldNotes, null, 2);
+_%>
+# 幕间：世界观沉淀与线索整理
+event_handler:
+  event_name: "线索整理事件"
+  task_type: "SILENT_BACKGROUND_PROCESS"
+  
+  narrative_guidance:
+    instruction: "这是一个纯粹的系统后台维护任务，不需要在叙事中体现"
+    focus: "请继续【严格根据玩家的上一条回复】进行原本的日常互动和剧情推进。玩家不应察觉到后台正在进行整理。"
+
+  ai_backend_task:
+    role: "严谨的系统档案管理员"
+    instruction: "在完成正常的小说正文后，你需要在底部的 <UpdateVariable> JSONPatch 块中，对当前的【世界观备注】进行碎片整理与垃圾回收。"
+    
+    current_lore_data: |
+      <%- notesString %>
+    
+    consolidation_rules:
+      - "【合并同类项】: 将关于同一个人、同一地点或同一设定的零散情报，整合为完整的描述。"
+      - "【清理过期垃圾】: 删除已经死去的初级魔物弱点、已经离开的临时场景地图、或是已经被解决的单次危机记录。"
+      - "【保留核心资产】: 务必保留：重要NPC的好感/状态、主角身上未消退的特殊状态/诅咒、常驻设定的世界观规则。"
+      - "【字数精简】: 提炼后的 Value 应尽量洗练而客观。"
+    
+    mandatory_patch_execution:
+      instruction: "梳理完成后，你【必须】输出一个单独的 `replace` 指令，用整理后的全新完整字典对象，直接替换掉旧的 `/世界/世界观备注`。"
+      patch_template: |[
+          {
+            "op": "replace",
+            "path": "/世界/世界观备注",
+            "value": {
+              "小圆": "同班同学，在那一次战斗之后，似乎对我的秘密有所察觉...",
+              // ... 请在此处填入经过你整理、合并和保留的所有 Key-Value
+            }
+          },
+          // 务必移除本事件触发器，防止死循环
+          { "op": "remove", "path": "/系统状态/待处理事件/线索整理事件" }
+        ]
+---
+<%_ }} _%>

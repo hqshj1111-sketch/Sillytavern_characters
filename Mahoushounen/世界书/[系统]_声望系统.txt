@@ -1,0 +1,119 @@
+<%_
+// --- [系统] 声望矩阵叙事系统 ---
+// --- 安全检查 ---
+if (
+  getvar('initialized_lorebooks') !== undefined &&
+  _.has(getvar('stat_data'), '名声.知名度') &&
+  _.get(getvar('stat_data'), '名声.知名度', 0) > 15 // 仅在不再是“默默无闻”时激活
+) {
+
+  // --- 1. 核心变量获取 ---
+  const personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '善良');
+  const fame = _.get(getvar('stat_data'), '名声.知名度', 0);
+  const reputationScore = _.get(getvar('stat_data'), '名声.风评', 0);
+  const gamePhase = _.get(getvar('stat_data'), '进程.阶段');
+
+  // --- 2. 叙事指导变量定义 ---
+  let fameLevel;
+  let narrativeFocus = "";
+  let toneGuidance = "";
+
+  // --- 3. 知名度等级 ---
+  if (fame < 45) { fameLevel = "都市传说"; }
+  else if (fame < 85) { fameLevel = "公众热议"; }
+  else { fameLevel = "无人不晓"; }
+
+  // --- 4. 生成叙事指导 ---
+
+  // A. 日常模式 (幕间休息) 
+  if (gamePhase === '幕间休息') {
+    narrativeFocus = "【幕间氛围】";
+    if (personality === '善良') {
+      if (reputationScore >= 70) { // S级: 英雄
+        if (fameLevel === "都市传说") { toneGuidance = "氛围：【地下英雄】。网络上流传着关于主角的夸张美谈。"; }
+        if (fameLevel === "公众热议") { toneGuidance = "氛围：【公众偶像】。市民会投来尊敬的目光。"; }
+        if (fameLevel === "无人不晓") { toneGuidance = "氛围：【英雄形象】。主角的形象已经成为城市的重要标志。"; }
+      }
+      else if (reputationScore >= 30) { // A级
+        if (fameLevel === "都市传说") { toneGuidance = "氛围：【神秘守护者】。人们私下谈论着那个总在危急关头出现的奇怪少年，充满了信赖与好奇。"; }
+        if (fameLevel === "公众热议") { toneGuidance = "氛围：【亲切信赖】。市民对主角的存在感到安心，主角战斗过的街区会有人悄悄献上鲜花表示感谢。"; }
+        if (fameLevel === "无人不晓") { toneGuidance = "氛围：【无言默契】。市民已经习惯了主角的守护，存在本身就是城市秩序的一部分。"; }
+      }
+      else if (reputationScore > -30) { // B级
+        if (fameLevel === "都市传说") { toneGuidance = "氛围：【矛盾流言】。关于主角的传闻好坏参半，有人说是英雄，也有人说是带来麻烦的根源。"; }
+        if (fameLevel === "公众热议") { toneGuidance = "氛围：【审视】。在身为魔法少年时，一举一动都被人观察和议论，无时无刻不遭遇揣测。"; }
+        if (fameLevel === "无人不晓") { toneGuidance = "氛围：【习惯性质疑】。公众对主角的评价已成常态，无论做什么，总会有赞美和批评两种声音同时出现。"; }
+      }
+      else if (reputationScore > -70) { // C级
+        if (fameLevel === "都市传说") { toneGuidance = "氛围：【不祥预兆】。主角模糊的信息与战斗联系在一起，人们在谈论时总觉得不安和色情，有好事者会盯上主角的肉体。"; }
+        if (fameLevel === "公众热议") { toneGuidance = "氛围：【视线羞辱】。主角总能感受到周围的视线，甚至有人会对着魔法少年的身影窃窃私语或投来带有情色意味的眼神。"; }
+        if (fameLevel === "无人不晓") { toneGuidance = "氛围：【无能的肉便器】。善良的市民厌弃作为失败者的主角，而心怀不轨者则毫无顾忌地侵犯这常输给敌人的身体。"; }
+      }
+      else {
+        if (fameLevel === "都市传说") { toneGuidance = "氛围：【移动的风俗店】。都市传说称，只要在小巷遇到战败的魔法少年，就可以随意使用且不用负责。"; }
+        if (fameLevel === "公众热议") { toneGuidance = "氛围：【合法猎物】。媒体暗示主角“由于力量失控需被管理”，市民的眼神不再是对人类的眼神，而是对待移动的色情肉便器。"; }
+        if (fameLevel === "无人不晓") { toneGuidance = "氛围：【指定肉便器】。主角被官方定性为“诱发魔物的源头”。只要不杀害，对主角做任何过分的事都被大众默许为“正义的惩罚”，任何有欲望的人都乐意侵犯他。"; }
+      }
+    } else { // 堕落路线
+      if (reputationScore <= -70) { // S级
+        if (fameLevel === "都市传说") { toneGuidance = "氛围：【地下魔王】。在城市的阴影面，主角的名字已成为可怕的传言。"; }
+        if (fameLevel === "公众热议") { toneGuidance = "氛围：【知名反派】。所到之处令市民都因惊慌逃窜，只有善良坚强的魔法少年敢于挑战主角。"; }
+        if (fameLevel === "无人不晓") { toneGuidance = "氛围：【恶堕魔法少年】。主角强大的危险声望征服了一片宽阔的区域。"; }
+      }
+      else if (reputationScore <= -30) { // A级
+        if (fameLevel === "都市传说") { toneGuidance = "氛围：【隐秘的灾难】。主角是暗中活动的恶堕魔法少年。"; }
+        if (fameLevel === "公众热议") { toneGuidance = "氛围：【行走灾难】。市民见到主角会立刻陷入恐慌。"; }
+        if (fameLevel === "无人不晓") { toneGuidance = "氛围：【被围猎者】。主角知道整个世界都与她为敌。"; }
+      }
+      else if (reputationScore < 30) { // C级
+        if (fameLevel === "都市传说") { toneGuidance = "氛围：【被低估的威胁】。人们模糊地知道主角，但普遍认为只是个有点棘手的地方性麻烦。"; }
+        if (fameLevel === "公众热议") { toneGuidance = "氛围：【滑稽的反派】。主角总被误解，甚至有人会把他当成某种行为艺术家。"; }
+        if (fameLevel === "无人不晓") { toneGuidance = "氛围：【无害的吉祥物】。主角的形象甚至被做成了一些搞笑商品，人们不再惧怕，反而觉得有点“可爱”。"; }
+      }
+      else { 
+        if (fameLevel === "都市传说") { toneGuidance = "氛围：【网黄传说】。传闻有个穿着色情的魔法少年专门在深夜送福利，主角的战斗视频在色情网站点击率爆表。"; }
+        if (fameLevel === "公众热议") { toneGuidance = "氛围：【全网老公】。虽然主角自称邪恶，但大众疯狂追捧主角的色气身姿。"; }
+        if (fameLevel === "无人不晓") { toneGuidance = "氛围：【涩情偶像】。作为反派彻底失败。主角被官方邀请参加商业活动，粉丝挥舞着荧光棒应援。"; }
+      }
+    }
+  }
+  //  B. 战斗模式 (非幕间休息)
+  else {
+    narrativeFocus = "【战斗变数】";
+    // 仅在知名度达到“公众热议”或更高时，战斗才会受影响
+    if (fameLevel !== "都市传说") {
+      if (personality === '善良') {
+        if (reputationScore >= 70) { // S级: 英雄
+          toneGuidance = "氛围：【万众瞩目】的压力。主角能够意识到充满期待和崇拜的眼睛在注视着自己，带来力量。他在面对敌人的侵犯和骚扰时会更加羞耻尴尬。";
+        }
+        else if (reputationScore >= 30) { // A级: 守护者
+          toneGuidance = "氛围：【守护者的战斗】。在平民身边的战斗让主角有些尴尬困顿，守护者的身份让他遇到【分心的窘迫】。";
+        }
+        else if (reputationScore > -30) { // B级: 争议者
+          toneGuidance = "氛围：【争议者】。主角的战斗已被认知，但大家尚未形成明确评价。";
+        }
+        else if (reputationScore > -70) toneGuidance = "氛围：【孤立无援】。市民把主角当反派，战斗的任何失误都会遭到羞辱。";
+        else toneGuidance = "氛围：【四面楚歌】。这不只是与魔物的战斗。围观者不避难，兴奋地起哄着，期待看到主角战败受辱的画面，甚至有人趁乱对他伸出咸猪手。";
+      } else { // 堕落路线
+        if (reputationScore <= -70) { // S级
+          toneGuidance = "氛围：【强大的恶堕魔法少年】。";
+        }
+        else if (reputationScore <= -30) { // A级
+          toneGuidance = "氛围：【反派的战斗】。";
+        }
+        else if (reputationScore < 30) toneGuidance = "氛围：【被围观的闹剧】。由于不够可怕，围观群众甚至在点评主角的招式。";
+        else toneGuidance = "氛围：【粉丝见面会】。这简直不是战斗。周围全是举着摄像机的狂热粉丝，他们在抓拍主角的走光瞬间。敌人甚至因为被无视而感到困惑。";
+      }
+    }
+  }
+
+  // --- 5. 最终输出 ---
+  if (toneGuidance) {
+_%>
+reputation_narrative_guidance:
+  focus: "<%= narrativeFocus %>"
+  instruction: "<%= toneGuidance %>"
+<%_
+  }
+}
+_%>

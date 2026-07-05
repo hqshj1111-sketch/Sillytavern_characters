@@ -1,0 +1,178 @@
+<%_
+// --- [MVU] 智能变量快照与动态档案 ---
+// 核心逻辑: 提取静态设定渲染为YAML + 清理多余节点 + 输出纯净的动态JSON树。
+
+let s = JSON.parse(JSON.stringify(getvar("stat_data") || {}));
+const isEmpty = (obj) => Object.keys(obj).length === 0;
+const phase = _.get(s, '进程.阶段', '创角阶段');
+
+let profileOutput = "";
+
+// 1. 提取静态档案与世界观 (原[描述] 动态角色卡与世界观的内容)
+if (s.主角 && s.世界 && phase !== '创角阶段') {
+    const basic = s.主角.基本信息 || {}; 
+    const appearance = s.主角.身材细节 || {};
+    const face = s.主角.相貌特征 || {};
+    const sexual = s.主角.性器官特征 || {};
+    const info = s.主角.个人信息 || {};
+
+    // 日期计算
+    const rawDate = parseInt(_.get(s, '世界.日期', 305), 10);
+    const dMonth = Math.floor(rawDate / 100);
+    const dDay = rawDate % 100;
+    
+    // 提取世界观备注
+    const notes = s.世界.世界观备注 || {};
+    const noteEntries = Object.entries(notes).filter(([k,v]) => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+
+    const isTransformed = _.get(s, '主角.核心状态.变身状态') === true;
+    const currentName = isTransformed ? (basic.魔法少女名 || basic.姓名) : (basic.姓名 || '未知');
+    const alignment = _.get(s, '主角.核心状态.人格状态') || '善良';
+
+    let profileStr = `# 角色当前档案\n下述是关于主角的设定。这份资料用于帮你确认她的形象：\ncharacter_core_profile:\n  identity:\n    当前应使用称呼: "姓名: "${basic.姓名 || '未知'}"\n    魔法少女名: "${basic.魔法少女名 || '未命名'}"\n    人格阵营: "${alignment}"\n    年龄: "${basic.年龄 || '未知'}"\n    日常身份: "${info['身份&职业'] || info['身份/职业'] || '普通人'}"\n    性格特质: "${info.性格特质 || '未知'}"\n    \n  physical_appearance:\n    面容: "${face.五官 || '清秀'}，${face.眼睛颜色 || '普通'}"\n    发型: "${face.发型与发色 || '普通'}"\n    体态: "身高${appearance.身高 || '未知'}，${appearance.体态 || '匀称'}。三围：${appearance.三围 || '未知'}"\n    肌肤: "${appearance.皮肤状态 || '光滑'}，${appearance.肌肉线条 || '无明显肌肉'} (体脂率: ${appearance.体脂率 || '标准'})"\n    特殊记号: "${face.特殊记号 || '无'}"\n\n  intimate_traits:\n    胸部: "${sexual.乳房形状 || '未设定'}，乳首：${sexual.乳晕与乳头颜色 || '未设定'}"\n    私密: "${sexual.阴唇形态 || '未设定'}，体毛：${sexual.体毛状况 || '未设定'}"\n    敏感度: "${sexual.天生敏感度 || '标准'}"\n\n  magical_contract:\n    代表色: "${info.代表色 || '无'}"\n    核心能力: "${info.核心能力 || '未觉醒'}"\n    专属武装: "${info.武装 || '暂无'}"\n    变身服饰: "${info.变身服 || '无'}"\n    \n  familiar_companion:\n    种类: "${info.使魔伙伴种类 || '无'}"\n    性格: "${info.使魔伙伴性格 || '未知'}"\n    关系: "${info.使魔伙伴与主角关系 || '守护者'}"\n`;
+
+    if (noteEntries.length > 0) {
+        profileStr += `\nworld_lore:\n  当前积累的世界设定如下：\n`;
+        for (const [k, v] of noteEntries) {
+            profileStr += `  - ${k}: ${v}\n`;
+        }
+    }
+    profileStr += `\ncurrent_date: "${dMonth}月${dDay}日"\n`;
+    profileOutput = profileStr;
+}
+
+// 2. 基础清理
+if (s.主角) {
+    delete s.主角.基本信息;
+    delete s.主角.个人信息;
+    delete s.主角.相貌特征; 
+    delete s.主角.身材细节; 
+    delete s.主角.性器官特征;
+    delete s.主角["战斗临时"]; 
+
+    if (s.主角.淫纹) {
+        const curse = s.主角.淫纹;
+        // 智能隐藏：如果经验为0，且没有实质性描述，则彻底在当前变量树中隐藏。
+        if (curse.经验 <= 0) {
+            delete s.主角.淫纹;
+        }
+    }
+}
+
+if (s.系统状态) {
+    const events = s.系统状态.待处理事件 || {};
+    const activeEvents = Object.keys(events).filter(k => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+    if (activeEvents.length === 0) {
+        delete s.系统状态;
+    } else {
+        s.系统状态 = { "待处理事件": events };
+    }
+}
+
+// 3. [世界] 模块 (幕间隐藏关卡信息)
+if (s.世界) {
+    delete s.世界.世界观备注; 
+
+    if (s.世界.当前关卡 && (s.世界.当前关卡.名称 === "无" || s.世界.当前关卡.名称 === "未知的威胁")) {
+        delete s.世界.当前关卡;
+    } else if (s.进程 && s.进程.阶段 === "幕间休息" && s.世界.当前关卡) {
+       delete s.世界.当前关卡.Boss韧性值;
+       delete s.世界.当前关卡.Boss基础强度;
+       delete s.世界.当前关卡.Boss状态;
+       delete s.世界.当前关卡.战斗类型;
+       delete s.世界.威胁等级;
+    }
+
+    if (s.世界.幕间H事件 && s.世界.幕间H事件.名称 === "无") {
+        delete s.世界.幕间H事件;
+    }
+}
+
+// 4. [生理状态] 细节优化
+if (s.主角 && s.主角.生理状态) {
+    if (s.主角.生理状态.子宫状态) {
+        if (s.主角.生理状态.子宫状态.受孕状态 === "未受孕") {
+            delete s.主角.生理状态.子宫状态.孕育信息;
+        }
+    }
+    if (s.主角.生理状态.子宫内异物 && isEmpty(s.主角.生理状态.子宫内异物.异物列表)) {
+        delete s.主角.生理状态.子宫内异物;
+    }
+    if (s.主角.生理状态.阴道状态 && isEmpty(s.主角.生理状态.阴道状态.内部异物)) {
+        delete s.主角.生理状态.阴道状态.内部异物;
+    }
+}
+
+// 5. [性癖] 系统压缩
+if (s.主角 && s.主角.快感状态 && s.主角.快感状态.性癖) {
+    const originalKinks = s.主角.快感状态.性癖;
+    const activeKinks = {};
+    const pendingKeys = [];
+
+    Object.keys(originalKinks).forEach(key => {
+        if (key === '$meta' || key === "$__META_EXTENSIBLE__$") return;
+        const val = originalKinks[key];
+        if ((val.经验 && val.经验 > 0) || (val.等级 && val.等级 > 0)) {
+            activeKinks[key] = val;
+        } else {
+            pendingKeys.push(key);
+        }
+    });
+    s.主角.快感状态.性癖 = activeKinks;
+    if (pendingKeys.length > 0) s.主角.快感状态.性癖["[待觉醒列表]"] = pendingKeys.join(", ");
+}
+
+if (s.主角 && s.主角.快感状态) {
+    delete s.主角.快感状态.高潮阈值;
+}
+
+// 6. 杂项清理
+if (s.记录) {
+    if (s.记录.已击败Boss计数 === 0) {
+        delete s.记录.已击败的Boss;
+    } else if (s.记录.已击败的Boss) {
+        const historyObj = s.记录.已击败的Boss;
+        const optimizedHistory = {};
+        
+        Object.keys(historyObj).forEach(key => {
+            const bossData = historyObj[key];
+            if (bossData && typeof bossData === 'object' && bossData.名称 && bossData.名称 !== "$__META_EXTENSIBLE__$") {
+                optimizedHistory[bossData.名称] = {
+                    "核心主题": bossData.核心主题 ||[],
+                    "结果": bossData.结果 || "WIN"
+                };
+            }
+        });
+        
+        s.记录.已击败的Boss = optimizedHistory;
+    }
+
+    if (s.记录.总战败次数 === 0) delete s.记录.总战败次数;
+    
+    const children = s.记录.诞下的子嗣;
+    const hasChildren = children && (
+        (Array.isArray(children) && children.length > 0) || 
+        (typeof children === 'object' && Object.keys(children).length > 0)
+    );
+
+    if (!hasChildren) {
+        delete s.记录.诞下的子嗣;
+    }
+}
+if (s.主角 && s.主角.核心状态) {
+    if (s.主角.核心状态.产后状态 === "无") delete s.主角.核心状态.产后状态;
+    if (s.主角.核心状态.主人 === "无") delete s.主角.核心状态.主人;
+}
+if (s.主角 && isEmpty(s.主角.永久性身体改造)) delete s.主角.永久性身体改造;
+
+const cleanMeta = (arr) => Array.isArray(arr) ? arr.filter(x => x !== "$__META_EXTENSIBLE__$") : arr;
+if (s.世界 && s.世界.当前关卡) s.世界.当前关卡.核心主题 = cleanMeta(s.世界.当前关卡.核心主题);
+
+let output = "";
+if (profileOutput) {
+    output += profileOutput + "\n";
+}
+
+output += `# 当前剧情下的变量状态:\n - 注意，这里的变量内容既是叙事参考，也是更新时需遵循的JSON路径。\n<status_current_variables>\n${JSON.stringify(s, null, 2)}\n</status_current_variables>`;
+_%>
+<%- output %>

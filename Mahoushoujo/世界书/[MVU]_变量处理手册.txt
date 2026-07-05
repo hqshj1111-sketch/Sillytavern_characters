@@ -1,0 +1,167 @@
+<%_{
+// --- [系统] MVU变量操作总纲 (YAML结构化版) ---
+const s = getvar('stat_data') || {};
+const ph = _.get(s, '进程.阶段', '创角阶段');
+const per = _.get(s, '主角.核心状态.人格状态', '善良');
+
+// 阶段标志位
+const isInit = ph === '创角阶段';
+const isIdle = ph === '幕间休息';
+const isPrep = ph === '战斗准备';
+const isCombat = ['战斗回合', '终结回合'].includes(ph);
+const isResult = ['战斗胜利', '战斗败北', '战后处理'].includes(ph);
+const isFallen = per === '堕落';
+
+// 动态变量名与概念
+const ultVar = isFallen ? '污秽魔力' : '净化之力';
+const corrConcept = isFallen ? '恩宠/纯度' : '污染度';
+
+// 幕间冷却计算
+const turnCount = _.get(s, '系统状态.幕间回合计数', 0);
+const BOSS_COOLDOWN = 10;
+const isBossReady = turnCount >= BOSS_COOLDOWN;
+
+// 辅助函数: 安全 JSON 字符串
+const j = (v) => JSON.stringify(v);
+_%>
+variable_update_handbook:
+  context:
+    phase: <%- j(ph) %>
+    personality: <%- j(per) %>
+    ultimate_power: <%- j(ultVar) %>
+    corruption_concept: <%- j(corrConcept) %>
+    boss_cooldown_turns: <%= turnCount %>/<%= BOSS_COOLDOWN %>
+  current_phase_rules:
+<%_ if (isInit) { _%>
+    phase: <%- j(ph) %>
+    constraints:
+      - note: "初始化所有数据后，执行必要指令。"
+        reference: "请参考角色创建事件完成变量填充。"
+<%_ } else if (isPrep) { _%>
+    phase: <%- j(ph) %>
+    constraints:
+      - trigger: "当玩家确认战斗意愿（或被突袭）时，执行以下任一指令开启战斗"
+        methods:
+          - method: "变身开启"
+            action: <%- j({"op":"replace","path":"/主角/核心状态/变身状态","value":true}) %>
+            note: "变身动作会自动触发后台脚本切换至战斗回合。"
+          - method: "直接开战"
+            action: <%- j({"op":"replace","path":"/进程/阶段","value":"战斗回合"}) %>
+            note: "用于肉身应战、突袭或规则决斗等不需要变身的场合。"
+      - requirement: "当阶段转为战斗准备时，必须根据生成的Boss信息更新世界/当前关卡的名称、Boss基础强度、Boss韧性值(设为100)和核心主题。"
+<%_ } else if (isCombat) { _%>
+    phase: <%- j(ph) %>
+    constraints:
+      - rule: "胜负判定由后台脚本根据HP和韧性自动判决，严禁手动修改 /进程/阶段（如设为战斗胜利/败北）。"
+        victory: "若想表现战斗胜利，仅需将 /世界/当前关卡/Boss韧性值 减至 0。"
+        defeat: "若想表现战斗败北，仅需将 /主角/核心状态/体力值/当前 减至 0。"
+      - readonly_paths:
+          - "世界/当前关卡/Boss状态 (脚本自动更新)"
+          - "世界/当前关卡/核心主题 (关卡生成后锁定)"
+          - "记录/已击败的Boss (脚本自动注册)"
+          - "记录/已击败Boss计数 (脚本自动增加)"
+      - numeric_operations:
+          - path: "/世界/当前关卡/Boss韧性值"
+            logic: "使用 delta 更新。"
+          - path: "/主角/核心状态/体力值/当前"
+            logic: "使用 delta 更新。"
+          - path: "/主角/核心状态/魔力值/当前"
+            logic: "使用 delta 更新。若剧中使用了魔法，必须在 Analysis 中计算 MP 消耗并扣除。"
+          - path: "/主角/核心状态/<%= ultVar %>"
+            logic: "必杀技充能，使用 delta 更新。"
+          - path: "/主角/战斗临时/当前战斗日志"
+            logic: "每个战斗回合结束时，将战斗仲裁庭生成的完整结果字符串更新到此变量。"
+<%_ } else if (isResult) { _%>
+    phase: <%- j(ph) %>
+    constraints:
+<%_   if (ph === '战斗胜利') { _%>
+      - trigger: "当胜利演出结束，准备进入打扫战场/结算画面时，执行："
+        action: <%- j({"op":"replace","path":"/进程/阶段","value":"战后处理"}) %>
+<%_   } else if (ph === '战斗败北') { _%>
+      - ban: "严禁手动修改 /进程/阶段！后台脚本正在进行回合倒计时，你只需专注于描绘败北后的遭遇或挣扎，直到触发彻底败北结算事件。"
+<%_   } else { _%>
+      - note: "描绘完战后休整/撤退场景后，无需操作变量。后台脚本会自动将阶段重置为幕间休息。"
+<%_   } _%>
+<%_ } else if (isIdle) { _%>
+    phase: <%- j(ph) %>
+    constraints:
+<%_   if (isBossReady) { _%>
+      - alert: "危机已至，系统已提供新BOSS战生成指令，引出敌人后必须用 JSONPatch 切换阶段： <%- j({"op":"replace","path":"/进程/阶段","value":"战斗准备"}) %>"
+<%_   } else { _%>
+      - ban: "严禁擅自修改 /进程/阶段 提前进入战斗！当前处于日常/休整期，专注于当下的生活或处理当前情境。"
+<%_   } _%>
+      - numeric_guidelines:
+          - path: "/世界/世界观备注"
+            type: "Map (主题 -> 内容)"
+            trigger: "随时将剧情中涌现的关键细节持久化。记录范围包括NPC特征、敌人弱点、魔法用法、特殊场景机制、誓言等。"
+            operations:
+              - "insert: 使用 insert 登记新设定，Key 为精炼主题。"
+              - "replace: 设定有新发展时使用 replace。"
+              - "remove: 设定失效时使用 remove。"
+            examples:
+              - <%- j({"op":"insert","path":"/世界/世界观备注/弱点_史莱姆","value":"极其惧怕盐酸，会因此失去粘性。"}) %>
+              - <%- j({"op":"insert","path":"/世界/世界观备注/人际关系_小圆","value":"同班同学，似乎察觉到了主角魔法少女的身份。"}) %>
+          - path: "/世界/日期"
+            note: "MMDD 格式数字，后台自动推进，严禁随意增减或改写。你需要根据此日期感知季节和节日。"
+          - path: "/名声/知名度"
+            logic: "使用 delta 更新。"
+          - path: "/名声/风评"
+            logic: "使用 delta 更新。"
+          - path: "/主角/道具栏"
+            type: "Map (物品名 -> 数量/状态)"
+            operations:
+              - "insert: 获得物品时使用 insert，路径为 /主角/道具栏/物品名。"
+              - "remove: 消耗物品时使用 remove 删除对应 Key。"
+<%_ } _%>
+<%_ if (!isInit) { _%>
+  general_rules:
+    scope: "通用生理与状态规则"
+    constraints:
+      - readonly_paths:
+          - "主角/生理状态/子宫状态/受孕状态 (脚本自动判定)"
+      - active_paths:
+          - path: "/主角/生理状态/当前生理动态"
+            logic: "更新一句简短的感官描写（如：呼吸急促）。"
+            example: <%- j({"op":"replace","path":"/主角/生理状态/当前生理动态","value":"小腹鼓胀，喘息不止"}) %>
+          - path: "/主角/身体部位状况"
+            policy: "必须积极更新该条目，这是以镜头凝视主角身体的重要风味部分。更新每个部位的综合状态，包括服装破损与肉体痕迹。单条不超过20字，一次只更新一个部位路径。战斗后沐浴应重置为完好。"
+            example: <%- j({"op":"replace","path":"/主角/身体部位状况/胸部","value":"衣料撕裂，肌肤布满红印与粘液。"}) %>
+          - path: "/主角/快感状态/快感值"
+            logic: "受到性刺激时使用 delta 增加，脱离性交快感平息时使用 delta 减少。"
+          - path: "/主角/快感状态/总高潮次数"
+            warning: "禁止直接添加！AI 只可操作快感值。脚本推送高潮事件后，按指令使用 delta 更新总次数。"
+          - path: "/主角/快感状态/污染度"
+            instruction_type: "conditional"
+            conditional_rules:
+              - condition: "fallen"
+                action: "当主角享受淫乱、主动诱堕他人时增加。"
+              - condition: "pure"
+                action: "当发生精神侵蚀、被无套内射、被刻画淫纹或抵达高潮时，根据强度增加。"
+          - path: "/主角/快感状态/性癖"
+            pattern: "/主角/快感状态/性癖/${性癖名称}/经验"
+            rule: "发生具体性行为时，根据强度与深度，使用 delta 更新对应性癖经验。若条目未觉醒，直接 delta 经验即可自动构型。严禁凭空创造变量表中不存在的性癖 Key。"
+            example: <%- j({"op":"delta","path":"/主角/快感状态/性癖/触手/经验","value":50}) %>
+          - path: "/主角/生理状态/体液与分泌/子宫内精液"
+            logic: "被注入精液/卵液时，执行两步：1. delta 增减存量；2. insert 添加射精者 Key 到来源表。"
+            example: <%- j([
+              {"op":"delta","path":"/主角/生理状态/体液与分泌/子宫内精液/存量","value":100},
+              {"op":"insert","path":"/主角/生理状态/体液与分泌/子宫内精液/来源/哥布林","value":"浓厚"}
+            ]) %>
+          - path: "/主角/生理状态/阴道状态/当前状态"
+            note: "必须积极更新！用简短语句即时反映阴道动态：吞吐肉棒/正常/悸动/分泌爱液……"
+          - path: "/主角/生理状态/阴道状态/湿润度"
+            note: "填入单个词语：湿润/粘稠/干涩/正常……"
+          - path: "/主角/生理状态/阴道状态/内部异物"
+            type: "Map (异物名 -> 状态)"
+            example: <%- j({"op":"insert","path":"/主角/生理状态/阴道状态/内部异物/震动蛋","value":"正在高频震动"}) %>
+          - path: "/主角/生理状态/子宫内异物/异物列表"
+            type: "Map结构"
+            example: <%- j({"op":"insert","path":"/主角/生理状态/子宫内异物/异物列表/触手","value":{"名称":"触手尖端","特征":"不断分泌粘液"}}) %>
+          - path: "/主角/生理状态/后穴状态/开发度"
+            logic: "发生后庭相关行为时，使用 delta 增加。"
+          - path: "/主角/永久性身体改造"
+            type: "Map (改造名称 -> 详情)"
+            example: <%- j({"op":"insert","path":"/主角/永久性身体改造/淫纹","value":{"部位":"小腹","详情":"发光的粉色纹路","来源":"触手怪"}}) %>
+          - path: "/系统状态/待处理事件"
+            logic: "事件队列。脚本会自动推送事件进入，AI 一般不得主动操作；事件完成后必须用 remove 清理。"
+<%_ }} _%>

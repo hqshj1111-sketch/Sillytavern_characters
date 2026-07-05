@@ -1,0 +1,82 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const isManifest = events['淫纹显现事件'];
+  const isEvolve = events['淫纹进化事件'];
+  const isDegrade = events['淫纹降级事件'];
+
+  if (isManifest || isEvolve || isDegrade) {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+    const color = _.get(stat, '主角.个人信息.代表色', '未知');
+    const ability = _.get(stat, '主角.个人信息.核心能力', '未知');
+    const curXp = _.get(stat, '主角.淫纹.经验', 0);
+    const curDesc = _.get(stat, '主角.淫纹.描述', '无');
+
+    const getLevel = xp => xp <= 0 ? 0 : (xp < 150 ? 1 : (xp < 400 ? 2 : 3));
+    const currentLevel = getLevel(curXp);
+    const isZero = currentLevel === 0;
+    const isRevival = isManifest && curDesc !== '无' && curDesc !== '尚未演化……' && curDesc !== '生成中……';
+
+    let eventTitle, contextStr, narrativeDir;
+    let extraPatches = [];
+
+    if (isManifest) {
+      if (isRevival) {
+        eventTitle = personality === '善良' ? '淫纹复苏 (死灰复燃)' : '淫纹复苏 (恩宠重临)';
+        contextStr = "曾被克服或休眠的淫纹，因再次被内射或极度的快感滋养而复苏。";
+        narrativeDir = personality === '善良' ? "那道浅浅的疤痕再次发烫，重新化作淫靡的刺青。" : "它贪婪地吸收着养分，重新绽放出妖艳的光芒。";
+        extraPatches.push('{ "op": "replace", "path": "/主角/淫纹/经验", "value": 70 }');
+      } else {
+        eventTitle = '淫纹初次显现';
+        contextStr = "身体发生异变，淫纹初次在主角身上觉醒。";
+        narrativeDir = `请在75字内设计一个独特而色气的淫纹图案：结合人格[${personality}]、代表色[${color}]、能力[${ability}]。描绘浮现的位置、图案形状，以及激活时酥麻灼热的体感。保持日系美学。`;
+        extraPatches.push('{ "op": "replace", "path": "/主角/淫纹/经验", "value": 40 }');
+      }
+    } else if (isEvolve) {
+      eventTitle = `淫纹进化 (Lv.${currentLevel})`;
+      contextStr = "淫纹吸饱了精液与快感，跨越了进化的门槛。";
+      narrativeDir = `原描述：「${curDesc}」。请描绘它向新部位蔓延、色彩变深，以及主角对魔力回路被深层侵蚀的感知。`;
+    } else if (isDegrade) {
+      if (personality === '善良') {
+          eventTitle = isZero ? '淫纹克服 (净化升华)' : `淫纹衰退 (Lv.${currentLevel})`;
+          contextStr = isZero ? "长期保持纯洁，主角凭借坚韧的意志彻底克服了淫纹！" : "由于缺乏滋养，淫纹的力量开始衰退。";
+          narrativeDir = isZero 
+              ? "请描绘淫纹消退化作微弱无害疤痕的过程。主角感受到污秽被拔除，夺回了身心的控制权，精神与魔力迎来了升华！"
+              : `请描绘淫纹光芒黯淡、面积缩小（降至Lv.${currentLevel}），主角感受到酥麻与淫靡感正在减轻。`;
+          if (isZero) {
+              extraPatches.push('{ "op": "delta", "path": "/主角/核心状态/基础强度", "value": 3 }');
+              extraPatches.push('{ "op": "delta", "path": "/主角/快感状态/污染度", "value": -15 }');
+              extraPatches.push('{ "op": "replace", "path": "/主角/淫纹/描述", "value": "已枯萎，仅留下一道浅浅的纯洁印记。" }');
+          }
+      } else {
+          eventTitle = isZero ? '淫纹枯竭 (恩宠剥夺)' : `淫纹饥渴 (Lv.${currentLevel})`;
+          contextStr = isZero ? "长时间没有得到灌溉，淫纹暂时性失活了。" : "缺乏精液滋养，淫纹开始衰退。";
+          narrativeDir = isZero
+              ? "堕落的证明从肌肤上隐去。请描绘主角感受到力量与恩宠流失，子宫陷入空虚饥渴，迫切地想要找猎物把肚子重新填满。"
+              : `请描绘淫纹黯淡、收束（降至Lv.${currentLevel}），不再源源不断提供魔力。`;
+          extraPatches.push('{ "op": "delta", "path": "/主角/快感状态/污染度", "value": -10 }');
+          if (isZero) extraPatches.push('{ "op": "replace", "path": "/主角/淫纹/描述", "value": "因过度饥渴而陷入休眠，失去了光泽。" }');
+      }
+    }
+    let eventKey = isManifest ? '淫纹显现事件' : (isEvolve ? '淫纹进化事件' : '淫纹降级事件');
+_%>
+event_handler:
+  event_name: "<%= eventTitle %>"
+  context: "<%= contextStr %>"
+  narrative_directives:
+    - "<%= narrativeDir %>"
+  system_tasks:
+    instruction: "请在 <JSONPatch> 中输出以下维护指令，更新淫纹状态并移除事件："
+    mandatory_patch: |
+      [
+        <%_ if (!isZero && !(isManifest && !isRevival)) { _%>
+        { "op": "replace", "path": "/主角/淫纹/描述", "value": "[请在此处填入更新后的视觉描述]" },
+        <%_ } _%>
+        <%- extraPatches.length > 0 ? extraPatches.join(',\\n        ') + ',' : '' %>
+        { "op": "remove", "path": "/系统状态/待处理事件/<%= eventKey %>" }
+      ]
+<%_
+  }
+}
+_%>

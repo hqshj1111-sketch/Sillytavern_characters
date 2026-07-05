@@ -1,0 +1,68 @@
+﻿<%#
+  [系统] 幕间生活引擎 (连贯版)
+%>
+<%_{
+// --- 1. 环境检查 ---
+const stat = getvar('stat_data') || {};
+const currentEventName = _.get(stat, '世界.幕间H事件.名称', '无');
+const isCharCreated = String(_.get(stat, '系统状态.主角创建完毕')) === 'true';
+const isIntermission = _.get(stat, '进程.阶段') === '幕间休息';
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+// 读取幕间事件完成状态
+const rawEventCompleted = _.get(stat, '系统状态.幕间事件完成', true);
+const eventCompleted = String(rawEventCompleted) === 'true';
+
+// 仅在真正的日常空白期（无H事件、无强制事件）激活
+if (isCharCreated && isIntermission && currentEventName === '无') {
+
+  // --- 2. 变量提取 ---
+  const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+  const turnCount = parseInt(_.get(stat, '系统状态.幕间回合计数', 0), 10);
+
+  // 提取可用元素供AI参考，而不是强制随机
+  let availableElements =[];
+  if (personality === '反派') {
+      const master = _.get(stat, '主角.核心状态.主人', '无');
+      if (master !== '无') availableElements.push(`侍奉或思念怪人组织老大(${master})`);
+      availableElements.push("享受黑暗的消遣");
+      availableElements.push("巡视据点或组织设施");
+  } else {
+      availableElements.push("与同伴或联络人交流");
+      availableElements.push("处理表世界身份的日常(学校/工作/社交)");
+      availableElements.push("城市巡逻");
+      availableElements.push("体能训练与维护装备");
+      availableElements.push("独处的平静时光");
+  }
+
+  // --- 3. 动态节奏控制 (核心优化) ---
+  // 根据幕间经过的回合数，平滑过渡氛围，直到H事件(Entry 34)接管
+  let paceTitle = "";
+  let paceGuidance = "";
+
+  if (turnCount === 0) {
+      paceTitle = "【修整与余韵】";
+      paceGuidance = "主角刚刚经历了一场剧烈的事件（战斗或剧情）。请侧重描写他清理痕迹、平复呼吸、整理装备或洗浴休息的过渡场景。";
+  } else if (turnCount < 6) {
+      paceTitle = "【平稳的日常延续】";
+      paceGuidance = "推进平静的日常对话与生活互动。不要擅自跳跃时间或更换场景，让玩家享受此刻的安宁。";
+  } else {
+      paceTitle = "【暗流涌动的日常】";
+      paceGuidance = "平静的日常已经持续了一段时间。在维持生活场景的同时，请开始为调查、BOSS战等行动留下故事钩子与叙事空间。";
+  }
+_%>
+intermission_life_protocol:
+  objective: "现在是幕间休息环节。请暂缓节奏，聚焦于生活细节与角色内心，【保持场景的连贯性】。"
+
+  current_rhythm:
+    phase: "<%= paceTitle %>"
+    guidance: "<%= paceGuidance %>"
+
+  narrative_elements:
+    instruction: "在推进日常时，你可以根据当前的上下文，自然地融入以下元素（无需生硬罗列，符合语境即可）："
+    elements: [ "<%- availableElements.join('", "') %>" ]
+
+  polishing_instructions:
+    - "【幕间休息】: 禁止你让主角的身体淫乱化、过分敏感，或是被之前战斗的痕迹严重困扰。主角在战斗环节中会有激烈专注于H描写和色情内容，如果在幕间继续延续前文的色情故事描写，就失去了挖掘主角人设、拓展人际关系等的重要机会。"
+    - "【状态反馈】：如果主角有较高的侵蚀度或被刻下了黑暗印记等身体改造，请将其作为隐秘的"背景滤镜"融入对日常的感知中，展现表里不一的反差感。"
+
+<%_ }} _%>

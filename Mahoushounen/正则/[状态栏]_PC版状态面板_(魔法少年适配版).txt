@@ -1,0 +1,2003 @@
+﻿```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>状态总览</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-source-exo-2/4.5.0/700.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-source-sarabun/4.5.12/400.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-source-sarabun/4.5.12/600.css" rel="stylesheet">
+<style>
+    :root {
+        /* --- 核心配色 --- */
+        --card-bg: #1a1b26; 
+        --card-bg-blur: rgba(26, 27, 38, 0.95); 
+        --border-color: rgba(255, 255, 255, 0.08); 
+        --text-color: #c0caf5; 
+        --text-secondary: #787c99;
+        
+        /* 功能色块 */
+        --accent-color: #b4befe; /* 柔和蓝紫 */
+        --accent-glow: rgba(180, 190, 254, 0.3);
+        --hp-color: #9ece6a; /* 抹茶绿 */
+        --mp-color: #7aa2f7; /* 矢车菊蓝 */
+        --pleasure-color: #f7768e; /* 樱花粉 */
+        --corruption-color: #bb9af7; /* 薰衣草紫 */
+        --ultimate-color: #e0af68; /* 奶茶金 */
+        --combat-color: #f87171; /* 柔和红 */
+        
+        --font-main: 'Sarabun', sans-serif;
+        --font-header: 'Exo 2', sans-serif;
+        font-feature-settings: "tnum"; 
+        -webkit-font-smoothing: antialiased;
+
+        /* --- GM控制台配色 --- */
+        --gm-bg: rgba(19, 20, 31, 0.98); 
+        --gm-border: #2f354b;
+        --gm-text: #a9b1d6; 
+        --gm-accent: #7aa2f7;
+        --gm-input-bg: #1a1b26; 
+        --gm-radius: 12px;
+    }
+
+    /* --- 基础布局 --- */
+    body { background-color: transparent; font-family: var(--font-main); color: var(--text-color); margin: 0; padding: 10px; font-size: 14px; line-height: 1.6; }
+    
+    /* --- 动画定义 --- */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-soft { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
+    @keyframes flash-danger { 50% { border-color: var(--combat-color); box-shadow: 0 0 10px var(--combat-color); } }
+
+    /* --- 主卡片容器 --- */
+    .status-card { 
+        display: grid; grid-template-columns: 1fr 1.25fr; 
+        gap: 24px; min-height: 580px; align-items: start; 
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+        box-shadow: 0 20px 50px -10px rgba(0,0,0,0.6); 
+        background-color: var(--card-bg); 
+        border-radius: 20px; 
+        padding: 26px; 
+        max-width: 95%; margin: auto; position: relative; 
+        transition: all 0.5s ease;
+    }
+
+    /* 顶部氛围溢光 */
+    .status-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(to bottom, var(--accent-glow) 0%, rgba(0,0,0,0) 25%);
+        opacity: 0.2; pointer-events: none; z-index: 0; border-radius: 20px;
+    }
+
+    /* 动态主题适配 */
+    .theme-fallen .status-card::before { background: linear-gradient(90deg, #f7768e, #bb9af7); }
+    .theme-eroded .status-card::before { background: linear-gradient(90deg, #bb9af7, #7aa2f7); }
+    .state-ultimate-ready { box-shadow: 0 0 30px rgba(224, 175, 104, 0.3); }
+
+    /* --- 左右面板 --- */
+    .panel-left, .panel-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; position: relative; z-index: 1; }
+    .panel-left:hover { z-index: 102; } /* 防止被右侧遮挡 */
+    .panel-right { 
+        height: 580px; overflow: hidden; 
+        background: rgba(255, 255, 255, 0.03); 
+        border-radius: 16px; padding: 16px; 
+    }
+    .panel-right:has(.has-tooltip:hover) { z-index: 101; }
+
+    /* 标题与头部 */
+    .card-header { padding-bottom: 8px; text-align: center; }
+    .card-header h2 { margin: 0; font-family: var(--font-header); font-size: 1.4em; color: var(--text-color); letter-spacing: 1px; font-weight: 700; opacity: 0.9; }
+
+    /* --- 进度条系统 --- */
+    .progress-stack { 
+        display: flex; flex-direction: column; gap: 14px; 
+        background: rgba(255, 255, 255, 0.02); 
+        border-radius: 12px; padding: 16px;
+    }
+    .stack-header { 
+        font-family: var(--font-header); text-align: center; color: var(--text-secondary); 
+        font-size: 0.85em; letter-spacing: 1px; text-transform: uppercase;
+        margin-bottom: 6px; opacity: 0.7;
+    }
+    .progress-item .progress-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.95em; font-weight: 600; color: var(--text-color); }
+    .progress-label i { margin-right: 8px; color: var(--text-secondary); width: 1.2em; text-align: center; }
+    .progress-bar { width: 100%; height: 10px; background-color: rgba(0, 0, 0, 0.3); border-radius: 5px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3); }
+    .progress-fill { height: 100%; border-radius: 5px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+    .progress-value { font-family: var(--font-header); font-size: 0.9em; opacity: 0.9; }
+
+    /* --- 精神崩坏·色差故障特效 --- */
+    @keyframes mental-glitch-shudder {
+        0% { transform: translate(0, 0); text-shadow: none; color: inherit; }
+        20% { transform: translate(-2px, 1px); text-shadow: 2px 0 #ff0055, -2px 0 #00ffff; }
+        40% { transform: translate(1px, -1px); text-shadow: none; color: inherit; }
+        60% { transform: translate(-1px, 2px); text-shadow: -2px 0 #ff0055, 2px 0 #00ffff; color: var(--combat-color); }
+        80% { transform: translate(1px, -2px); text-shadow: none; }
+        100% { transform: translate(0, 0); text-shadow: none; }
+    }
+    .corrupt-active { 
+        display: inline-block; font-weight: 800; letter-spacing: 2px;
+        animation: mental-glitch-shudder 0.25s infinite steps(2);
+        will-change: transform, text-shadow; 
+    }
+
+    /* --- 心跳共鸣条 (EKG) --- */
+    .ekg-wrapper {
+        display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+        background: rgba(247, 118, 142, 0.1); border-radius: 12px; 
+        padding: 10px 14px; margin-bottom: 8px; border: 1px solid rgba(247, 118, 142, 0.2);
+    }
+    .ekg-heart-box { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(247, 118, 142, 0.2); border-radius: 50%; }
+    .ekg-icon { color: var(--pleasure-color); font-size: 1.1em; }
+    .ekg-icon.beating { animation: soft-beat 1.5s infinite ease-in-out; }
+    .ekg-icon.beating-fast { animation: soft-beat 0.6s infinite ease-in-out; }
+    @keyframes soft-beat {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.2); opacity: 1; text-shadow: 0 0 10px var(--pleasure-color); }
+        100% { transform: scale(1); opacity: 0.8; }
+    }
+    .ekg-bar-container { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; position: relative; }
+    .ekg-bar-fill { height: 100%; background: linear-gradient(90deg, #f7768e, #ff9e64); border-radius: 4px; transition: width 0.5s ease; box-shadow: 0 0 10px rgba(247, 118, 142, 0.4); }
+    .ekg-bar-fill.critical { background: linear-gradient(90deg, #ff0055, #ff5599); animation: bar-pulse 2s infinite; }
+    @keyframes bar-pulse { 0% { opacity: 0.8; } 50% { opacity: 1; box-shadow: 0 0 15px #ff0055; } 100% { opacity: 0.8; } }
+    .ekg-data { font-family: var(--font-header); font-weight: 700; color: var(--pleasure-color); font-size: 1.1em; }
+
+    /* --- Tab 切换卡 --- */
+    .tab-container { display: flex; gap: 8px; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 10px;}
+    .tab-btn { 
+        flex: 1; padding: 8px 12px; background: transparent; border: none; border-radius: 8px; 
+        color: var(--text-secondary); font-family: var(--font-header); font-size: 0.9em; 
+        cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .tab-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-color); }
+    .tab-btn.active { background: var(--accent-color); color: #1a1b26; font-weight: bold; box-shadow: 0 2px 10px rgba(180, 190, 254, 0.3); }
+    .content-container { flex-grow: 1; position: relative; overflow: hidden; }
+    .tab-content { display: none; height: 100%; overflow-y: auto; animation: fadeIn 0.4s ease; padding-right: 4px; }
+    .tab-content.active { display: block; }
+    .tab-content::-webkit-scrollbar { width: 4px; }
+    .tab-content::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 2px; }
+
+    /* --- 详细信息网格 (新版优化) --- */
+    .details-grid { display: grid; grid-template-columns: auto 1fr; gap: 12px 20px; font-size: 0.95em; align-items: baseline; }
+    .details-section-header { 
+        font-weight: 700; color: var(--accent-color); grid-column: 1 / -1; 
+        margin: 12px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); 
+        font-size: 1em; letter-spacing: 0.5px; display: flex; align-items: center;
+    }
+    .details-section-header i { margin-right: 8px; opacity: 0.8; }
+    .item-label { color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; gap: 6px; align-self: baseline; padding-top: 2px; }
+    .item-value { color: var(--text-color); line-height: 1.4; font-weight: 400; }
+
+    /* 富文本容器 */
+    .rich-value-box { display: inline-flex; flex-direction: column; justify-content: center; vertical-align: baseline; width: 100%; }
+    .rich-main-text { font-size: 1.05em; font-weight: 400; color: var(--text-color); line-height: 1.4; }
+    .rich-sub-text { font-size: 0.85em; color: var(--text-secondary); margin-top: 4px; display: flex; gap: 5px; flex-wrap: wrap; line-height: 1.2; }
+    .info-tag { padding: 1px 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255,255,255,0.08); font-size: 0.85em; color: var(--text-secondary); display: inline-flex; align-items: center; }
+    .info-tag i { margin-right: 4px; opacity: 0.7; font-size: 0.9em; }
+    .rank-badge { padding: 1px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em; background: var(--accent-glow); color: var(--text-color); border: 1px solid var(--accent-color); box-shadow: 0 0 10px -4px var(--accent-glow); display: inline-block; }
+
+    /* --- 状态上下文 (战斗/幕间) --- */
+    .context-box { padding: 16px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; text-align: center; }
+    .battle-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .status-side.player-side { text-align: left; }
+    .status-side.enemy-side { text-align: right; }
+    .side-main { font-family: var(--font-header); font-weight: 700; font-size: 1.2em; color: var(--text-color); }
+    .side-status-tag { display: inline-block; font-size: 0.75em; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: var(--accent-color); color: #1a1b26; margin-top: 4px; }
+    .intermission-status .main-status { font-size: 1.2em; font-weight: 700; color: var(--accent-color); margin-bottom: 4px; }
+    .combat-log-display { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); font-size: 0.85em; text-align: left; color: var(--text-secondary); }
+    .log-success { color: var(--hp-color); font-weight: bold; } 
+    .log-failure { color: var(--combat-color); font-weight: bold; }
+
+    /* --- 身体监控 --- */
+    .body-monitor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .body-part-node { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; text-align: center; transition: all 0.3s ease; }
+    .body-part-node i { font-size: 1.3em; margin-bottom: 4px; display: block; opacity: 0.8; }
+    .body-part-name { font-size: 0.75em; color: var(--text-secondary); }
+    .node-status-ok { opacity: 0.6; }
+    .node-status-ok i { color: var(--hp-color); }
+    .node-status-damaged { border-color: var(--ultimate-color); background: rgba(224, 175, 104, 0.1); }
+    .node-status-damaged i { color: var(--ultimate-color); }
+    .node-status-critical { border-color: var(--combat-color); background: rgba(248, 113, 113, 0.1); }
+    .node-status-critical i { color: var(--combat-color); animation: flash-danger 1.5s infinite; }
+    .node-status-sticky { border-color: var(--pleasure-color); background: rgba(247, 118, 142, 0.1); }
+    .node-status-sticky i { color: var(--pleasure-color); }
+
+/* --- 生体容器 (Flask Widget) --- */
+    .bio-container-widget {
+        grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 15px;
+        background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 12px;
+        position: relative; overflow: hidden; align-items: center; /* 确保居中对齐 */
+    }
+    
+    /* 基础容器样式 */
+    .bio-flask {
+        height: 74px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 2px solid rgba(255,255,255,0.15); 
+        border-top: none; 
+        position: relative; overflow: hidden;
+        transform: translateZ(0); z-index: 1;
+        /* 加入带有弹性的果冻过渡动画，扩张时会有肉眼可见的“撑开”感 */
+        transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    }
+
+    /* 阶段 1: 标准 ( < 100ml ) */
+    .flask-tier-1 { width: 50px; border-radius: 0 0 16px 16px; box-shadow: inset 0 -5px 15px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2); }
+    
+    /* 阶段 2: 扩张 ( 100ml ~ 149ml ) - 微微变宽，泛起粉晕 */
+    .flask-tier-2 { width: 56px; border-radius: 0 0 20px 20px; border-color: rgba(247, 118, 142, 0.3); background: rgba(247, 118, 142, 0.03); box-shadow: inset 0 -5px 15px rgba(247, 118, 142, 0.1), 0 5px 15px rgba(0,0,0,0.2); }
+    
+    /* 阶段 3: 深度开发 ( 150ml ~ 199ml ) - 明显圆润，内壁呈现肉色 */
+    .flask-tier-3 { width: 64px; border-radius: 0 0 26px 26px; border-color: rgba(247, 118, 142, 0.6); background: rgba(247, 118, 142, 0.08); box-shadow: inset 0 -5px 20px rgba(247, 118, 142, 0.3), 0 5px 15px rgba(0,0,0,0.2); }
+    
+    /* 阶段 4: 极限苗床 ( 200ml MAX ) - 极端宽大，并伴随生命般的肉体脉动 */
+    .flask-tier-4 { width: 72px; border-radius: 0 0 32px 32px; border-color: var(--pleasure-color); background: rgba(247, 118, 142, 0.15); animation: flask-pulse-max 3s infinite ease-in-out; }
+
+    @keyframes flask-pulse-max {
+        0%, 100% { box-shadow: inset 0 -5px 20px rgba(247, 118, 142, 0.4), 0 0 10px rgba(247, 118, 142, 0.2); transform: scale(1); }
+        50% { box-shadow: inset 0 -5px 30px rgba(247, 118, 142, 0.7), 0 0 25px rgba(247, 118, 142, 0.5); transform: scale(1.02); }
+    }
+    .liquid-wave {
+        position: absolute; bottom: 0; left: 0; width: 100%;
+        background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 50%, #cbd5e1 100%); 
+        transition: height 0.8s cubic-bezier(0.5, 0, 0.1, 1), background 0.5s ease;
+        opacity: 0.95; box-shadow: inset 0 5px 15px rgba(255,255,255,0.4); 
+        will-change: height, background;
+    }
+    .liquid-wave::before {
+        content: ''; position: absolute; top: -3px; left: 0; width: 100%; height: 6px;
+        background: rgba(255,255,255,0.6); border-radius: 50%;
+        transform: scaleX(1.2); opacity: 0.7; box-shadow: 0 -1px 2px rgba(255,255,255,0.3);
+    }
+    @keyframes liquid-viscous-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .bio-flask.danger .liquid-wave {
+        background: linear-gradient(45deg, #fff0f5, #ffe4e1, #fff0f5);
+        background-size: 200% 200%;
+        animation: liquid-viscous-flow 4s ease-in-out infinite;
+        box-shadow: 0 0 20px rgba(255, 228, 225, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.8);
+    }
+    .bio-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 4px; }
+    .bio-tag {
+        background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 4px; padding: 1px 6px; font-size: 0.75em;
+        color: var(--text-secondary); white-space: nowrap; transition: all 0.2s;
+    }
+    .bio-tag.risk-high { background: rgba(247, 118, 142, 0.2); border-color: var(--pleasure-color); color: var(--pleasure-color); }
+
+    /* --- 性癖等级 --- */
+    .kink-row { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 4px 0; }
+    .kink-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .rank-icon { width: 1.2em; text-align: center; }
+    .rank-0 { color: var(--text-secondary); opacity: 0.5; }
+    .rank-1 { color: #81C784; }
+    .rank-2 { color: #64B5F6; }
+    .rank-3 { color: #BA68C8; }
+    .rank-4 { color: #FFD54F; text-shadow: 0 0 5px rgba(255, 213, 79, 0.4); animation: pulse-soft 2s infinite; }
+    .kink-xp { font-family: var(--font-header); font-size: 0.85em; color: var(--text-secondary); }
+    .kink-xp.is-max { color: var(--ultimate-color); font-weight: bold; }
+    .kink-progress-container { height: 4px; background: rgba(0,0,0,0.3); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+    .boss-phase-marker { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.3); z-index: 5; }
+    
+    /* --- Tooltip 样式 --- */
+    .has-tooltip { position: relative; cursor: help; }
+    .custom-tooltip { 
+        position: fixed; visibility: hidden; opacity: 0; 
+        background: rgba(26, 27, 38, 0.98); border: 1px solid var(--accent-color);
+        border-left: 4px solid var(--accent-color); border-radius: 8px; padding: 12px 16px; 
+        width: max-content; max-width: 300px; z-index: 99999 !important; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        transition: opacity 0.15s ease; pointer-events: none; text-align: left; line-height: 1.5; top: 0; left: 0; 
+    }
+    .custom-tooltip.active { visibility: visible; opacity: 1; }
+    .custom-tooltip .label { color: var(--accent-color); font-size: 0.9em; font-weight: 800; margin-bottom: 4px; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; }
+    .custom-tooltip .value { color: var(--text-color); font-size: 0.9em; white-space: normal; }
+
+    /* --- 动态主题变量 --- */
+    .status-card.theme-eroded {
+        --accent-color: #d946ef; 
+        --accent-glow: rgba(217, 70, 239, 0.5); 
+        --text-color: #fce7f3; 
+        --hp-color: #a78bfa; 
+        --mp-color: #e879f9;
+        box-shadow: 0 10px 40px rgba(192, 38, 211, 0.15);
+    }
+    .status-card.theme-fallen-core {
+        --accent-color: #ef4444; 
+        --accent-glow: rgba(220, 38, 38, 0.6); 
+        --text-color: #fee2e2;   
+        --text-secondary: #996666;
+        --hp-color: #b91c1c; 
+        --mp-color: #7f1d1d; 
+        --ultimate-color: #fbbf24;
+        background-color: #1a0505;
+        box-shadow: 0 10px 50px rgba(220, 38, 38, 0.3);
+        position: relative; z-index: 1;
+    }
+
+    /* --- 特殊样式 --- */
+    .special-highlight {
+        grid-column: 1 / -1; background: rgba(233, 30, 99, 0.1); 
+        border: 1px solid var(--pleasure-color); border-left: 4px solid var(--pleasure-color);
+        border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+        display: flex; flex-direction: column; gap: 4px;
+    }
+    .special-highlight .item-label { color: var(--pleasure-color); font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
+    .special-highlight .item-value { font-family: var(--font-header); font-size: 1.1em; font-weight: bold; color: var(--text-color); text-shadow: 0 0 10px rgba(233, 30, 99, 0.3); }
+
+    .master-banner {
+        background: linear-gradient(135deg, rgba(20, 10, 20, 0.9), rgba(40, 15, 25, 0.7));
+        border: 1px solid rgba(247, 118, 142, 0.3); border-left: 4px solid var(--pleasure-color);
+        border-radius: 8px; margin-bottom: 16px; padding: 12px 16px;
+        display: flex; justify-content: space-between; align-items: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); position: relative; overflow: hidden;
+    }
+    .master-banner::after {
+        content: '\f6f0'; font-family: "Font Awesome 6 Free"; font-weight: 900;
+        position: absolute; right: -10px; bottom: -20px;
+        font-size: 5em; color: var(--pleasure-color); opacity: 0.05; transform: rotate(-15deg); pointer-events: none;
+    }
+    .master-banner-label { color: var(--pleasure-color); font-size: 0.85em; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+    .master-banner-value { font-family: var(--font-header); font-size: 1.25em; font-weight: 700; color: var(--ultimate-color); text-shadow: 0 0 10px rgba(224, 175, 104, 0.2); }
+
+/* --- 淫纹独立卡片 --- */
+    .curse-mark-banner {
+        border-radius: 8px; margin-bottom: 16px; padding: 12px 16px;
+        display: flex; flex-direction: column; gap: 6px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1); border-left-width: 4px;
+        transition: all 0.4s ease;
+    }
+    .curse-mark-banner .watermark-icon {
+        position: absolute; right: -10px; bottom: -20px;
+        font-size: 5.5em; opacity: 0.05; transform: rotate(-15deg);
+        pointer-events: none; z-index: 0; transition: color 0.4s;
+    }
+    .curse-mark-content { position: relative; z-index: 1; }
+
+    /* --- GM控制台样式 --- */
+    #gm-debug-wrapper { position: fixed; top: 10px; right: 15px; z-index: 99999; font-family: 'Segoe UI', 'Roboto', sans-serif; font-size: 13px; user-select: none; opacity: 0.2; transition: opacity 0.3s ease; pointer-events: none; }
+    #gm-debug-wrapper:hover, #gm-debug-wrapper:has(.gm-panel.show) { opacity: 1; pointer-events: auto; }
+    .gm-trigger {
+        width: 42px; height: 42px; border-radius: 10px; background: var(--gm-bg); color: var(--gm-accent);
+        display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto;
+        border: 1px solid rgba(122, 162, 247, 0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        backdrop-filter: blur(8px); font-size: 18px; margin-left: auto; transition: transform 0.2s;
+    }
+    .gm-trigger:hover { transform: scale(1.1); color: #fff; background: var(--gm-accent); border-color: #fff; }
+    .gm-panel {
+        display: none; position: absolute; top: 55px; right: 0;
+        width: 340px; height: 600px; min-width: 300px; min-height: 300px; max-width: 90vw; max-height: 90vh;
+        resize: both; overflow: hidden; background: var(--gm-bg);
+        border: 1px solid var(--gm-border); border-radius: var(--gm-radius);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.6); backdrop-filter: blur(20px);
+        transform-origin: top right; flex-direction: column;
+    }
+    .gm-panel:not(.show) { display: none; }
+    .gm-panel.show { display: flex; animation: gmSlideIn 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+    .gm-panel.maximized { width: 92vw !important; height: 92vh !important; resize: none; top: 10px; right: -10px; }
+    @keyframes gmSlideIn { from {opacity:0; transform:scale(0.95) translateY(-10px);} to {opacity:1; transform:scale(1) translateY(0);} }
+    .gm-header { padding: 10px 14px; background: #0f0f16; flex-shrink: 0; border-bottom: 1px solid var(--gm-border); color: #fff; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+    .gm-icon-btn { background:transparent; border:none; color:var(--gm-text); width:28px; height:28px; cursor:pointer; font-size:1.1em; transition:0.2s; display:flex; align-items:center; justify-content:center; border-radius:4px; }
+    .gm-icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .gm-close { cursor: pointer; font-size: 1.5em; color: var(--gm-text); margin-left: 8px; line-height: 1;} .gm-close:hover { color: #ff5555; }
+    .gm-nav { display: flex; background: #16161e; border-bottom: 1px solid var(--gm-border); flex-shrink: 0; }
+    .gm-tab { flex: 1; text-align: center; padding: 10px 0; cursor: pointer; color: var(--gm-text); transition: all 0.2s; border-bottom: 2px solid transparent; font-weight: 600; font-size: 0.95em; }
+    .gm-tab:hover { color: #fff; background: rgba(255,255,255,0.03); }
+    .gm-tab.active { color: var(--gm-accent); border-bottom-color: var(--gm-accent); background: rgba(122, 162, 247, 0.08); }
+    .gm-content { display: none; flex-grow: 1; height: 0; padding: 16px; overflow-y: auto; }
+    .gm-content.active { display: block; }
+    .gm-content::-webkit-scrollbar { width: 6px; }
+    .gm-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+    .gm-content::-webkit-scrollbar-thumb { background: #414868; border-radius: 3px; }
+    .gm-content::-webkit-scrollbar-thumb:hover { background: var(--gm-accent); }
+    .gm-section { margin-bottom: 18px; }
+    .gm-label { color: #787c99; font-size: 0.85em; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+    .gm-input { background: var(--gm-input-bg); border: 1px solid var(--gm-border); color: #fff; border-radius: 6px; padding: 6px 10px; font-family: 'Consolas', monospace; font-size: 13px; width: 100%; box-sizing: border-box; }
+    .gm-input:focus { border-color: var(--gm-accent); outline: none; }
+    .gm-input.num { text-align: center; font-weight: bold; }
+    .gm-input.mini { width: 50px; padding: 4px; font-size: 12px; }
+    .control-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .control-row .label { flex: 1; color: #c0caf5; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .control-row .gm-input.num { width: 70px; flex-shrink: 0; }
+    .quick-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .mini-btn { background: var(--gm-input-bg); border: 1px solid var(--gm-border); color: var(--gm-text); border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px; min-width: 32px; transition: all 0.2s; }
+    .mini-btn:hover { background: #2a2e3f; color: #fff; border-color: var(--gm-accent); }
+    .mini-btn.green:hover { border-color: #9ece6a; color: #9ece6a; }
+    .mini-btn.blue:hover { border-color: #7aa2f7; color: #7aa2f7; }
+    .mini-btn.pink:hover { border-color: #f7768e; color: #f7768e; }
+    .mini-btn.red:hover { border-color: #ff5555; color: #ff5555; }
+.mini-btn.gold:hover { border-color: #e0af68; color: #e0af68; }
+    .mini-btn.purple:hover { border-color: #bb9af7; color: #bb9af7; }
+    .gm-btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; }
+    .gm-btn { background: #252830; border: 1px solid var(--gm-border); color: var(--gm-text); padding: 10px; cursor: pointer; text-align: center; font-family: inherit; font-size: 12px; border-radius: 6px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+    .gm-btn.full-width { grid-column: 1 / -1; width: 100%; }
+    .gm-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); color:#fff; }
+    .gm-btn.blue { border-color: rgba(122, 162, 247, 0.3); color: #7aa2f7; } .gm-btn.blue:hover { background: #7aa2f7; color: #000; }
+    .gm-btn.pink { border-color: rgba(247, 118, 142, 0.3); color: #f7768e; } .gm-btn.pink:hover { background: #f7768e; color: #000; }
+    .gm-btn.gold { border-color: rgba(224, 175, 104, 0.3); color: #e0af68; } .gm-btn.gold:hover { background: #e0af68; color: #000; }
+    .gm-btn.gray { border-color: rgba(255,255,255,0.1); color: #666; } .gm-btn.gray:hover { background: #444; color: #fff; }
+    
+    .theme-tags-area { display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px; margin-bottom: 4px;}
+    .theme-tag { background: rgba(122, 162, 247, 0.15); border: 1px solid rgba(122, 162, 247, 0.4); color: #c0caf5; padding: 2px 8px; border-radius: 4px; font-size: 11px; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .theme-tag.h-event { border-color: #f7768e; background: rgba(247, 118, 142, 0.15); }
+    .theme-tag .del { cursor: pointer; opacity: 0.6; font-weight: bold; } .theme-tag .del:hover { opacity: 1; color: #fff; }
+    .input-group { display: flex; gap: 4px; }
+    .gm-btn-icon { background: var(--gm-accent); border: none; color: #1a1b26; border-radius: 6px; width: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    
+    .event-list { display: flex; flex-direction: column; gap: 4px; }
+    .event-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 4px; font-size: 12px; border-left: 2px solid var(--gm-accent); word-break: break-all; }
+    .event-item .del { cursor: pointer; color: #f7768e; opacity: 0.7; padding-left: 8px;}
+
+    /* 世界观备注列表 */
+    .notes-list { display: flex; flex-direction: column; gap: 6px; max-height: 250px; overflow-y: auto; }
+    .note-item { 
+        background: rgba(255, 255, 255, 0.03); 
+        border: 1px solid var(--gm-border); 
+        border-left: 2px solid var(--gm-accent);
+        padding: 6px 8px; 
+        border-radius: 4px; 
+        font-size: 12px; 
+        position: relative;
+        transition: all 0.2s;
+    }
+    .note-item:hover { background: rgba(255, 255, 255, 0.06); }
+    .note-key { color: var(--gm-accent); font-weight: bold; display: block; margin-bottom: 2px; font-family: 'Consolas', monospace; }
+    .note-val { color: var(--gm-text); white-space: pre-wrap; word-break: break-all; opacity: 0.9; line-height: 1.4; }
+    .note-actions { position: absolute; top: 4px; right: 4px; display: flex; gap: 4px; }
+    .note-btn { 
+        width: 20px; height: 20px; border-radius: 4px; border: none; cursor: pointer; 
+        display: flex; align-items: center; justify-content: center; opacity: 0.6;
+    }
+    .note-btn:hover { opacity: 1; }
+    .note-btn.edit { background: var(--gm-accent); color: #000; }
+    .note-btn.del { background: #ff5555; color: #fff; }
+
+    @media (max-width: 500px) {
+        .gm-panel { position: fixed; top: auto; bottom: 0; right: 0; left: 0; width: 100% !important; max-width: 100%; height: 70vh; border-radius: 12px 12px 0 0; transform-origin: bottom center; resize: none; }
+        .gm-panel.maximized { height: 95vh !important; }
+        .gm-trigger { margin-right: 10px; }
+    }
+
+/* === 动画库 === */
+
+/* 动画 A: 堕落心跳 - 改为低沉暗光连击 */
+@keyframes animHeartbeat {
+    0%, 30% { transform: scale(1); opacity: 0.06; }
+    15% { transform: scale(1.15); opacity: 0.18; }
+    30% { transform: scale(1); opacity: 0.06; }
+    45% { transform: scale(1.15); opacity: 0.18; }
+}
+@keyframes glowHeartbeat {
+    0%, 30% { opacity: 0.05; }
+    15%, 45% { opacity: 0.4; }   /* 原为 1，现最高 0.4 */
+    30% { opacity: 0.1; }
+}
+
+/* 动画 B: 沉重侵蚀 - 转为柔缓压迫感 */
+@keyframes animErode {
+    0%, 30% { transform: rotate(-15deg) scale(1.1); opacity: 0.08; }
+    50% { transform: rotate(-8deg) scale(1.35); opacity: 0.2; filter: blur(2px); }
+}
+@keyframes glowErode {
+    0%, 100% { opacity: 0.05; }
+    50% { opacity: 0.3; }        /* 原为 0.6，现削半 */
+}
+
+/* 动画 C: 幽暗呼吸 (不变) */
+@keyframes glowBreath { 0% { opacity: 0; } 100% { opacity: 0.25; } } /* 略微降低峰值 */
+@keyframes animBreath { 0% { transform: rotate(-15deg) scale(1.1); opacity: 0.06; } 100% { transform: rotate(-10deg) scale(1.2); opacity: 0.12; } }
+
+/* 触发器保持不变 */
+.curse-state-fallen::before { animation: glowHeartbeat 2.5s infinite linear; }
+.curse-state-fallen .watermark-icon { animation: animHeartbeat 2.5s infinite linear; }
+
+.curse-state-eroded::before { animation: glowErode 4s infinite ease-in-out; }
+.curse-state-eroded .watermark-icon { animation: animErode 4s infinite ease-in-out; }
+
+.curse-state-dormant::before { animation: glowBreath 3s infinite alternate ease-in-out; }
+.curse-state-dormant .watermark-icon { animation: animBreath 3s infinite alternate ease-in-out; }
+
+</style>
+</head>
+<body>
+    <div id="status-card-container"></div>
+
+    <!-- GM控制台 (Director Studio Pro: Responsive) -->
+    <div id="gm-debug-wrapper">
+        <!-- 触发器 -->
+        <div class="gm-trigger" onclick="toggleGM()" title="导演控制台">
+            <i class="fa-solid fa-clapperboard"></i>
+        </div>
+        <!-- 主面板 -->
+        <div class="gm-panel" id="gm-panel">
+            <!-- 头部功能区 -->
+            <div class="gm-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span><i class="fa-solid fa-terminal"></i> DIRECTOR_STD</span>
+                    <span id="save-status" style="font-size:0.8em; font-weight:normal; opacity:0.5;"></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button class="gm-icon-btn" onclick="restoreSnapshot()" title="撤销本次操作"><i class="fa-solid fa-rotate-left"></i></button>
+                    <button class="gm-icon-btn" onclick="toggleGMMaximize()" title="最大化/还原"><i class="fa-regular fa-square" id="gm-max-icon"></i></button>
+                    <span class="gm-close" onclick="toggleGM()">×</span>
+                </div>
+            </div>
+            <!-- 导航栏 -->
+            <div class="gm-nav">
+                <div class="gm-tab active" onclick="switchGmTab(this, 'gm-tab-narrative')">叙事</div>
+                <div class="gm-tab" onclick="switchGmTab(this, 'gm-tab-stats')">状态</div>
+                <div class="gm-tab" onclick="switchGmTab(this, 'gm-tab-world')">世界</div>
+            </div>
+
+            <!-- Tab 1: 叙事与战斗 -->
+            <div id="gm-tab-narrative" class="gm-content active">
+                <div class="gm-section">
+                    <div class="gm-label">
+                        <span><i class="fa-solid fa-forward"></i> 强制转场 (Phase)</span>
+                        <span id="current-phase-display" style="color:var(--gm-accent); font-weight:normal;"></span>
+                    </div>
+                    <select id="phase-selector" class="gm-input full" onchange="gm_update('stat_data.进程.阶段', this.value)">
+                        <option value="" disabled>-- 跳转至 --</option>
+                        <option value="幕间休息">☕ 幕间休息 (Idle)</option>
+                        <option value="战斗准备">⚠️ 战斗准备 (Prep)</option>
+                        <option value="战斗回合">⚔️ 战斗回合 (Combat)</option>
+                        <option value="终结回合">✨ 终结时刻 (Finish)</option>
+                        <option value="战斗胜利">🏆 战斗胜利 (Win)</option>
+                        <option value="战斗败北">💔 战斗败北 (Lose)</option>
+                        <option value="战后处理">🧹 战后处理 (Cleanup)</option>
+                    </select>
+                </div>
+                <div class="gm-section">
+                    <div class="gm-label">
+                        <span><i class="fa-solid fa-syringe"></i> 叙事/主题注入</span>
+                        <span style="font-size:0.8em; opacity:0.6;" id="theme-target-label">Target: Unknown</span>
+                    </div>
+                    <div id="theme-tags-container" class="theme-tags-area"></div>
+                    <div class="input-group" style="margin-top:6px;">
+                        <input type="text" id="new-theme-input" class="gm-input" placeholder="输入关键词 (如: 触手, 纯爱)..." onkeydown="if(event.key==='Enter') injectTheme()">
+                        <button class="gm-btn-icon" onclick="injectTheme()"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+                <!-- 幕间H事件监控 -->
+                <div id="panel-hevent-control" class="gm-section" style="border-color: #f7768e; border-left: 2px solid #f7768e; padding-left: 8px; display:none;">
+                   <div class="gm-label" style="color:#f7768e">
+                        <span><i class="fa-solid fa-heart-crack"></i> 幕间H事件</span>
+                        <span id="hevent-turn-counter" style="font-size:0.8em; font-weight:normal; opacity:0.8;">回合: 0/6</span>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; margin-bottom:8px; font-size:0.85em;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <span style="opacity:0.7;">当前状态:</span>
+                            <span id="hevent-status-val" style="font-weight:bold; color:var(--gm-accent);">检测中...</span>
+                        </div>
+                        <div>
+                            <div style="opacity:0.7; margin-bottom:2px;">锁定主题:</div>
+                            <div id="hevent-theme-val" style="color:var(--gm-text); line-height:1.2; padding-left:4px; border-left:2px solid #f7768e;">--</div>
+                        </div>
+                    </div>
+                    <div class="gm-btn-group" style="grid-template-columns: repeat(3, 1fr);">
+                        <button class="gm-btn gold" id="btn-reroll-hevent" onclick="rerollHEvent()" title="基于XP池重新随机事件"><i class="fa-solid fa-shuffle"></i> <span>重随</span></button>
+                        <button class="gm-btn pink" id="btn-trigger-hevent" onclick="triggerHEvent()"><i class="fa-solid fa-play"></i> <span>强制</span></button>
+                        <button class="gm-btn blue" id="btn-skip-hevent" onclick="skipHEvent()"><i class="fa-solid fa-check"></i> <span>跳过</span></button>
+                    </div>
+                </div>
+                <!-- 战斗仲裁 -->
+                <div id="panel-combat-control" style="display:none;">
+                    <div class="gm-section" style="border-color: #f87171;">
+                        <div class="gm-label" style="color:#f87171"><i class="fa-solid fa-skull-crossbones"></i> BOSS: <span id="val-boss-name">?</span></div>
+                        <div class="control-row">
+                            <span class="label">韧性 HP</span>
+                            <input type="number" id="inp-boss-hp" class="gm-input num" onchange="gm_update('stat_data.世界.当前关卡.Boss韧性值', Number(this.value))">
+                            <div class="quick-actions">
+                                <button class="mini-btn" onclick="gm_update('stat_data.世界.当前关卡.Boss韧性值', -20, 'add')">-20</button>
+                                <button class="mini-btn red" onclick="gm_update('stat_data.世界.当前关卡.Boss韧性值', 0)">Kill</button>
+                            </div>
+                        </div>
+                        <div class="control-row">
+                            <span class="label">强度 ATK</span>
+                            <input type="number" id="inp-boss-str" class="gm-input num" onchange="gm_update('stat_data.世界.当前关卡.Boss基础强度', Number(this.value))">
+                            <div class="quick-actions">
+                                <button class="mini-btn" onclick="gm_update('stat_data.世界.当前关卡.Boss基础强度', -10, 'add')">-10</button>
+                                <button class="mini-btn" onclick="gm_update('stat_data.世界.当前关卡.Boss基础强度', 10, 'add')">+10</button>
+                            </div>
+                        </div>
+                        <button class="gm-btn gold full-width" style="margin-top:8px;" onclick="(async()=>{ await gm_update('stat_data.主角.核心状态.净化之力', 100); await gm_update('stat_data.主角.核心状态.污秽魔力', 100); })()">
+                            <i class="fa-solid fa-bolt"></i> 必杀充能 (Ultimate Ready)
+                        </button>
+                    </div>
+                </div>
+                <!-- 幕间控制 -->
+                <div id="panel-intermission-control" style="display:none;">
+                    <div class="gm-section">
+                        <div class="gm-label"><i class="fa-solid fa-clock"></i> 幕间节奏 (Turn: <span id="val-turn">0</span>)</div>
+                        <div class="gm-btn-group">
+                            <button class="gm-btn blue" onclick="gm_update('stat_data.系统状态.幕间回合计数', -999)"><i class="fa-solid fa-lock"></i> 锁定和平</button>
+                            <button class="gm-btn pink" onclick="gm_update('stat_data.系统状态.幕间回合计数', 10)"><i class="fa-solid fa-bed"></i> 立即推进</button>
+                        </div>
+                    </div>
+                </div>
+<!-- 威胁预警雷达 -->
+            <div id="panel-threat-forecast" class="gm-section" style="border-color: #e0af68; border-left: 2px solid #e0af68; padding-left: 8px; display:none;">
+                <div class="gm-label" style="color:#e0af68">
+                    <span id="threat-panel-title"><i class="fa-solid fa-radar"></i> 威胁雷达 (潜伏中)</span>
+                    <span id="threat-turn-counter" style="font-size:0.8em; font-weight:normal; opacity:0.8;">回合: 0/10</span>
+                </div>
+                
+<!-- 目标锁定器 (双路线通用) -->
+                <div id="fallen-prey-selector" style="display:flex; margin-bottom:8px; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); padding:6px 8px; border-radius:4px;">
+                    <span id="prey-selector-label" style="opacity:0.8; font-size:0.85em; font-weight:bold;">🎯 目标类型:</span>
+                    <div class="gm-btn-group" style="display:flex; gap:6px;">
+                        <button id="btn-prey-random" class="mini-btn" onclick="lockPreyType('无')">随机</button>
+                        <button id="btn-prey-monster" class="mini-btn" onclick="lockPreyType('魔物')">魔物</button>
+                        <button id="btn-prey-mg" class="mini-btn" onclick="lockPreyType('魔法少年')">魔法少年</button>
+                        <button id="btn-prey-human" class="mini-btn" onclick="lockPreyType('人类')">人类</button>
+                    </div>
+                </div>
+
+                <div id="threat-theme-area" style="background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; margin-bottom:8px; font-size:0.85em;">
+                    <div style="margin-bottom:6px;">
+                        <span style="opacity:0.7;">已锁定主主题:</span>
+                        <span id="threat-main-theme" style="font-weight:bold; color:var(--ultimate-color); margin-left:4px;">读取中...</span>
+                    </div>
+                    <div>
+                        <div style="opacity:0.7; margin-bottom:4px; display:flex; justify-content:space-between;">
+                            <span>副主题选项 (点击锁定):</span>
+                            <span id="threat-sub-status" style="color:var(--hp-color)">[待选择]</span>
+                        </div>
+                        <div id="threat-sub-options" class="theme-tags-area"></div>
+                    </div>
+                </div>
+
+                <div class="gm-btn-group" style="grid-template-columns: repeat(3, 1fr);">
+                    <button class="gm-btn gold" onclick="rerollThreatMainTheme()" title="重随主主题"><i class="fa-solid fa-dice"></i></button>
+                    <button class="gm-btn blue" onclick="clearThreatSubTheme()" title="清空/重新随机副主题"><i class="fa-solid fa-eraser"></i></button>
+                    <button class="gm-btn pink" onclick="forceThreatEncounter()" title="强制下回合触发"><i class="fa-solid fa-forward-fast"></i></button>
+                </div>
+            </div>
+                <!-- 事件队列 -->
+                <div class="gm-section">
+                    <div class="gm-label">
+                        <span><i class="fa-solid fa-list-check"></i> 事件队列</span>
+                        <i class="fa-solid fa-rotate-right action-icon" onclick="renderGM()" title="刷新" style="cursor:pointer"></i>
+                    </div>
+                    <div id="event-list-container" class="event-list"></div>
+                    <button class="gm-btn gray full-width" style="margin-top:5px; font-size:0.8em; padding:4px;" onclick="gm_update('stat_data.系统状态.待处理事件', {})">清空所有待处理事件</button>
+                </div>
+            </div>
+
+<!-- Tab 2: 主角状态 -->
+            <div id="gm-tab-stats" class="gm-content">
+                <div class="gm-section">
+                    <div class="gm-label"><i class="fa-solid fa-sliders"></i> 核心数值</div>
+                    <div class="control-row">
+                        <span class="label">体力 HP</span>
+                        <input type="number" id="inp-hp" class="gm-input num" onchange="gm_update('stat_data.主角.核心状态.体力值.当前', Number(this.value))">
+                        <div class="quick-actions">
+                            <button class="mini-btn" onclick="gm_update('stat_data.主角.核心状态.体力值.当前', -10, 'add')">-10</button>
+                            <button class="mini-btn green" onclick="gm_update('stat_data.主角.核心状态.体力值.当前', 999)">满</button>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <span class="label">魔力 MP</span>
+                        <input type="number" id="inp-mp" class="gm-input num" onchange="gm_update('stat_data.主角.核心状态.魔力值.当前', Number(this.value))">
+                        <div class="quick-actions">
+                            <button class="mini-btn" onclick="gm_update('stat_data.主角.核心状态.魔力值.当前', -10, 'add')">-10</button>
+                            <button class="mini-btn blue" onclick="gm_update('stat_data.主角.核心状态.魔力值.当前', 999)">满</button>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <span class="label" style="color:#f7768e">快感值</span>
+                        <input type="number" id="inp-pleasure" class="gm-input num" style="color:#f7768e; border-color:#f7768e;" onchange="gm_update('stat_data.主角.快感状态.快感值', Number(this.value))">
+                        <div class="quick-actions">
+                            <button class="mini-btn" onclick="gm_update('stat_data.主角.快感状态.快感值', -50, 'add')">-50</button>
+                            <button class="mini-btn pink" onclick="gm_update('stat_data.主角.快感状态.快感值', 9999)">崩坏</button>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <span class="label" style="color:#bb9af7">污染度</span>
+                        <input type="number" id="inp-corruption" class="gm-input num" style="color:#bb9af7; border-color:#bb9af7;" onchange="gm_update('stat_data.主角.快感状态.污染度', Number(this.value))">
+                        <div class="quick-actions">
+                            <button class="mini-btn" onclick="gm_update('stat_data.主角.快感状态.污染度', -10, 'add')">-10</button>
+                            <button class="mini-btn purple" onclick="gm_update('stat_data.主角.快感状态.污染度', 0)">净化</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gm-section">
+                    <div class="gm-label"><i class="fa-solid fa-bolt"></i> 必杀技充能</div>
+                    <div class="control-row">
+                        <span class="label" style="color:var(--ultimate-color)">净化之力</span>
+                        <input type="number" id="inp-purification" class="gm-input num" style="color:var(--ultimate-color); border-color:var(--ultimate-color);" onchange="gm_update('stat_data.主角.核心状态.净化之力', Number(this.value))">
+                        <div class="quick-actions">
+                            <button class="mini-btn" onclick="gm_update('stat_data.主角.核心状态.净化之力', -20, 'add')">-20</button>
+                            <button class="mini-btn gold" onclick="gm_update('stat_data.主角.核心状态.净化之力', 100)">充能</button>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <span class="label" style="color:var(--corruption-color)">污秽魔力</span>
+                        <input type="number" id="inp-corrupt_magic" class="gm-input num" style="color:var(--corruption-color); border-color:var(--corruption-color);" onchange="gm_update('stat_data.主角.核心状态.污秽魔力', Number(this.value))">
+                        <div class="quick-actions">
+                            <button class="mini-btn" onclick="gm_update('stat_data.主角.核心状态.污秽魔力', -20, 'add')">-20</button>
+                            <button class="mini-btn purple" onclick="gm_update('stat_data.主角.核心状态.污秽魔力', 100)">充能</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gm-section">
+                    <div class="gm-label"><i class="fa-solid fa-wand-magic-sparkles"></i> 一键维护</div>
+                    <div class="gm-btn-group">
+                        <button class="gm-btn blue" onclick="(async()=>{ 
+    const parts =['面部','胸部','手臂','腰腹','臀部','私处','腿部'];
+    for(let p of parts) await gm_update(`stat_data.主角.身体部位状况.${p}`, '完好');
+})()"><i class="fa-solid fa-shirt"></i> 修复衣物</button>
+                        <button class="gm-btn green" onclick="(async()=>{ 
+                            await gm_update('stat_data.主角.生理状态.体液与分泌.魔力腔内精液.存量', 0);
+                            await gm_update('stat_data.主角.生理状态.体液与分泌.魔力腔内精液.来源', {});
+                            await gm_update('stat_data.主角.生理状态.阴茎状态.内部异物', {});
+                            await gm_update('stat_data.主角.生理状态.魔力腔内异物.异物列表', {});
+                        })()"><i class="fa-solid fa-shower"></i> 身体净化</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: 世界与声望 -->
+            <div id="gm-tab-world" class="gm-content">
+                <div class="gm-section">
+                    <div class="gm-label"><i class="fa-solid fa-users"></i> 声望控制</div>
+                    <div class="control-row">
+                        <span class="label">知名度</span>
+                        <input type="range" class="gm-range" min="0" max="100" step="5" id="range-fame" oninput="document.getElementById('inp-fame').value=this.value" onchange="gm_update('stat_data.名声.知名度', Number(this.value))">
+                        <input type="number" id="inp-fame" class="gm-input num mini" onchange="gm_update('stat_data.名声.知名度', Number(this.value))">
+                    </div>
+                    <div class="control-row">
+                        <span class="label">风评</span>
+                        <input type="range" class="gm-range" min="-100" max="100" step="5" id="range-rep" oninput="document.getElementById('inp-rep').value=this.value" onchange="gm_update('stat_data.名声.风评', Number(this.value))">
+                        <input type="number" id="inp-rep" class="gm-input num mini" onchange="gm_update('stat_data.名声.风评', Number(this.value))">
+                    </div>
+                </div>
+                
+                <!-- [新增] 世界观备注管理器 -->
+                <div class="gm-section">
+                    <div class="gm-label">
+                        <span><i class="fa-solid fa-book-journal-whills"></i> 世界观备注 / 设定</span>
+                        <button class="mini-btn blue" onclick="toggleNoteEditor()" title="添加新设定">+</button>
+                    </div>
+                    
+                    <!-- 列表显示区 -->
+                    <div id="world-notes-list" class="notes-list"></div>
+
+                    <!-- 编辑/添加区 (默认隐藏) -->
+                    <div id="world-note-editor" style="display:none; margin-top:8px; background:rgba(0,0,0,0.2); padding:8px; border-radius:6px; border:1px solid var(--gm-border);">
+                        <div style="margin-bottom:4px; font-size:0.8em; opacity:0.7;">主题 (Key):</div>
+                        <input type="text" id="new-note-key" class="gm-input" placeholder="例如: 敌方弱点 / 人际关系_小圆">
+                        <div style="margin:4px 0; font-size:0.8em; opacity:0.7;">内容 (Value):</div>
+                        <textarea id="new-note-val" class="gm-input" rows="3" placeholder="输入设定详情..."></textarea>
+                        <div class="gm-btn-group" style="margin-top:8px;">
+                            <button class="gm-btn green" onclick="saveWorldNote()"><i class="fa-solid fa-save"></i> 保存 / 更新</button>
+                            <button class="gm-btn gray" onclick="toggleNoteEditor()">取消</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gm-section">
+                    <div class="gm-label"><i class="fa-solid fa-toolbox"></i> 杂项工具</div>
+                    <div class="gm-btn-group">
+                        <button class="gm-btn" onclick="gm_update('stat_data.主角.道具栏', {})"><i class="fa-solid fa-box-open"></i> 清空道具</button>
+                        <button class="gm-btn" onclick="gm_update('stat_data.记录.总战败次数', 0)"><i class="fa-solid fa-eraser"></i> 重置战败</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let lastActiveTabId = 'panel-character';
+    let _gmSnapshot = null;
+    let _currentMvuData = null;
+    
+    // 简化的 DOM 更新函数
+    function updateDOM(fromNode, toNode) { if (!fromNode || !toNode) return; const fromAttrs = fromNode.attributes, toAttrs = toNode.attributes; for (const attr of toAttrs) { if (fromNode.getAttribute(attr.name) !== attr.value) fromNode.setAttribute(attr.name, attr.value); } for (const attr of fromAttrs) { if (!toNode.hasAttribute(attr.name)) fromNode.removeAttribute(attr.name); } const fromChildren = Array.from(fromNode.childNodes), toChildren = Array.from(toNode.childNodes); for (let i = 0; i < Math.max(fromChildren.length, toChildren.length); i++) { const fromChild = fromChildren[i], toChild = toChildren[i]; if (!toChild) { fromNode.removeChild(fromChild); } else if (!fromChild) { fromNode.appendChild(toChild.cloneNode(true)); } else if (fromChild.nodeType !== toChild.nodeType || fromChild.tagName !== toChild.tagName) { fromNode.replaceChild(toChild.cloneNode(true), fromChild); } else if (fromChild.nodeType === Node.TEXT_NODE) { if (fromChild.textContent !== toChild.textContent) { fromChild.textContent = toChild.textContent; } } else if (fromChild.nodeType === Node.ELEMENT_NODE) { updateDOM(fromChild, toChild); } } }
+    
+    const getValue = (data, path, defaultValue = null) => { const value = path.split('.').reduce((acc, part) => acc && acc[part], data); return (value === undefined || value === null) ? defaultValue : value; };
+    const getDeep = (obj, path, def) => path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? def;
+    
+    const createDetailItem = (label, value, iconClass = null) => { if (!value || value === '待设定' || value === '无') return ''; const iconHtml = iconClass ? `<i class="fa-solid ${iconClass}"></i>` : ''; return `<div class='item-label'>${iconHtml}${label}</div><div class='item-value'>${value}</div>`; };
+    const createRichItem = (label, mainText, subHtml, iconClass = null) => {
+        if (!mainText || mainText === '待设定' || mainText === '无') return '';
+        const iconHtml = iconClass ? `<i class="fa-solid ${iconClass}"></i>` : '';
+        const subContent = subHtml ? `<div class='rich-sub-text'>${subHtml}</div>` : '';
+        return `
+        <div class='item-label'>${iconHtml}${label}</div>
+        <div class='rich-value-box'>
+            <div class='rich-main-text'>${mainText}</div>
+            ${subContent}
+        </div>`;
+    };
+
+    const TOOLTIP_DEFINITIONS = {
+        '主角.核心状态.体力值.当前': `<div class='label'>核心作用:</div><div class='value'>角色的生命值，代表其在战斗中承受伤害的能力。</div><div class='label'>机制说明:</div><div class='value'>因敌人的攻击而减少，可通过休息或特定技能恢复。</div><div class='label'>归零:</div><div class='value'>角色将陷入“力尽待辱”状态并输掉战斗，被动承受敌人无止尽的侵犯。</div>`,
+        '主角.核心状态.魔力值.当前': {
+            '善良': `<div class='label'>核心作用:</div><div class='value'>施放魔法技能的核心能源。</div><div class='label'>使用:</div><div class='value'>所有主动技能（攻击、防御、辅助）都会消耗魔力。</div><div class='label'>归零:</div><div class='value'>无法使用核心能力，且可能导致变身状态被强制解除，陷入危机。</div>`,
+            '堕落': `<div class='label'>核心作用:</div><div class='value'>驱动堕落力量的源泉。</div><div class='label'>机制说明:</div><div class='value'>无论是戏耍猎物还是展现力量，都需要消耗欲力。</div><div class='label'>功能:</div><div class='value'>它是你快乐的结晶，也是使用魔力的燃料。</div>`
+        },
+        '主角.快感状态.快感值': `<div class='label'>核心作用:</div><div class='value'>角色在遭受特定攻击或感官刺激时累积的生理愉悦度。</div><div class='label'>机制说明:</div><div class='value'>当该值达到或超过当前的【高潮阈值】时，会触发高潮事件。</div><div class='label'>关键后果:</div><div class='value'>高潮会消耗体力、增加污染度，且大幅增加对应性癖的经验，并重置快感值。</div>`,
+        '主角.快感状态.污染度': {
+            '善良': `<div class='label'>核心作用:</div><div class='value'>精神与灵魂被邪恶力量污染的程度。</div><div class='label'>来源:</div><div class='value'>遭受洗脑精神攻击、被内射或在高潮中获得。</div><div class='label'>后果:</div><div class='value'>增加的污染将影响主角的身心，达到100%时，将触发决定命运的堕落抉择事件。</div>`,
+            '堕落': `<div class='label'>核心作用:</div><div class='value'>从主人那里获得的宠爱，或是自身堕落本质的体现。</div><div class='label'>意义:</div><div class='value'>代表了你对欲望的屈从与掌控程度。该值越高，你的力量和存在就越发稳固。</div>`
+        },
+        '主角.核心状态.净化之力': `<div class='label'>核心作用:</div><div class='value'>在和敌人的战斗、以及在逆境中忍耐时所积蓄的反击能量。</div><div class='label'>获取:</div><div class='value'>通过有效攻击、或在承受敌方的攻击和侵犯时积蓄。</div><div class='label'>用途:</div><div class='value'>充能至100%时，可以宣言发动必杀的终结技。</div>`,
+        '主角.核心状态.污秽魔力': `<div class='label'>核心作用:</div><div class='value'>在享受战斗与快乐的过程中凝聚的黑暗能量。</div><div class='label'>获取:</div><div class='value'>通过玩弄对手、享受战斗中的快感来积蓄。</div><div class='label'>用途:</div><div class='value'>充能至100%时，可通过宣言展开名为“福音领域”的必杀技，为战斗画上休止符。</div>`
+    };
+    
+    const renderProgressItem = (item, data, isFallen) => {
+        const value = getValue(data, item.path, 0);
+        const max = item.options.max || 100;
+        const percentage = Math.max(0, Math.min(100, (value / max) * 100));
+        const orgasmIndicator = (item.path.includes('快感值') && value >= max) ? `<span title='高潮！'>⚡</span>` : '';
+
+        let tooltipText = TOOLTIP_DEFINITIONS[item.path] || null;
+        if (typeof tooltipText === 'object' && tooltipText !== null) {
+            tooltipText = isFallen ? tooltipText['堕落'] : tooltipText['善良'];
+        }
+        const tooltipIconHtml = tooltipText 
+            ? `<span class='has-tooltip'><i class="fa-solid fa-circle-info info-icon-pc tooltip-trigger"></i><span class='custom-tooltip'>${tooltipText}</span></span>`
+            : '';
+
+        return `<div class='progress-item'><div class='progress-label'><span><i class='${item.options.icon}'></i> <span>${item.label}</span> ${tooltipIconHtml} ${orgasmIndicator}</span><span class='progress-value'>${Math.round(value)}/${max}</span></div><div class='progress-bar'><div class='progress-fill' style='width: ${percentage}%; background: ${item.options.color};'></div></div></div>`;
+    };
+    
+const renderCharacterInfo = (data, personality) => {
+        let masterInfoHtml = '';
+        if (personality === '堕落') {
+            const masterName = getValue(data, '主角.核心状态.主人', '无');
+            if (masterName && masterName !== '无') {
+                masterInfoHtml = `
+                <div class='master-banner'>
+                    <div class='master-banner-label'><i class="fa-solid fa-crown"></i> <span>主人❤</span></div>
+                    <div class='master-banner-value'>${masterName}</div>
+                </div>`;
+            }
+        }
+
+        const fame = getValue(data, '名声.知名度', 0);
+        const reputationScore = getValue(data, '名声.风评', 0);
+        let fameLevel, reputationLevel, reputationHtml = '';
+
+        if (fame < 15) { fameLevel = "默默无闻"; }
+        else if (fame < 45) { fameLevel = "都市传说"; }
+        else if (fame < 85) { fameLevel = "公众热议"; }
+        else { fameLevel = "无人不晓"; }
+
+        if (fame >= 15) {
+            if (personality === '善良') {
+                if (reputationScore >= 70) { reputationLevel = "圣洁的英雄"; }
+                else if (reputationScore >= 30) { reputationLevel = "可靠的守护者"; }
+                else if (reputationScore > -30) { reputationLevel = "争议魔法少年"; }
+                else if (reputationScore > -70) { reputationLevel = "无能的荡妇"; }
+                else { reputationLevel = "公共肉便器"; }
+            } else { 
+                if (reputationScore <= -70) { reputationLevel = "令人战栗的灾厄"; }
+                else if (reputationScore <= -30) { reputationLevel = "可怕的堕落魔法少年"; }
+                else if (reputationScore < 30) { reputationLevel = "一点也不可怕而且很色"; }
+                else { reputationLevel = "国民级涩情偶像"; }
+            }
+            const isDGrade = (personality === '善良' && reputationScore <= -70) || (personality === '堕落' && reputationScore >= 30);
+            const badgeStyle = isDGrade ? 'border-color:var(--pleasure-color); color:var(--pleasure-color); box-shadow:none; background:rgba(247,118,142,0.1);' : '';
+            reputationHtml = createRichItem('风评', reputationScore, `<span class='rank-badge' style='${badgeStyle}'>${reputationLevel}</span>`, 'fa-gavel');
+        }
+
+        const famType = getValue(data, '主角.个人信息.使魔伙伴种类');
+        let familiarHtml = '';
+        if (famType && famType !== '待设定') {
+            const famPers = getValue(data, '主角.个人信息.使魔伙伴性格', '未知');
+            const famApp = getValue(data, '主角.个人信息.使魔伙伴外观', '未知');
+            const famRel = getValue(data, '主角.个人信息.使魔伙伴与主角关系', '伙伴');
+            familiarHtml = createRichItem('使魔', famType, 
+                `<span class='info-tag' title='性格'><i class="fa-regular fa-face-smile"></i>${famPers}</span>
+                 <span class='info-tag' title='外观'><i class="fa-solid fa-eye"></i>${famApp}</span>
+                 <span class='info-tag' title='关系'><i class="fa-solid fa-link"></i>${famRel}</span>`, 
+            'fa-paw');
+        }
+
+        return `
+            ${masterInfoHtml}
+            <div class=\"details-grid\">
+                <div class='details-section-header'><i class=\"fa-solid fa-address-card\"></i> <b>核心人设</b></div>
+                ${createDetailItem('年龄', getValue(data, '主角.基本信息.年龄'), 'fa-cake-candles')}
+                ${createRichItem('身份', getValue(data, '主角.个人信息.身份&职业') || getValue(data, '主角.个人信息.身份/职业'), '', 'fa-user-tie')}
+                ${createRichItem('性格', getValue(data, '主角.个人信息.性格特质'), '', 'fa-masks-theater')}
+                
+                <div class='details-section-header'><i class=\"fa-solid fa-wand-sparkles\"></i> <b>魔法契约</b></div>
+${createDetailItem('强度', getValue(data, '主角.核心状态.基础强度', 50), 'fa-burst')}
+                ${createDetailItem('武装', getValue(data, '主角.个人信息.武装'), 'fa-gavel')}
+${createDetailItem('变身服', getValue(data, '主角.个人信息.变身服'), 'fa-shirt')}
+                ${createDetailItem('核心能力', getValue(data, '主角.个人信息.核心能力'), 'fa-bolt')}
+                
+${(() => {
+    const rawColor = getValue(data, '主角.个人信息.代表色', '未设定');
+    const cleanText = String(rawColor).replace(/\s*\([^)]*#[0-9a-fA-F]{6}[^)]*\)/g, '').trim();
+    const hexCodes = String(rawColor).match(/#[0-9a-fA-F]{6}/g);
+    let bgStyle = 'var(--accent-color)'; 
+    if (hexCodes && hexCodes.length > 0) {
+        if (hexCodes.length === 1) { bgStyle = hexCodes[0]; } else { bgStyle = `linear-gradient(90deg, ${hexCodes.join(', ')})`; }
+    } 
+    else if (['金', 'gold'].some(s => String(rawColor).includes(s))) { bgStyle = '#FFD700'; }
+    else if (['红', 'red'].some(s => String(rawColor).includes(s))) { bgStyle = '#FF6B6B'; }
+    else if (['蓝', 'blue'].some(s => String(rawColor).includes(s))) { bgStyle = '#4D96FF'; }
+    else if (['粉', 'pink'].some(s => String(rawColor).includes(s))) { bgStyle = '#FFB6C1'; }
+    else if (['紫', 'purple'].some(s => String(rawColor).includes(s))) { bgStyle = '#BB9AF7'; }
+    else if (['黑', 'black'].some(s => String(rawColor).includes(s))) { bgStyle = '#333333'; }
+    
+    return createRichItem('代表色', cleanText, 
+        `<div style="width:100%; height:6px; border-radius:3px; background:${bgStyle}; box-shadow: 0 1px 4px rgba(0,0,0,0.3); opacity:0.9; margin-top:2px;"></div>`, 
+    'fa-palette');
+})()}
+                
+                ${familiarHtml}
+                
+                <div class='details-section-header'><i class=\"fa-solid fa-dna\"></i> <b>相貌与身材</b></div>
+                ${createDetailItem('脸型', getValue(data, '主角.相貌特征.脸型'), 'fa-user-circle')}
+                ${createDetailItem('五官', getValue(data, '主角.相貌特征.五官'), 'fa-eye')}
+                ${createDetailItem('发型', getValue(data, '主角.相貌特征.发型与发色'), 'fa-user-astronaut')}
+                ${createDetailItem('眼睛', getValue(data, '主角.相貌特征.眼睛颜色'), 'fa-eye-dropper')}
+                
+                ${createDetailItem('身高', getValue(data, '主角.身材细节.身高'), 'fa-ruler-vertical')}
+                ${createRichItem('三围', getValue(data, '主角.身材细节.三围'), `<span class='info-tag'>体脂 ${getValue(data, '主角.身材细节.体脂率')}</span>`, 'fa-ruler-combined')}
+                
+                ${createDetailItem('体态', getValue(data, '主角.身材细节.体态'), 'fa-person-walking')}
+                ${createDetailItem('皮肤状态', getValue(data, '主角.身材细节.皮肤状态'), 'fa-feather-alt')}
+                ${createDetailItem('特殊记号', getValue(data, '主角.相貌特征.特殊记号'), 'fa-star-of-life')}
+                ${createDetailItem('肌肉线条', getValue(data, '主角.身材细节.肌肉线条'), 'fa-dumbbell')}
+                
+                <div class='details-section-header'><i class=\"fa-solid fa-gem\"></i> <b>私密特征</b></div>
+                ${createDetailItem('胸部', getValue(data, '主角.性器官特征.胸部形态'), 'fa-mars-stroke')}
+                ${createDetailItem('乳首', getValue(data, '主角.性器官特征.乳头颜色'), 'fa-circle-dot')}
+                ${createDetailItem('阴茎', getValue(data, '主角.性器官特征.阴茎形态'), 'fa-mars')}
+                ${createDetailItem('体毛', getValue(data, '主角.性器官特征.体毛状况'), 'fa-leaf')}
+                ${createDetailItem('敏感度', getValue(data, '主角.性器官特征.天生敏感度'), 'fa-bolt-lightning')}
+                
+                <div class='details-section-header'><i class=\"fa-solid fa-users\"></i> <b>社会影响</b></div>
+                ${createRichItem('知名度', fame, `<span style="opacity:0.7">${fameLevel}</span>`, 'fa-eye')}
+                ${reputationHtml}
+            </div>`;
+    };
+    
+    const renderBodyStatus = (data) => {
+        const bodyParts = getValue(data, '主角.身体部位状况', {});
+        const bodyPartsHtml = Object.entries(bodyParts).map(([part, statusVal]) => {
+            if (part === '$meta') return '';
+            const status = typeof statusVal === 'string' ? statusVal : '完好';
+            return createDetailItem(part, `<span style='color:${status === '完好' ? 'var(--text-secondary)' : 'var(--combat-color)'}'>${status}</span>`);
+        }).join('');
+
+        let modificationsHtml = Object.entries(getValue(data, '主角.永久性身体改造', {})).filter(([key]) => key !== '$meta').map(([modName, modData]) => {
+            const partText = getValue(modData, '部位', '未知');
+            const detailsText = getValue(modData, '详情', '无');
+            const sourceText = getValue(modData, '来源', '未知');
+            let tooltipContent = `<div class='label'>部位:</div><div class='value'>${partText}</div><div class='label'>详情:</div><div class='value'>${detailsText}</div><div class='label'>来源:</div><div class='value'>${sourceText}</div>`;
+            return `<span class='has-tooltip'><span class="tooltip-trigger">✨ ${modName}</span><span class='custom-tooltip'>${tooltipContent}</span></span>`;
+        }).join('<br>');
+        if (!modificationsHtml.trim()) modificationsHtml = '<span style="opacity:0.5">肉体纯洁无暇。</span>';
+
+        const penisState = getValue(data, '主角.生理状态.阴茎状态.当前状态', '疲软');
+        const penisHardness = getValue(data, '主角.生理状态.阴茎状态.硬度', '普通');
+        const penisDetails = `${penisState} <span style="opacity:0.7; font-size:0.9em">(${penisHardness})</span>`;
+
+let semenHtml = '';
+        const semenAmount = getValue(data, '主角.生理状态.体液与分泌.魔力腔内精液.存量', 0);
+        // 【修复】默认值从 200 改为 50，与后端扩容逻辑对齐
+        const cavityCapacity = getValue(data, '主角.生理状态.魔力腔状态.最大容量', 50); 
+        const semenSources = Object.keys(getValue(data, '主角.生理状态.体液与分泌.魔力腔内精液.来源', {})).filter(s => s !== '$meta' && s !== '$__META_EXTENSIBLE__$');
+
+        if (true) {
+            const pct = Math.min(100, (semenAmount / cavityCapacity) * 100);
+            const isOverflow = semenAmount >= cavityCapacity;
+            let riskTag = '', riskLevel = '安宁';
+            if (isOverflow) { riskLevel = '满溢界限'; riskTag = 'risk-high'; }
+            else if (pct > 80) { riskLevel = '小腹鼓胀'; riskTag = 'risk-high'; }
+            else if (pct > 50) { riskLevel = '半满'; }
+            else if (pct > 20) { riskLevel = '存积'; }
+
+            // 【新增】容器形态分级逻辑
+            let tierClass = 'flask-tier-1';
+            let capLabel = '标准';
+            let capColor = 'inherit';
+            if (cavityCapacity >= 200) { tierClass = 'flask-tier-4'; capLabel = '❤苗床化'; capColor = 'var(--pleasure-color)'; }
+            else if (cavityCapacity >= 150) { tierClass = 'flask-tier-3'; capLabel = '深度开发'; capColor = '#f472b6'; }
+            else if (cavityCapacity >= 100) { tierClass = 'flask-tier-2'; capLabel = '已扩张'; capColor = '#fb7185'; }
+
+            let sourceTagsHtml = semenSources.length > 0 
+                ? semenSources.slice(0, 3).map(s => `<span class='bio-tag'>${s.split(':')[0]}</span>`).join('') 
+                : `<span class='bio-tag' style="opacity:0.5">洁净</span>`;
+            if (semenSources.length > 3) sourceTagsHtml += `<span class='bio-tag'>+${semenSources.length - 3}</span>`;
+
+            // 组合形态类名与满溢警告类名
+            const flaskClass = `bio-flask ${tierClass} ${isOverflow ? 'danger' : ''}`;
+
+            semenHtml = `
+            <div class="bio-container-widget">
+                <div class="${flaskClass}">
+                    <div class="liquid-wave" style="height: ${pct}%"></div>
+                </div>
+                <div class="bio-data" style="width: 100%;">
+                    <div class="bio-header" style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+                        <div class="bio-title" style="font-weight:bold; color:var(--accent-color);">
+                            <i class="fa-solid fa-flask"></i> 内部容量 
+                            <span style="font-size:0.75em; color:${capColor}; margin-left:4px; font-weight:normal;">[${capLabel}]</span>
+                        </div>
+                        <div class="bio-tag ${riskTag}" style="font-size:0.7em;">${riskLevel}</div>
+                    </div>
+                    <div class="bio-readout" style="font-family:var(--font-header); font-size:1.15em; margin-bottom:4px; font-weight:600;">
+                        ${semenAmount} <small style="opacity:0.6; font-size:0.75em; font-weight:normal;">/ ${cavityCapacity} ml</small>
+                    </div>
+                    <div class="bio-tags">${sourceTagsHtml}</div>
+                </div>
+            </div>`;
+        }
+
+        const itemObj = getValue(data, '主角.道具栏', {});
+        const itemKeys = Object.keys(itemObj).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+        let itemsHtml = '';
+        if (itemKeys.length > 0) {
+            const tagsHtml = itemKeys.map(k => {
+                const val = itemObj[k];
+                let content = k;
+                if (val && val !== 1 && val !== '1' && val !== true && val !== '有') {
+                    content += ` <span style="opacity:0.6; padding-left:5px; margin-left:3px; border-left:1px solid rgba(255,255,255,0.2); font-size:0.9em;">${val}</span>`;
+                }
+                return `<span class="bio-tag" style="background:rgba(122, 162, 247, 0.1); border-color:rgba(122, 162, 247, 0.2); color:var(--text-color);">${content}</span>`;
+            }).join('');
+            itemsHtml = `<div class='details-section-header'><i class="fa-solid fa-box-open"></i> <b>持有物</b></div><div class="bio-tags" style="margin-bottom:8px; grid-column: 1 / -1;">${tagsHtml}</div>`;
+        } else {
+            itemsHtml = `<div class='details-section-header'><i class="fa-solid fa-box-open"></i> <b>持有物</b></div><div style="opacity:0.4; font-size:0.9em; padding-left:4px; grid-column: 1 / -1;">(空)</div>`;
+        }
+
+        const formatObjs = (dataObj) => {
+            if (!dataObj || typeof dataObj !== 'object') return '<span style="opacity:0.5">无</span>';
+            const validKeys = Object.keys(dataObj).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+            if (validKeys.length === 0) return '<span style="opacity:0.5">无</span>';
+            return validKeys.map(k => {
+                const v = dataObj[k];
+                const desc = (typeof v === 'object') ? (v.特征 || v.状态 || v.description || '存在') : v;
+                return `${k} <span style="opacity:0.7; font-size:0.9em">(${desc})</span>`;
+            }).join('<br>');
+        };
+
+        return `<div class=\"details-grid\">
+            <div class='details-section-header'><i class=\"fa-solid fa-shirt\"></i> <b>服装与身体状态</b></div>
+            ${bodyPartsHtml}
+            <div class='details-section-header'><i class=\"fa-solid fa-atom\"></i> <b>内部状态</b></div>
+            ${createDetailItem('生理动态', getValue(data, '主角.生理状态.当前生理动态'), 'fa-heart-pulse')}
+            ${createDetailItem('阴茎', penisDetails, 'fa-mars')}
+            ${createDetailItem('后穴', `开发度 ${getValue(data, '主角.生理状态.后穴状态.开发度', 0)}`, 'fa-asterisk')}
+            <div class='details-section-header'><i class=\"fa-solid fa-flask-vial\"></i> <b>体液与改造</b></div>
+            ${semenHtml}
+            ${createDetailItem('改造列表', modificationsHtml, 'fa-list-ul')}
+            ${itemsHtml}
+            <div class='details-section-header'><i class=\"fa-solid fa-virus\"></i> <b>侵入异物</b></div>
+            ${createDetailItem('阴道内', formatObjs(getValue(data, '主角.生理状态.阴茎状态.内部异物')), 'fa-cube')}
+            ${createDetailItem('魔力腔内', formatObjs(getValue(data, '主角.生理状态.魔力腔内异物.异物列表')), 'fa-cubes')}
+        </div>`;
+    };
+    
+    const renderRecords = (data, personality) => {
+
+        // --- 淫纹独立卡片逻辑 ---
+        const curseDesc = getValue(data, '主角.淫纹.描述', '无');
+        const curseXp = getValue(data, '主角.淫纹.经验', 0);
+        let curseHtml = '';
+
+if (curseXp > 0 || (curseDesc && curseDesc !== '生成中……' && curseDesc !== '待设定')) {
+            const level = curseXp <= 0 ? 0 : (curseXp < 150 ? 1 : (curseXp < 400 ? 2 : 3));
+            const corruption = getValue(data, '主角.快感状态.污染度', 0);
+
+            let titleColor, bgColor, iconClass, animState;
+
+            if (personality === '堕落') {
+                titleColor = 'var(--pleasure-color)';
+                bgColor = 'linear-gradient(135deg, rgba(40, 15, 25, 0.9), rgba(20, 10, 20, 0.7))';
+                iconClass = 'fa-solid fa-heart-pulse';
+                animState = 'curse-state-fallen'; 
+            } else if (corruption >= 65) {
+                titleColor = 'var(--corruption-color)';
+                bgColor = 'linear-gradient(135deg, rgba(30, 20, 40, 0.8), rgba(20, 15, 30, 0.7))';
+                iconClass = 'fa-brands fa-diaspora';
+                animState = 'curse-state-eroded'; 
+            } else {
+                titleColor = 'var(--text-secondary)';
+                bgColor = 'linear-gradient(135deg, rgba(30, 30, 40, 0.6), rgba(20, 20, 25, 0.5))';
+                iconClass = 'fa-solid fa-seedling';
+                animState = 'curse-state-dormant'; 
+            }
+
+            const finalAnimClass = level >= 3 ? animState : '';
+            
+// --- 新增：动态生成被动效果标签 (双路线) ---
+            let curseTraitsHtml = '';
+            if (level >= 1) {
+                const traits = [];
+                if (personality === '善良') {
+                traits.push({ icon: 'fa-temperature-arrow-up', name: '发情阻碍', desc: '战斗中快感超过40%时，淫纹会发烫并吸收体力，削减自身的战斗强度。' });
+                traits.push({ icon: 'fa-droplet-slash', name: '纯洁试炼', desc: '保持魔力腔内没有精液，身体不发生高潮，淫纹会因饥饿而逐渐削弱。彻底克服淫纹后，基础强度将获得永久提升，并降低污染度。' });
+                    if (level >= 2) traits.push({ icon: 'fa-wand-magic-sparkles', name: '魔力发情', desc: '[Lv.2解锁] 魔力回路被污染。战斗中每次消耗MP施展魔法，流失的魔力都会被强行转化为性快感。' });
+                    if (level >= 3) {
+                        traits.push({ icon: 'fa-heart-crack', name: '痛觉转换', desc: '[Lv.3解锁] 痛觉中枢被篡改。战斗中承受的任何物理伤害与痛楚，都会被瞬间扭曲为绝顶的快感浪潮。' });
+                        traits.push({ icon: 'fa-biohazard', name: '深渊侵蚀', desc: '[Lv.3解锁] 无时无刻不在散发堕落的荷尔蒙，每天清晨强制增加 5 点污染度。' });
+                    }
+                } else {
+                traits.push({ icon: 'fa-fire', name: '爱欲强化', desc: '战斗中快感超过40%时，淫纹会将激活并提供魔力，增强自身的强度。' });
+                traits.push({ icon: 'fa-glass-water', name: '精液饥渴', desc: '淫纹极度依赖精液灌溉。若魔力腔空虚，淫纹将干瘪衰退，并导致恩宠与力量流失。' });
+                    if (level >= 2) traits.push({ icon: 'fa-wand-magic-sparkles', name: '魔力发情', desc: '[Lv.2解锁] 魔力与快感深度绑定。消耗魔力不再是负担，反而能带来快感。' });
+                    if (level >= 3) {
+                        traits.push({ icon: 'fa-heart-pulse', name: '痛觉转换', desc: '[Lv.3解锁] 痛觉被完全逆转。承受的物理伤害与痛楚都会转化为快感。' });
+                        traits.push({ icon: 'fa-crown', name: '深渊眷顾', desc: '[Lv.3解锁] 完全适应堕落，每天清晨能从淫纹中汲取恩宠。' });
+                    }
+                }
+
+                // 组装标签 HTML
+                curseTraitsHtml = `<div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">` + 
+                    traits.map(t => `
+                    <span class='has-tooltip' style='display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:6px; background:rgba(0,0,0,0.4); border:1px solid ${titleColor}; color:${titleColor}; font-size:0.85em; cursor:help; box-shadow: 0 2px 4px rgba(0,0,0,0.2);'>
+                        <span class="tooltip-trigger"><i class="fa-solid ${t.icon}"></i> ${t.name}</span>
+                        <span class='custom-tooltip'>
+                            <div class='label'>${t.name}</div>
+                            <div class='value'>${t.desc}</div>
+                        </span>
+                    </span>`).join('') + `</div>`;
+            }
+            
+            curseHtml = `
+            <div class='curse-mark-banner curse-lv${level} ${finalAnimClass}' style="--curse-glow: ${titleColor}; background: ${bgColor}; border-left-color: ${titleColor};">
+                <div class="curse-mark-content">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom:6px; margin-bottom:6px;">
+                        <div style="color: ${titleColor}; font-size: 0.9em; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                            <i class="${iconClass}"></i> <span>淫纹显现</span>
+                        </div>
+                        <div style="font-family: var(--font-header); font-size: 0.95em; font-weight:700; color: ${titleColor}; opacity: 0.9;">
+                            Lv.${level} <span style="font-size:0.75em; opacity:0.6; font-weight:normal;">(${curseXp} XP)</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.9em; color: var(--text-color); line-height: 1.5; opacity: 0.9;">
+                        ${curseDesc}
+                    </div>
+                    ${curseTraitsHtml}
+                </div>
+                <i class="${iconClass} watermark-icon" style="color: ${titleColor};"></i>
+            </div>`;
+        }
+
+        const KINK_LEVELS = { 
+            0: { name: '未觉醒', xp_needed: 100, icon: 'fa-circle-notch' }, 
+            1: { name: '萌芽', xp_needed: 250, icon: 'fa-leaf' }, 
+            2: { name: '熟练', xp_needed: 500, icon: 'fa-layer-group' }, 
+            3: { name: '心醉', xp_needed: 1000, icon: 'fa-heart' }, 
+            4: { name: '极境', xp_needed: Infinity, icon: 'fa-crown' } 
+        };
+
+        const kinks = getValue(data, '主角.快感状态.性癖', {});
+        const kinkEntries = Object.entries(kinks)
+            .filter(([key, val]) => key !== '$meta' && (val.经验 > 0 || val.经验值 > 0))
+            .sort(([, a], [, b]) => (b.经验 || b.经验值 || 0) - (a.经验 || a.经验值 || 0));
+
+        let kinkHtml = '';
+        if (kinkEntries.length === 0) {
+            kinkHtml = `<div style='grid-column: 1/-1; text-align:center; color:var(--text-secondary); padding:10px;'>暂无性癖觉醒</div>`;
+        } else {
+            kinkHtml = kinkEntries.map(([key, val]) => {
+                const exp = val.经验 || val.经验值 || 0;
+                const level = val.等级 || 0;
+                const levelInfo = KINK_LEVELS[level] || KINK_LEVELS[0];
+                const isMax = levelInfo.xp_needed === Infinity;
+                const rankClass = `rank-${Math.min(level, 4)}`;
+                const prevXp = level > 0 ? KINK_LEVELS[level - 1].xp_needed : 0;
+                
+                let progressPercent = 0;
+                if (isMax) { progressPercent = 100; } 
+                else { progressPercent = Math.max(0, Math.min(100, ((exp - prevXp) / (levelInfo.xp_needed - prevXp)) * 100)); }
+                
+                let xpDisplayHtml = isMax 
+                    ? `<span class="kink-xp is-max">${exp} <small>MAX</small></span>`
+                    : `<span class="kink-xp">${exp} <small>/ ${levelInfo.xp_needed}</small></span>`;
+                const barColor = isMax ? 'var(--ultimate-color)' : 'var(--accent-color)';
+                
+                return `
+                <div style="grid-column: 1/-1; margin-bottom:6px;">
+                    <div class="kink-row">
+                        <div class="kink-name ${rankClass}">
+                            <i class="fa-solid ${levelInfo.icon} rank-icon"></i>
+                            <span>${key} <span style="font-size:0.8em; opacity:0.8; font-weight:normal;">Lv.${level}</span></span>
+                        </div>
+                        <div>${xpDisplayHtml}</div>
+                    </div>
+                    <div class="kink-progress-container">
+                        <div class="progress-fill" style="width: ${progressPercent}%; background: ${barColor}; box-shadow: 0 0 10px ${barColor};"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        const getListValues = (path) => {
+            const raw = getValue(data, path, {});
+            if (Array.isArray(raw)) return raw;
+            if (typeof raw === 'object' && raw !== null) return Object.values(raw);
+            return [];
+        };
+
+        const bossesList = getListValues('记录.已击败的Boss');
+let bossesHtml = bossesList.filter(b => b !== '$__META_EXTENSIBLE__$').map(boss => { 
+            const bossName = (typeof boss === 'object' ? boss.名称 : boss) || '未知'; 
+            const tagsArray = (typeof boss === 'object' ? boss.核心主题 : []) ||[]; 
+            const result = (typeof boss === 'object' ? boss.结果 : 'WIN') || 'WIN';
+            
+            const cType = (typeof boss === 'object' ? boss.战斗类型 : '') || ''; 
+            const encAlign = (typeof boss === 'object' ? boss.遭遇阵营 : '') || personality;
+
+            const tagsText = (tagsArray.length > 0) ? `<div class='label'>核心主题:</div><div class='value'>${tagsArray.join(', ')}</div>` : '无特殊主题'; 
+            
+let tooltipBadge = '';
+            if (cType) {
+                if (encAlign === '善良') {
+                    if (cType === '魔法少年') {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(187, 154, 247, 0.15); color:#bb9af7; border:1px solid rgba(187, 154, 247, 0.5); border-radius:4px;'><i class="fa-solid fa-moon"></i> 堕落魔法少年</span></div>`;
+                    } else if (cType === '人类') {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(122, 162, 247, 0.15); color:#7aa2f7; border:1px solid rgba(122, 162, 247, 0.5); border-radius:4px;'><i class="fa-solid fa-user-secret"></i> 人类恶棍</span></div>`;
+                    } else {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(248, 113, 113, 0.15); color:#f87171; border:1px solid rgba(248, 113, 113, 0.5); border-radius:4px;'><i class="fa-solid fa-spider"></i> 魔物</span></div>`;
+                    }
+                } else {
+                    if (cType === '魔法少年') {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(255, 255, 255, 0.15); color:#fff; border:1px solid rgba(255, 255, 255, 0.8); border-radius:4px; box-shadow: 0 0 6px rgba(255,255,255,0.4); text-shadow: 0 0 4px rgba(255,255,255,0.8);'><i class="fa-solid fa-feather"></i> 魔法少年</span></div>`;
+                    } else if (cType === '人类') {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(122, 162, 247, 0.15); color:#7aa2f7; border:1px solid rgba(122, 162, 247, 0.5); border-radius:4px;'><i class="fa-solid fa-user-tie"></i> 人类玩物</span></div>`;
+                    } else {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(247, 118, 142, 0.15); color:#f7768e; border:1px solid rgba(247, 118, 142, 0.5); border-radius:4px;'><i class="fa-solid fa-paw"></i> 猎物</span></div>`;
+                    }
+                }
+            }
+            
+            const tooltipContent = `${tooltipBadge}${tagsText}`;
+
+            let icon, styleClass;
+            if (result === 'LOSE') {
+                icon = 'fa-heart-crack'; styleClass = 'color: var(--combat-color); opacity: 0.8;';
+            } else {
+                icon = 'fa-skull-crossbones'; styleClass = 'color: var(--text-color);';
+            }
+            
+            return `<span class='has-tooltip' style='display:inline-block; margin-right:8px; margin-bottom:6px; ${styleClass}'><span class="tooltip-trigger"><i class="fa-solid ${icon}"></i> ${bossName}</span><span class='custom-tooltip'>${tooltipContent}</span></span>`; 
+        }).join('<br>');
+
+        const recordsHeader = (personality === '善良') ? '战斗记录' : '战斗记录';
+        const recordsIcon = (personality === '善良') ? 'fa-skull-crossbones' : 'fa-gem';
+        
+        return `${curseHtml}<div class=\"details-grid\">
+            <div class='details-section-header'><i class=\"fa-solid fa-arrow-trend-up\"></i> <b>性癖开发</b></div>
+            ${kinkHtml}
+            <div class='details-section-header'><i class=\"fa-solid fa-scroll\"></i> <b>冒险记录</b></div>
+            ${createDetailItem('总高潮次数', getValue(data, '主角.快感状态.总高潮次数', 0), 'fa-wave-square')}
+            ${createDetailItem('总战败', getValue(data, '记录.总战败次数', 0), 'fa-heart-crack')}
+            ${createDetailItem(recordsHeader, bossesHtml, recordsIcon)}
+        </div>`;
+    };
+
+    // --- 心跳共鸣条渲染 (EKG) ---
+    const renderEKGMonitor = (data) => {
+        const current = getValue(data, '主角.快感状态.快感值', 0);
+        const threshold = getValue(data, '主角.快感状态.高潮阈值', 100);
+        const ratio = Math.min(1, current / threshold); 
+        const percent = ratio * 100;
+        let beatClass = 'beating'; let fillClass = '';
+        
+        if (current >= threshold) { beatClass = 'beating-fast'; fillClass = 'critical'; }
+        else if (ratio >= 0.7) { beatClass = 'beating-fast'; }
+        
+        return `
+        <div class="ekg-wrapper">
+            <div class="ekg-heart-box"><i class="fa-solid fa-heart ekg-icon ${beatClass}"></i></div>
+            <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
+                <div style="display:flex; justify-content:space-between; font-size:0.8em; color:var(--text-secondary); padding:0 2px;">
+                    <span>PLEASURE</span><span>${Math.round(percent)}%</span>
+                </div>
+                <div class="ekg-bar-container"><div class="ekg-bar-fill ${fillClass}" style="width: ${percent}%"></div></div>
+            </div>
+            <div class="ekg-data">${Math.round(current)}</div>
+        </div>`;
+    };
+
+    // --- 主面板渲染逻辑 ---
+    const renderStatusPanel = (data) => {
+        if (!data || !getValue(data, '系统状态.主角创建完毕')) return `<div class='status-card' style='text-align:center; padding:20px;'>未检测到主角创建...</div>`;
+        
+        // 1. 变量提取
+        const personality = getValue(data, '主角.核心状态.人格状态', '善良');
+        const isFallen = personality === '堕落';
+        const corruption = getValue(data, '主角.快感状态.污染度', 0);
+        const levelState = getValue(data, '进程.阶段', '幕间休息');
+
+        // 2. 标题与状态判定
+        const isTransformed = getValue(data, '主角.核心状态.变身状态', false);
+        const magicName = getValue(data, '主角.基本信息.魔法少年名');
+        const realName = getValue(data, '主角.基本信息.姓名');
+        const currentName = (isTransformed && magicName) ? magicName : (realName || '主角');
+        const prefixText = isFallen ? '堕落魔法少年' : '魔法少年';
+        
+        const currentEvents = getValue(data, '系统状态.待处理事件', {});
+        const isCorrupting = currentEvents['魔法少年恶堕'] || currentEvents['堕落临界点'];
+        const headerTitle = `<span class='${isCorrupting ? 'corrupt-active' : ''}'>${prefixText} ${currentName}</span>`;
+
+        // 3. UI 标签定义
+        const hpLabel = isFallen ? '耐久' : '体力';
+        const mpLabel = isFallen ? '欲力' : '魔力';
+        const corruptionLabel = isFallen ? '恩宠' : '侵蚀';
+        const corruptionIcon = isFallen ? 'fa-crown' : 'fa-biohazard';
+        const ultimateLabel = isFallen ? '欲望充能' : '意志充能';
+        const ultimateIcon = isFallen ? 'fa-moon' : 'fa-sun';
+        
+        const tab1Label = isFallen ? '烙印' : '档案';
+        const tab2Label = isFallen ? '肉体' : '身体';
+        const tab3Label = isFallen ? '战果' : '记录';
+        const bodyTabIcon = isFallen ? 'fa-venus-mars' : 'fa-dna';
+        const recordsTabIcon = isFallen ? 'fa-trophy' : 'fa-book-medical';
+
+        // 4. 动态主题
+        let themeClass = 'theme-pure';
+        if (isFallen) { themeClass = 'theme-fallen-core'; }
+        else if (corruption > 65) { themeClass = 'theme-eroded'; }
+        let cardClass = `status-card ${themeClass}`;
+        if (getValue(data, '主角.核心状态.净化之力', 0) >= 100 || getValue(data, '主角.核心状态.污秽魔力', 0) >= 100) cardClass += ' state-ultimate-ready';
+        else if (getValue(data, '主角.核心状态.体力值.当前', 100) <= 35) cardClass += ' state-danger';
+
+        // 5. 上下文区域 (战斗/幕间)
+        let contextualHtml = '';
+        if (levelState === '战斗准备' || levelState === '战斗回合') {
+            const bossName = getValue(data, '世界.当前关卡.名称', '未知');
+            let statusDisplay;
+            if (levelState === '战斗准备') {
+                const bossThemes = getValue(data, '世界.当前关卡.核心主题', []).filter(t => t !== '$__META_EXTENSIBLE__$');
+                let themesHtml = (bossThemes.length > 0) ? `<div class='boss-themes' style="margin-top:4px;"><i class='fa-solid fa-tags'></i> ${bossThemes.join(' / ')}</div>` : '';
+                
+                // 【新增】读取并渲染环境警戒度进度条
+                const alertness = parseInt(getValue(data, '系统状态.待处理事件.环境警戒度', 0), 10) || 0;
+                let alertnessHtml = '';
+                if (alertness > 0) {
+                    // 警戒度最高20：低(0-7)=抹茶绿，中(8-14)=奶茶金，高(15-20)=柔和红
+                    let alertColor = alertness >= 15 ? 'var(--combat-color)' : (alertness >= 8 ? 'var(--ultimate-color)' : 'var(--hp-color)');
+                    alertnessHtml = `
+                    <div style="margin-top: 14px; text-align: left; background: rgba(0,0,0,0.2); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); border-left: 3px solid ${alertColor};">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9em; color: ${alertColor}; font-weight: bold; margin-bottom: 6px;">
+                            <span><i class="fa-solid fa-eye"></i> 环境警戒度</span>
+                            <span style="font-family: var(--font-header);">${alertness} <span style="font-size:0.75em; opacity:0.6; font-weight:normal;">/ 20</span></span>
+                        </div>
+                        <div class="progress-bar" style="height: 6px; background: rgba(0,0,0,0.4);">
+                            <div class="progress-fill" style="width: ${Math.min(100, (alertness / 20) * 100)}%; background: ${alertColor}; box-shadow: 0 0 8px ${alertColor}; transition: width 0.5s, background 0.5s;"></div>
+                        </div>
+                        <div style="font-size: 0.75em; color: var(--text-secondary); margin-top: 6px; line-height: 1.3;">
+                            警戒度越高，敌人越有可能取得先手优势，强制开始战斗。
+                        </div>
+                    </div>`;
+                }
+
+                // 优化战前阶段的标题样式
+                statusDisplay = `
+                <div class="intermission-status">
+                    <div style="display:flex; justify-content:space-between; font-size:0.85em; font-weight:bold; color:var(--ultimate-color); letter-spacing:1px; margin-bottom:4px;">
+                        <span><i class="fa-solid fa-crosshairs"></i> PRE-COMBAT</span>
+                        <span>战前周旋</span>
+                    </div>
+                    <div class='main-status' style='color: var(--text-main); font-size: 1.3em; text-shadow: 0 0 10px rgba(255,255,255,0.2);'>${bossName}</div>
+                    ${themesHtml}
+                    ${alertnessHtml}
+                </div>`;
+            } else { // 战斗回合
+                const bossToughness = getValue(data, '世界.当前关卡.Boss韧性值', null);
+                let bossHealthBar = '';
+                
+                // 威胁等级
+                const threatLv = getValue(data, '世界.威胁等级', 1);
+                const threatConfig = isFallen 
+                    ? { 1: { t: '玩物', c: '#a8d8ea' }, 2: { t: '猎物', c: '#bb9af7' }, 3: { t: '强敌', c: '#f7768e' } }
+                    : { 1: { t: '骚扰者', c: '#9ece6a' }, 2: { t: '侵犯者', c: '#e0af68' }, 3: { t: '支配者', c: '#f87171' } };
+                const tInfo = threatConfig[threatLv] || { t: '未知威胁', c: '#787c99' };
+                const threatHtml = `<span style="color:${tInfo.c}; font-weight:bold; padding:2px 6px; background:rgba(0,0,0,0.2); border-radius:4px; margin-left:6px; font-size:0.8em;">Lv.${threatLv} ${tInfo.t}</span>`;
+
+                if (bossToughness !== null) {
+                    const bossHpPct = Math.max(0, Math.min(100, bossToughness));
+                    bossHealthBar = `
+                    <div class='progress-item'>
+                        <div class='progress-label'><span><i class='fa-solid fa-shield-virus'></i> <span>韧性 (Boss)</span></span><span class='progress-value'>${bossToughness}/100</span></div>
+                        <div class='progress-bar' style="position:relative; overflow:visible; background:rgba(0,0,0,0.6);">
+                            <div class="boss-phase-marker" style="left: 30%;" data-phase="P3"></div>
+                            <div class="boss-phase-marker" style="left: 70%;" data-phase="P2"></div>
+                            <div class='progress-fill' style='width: ${bossHpPct}%; background: var(--combat-color); position:relative; z-index:1;'></div>
+                        </div>
+                    </div>`;
+                }
+                const posture = getValue(data, '主角.核心状态.当前战斗姿态', '战斗中');
+                const postureMap = isFallen ? { '战斗中': '狩猎中', '劣势': '享乐中' } : { '战斗中': '戦闘中', '劣势': '劣勢' };
+                const bossState = getValue(data, '世界.当前关卡.Boss状态', '完好');
+                const bossThemes = getValue(data, '世界.当前关卡.核心主题', []).filter(t => t !== '$__META_EXTENSIBLE__$');
+                const bossThemeHtml = (bossThemes.length > 0) ? `<div class='side-theme'>${bossThemes.join(' / ')}</div>` : '';
+                
+                let combatLogHtml = '';
+                const lastCombatLog = getValue(data, '主角.战斗临时.当前战斗日志', '无');
+                if (lastCombatLog && lastCombatLog !== '无') { 
+                    const parts = lastCombatLog.split('|'); 
+                    const resultText = parts[0] || '检定'; 
+                    const isFailure = resultText.includes('失败') || resultText.includes('纠缠'); 
+                    combatLogHtml = `<div class=\"combat-log-display\"><div><b>战报: <span class=\"${isFailure ? 'log-failure' : 'log-success'}\">${resultText.replace('结果:','')}</span></b></div><small style=\"opacity: 0.8;\">${parts.slice(1).join(' | ')}</small></div>`; 
+                }
+                statusDisplay = `<div class='battle-status-grid'><div class='status-side player-side'><div class='side-label'>Player</div><div class='side-main'>${currentName}</div><div class='side-status-container'><span class='side-status-tag'>${postureMap[posture] || posture}</span></div></div><div class='status-side enemy-side'><div class='side-label'>Enemy ${threatHtml}</div><div class='side-main'>${bossName}</div><div class='side-status-container'><span class='side-status-tag' style='background:var(--combat-color)'>${bossState}</span></div>${bossThemeHtml}</div></div>${bossHealthBar}${combatLogHtml}`;
+            }
+            contextualHtml = `<div class=\"context-box\">${statusDisplay}</div>`;
+        } else {
+            // 幕间事件处理
+            const eventName = getValue(data, '世界.幕间H事件.名称', '无');
+            if (eventName && eventName !== '无') {
+                const eventThemes = getValue(data, '世界.幕间H事件.核心主题', []).filter(t => t !== '$__META_EXTENSIBLE__$').join(' / ');
+                contextualHtml = `
+                <div class=\"context-box intermission-status\" style=\"border-left: 4px solid var(--pleasure-color); background: linear-gradient(90deg, rgba(233,30,99,0.1), transparent);\">
+                    <div style=\"color:var(--pleasure-color); font-weight:bold; font-size:0.9em; margin-bottom:5px;\">
+                        <i class=\"fa-solid fa-triangle-exclamation\"></i> 幕间H事件
+                    </div>
+                    <div class='main-status' style=\"font-size:1.2em; line-height:1.3;\">${eventName}</div>
+                    <div class='sub-status' style=\"color:var(--text-secondary); margin-top:5px; font-size:0.85em;\"> <i class=\"fa-solid fa-tags\"></i> ${eventThemes} </div>
+                </div>`;
+            } else {
+                const stateText = { '幕间休息': (isFallen ? '🍷 间歇' : '☕ 幕间'), '终结回合': '✨ 终结时刻', '战斗胜利': '🏆 战斗胜利', '战斗败北': '💔 力尽败北', '战后处理': '🧹战后清理' }[levelState] || levelState;
+                contextualHtml = `<div class=\"context-box intermission-status\"><div class='main-status'>${stateText}</div><div class='sub-status'>${getValue(data, '主角.生理状态.当前生理动态')}</div></div>`;
+            }
+        }
+        
+        const ekgMonitorHtml = (typeof renderEKGMonitor === 'function') ? renderEKGMonitor(data) : '';
+
+        const progressHtml = `<div class=\"progress-stack\">
+            <div class='stack-header'>基础资源</div>
+            ${renderProgressItem({ path: '主角.核心状态.体力值.当前', label: hpLabel, options: { icon: 'fa-solid fa-heart', color: 'var(--hp-color)', max: getValue(data, '主角.核心状态.体力值.最大', 100) } }, data, isFallen)}
+            ${renderProgressItem({ path: '主角.核心状态.魔力值.当前', label: mpLabel, options: { icon: 'fa-solid fa-wand-magic-sparkles', color: 'var(--mp-color)', max: getValue(data, '主角.核心状态.魔力值.最大', 100) } }, data, isFallen)}
+            <div class='stack-header'>精神与感官</div>
+            ${ekgMonitorHtml}
+            ${renderProgressItem({ path: '主角.快感状态.污染度', label: corruptionLabel, options: { icon: `fa-solid ${corruptionIcon}`, color: 'var(--corruption-color)' } }, data, isFallen)}
+            <div class='stack-header'>必杀技</div>
+            <div class='progress-item'>${renderProgressItem({ path: isFallen ? '主角.核心状态.污秽魔力' : '主角.核心状态.净化之力', label: ultimateLabel, options: { icon: `fa-solid ${ultimateIcon}`, color: 'var(--ultimate-color)' } }, data, isFallen)}</div>
+        </div>`;
+
+        const tabbedHtml = `
+            <div class=\"tab-container\">
+                <button class=\"tab-btn\" data-target=\"panel-character\"><i class=\"fa-solid fa-address-card\"></i> ${tab1Label}</button>
+                <button class=\"tab-btn\" data-target=\"panel-body\"><i class=\"fa-solid ${bodyTabIcon}\"></i> ${tab2Label}</button>
+                <button class=\"tab-btn\" data-target=\"panel-records\"><i class=\"fa-solid ${recordsTabIcon}\"></i> ${tab3Label}</button>
+            </div>
+            <div class=\"content-container\">
+                <div id=\"panel-character\" class=\"tab-content\">${renderCharacterInfo(data, personality)}</div>
+                <div id=\"panel-body\" class=\"tab-content\">${renderBodyStatus(data)}</div>
+                <div id=\"panel-records\" class=\"tab-content\">${renderRecords(data, personality)}</div>
+            </div>`;
+    
+        return `<div class='${cardClass}'>
+            <div class=\"panel-left\">
+                <div class=\"card-header\"><h2>${headerTitle}</h2>                   </div>
+                ${contextualHtml}
+                ${progressHtml}
+            </div>
+            <div class=\"panel-right\">${tabbedHtml}</div>
+        </div>`;
+    };
+    
+    const renderPanelWithData = (stat_data) => {
+        if (typeof hideDynamicTooltip === 'function') {
+            hideDynamicTooltip(); 
+            const oldTooltips = document.querySelectorAll('.custom-tooltip-dynamic');
+            oldTooltips.forEach(el => el.remove());
+        }
+        const container = document.getElementById('status-card-container');
+        if (!container) return;
+        try {
+            const newHTML = renderStatusPanel(stat_data);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newHTML;
+            const newContent = tempDiv.firstChild;
+            if (newContent && newContent.querySelector) {
+                const newActiveButton = newContent.querySelector(`[data-target="${lastActiveTabId}"]`);
+                if (newActiveButton) newActiveButton.classList.add('active');
+                const newActivePanel = newContent.querySelector(`#${lastActiveTabId}`);
+                if (newActivePanel) newActivePanel.classList.add('active');
+            }
+            if (container.firstChild) { updateDOM(container.firstChild, newContent); } 
+            else { if(newContent) container.appendChild(newContent); }
+        } catch (error) {console.error('Status Panel Error:', error); container.innerHTML = `<div class='status-card' style='color:var(--combat-color);'>渲染出错: ${error.message}</div>`; } 
+    };
+
+    function getMvuInstance() { try { return window.Mvu || (window.parent && window.parent.Mvu) || (window.top && window.top.Mvu) || null; } catch (e) { return null; } }
+    
+    // --- Tooltip 悬浮窗逻辑 ---
+    const setupTooltips = () => {
+        let activeTooltip = null;
+        const showTip = (target) => {
+            const tooltip = target.querySelector('.custom-tooltip');
+            if (!tooltip) return;
+            tooltip.classList.add('active');
+            activeTooltip = tooltip;
+            const targetRect = target.getBoundingClientRect();
+            const tipRect = tooltip.getBoundingClientRect();
+            let top = targetRect.top + (targetRect.height / 2) - (tipRect.height / 2);
+            let left = targetRect.right + 15; 
+            if (top + tipRect.height > window.innerHeight - 10) { top = window.innerHeight - tipRect.height - 10; }
+            if (top < 10) top = 10;
+            if (left + tipRect.width > window.innerWidth - 10) { left = targetRect.left - tipRect.width - 15; }
+            tooltip.style.top = top + 'px';
+            tooltip.style.left = left + 'px';
+        };
+        const hideTip = () => { if (activeTooltip) { activeTooltip.classList.remove('active'); activeTooltip = null; } };
+        document.addEventListener('mouseover', (e) => { const trigger = e.target.closest('.has-tooltip'); if (trigger) showTip(trigger); });
+        document.addEventListener('mouseout', (e) => { const trigger = e.target.closest('.has-tooltip'); if (trigger) hideTip(); });
+        window.addEventListener('scroll', hideTip, true);
+    };
+    
+    // 初始化
+    setupTooltips();
+    const init = () => {
+        const Mvu = window.Mvu || (window.parent && window.parent.Mvu) || (window.top && window.top.Mvu);
+        if (Mvu && Mvu.events) {
+            console.log("[PC Status] MVU found, registering native listeners.");
+            document.addEventListener(Mvu.events.VARIABLE_UPDATE_ENDED, (e) => {
+                if (e.detail && e.detail.stat_data) { renderPanelWithData(e.detail.stat_data); }
+            });
+            (async () => { 
+                try { 
+                    if (typeof getChatMessages !== 'undefined') {
+                        const msgs = await getChatMessages(getCurrentMessageId());
+                        const data = msgs[0]?.data?.stat_data || Mvu.getMvuData({type:'message', message_id:-1})?.stat_data;
+                        renderPanelWithData(data);
+                    }
+                } catch (e) { console.warn("[PC Status] Initial fetch failed.", e); } 
+            })();
+            const container = document.getElementById('status-card-container');
+            if (container) {
+                container.addEventListener('click', (event) => {
+                    const button = event.target.closest('.tab-btn');
+                    if (!button || button.classList.contains('active')) return;
+                    const targetPanelId = button.dataset.target;
+                    const targetPanel = container.querySelector(`#${targetPanelId}`);
+                    if (!targetPanel) return;
+                    container.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    container.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'));
+                    button.classList.add('active');
+                    targetPanel.classList.add('active');
+                    lastActiveTabId = targetPanelId;
+                });
+            }
+        } else {
+            setTimeout(init, 500);
+        }
+    };
+
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+
+    // --- GM 主渲染逻辑 (整合版) ---
+    window.toggleGM = () => {
+        const p = document.getElementById('gm-panel');
+        if (p) {
+            if (!p.classList.contains('show')) {
+                p.style.display = 'flex'; 
+                requestAnimationFrame(() => {
+                    p.classList.add('show');
+                    window.renderGM();
+                    if(_currentMvuData) {
+                        _gmSnapshot = JSON.parse(JSON.stringify(_currentMvuData));
+                        showToast("Snapshot created", "#save-status");
+                    }
+                });
+            } else {
+                p.classList.remove('show');
+                setTimeout(() => p.style.display = 'none', 250);
+            }
+        }
+    };
+
+    window.toggleGMMaximize = () => {
+        const p = document.getElementById('gm-panel');
+        const icon = document.getElementById('gm-max-icon');
+        if (p) {
+            p.classList.toggle('maximized');
+            icon.className = p.classList.contains('maximized') ? "fa-regular fa-clone" : "fa-regular fa-square";
+        }
+    };
+
+    window.switchGmTab = (btn, targetId) => {
+        document.querySelectorAll('.gm-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.gm-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(targetId).classList.add('active');
+    };
+
+    const showToast = (msg, selector) => {
+        const el = document.querySelector(selector);
+        if(el) { el.innerText = msg; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 2000); }
+    };
+
+    const setInp = (id, val) => {
+        const el = document.getElementById(id);
+        if(el && document.activeElement !== el) el.value = (typeof val === 'number') ? Math.round(val) : val;
+    };
+    const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+
+    window.renderGM = async () => {
+        try {
+            const Mvu = window.Mvu || window.parent?.Mvu || window.top?.Mvu;
+            if (!Mvu) return;
+            const wrapper = Mvu.getMvuData({ type: 'message', message_id: -1 });
+            if (!wrapper) return;
+            _currentMvuData = wrapper.stat_data || wrapper;
+            const d = _currentMvuData;
+
+            const phase = getDeep(d, '进程.阶段', '幕间休息');
+            const isCombat = ['战斗回合', '战斗准备', '终结回合'].includes(phase);
+            const isIntermission = (phase === '幕间休息');
+
+            document.getElementById('panel-combat-control').style.display = isCombat ? 'block' : 'none';
+            document.getElementById('panel-intermission-control').style.display = isIntermission ? 'block' : 'none';
+            setTxt('current-phase-display', phase);
+            setInp('phase-selector', phase);
+
+            const isHEvent = (isIntermission && getDeep(d, '世界.幕间H事件.名称', '无') !== '无');
+            const targetPath = (isIntermission && !isHEvent) ? '世界.幕间H事件.核心主题' : '世界.当前关卡.核心主题';
+            setTxt('theme-target-label', (isIntermission && !isHEvent) ? "Target: 幕间事件" : "Target: 战斗/关卡");
+            
+            const themes = getDeep(d, targetPath, []);
+            const validThemes = Array.isArray(themes) ? themes.filter(t => t !== '$__META_EXTENSIBLE__$') : [];
+            document.getElementById('theme-tags-container').innerHTML = validThemes.map(t => `
+                <div class="theme-tag ${isIntermission ? 'h-event' : ''}">
+                    ${t} <span class="del" onclick="removeTheme('${targetPath}', '${t}')">×</span>
+                </div>`).join('') || '<span style="opacity:0.5; font-style:italic;">无主题</span>';
+
+            setInp('inp-hp', getDeep(d, '主角.核心状态.体力值.当前', 0));
+            setInp('inp-mp', getDeep(d, '主角.核心状态.魔力值.当前', 0));
+            setInp('inp-pleasure', getDeep(d, '主角.快感状态.快感值', 0));
+            setInp('inp-corruption', getDeep(d, '主角.快感状态.污染度', 0));
+            setInp('inp-purification', getDeep(d, '主角.核心状态.净化之力', 0));
+            setInp('inp-corrupt_magic', getDeep(d, '主角.核心状态.污秽魔力', 0));
+            setTxt('val-turn', getDeep(d, '系统状态.幕间回合计数', 0));
+            setTxt('val-boss-name', getDeep(d, '世界.当前关卡.名称', 'Unknown'));
+            setInp('inp-boss-hp', getDeep(d, '世界.当前关卡.Boss韧性值', 0));
+            setInp('inp-boss-str', getDeep(d, '世界.当前关卡.Boss基础强度', 0));
+            const fame = getDeep(d, '名声.知名度', 0); const rep = getDeep(d, '名声.风评', 0);
+            setInp('inp-fame', fame); setInp('range-fame', fame);
+            setInp('inp-rep', rep); setInp('range-rep', rep);
+
+            const events = getDeep(d, '系统状态.待处理事件', {});
+            document.getElementById('event-list-container').innerHTML = Object.keys(events).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$').map(k => `
+                <div class="event-item"><span>${k}</span><i class="fa-solid fa-xmark del" onclick="gm_update('stat_data.系统状态.待处理事件.${k}', null, 'remove')"></i></div>
+            `).join('') || '<div style="text-align:center; opacity:0.5; padding:4px;">(空)</div>';
+
+            const threatPanel = document.getElementById('panel-threat-forecast');
+            if (threatPanel) {
+                if (isIntermission) {
+                    threatPanel.style.display = 'block';
+                    const turnCount = getDeep(d, '系统状态.幕间回合计数', 0);
+                    
+                    // 1. 动态阵营 UI 切换
+                    const isFallen = getDeep(d, '主角.核心状态.人格状态') === '堕落';
+                    const panelTitleEl = document.getElementById('threat-panel-title');
+                    
+                    if (isFallen) {
+                        panelTitleEl.innerHTML = '<i class="fa-solid fa-crosshairs"></i> 狩猎雷达 (搜寻中)';
+                        threatPanel.style.borderColor = 'var(--pleasure-color)';
+                        threatPanel.style.borderLeftColor = 'var(--pleasure-color)';
+                        threatPanel.querySelector('.gm-label').style.color = 'var(--pleasure-color)';
+                    } else {
+                        panelTitleEl.innerHTML = '<i class="fa-solid fa-radar"></i> 威胁雷达 (潜伏中)';
+                        threatPanel.style.borderColor = '#e0af68';
+                        threatPanel.style.borderLeftColor = '#e0af68';
+                        threatPanel.querySelector('.gm-label').style.color = '#e0af68';
+                    }
+                    const heventCompleted = getDeep(d, '系统状态.幕间事件完成', true);
+                    if (heventCompleted) {
+                        setTxt('threat-turn-counter', `冷却: ${turnCount}/8 ${turnCount >= 8 ? '(Ready!)' : ''}`);
+                    } else {
+                        setTxt('threat-turn-counter', `(等待H事件)`);
+                    }
+                    
+// 目标类型锁定器 UI (双路线通用)
+                    const preySelector = document.getElementById('fallen-prey-selector');
+                    const targetType = getDeep(d, '世界.当前关卡.战斗类型', '无');
+                    // 堕落线用粉色，善良线用预警金色
+                    const activeColor = isFallen ? 'var(--pleasure-color)' : '#e0af68'; 
+                    
+                    preySelector.style.display = 'flex';
+                    // 动态调整文案：堕落线叫猎物，善良线叫威胁
+                    document.getElementById('prey-selector-label').innerText = isFallen ? '🎯 猎物类型:' : '🎯 威胁类型:';
+                    document.getElementById('btn-prey-random').style.borderColor = (targetType==='无'||targetType==='随机') ? activeColor : 'var(--gm-border)';
+                    document.getElementById('btn-prey-monster').style.borderColor = targetType==='魔物' ? activeColor : 'var(--gm-border)';
+                    document.getElementById('btn-prey-mg').style.borderColor = targetType==='魔法少年' ? activeColor : 'var(--gm-border)';
+                    document.getElementById('btn-prey-human').style.borderColor = targetType==='人类' ? activeColor : 'var(--gm-border)';
+
+                    // 动态显隐性癖区域
+                    const themeArea = document.getElementById('threat-theme-area');
+                    
+                    // 如果是堕落路线(isFallen)去狩猎魔法少年，不需要主题，因此隐藏。但如果是善良路线(!isFallen)遭遇堕落魔法少年，我们需要赋予她魔物主题，因此保持显示！
+
+                    if (isFallen && targetType === '魔法少年') {
+                        themeArea.style.display = 'none';
+                    } else {
+                        themeArea.style.display = 'block';
+                        const t_themesRaw = getDeep(d, '世界.当前关卡.核心主题', []);
+                        const t_validThemes = Array.isArray(t_themesRaw) ? t_themesRaw.filter(t => t !== '$__META_EXTENSIBLE__$') : [];
+                        const t_mainTheme = t_validThemes[0] || '未锁定';
+                        const t_subTheme = t_validThemes[1] || null;
+                        
+                        setTxt('threat-main-theme', t_mainTheme);
+                        const subContainer = document.getElementById('threat-sub-options');
+                        const subStatus = document.getElementById('threat-sub-status');
+                        
+                        if (t_subTheme) {
+                            subStatus.innerText = '[已锁定]';
+                            subStatus.style.color = 'var(--combat-color)';
+                            subContainer.innerHTML = `<div class="theme-tag" style="border-color:var(--combat-color); color:var(--combat-color);">${t_subTheme}</div>`;
+                        } else {
+                            subStatus.innerText = '[留空交由AI生成]';
+                            subStatus.style.color = 'var(--hp-color)';
+                            const pool = getDeep(d, '系统状态.Boss生成主题池', []).filter(t => t !== '$__META_EXTENSIBLE__$' && t !== t_mainTheme);
+                            const shuffled = pool.sort(() => 0.5 - Math.random()).slice(0, 8);
+                            subContainer.innerHTML = shuffled.map(t => `<div class="theme-tag" style="cursor:pointer;" onclick="lockThreatSubTheme('${t}')">${t}</div>`).join('');
+                        }
+                    }
+                } else {
+                    threatPanel.style.display = 'none';
+                }
+            }
+
+            const heventPanel = document.getElementById('panel-hevent-control');
+            if (heventPanel) {
+                if (isIntermission) {
+                    heventPanel.style.display = 'block';
+                    const heventName = getDeep(d, '世界.幕间H事件.名称', '无');
+                    const heventThemes = getDeep(d, '世界.幕间H事件.核心主题', []);
+                    const cleanThemes = Array.isArray(heventThemes) ? heventThemes.filter(t => t !== '$__META_EXTENSIBLE__$') : [];
+                    const heventCompleted = getDeep(d, '系统状态.幕间事件完成', true);
+                    const elStatus = document.getElementById('hevent-status-val');
+                    const elTheme = document.getElementById('hevent-theme-val');
+                    const btnReroll = document.getElementById('btn-reroll-hevent');
+                    const btnTrigger = document.getElementById('btn-trigger-hevent');
+                    const btnSkip = document.getElementById('btn-skip-hevent');
+
+                    elTheme.innerText = cleanThemes.length > 0 ? cleanThemes.join(' / ') : '无';
+                    const turnCount = getDeep(d, '系统状态.幕间回合计数', 0);
+                    if (!heventCompleted && heventName === '无') {
+                        setTxt('hevent-turn-counter', `冷却: ${turnCount}/6 ${turnCount >= 6 ? '(Ready!)' : ''}`);
+                    } else if (!heventCompleted) {
+                        setTxt('hevent-turn-counter', `(进行中)`);
+                    } else {
+                        setTxt('hevent-turn-counter', `(休眠)`);
+                    }
+
+                    if (heventName !== '无') { // 进行中
+                        elStatus.innerText = `进行中: ${heventName.replace('EVENT：', '')}`;
+                        elStatus.style.color = 'var(--pleasure-color)';
+                        btnReroll.disabled = true; btnReroll.style.opacity = '0.4';
+                        btnTrigger.disabled = true; btnTrigger.style.opacity = '0.4';
+                        btnSkip.disabled = false; btnSkip.style.opacity = '1';
+                    } else if (!heventCompleted && cleanThemes.length > 0) { // 预锁定
+                        elStatus.innerText = '预锁定 (待AI命名)';
+                        elStatus.style.color = '#e0af68';
+                        btnReroll.disabled = false; btnReroll.style.opacity = '1';
+                        btnTrigger.disabled = false; btnTrigger.querySelector('span').innerText = '强制开始'; btnTrigger.style.opacity = '1';
+                        btnSkip.disabled = false; btnSkip.style.opacity = '1';
+                    } else { // 空闲
+                        elStatus.innerText = '空闲';
+                        elStatus.style.color = 'var(--gm-text)';
+                        btnReroll.disabled = false; btnReroll.style.opacity = '1';
+                        btnTrigger.disabled = false; btnTrigger.querySelector('span').innerText = '新建H事件'; btnTrigger.style.opacity = '1';
+                        btnSkip.disabled = true; btnSkip.style.opacity = '0.5';
+                    }
+                } else { heventPanel.style.display = 'none'; }
+            }
+            
+            // 调用备注渲染
+            renderWorldNotes(d); 
+
+        } catch (e) { console.error("[GM Render]", e); }
+    };
+
+    window.gm_update = async (path, value, mode = 'set') => {
+        try {
+            const Mvu = window.Mvu || window.parent?.Mvu || window.top?.Mvu;
+            if (!Mvu) return;
+            const mvuData = Mvu.getMvuData({ type: 'message', message_id: -1 });
+            if (!mvuData) return;
+            if (typeof _ !== 'undefined' && _.set) {
+                if (mode === 'remove') _.unset(mvuData, path);
+                else if (mode === 'add') { const old = _.get(mvuData, path) || 0; _.set(mvuData, path, Number(old) + Number(value)); }
+                else _.set(mvuData, path, value);
+            }
+            await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: -1 });
+            const cleanData = JSON.parse(JSON.stringify(mvuData.stat_data || mvuData));
+            document.dispatchEvent(new CustomEvent(Mvu.events.VARIABLE_UPDATE_ENDED, { detail: { stat_data: cleanData }, bubbles: true }));
+            setTimeout(renderGM, 50);
+        } catch (e) { console.error("[GM Update]", e); }
+    };
+
+    window.injectTheme = async () => {
+        const input = document.getElementById('new-theme-input');
+        const val = input.value.trim();
+        if(!val) return;
+        const targetPath = document.getElementById('theme-target-label').innerText.includes("幕间") ? 'stat_data.世界.幕间H事件.核心主题' : 'stat_data.世界.当前关卡.核心主题';
+        let arr = getDeep(_currentMvuData, targetPath.replace('stat_data.', ''), []);
+        if(!Array.isArray(arr)) arr = [];
+        if(!arr.includes(val)) {
+            const newArr = arr.filter(x => x !== '$__META_EXTENSIBLE__$');
+            newArr.push(val);
+            await gm_update(targetPath, newArr);
+            input.value = ''; showToast("Added: " + val, "#theme-target-label");
+        }
+    };
+
+    window.removeTheme = async (rawPath, valToRemove) => {
+        let arr = getDeep(_currentMvuData, rawPath, []);
+        const newArr = arr.filter(t => t !== valToRemove);
+        await gm_update('stat_data.' + rawPath, newArr);
+    };
+
+    window.rerollHEvent = async () => {
+        const d = _currentMvuData;
+        const allKinks = getDeep(d, '主角.快感状态.性癖', {});
+        const validKinks = Object.keys(allKinks).filter(k => {
+            const val = allKinks[k];
+            return k !== '$meta' && k !== '$__META_EXTENSIBLE__$' && (val.等级 >= 1 || val.经验 >= 50);
+        });
+        let newThemes = [];
+        if (validKinks.length > 0) {
+            const primary = validKinks[Math.floor(Math.random() * validKinks.length)];
+            newThemes.push(primary);
+            const remaining = validKinks.filter(k => k !== primary);
+            if (remaining.length > 0 && Math.random() > 0.3) newThemes.push(remaining[Math.floor(Math.random() * remaining.length)]);
+        } else {
+            const basicKinks = ['敏感体质', '羞耻心', '被动'];
+            newThemes.push(basicKinks[Math.floor(Math.random() * basicKinks.length)]);
+        }
+        newThemes.push('$__META_EXTENSIBLE__$');
+        await gm_update('stat_data.世界.幕间H事件.核心主题', newThemes);
+        await gm_update('stat_data.世界.幕间H事件.名称', '无');
+        await gm_update('stat_data.系统状态.幕间事件完成', false);
+        showToast("Reroll Complete!", "#hevent-status-val");
+    };
+
+    window.triggerHEvent = async () => {
+        const d = _currentMvuData;
+        const heventName = getDeep(d, '世界.幕间H事件.名称', '无');
+        const heventThemes = getDeep(d, '世界.幕间H事件.核心主题', []);
+        const cleanThemes = heventThemes.filter(t => t && t !== '$__META_EXTENSIBLE__$');
+        const isPreLocked = (!getDeep(d, '系统状态.幕间事件完成', true) && heventName === '无' && cleanThemes.length > 0);
+        
+        let targetName = 'EVENT：强制触发', targetThemes = cleanThemes;
+        if (isPreLocked) {
+            const proposedName = prompt(`预锁定主题: ${cleanThemes.join(' / ')}\\n请命名H事件:`, '突发遭遇');
+            if (!proposedName) return;
+            targetName = `EVENT：${proposedName}`;
+        } else {
+            const promptName = prompt('请输入H事件名称:', '意外事件');
+            if (!promptName) return;
+            targetName = `EVENT：${promptName}`;
+            const promptTheme = prompt('输入核心主题 (逗号分隔):', '身体改造,强制露出');
+            if (promptTheme) targetThemes = promptTheme.split(',').map(t => t.trim()).filter(Boolean);
+            else targetThemes = ['意外遭遇'];
+        }
+        if (!targetThemes.includes('$__META_EXTENSIBLE__$')) targetThemes.push('$__META_EXTENSIBLE__$');
+        await gm_update('stat_data.世界.幕间H事件.核心主题', targetThemes);
+        await gm_update('stat_data.世界.幕间H事件.名称', targetName);
+        await gm_update('stat_data.系统状态.幕间事件完成', false);
+        showToast("Started!", "#hevent-status-val");
+    };
+
+    window.skipHEvent = async () => {
+        if (confirm("确定要强制结算并跳过当前幕间事件吗？")) {
+            await gm_update('stat_data.世界.幕间H事件.名称', '无');
+            await gm_update('stat_data.世界.幕间H事件.核心主题', ['$__META_EXTENSIBLE__$']);
+            await gm_update('stat_data.系统状态.幕间事件完成', true);
+            showToast("Skipped.", "#hevent-status-val");
+        }
+    };
+
+    window.rerollThreatMainTheme = async () => {
+        const pool = getDeep(_currentMvuData, '系统状态.Boss生成主题池', []).filter(t => t !== '$__META_EXTENSIBLE__$');
+        if (pool.length > 0) {
+            const newMain = pool[Math.floor(Math.random() * pool.length)];
+            // 重随主主题时，会顺便清空已选的副主题，保持纯净
+            await gm_update('stat_data.世界.当前关卡.核心主题', [newMain, '$__META_EXTENSIBLE__$']);
+            showToast("主主题已重随", "#threat-turn-counter");
+        }
+    };
+    
+    window.lockThreatSubTheme = async (theme) => {
+        const themes = getDeep(_currentMvuData, '世界.当前关卡.核心主题', []).filter(t => t !== '$__META_EXTENSIBLE__$');
+        if (themes.length > 0) {
+            await gm_update('stat_data.世界.当前关卡.核心主题', [themes[0], theme, '$__META_EXTENSIBLE__$']);
+            showToast("副主题已锁定", "#threat-turn-counter");
+        }
+    };
+
+window.lockPreyType = async (type) => {
+        await gm_update('stat_data.世界.当前关卡.战斗类型', type);
+        showToast(`已锁定: ${type==='无'?'随机猎物':type}`, "#threat-turn-counter");
+    };
+
+    window.clearThreatSubTheme = async () => {
+        const themes = getDeep(_currentMvuData, '世界.当前关卡.核心主题', []).filter(t => t !== '$__META_EXTENSIBLE__$');
+        if (themes.length > 0) {
+            await gm_update('stat_data.世界.当前关卡.核心主题', [themes[0], '$__META_EXTENSIBLE__$']);
+            showToast("副主题已清除", "#threat-turn-counter");
+        }
+    };
+
+    window.forceThreatEncounter = async () => {
+        await gm_update('stat_data.系统状态.幕间回合计数', 10);
+        showToast("已强制推进至可遭遇状态", "#threat-turn-counter");
+    };
+
+    window.restoreSnapshot = async () => {
+        if(!_gmSnapshot) { alert("无快照可恢复"); return; }
+        if(confirm("确定撤销本次打开面板后的所有修改？")) {
+            await gm_update('stat_data', _gmSnapshot);
+            showToast("Reverted!", "#save-status");
+        }
+    };
+
+    window.renderWorldNotes = (data) => {
+        const notes = getDeep(data, '世界.世界观备注', {});
+        const container = document.getElementById('world-notes-list');
+        if (!container) return;
+
+        const validEntries = Object.entries(notes).filter(([k]) => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+        
+        if (validEntries.length === 0) {
+            container.innerHTML = '<div style="text-align:center; opacity:0.5; padding:10px;">暂无特殊设定</div>';
+            return;
+        }
+
+        container.innerHTML = validEntries.map(([k, v]) => `
+            <div class="note-item">
+                <span class="note-key">${k}</span>
+                <div class="note-val">${v}</div>
+                <div class="note-actions">
+                    <button class="note-btn edit" onclick="editNote('${k}')" title="编辑"><i class="fa-solid fa-pen"></i></button>
+                    <button class="note-btn del" onclick="deleteWorldNote('${k}')" title="删除"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+        `).join('');
+    };
+
+    window.toggleNoteEditor = () => {
+        const el = document.getElementById('world-note-editor');
+        if (el.style.display === 'none') {
+            el.style.display = 'block';
+            document.getElementById('new-note-key').value = '';
+            document.getElementById('new-note-val').value = '';
+        } else {
+            el.style.display = 'none';
+        }
+    };
+
+    window.editNote = (key) => {
+        const d = _currentMvuData; 
+        const val = getDeep(d, `世界.世界观备注.${key}`, '');
+        document.getElementById('world-note-editor').style.display = 'block';
+        document.getElementById('new-note-key').value = key;
+        document.getElementById('new-note-val').value = val;
+    };
+
+    window.saveWorldNote = async () => {
+        const key = document.getElementById('new-note-key').value.trim();
+        const val = document.getElementById('new-note-val').value.trim();
+        if (!key) { alert("Key不能为空"); return; }
+        await gm_update(`stat_data.世界.世界观备注.${key}`, val);
+        showToast(`Note Saved: ${key}`, "#save-status");
+        document.getElementById('world-note-editor').style.display = 'none';
+    };
+
+    window.deleteWorldNote = async (key) => {
+        if (confirm(`确定要删除关于 [${key}] 的设定吗？`)) {
+            await gm_update(`stat_data.世界.世界观备注.${key}`, null, 'remove');
+            showToast(`Note Deleted`, "#save-status");
+        }
+    };
+</script>
+</html>
+```

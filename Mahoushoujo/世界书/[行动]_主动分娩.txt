@@ -1,0 +1,30 @@
+<%_
+// 只有在怀孕状态下才激活此条目
+if (_.get(getvar('stat_data'), '主角.生理状态.子宫状态.受孕状态') !== '未受孕') {
+    const babySource = _.get(getvar('stat_data'), '主角.生理状态.子宫状态.孕育信息.孕育源', '未知魔物');
+_%>
+# 指令: 执行分娩
+action_trigger:
+  event: "主角进行分娩！"
+  description: "主角决定将腹中的新生命诞下。"
+  ai_tasks:
+    - task: "核心叙事：描绘生产过程"
+      instruction: |
+        详细描绘主角诞下异形后代的场景。
+        因为魔法少女的体质，禁止描写过度血腥或痛苦，应根据`人格状态`侧重于羞耻、母性或愉悦。
+    
+    - task: "数据结算队列"
+      instruction: "叙事完成后，必须输出以下 Patch 数组来更新变量："
+      mandatory_patch: |
+        [
+          { "op": "insert", "path": "/记录/诞下的子嗣/[孩子的名字]", "value": { "名称": "<%= babySource %>之子", "来源": "<%= babySource %>", "特征": "[由你补充]" } },
+
+          { "op": "replace", "path": "/主角/生理状态/子宫状态/受孕状态", "value": "未受孕" },
+          { "op": "replace", "path": "/主角/生理状态/子宫状态/孕育信息/孕育源", "value": "无" },
+          { "op": "replace", "path": "/主角/生理状态/子宫状态/孕育信息/妊娠计数器", "value": 0 },
+
+          { "op": "replace", "path": "/主角/核心状态/产后状态", "value": "恢复期" }
+        ]
+<%_ 
+}
+_%>

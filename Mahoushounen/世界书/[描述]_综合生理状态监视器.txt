@@ -1,0 +1,151 @@
+<%_
+{
+  // --- 1. 数据准备区 (Data Preparation) ---
+
+  const stat_data = getvar('stat_data') || {};
+  const personality = _.get(stat_data, '主角.核心状态.人格状态', '善良');
+  const gamePhase = _.get(stat_data, '进程.阶段', '幕间休息');
+
+if (gamePhase !== '创角阶段') {
+
+  const allKinks = _.get(stat_data, '主角.快感状态.性癖', {});
+  const themesArray = _.get(stat_data, '世界.当前关卡.核心主题', []);
+  const coreThemes = themesArray.filter(t => t !== "$__META_EXTENSIBLE__$" && t !== "$meta");
+
+  const isCombat = ['战斗回合', '战斗准备', '终结回合', '战斗胜利', '战斗败北'].includes(gamePhase);
+  const KinksNoShow = ['战斗胜利', '终结回合'].includes(gamePhase);
+  const isIntermissionH = (gamePhase === '幕间休息' && _.get(stat_data, '世界.幕间H事件.名称', '无') !== '无');
+
+  const allowErotica = isCombat || isIntermissionH;
+  
+  // --- 辅助函数：获取污染/堕落状态描述 ---
+  const getPollutionState = () => {
+    const val = _.get(stat_data, '主角.快感状态.污染度', 0);
+    if (val <= 10) return null;
+    
+    if (personality === '善良') {
+      if (allowErotica) {
+          // [战斗中]
+          if (val <= 25) return { stage: `阶段一: 异样感 (${val}%)`, text: "痛觉中混入麻痒，羞耻中混入眩晕。" };
+          if (val <= 45) return { stage: `阶段二: 感官扭曲 (${val}%)`, text: "负面刺激（击打、束缚）中开始明确混入快感。" };
+          if (val <= 65) return { stage: `阶段三: 身心背离 (${val}%)`, text: "精神仍在抵抗，但肉体对侵犯展现出明显的愉悦反应（喘息、湿润）。" };
+          if (val <= 85) return { stage: `阶段四: 意志磨损 (${val}%)`, text: "抵抗不再坚定，脑海中闪过'屈服也不错'的念头。" };
+          return { stage: `阶段五: 堕落前夜 (${val}%)`, text: "站在悬崖边缘。不再否认快感，陷入飘然的沉溺。" };
+      } else {
+          // [日常中]
+          if (val <= 25) return { stage: `状态: 轻微违和 (${val}%)`, text: "污染略微影响了生理，让他的身体变得活泼起来。" };
+          if (val <= 45) return { stage: `状态: 潜伏的躁动 (${val}%)`, text: "身体深处偶尔会传来莫名的空虚感，身体散发更多的魅力。" };
+          if (val <= 65) return { stage: `状态: 极力伪装 (${val}%)`, text: "平日里必须夹紧双腿或调整坐姿来掩饰身体的敏感。" };
+          if (val <= 85) return { stage: `状态: 精神恍惚 (${val}%)`, text: "日常中容易走神，脑海中偶尔会闪回快感片段。" };
+          return { stage: `状态: 崩溃边缘 (${val}%)`, text: "仅维持表面的理智就已经耗尽全力。眼神偶尔会变得空洞或迷离。" };
+      }
+    } else { // 堕落路线
+      if (val <= 25) return { stage: `感官苏醒 (${val}%)`, text: "对触感异常敏感，微风或摩擦都能带来快感。" };
+      if (val <= 45) return { stage: `快感探索者 (${val}%)`, text: "性欲高涨，对各种刺激感到渴望。" };
+      if (val <= 65) return { stage: `快乐共鸣者 (${val}%)`, text: "能从他人的愉悦中获得满足，频繁做出挑逗。" };
+      if (val <= 85) return { stage: `享乐的魔法少年 (${val}%)`, text: "追求快乐已成习惯。精准把握敏感点，懂得如何推高气氛。" };
+      return { stage: `阶段五: 行走的荷尔蒙 (${val}%)`, text: "存在即是诱惑。不经意的眼神和姿态都会散发强烈荷尔蒙。" };
+    }
+  };
+
+  // --- 辅助函数：获取容量状态 ---
+  const getCapacityState = () => {
+    const cap = _.get(stat_data, '主角.生理状态.魔力腔状态.内部容量', 200);
+    const current = _.get(stat_data, '主角.生理状态.体液与分泌.魔力腔内精液.存量', 0);
+    const pct = (current / cap) * 100;
+    if (pct <= 50) return null;
+    if (pct <= 85) return { stage: `充实 (${Math.round(pct)}%)`, text: "体内被温热液体填满。小腹微凸，行走时能感到内部晃动。" };
+    return { stage: `濒临满溢 (${Math.round(pct)}%)`, text: "塞满至极限，传来饱胀感，稍有动作就会溢出。" };
+  };
+
+  // --- 辅助函数：获取后穴状态 (仅战斗中) ---
+  const getAnalState = () => {
+    // 只有当主题明确包含肛交时才显示，或者开发度极高时显示
+    const dev = _.get(stat_data, '主角.生理状态.后穴状态.开发度', 0);
+    const isAnalTheme = coreThemes.includes('肛交');
+    if (!isAnalTheme && dev < 30) return null;
+
+    if (dev <= 15) return { stage: `未开发 (${dev})`, text: "从未被侵犯过，内部紧致而生涩。" };
+    if (dev <= 40) return { stage: `适应期 (${dev})`, text: "历经数次开发，但仍未完全适应。" };
+    if (dev <= 70) return { stage: `已开发 (${dev})`, text: "相当熟练，能轻松容纳异物。内部肌肉熟练地包裹、吮吸。" };
+    return { stage: `沉溺 (${dev})`, text: "开发到极致，甚至会主动渴求填满。" };
+  };
+
+  // 执行计算
+  const pollutionInfo = getPollutionState();
+  const capacityInfo = getCapacityState();
+  const analInfo = (gamePhase === '战斗回合') ? getAnalState() : null;
+  
+  // 检查是否存在任何需要汇报的状态
+  const hasAnyPhysicalState = (pollutionInfo || capacityInfo || analInfo);
+_%>
+# 动态生理与性癖叙事指导 (<%= isCombat ? '战斗模式' : '幕间模式' %>)
+这是主角核心生理状态和内心倾向的综合简报。你须以此为依据描绘她的反应。
+
+<%_ if (hasAnyPhysicalState) { _%>
+physical_state_briefing:
+<%_ if (pollutionInfo) { _%>
+  - 精神状态 (<%= personality === '善良' ? '污染度影响' : '堕落度影响' %>):
+      stage: "<%= pollutionInfo.stage %>"
+      directive: "『<%= pollutionInfo.text %>』"
+<%_ } _%>
+
+
+<%_ if (capacityInfo) { _%>
+  - 体内储量:
+      stage: "<%= capacityInfo.stage %>"
+      directive: "『<%= capacityInfo.text %>』"
+<%_ } _%>
+<%_ if (analInfo) { _%>
+  - 后穴状态:
+      stage: "<%= analInfo.stage %>"
+      directive: "『<%= analInfo.text %>』"
+<%_ } _%>
+<%_ } _%>
+
+<%_ 
+if (KinksNoShow) { 
+    // --- 定义各等级的通用表现描述 ---
+    const levelTraits = {
+        4: "已无法单纯用理智压抑，对相关的刺激表现出本能的喜爱与渴求。",
+        3: "自然地流露出与该性癖相关的小动作或习惯，身体已经记住了感觉。",
+        2: "看到类似的事物时会脸红心跳，有明确的认知和轻微的期待。",
+        1: "有微妙的感觉和违和感，偶尔会因此感到不自在。"
+    };
+
+    // --- 数据聚合逻辑 ---
+    const groupedKinks = { 4: [], 3: [], 2: [], 1: [] };
+    let hasAnyKink = false;
+
+    Object.entries(allKinks).forEach(([k, v]) => {
+        // 过滤掉元数据，只保留有经验的性癖
+        if (k !== "$meta" && k !== "$__META_EXTENSIBLE__$" && (v.经验 > 0 || v.经验值 > 0)) {
+            let lv = v.等级 || 0;
+            // 修正范围：将超过4级的归为4级，忽略0级（潜意识/未觉醒）
+            if (lv >= 4) lv = 4;
+            if (lv >= 1) {
+                groupedKinks[lv].push(k);
+                hasAnyKink = true;
+            }
+        }
+    });
+_%>
+<%= hasAnyPhysicalState ? '2' : '1' %>. 性癖经验影响
+developed_kinks_summary:
+  instruction: "主角已经被开发出以下性癖，将其以故事要素的形式加入正文叙事：拒绝粗糙的“报菜名”式加入，也绝不能演变为麻烦、创伤、后遗症。"
+  <%_ if (!hasAnyKink) { _%>
+  - note: "主角目前如白纸般纯洁，没有任何异常倾向。"
+  <%_ } else { 
+      // 倒序遍历：从 Lv.4 到 Lv.1
+      [4, 3, 2, 1].forEach(lv => {
+          if (groupedKinks[lv].length > 0) {
+  _%>
+  - kink: "<%= groupedKinks[lv].join(' /') %>" (Lv.<%= lv %>)
+      trait: "<%= levelTraits[lv] %>"
+  <%_ 
+          }
+      });
+  } _%>
+<%_ 
+}}}
+_%>
