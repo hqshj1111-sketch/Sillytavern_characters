@@ -1,0 +1,24 @@
+<div class="matte-black-log" style="width: 98%; margin: 8px auto; font-family: 'Sarabun', sans-serif;">
+    <details style="background: #1a1b26; border: 1px solid #2f354b; border-left: 2px solid #565f89; border-radius: 4px; overflow: hidden;">
+        <summary style="padding: 6px 12px; cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; background: #1f2335; color: #565f89; font-family: 'Consolas', monospace; font-size: 0.75em; user-select: none; transition: color 0.2s;">
+            <i class="fa-solid fa-server" style="font-size: 0.9em;"></i>
+            <span style="font-weight: 600; letter-spacing: 1px;">变量更新LOG // 处理完成</span>
+            <div style="flex: 1; height: 1px; background: #2f354b; margin: 0 10px;"></div>
+            <i class="fa-solid fa-caret-down toggle-arrow" style="transition: transform 0.2s;"></i>
+        </summary>
+        <div class="log-body" style="padding: 12px; background: #13131a; color: #787c99; font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 0.8em; line-height: 1.5; white-space: pre-wrap; word-break: break-all; border-top: 1px solid #1a1b26; box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);">
+            $1
+        </div>
+    </details>
+</div><!-- MVU:OK -->
+
+<style>
+    .matte-black-log summary:hover { color: #a9b1d6; }
+    .matte-black-log details[open] summary { color: #7aa2f7; border-bottom: 1px solid #13131a; }
+    .matte-black-log details[open] .toggle-arrow { transform: rotate(180deg); }
+    .matte-black-log details summary::marker { display: none; }
+    .matte-black-log .log-body::-webkit-scrollbar { width: 4px; }
+    .matte-black-log .log-body::-webkit-scrollbar-track { background: #13131a; }
+    .matte-black-log .log-body::-webkit-scrollbar-thumb { background: #2f354b; border-radius: 2px; }
+    .matte-black-log .log-body::-webkit-scrollbar-thumb:hover { background: #414868; }
+</style>

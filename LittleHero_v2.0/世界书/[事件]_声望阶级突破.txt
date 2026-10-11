@@ -1,0 +1,20 @@
+﻿<%_{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const fameType = events['知名度升级事件'];
+
+  if (fameType && typeof fameType === 'string') {
+    const fame = _.get(stat, '名声.知名度', 0);
+_%>
+event_handler:
+  event_name: "知名度阶级突破"
+  context: "主角的身份已被越来越多人所知晓，知名度抵达了新阶段：<%= fameType %> (当前知名度: <%= fame %>)。"
+  narrative_directives:
+    - "请通过外界环境的反馈来体现：路人投来的目光、街角报摊上的头条标题、社交网络上的讨论。"
+    - "本事件仅提供叙事契机。知名度数值的变动已由后台完成，严禁在此操作声望变量。"
+  system_tasks:
+    mandatory_patch: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/知名度升级事件" }
+      ]
+<%_ } } _%>

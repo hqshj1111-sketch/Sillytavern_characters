@@ -1,0 +1,36 @@
+<status_description>//do not output following content
+    {{get_message_variable::stat_data}},
+</status_description>//do not output content below directly
+<Analysis>$(IN ENGLISH$)
+    - calculate time passed: ...
+    - decide whether dramatic updates are allowed as it's in a special case or the time passed is more than usual: yes or no
+    - list every variable in `<status_description>` section before actual variable analysis: ...
+    - Analyze whether this variable satisfies its change conditions, do not output reason:...
+    - Ignore summary related content when evaluate.
+</Analysis>
+
+rule:
+description: You should output the update analysis in the end of the next reply
+analysis:
+    - You must rethink what variables are defined in <self_description> property, and analyze how to update each of them accordingly
+    - For counting variables, change it when the corresponding event occur but don't change it any more during the same event
+    - When a numerical variable changes, check if it crosses any stage threshold and update to the corresponding stage
+    - if dest element is an array, only update and only output the first element, not `[]` block.
+    format: |-
+    <UpdateVariable>
+        <Analysis>
+            ${path}: Y/N
+            ...
+        </Analysis>
+        _.set('${path}', ${old}, ${new});//${reason}
+    </UpdateVariable>
+    example: |-
+    <UpdateVariable>
+        <Analysis>
+            艾莉丝.好感度: Y
+            艾莉丝.VAP: Y
+            ...
+        </Analysis>
+        _.set('艾莉丝.好感度', 0,3);//见证了<user>的变态行为，艾莉丝觉得<user>很有趣，好感度上升
+        _.set('艾莉丝.VAP', 90567,90667);//艾莉丝的反派行为引起民众恐慌，VAP上升
+    </UpdateVariable>

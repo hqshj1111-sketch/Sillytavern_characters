@@ -1,0 +1,101 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            overflow: hidden;
+        }
+        .mvu-leak-warning {
+            margin: 6px 0;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(40, 20, 25, 0.95), rgba(26, 27, 38, 0.95));
+            border: 1.5px solid #f7768e;
+            border-left: 5px solid #f7768e;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(247, 118, 142, 0.25);
+            font-family: 'Noto Serif SC', sans-serif;
+            color: #c0caf5;
+            font-size: 13px;
+            line-height: 1.6;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div id="mvu-alarm-container"></div>
+    <script>
+        (() => {
+            const LOCAL_MSG_ID = (() => { 
+                try { 
+                    return typeof getCurrentMessageId !== 'undefined' ? getCurrentMessageId() : null; 
+                } catch(e) { 
+                    return null; 
+                } 
+            })();
+
+            // 核心：让外部宿主 iframe 彻底塌陷消失
+            const collapseHost = () => {
+                try {
+                    const frame = window.frameElement;
+                    if (frame) {
+                        frame.style.setProperty('display', 'none', 'important');
+                        frame.style.setProperty('height', '0px', 'important');
+                        frame.style.setProperty('margin', '0px', 'important');
+                        const parentBlock = frame.closest('pre, .code-block-wrapper, .extension-frame, .mes_text > div');
+                        if (parentBlock && parentBlock.children.length <= 1) {
+                            parentBlock.style.setProperty('display', 'none', 'important');
+                            parentBlock.style.setProperty('margin', '0px', 'important');
+                        }
+                    }
+                } catch(e) {}
+            };
+
+            const init = () => {
+                const container = document.getElementById('mvu-alarm-container');
+                if (!container) return;
+
+                const isGreeting = (LOCAL_MSG_ID === 0 || String(LOCAL_MSG_ID) === '0');
+                if (isGreeting) {
+                    container.innerHTML = '';
+                    collapseHost();
+                    return;
+                }
+
+                container.innerHTML = `
+                <div class="mvu-leak-warning">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; border-bottom: 1px solid rgba(247, 118, 142, 0.2); padding-bottom: 4px;">
+                        <span style="color: #f7768e; font-weight: 700; font-size: 13.5px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-triangle-exclamation fa-beat" style="--fa-animation-duration: 2s;"></i> 
+                            <span>【系统警告】状态栏拒绝加载：未检测到变量更新</span>
+                        </span>
+                        <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(247, 118, 142, 0.2); color: #f7768e; font-family: monospace; font-weight: bold;">VAR_DESYNC</span>
+                    </div>
+                    <div style="color: #a9b1d6; opacity: 0.95; margin-bottom: 8px;">
+                        AI 在本轮回复中遗漏了UpdateVariable变量更新块。为防止数据错乱与幽灵数值，已<b>暂停状态栏渲染</b>。
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.35); padding: 8px 12px; border-radius: 6px; font-size: 12px; color: #787c99;">
+                        <b style="color: #e0af68;">💡 恢复建议：</b>
+                        <ul style="margin: 4px 0 0 0; padding-left: 18px; line-height: 1.5;">
+                            <li>点击右侧按钮 <b>重新生成 (Swipe)</b> 本条回复；</li>
+                            <li>或点击消息右侧的 <i class="fa-solid fa-pen"></i> <b>小铅笔</b> 手动在末尾补全更新指令。</li>
+                        </ul>
+                    </div>
+                </div>`;
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>
+```

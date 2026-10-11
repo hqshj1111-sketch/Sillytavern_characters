@@ -1,0 +1,32 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  
+  if (events['节日到来事件']) {
+      const currentDay = _.get(stat, '进程.暑假天数', 1);
+      const calendar = _.get(stat, '活动日历') || [];
+      const todayEvent = calendar.find(e => e.日期 === currentDay);
+      
+      if (todayEvent) {
+_%>
+# 事件：节日到来！
+今天是暑假第 <%= currentDay %> 天，小镇的【<%= todayEvent.名称 %>】正式开始了。
+
+festival_arrival_protocol:
+  event_name: "<%= todayEvent.名称 %>"
+  location: "<%= todayEvent.地点 %>"
+  desc: "<%= todayEvent.描述 %>"
+  instruction: "描绘该活动的盛况、现场的布置，或是大家为了参加活动换上的特殊装扮。重点展现夏日小镇的热闹、燥热以及角色们在非日常状态下的互动张力。"
+  
+  mandatory_data_sync:
+    instruction: "若该事件已经完成，在 <UpdateVariable> 的 <JSONPatch> 块中必须输出以下指令："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/节日到来事件" }
+      ]
+<%_ 
+      } 
+  } 
+}
+_%>

@@ -1,0 +1,61 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  if (events['直播结算事件']) {
+    // 涨粉计算：衰减型转化率
+    const peakViewers = _.get(stat, '进程.直播间人数', 0);
+    const heat = _.get(stat, '进程.热度', 0);
+    const currentFans = _.get(stat, '主角.露出主播.粉丝数', 0);
+    const streamCount = _.get(stat, '主角.露出主播.直播次数', 0);
+    
+    // 转化率随粉丝数衰减：粉丝越多，转化越难
+    // 公式：baseRate = 0.35 * (200 / (200 + 粉丝数)) + 0.04
+    // 粉丝0时：0.35*1 + 0.04 = 0.39
+    // 粉丝100时：0.35*0.667 + 0.04 ≈ 0.273
+    // 粉丝1000时：0.35*0.1667 + 0.04 ≈ 0.098
+    const baseConversion = 0.35 * (200 / (200 + currentFans)) + 0.04;
+    
+    // 随机波动 0.9~1.1
+    const randomFactor = 0.9 + Math.random() * 0.2;
+    
+    // 涨粉 = 峰值观看人数 × 转化率 × 随机因子
+    const newFansGained = Math.floor(peakViewers * baseConversion * randomFactor);
+    
+    const newTotalFans = currentFans + newFansGained;
+
+    function getAttitudeText(times) {
+        if (times === 0) return "被意外拉入陌生的世界，站在镜头前不知所措，内心满是迷茫与羞耻。";
+        else if (times <= 3) return "磕磕绊绊中找到一丝隐秘的快乐，羞耻感尚未褪去，但期待已经开始萌芽。";
+        else if (times <= 6) return "与镜头和观众达成了默契，坦然接受自己露出主播的身份，表演愈发从容自信。";
+        else return "享受每一次心跳加速的展示，露出已成为生活的一部分，渴望更大胆的舞台。";
+    }
+    
+    const oldAttitude = getAttitudeText(streamCount - 1);
+    const newAttitude = getAttitudeText(streamCount);
+_%>
+# 后台事件：直播结算
+post_stream_analysis:
+  event_name: "直播结算"
+  results:
+    heat_generated: "<%= heat %>"
+    peak_viewers: "<%= peakViewers %>"
+    new_fans: "<%= newFansGained %>"
+    total_fans_after: "<%= newTotalFans %>"
+    current_attitude: "<%= newAttitude %>"
+
+  narrative_guidance:
+    - "直播结束了。主角查看本次直播的数据——最高在线人数<%= peakViewers %>，粉丝数增长了<%= newFansGained %>。"
+    - "请描绘主角看着这些数字时的心情变化。是对于涨粉缓慢的微微沮丧，还是看到在线人数提升后的兴奋与满足？" 
+    <%_ if (oldAttitude !== newAttitude) { _%>
+    - "【态度蜕变】主角对露出直播的态度，正从【<%= oldAttitude %>】悄然蜕变为【<%= newAttitude %>】。请在叙事中自然地融入这种心态的转变。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "结算完成后，更新粉丝数据并移除事件标记："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/直播结算事件" }
+        { "op": "replace", "path": "/主角/露出主播/粉丝数", "value": <%= newTotalFans %> }
+      ]
+<%_ } } _%>

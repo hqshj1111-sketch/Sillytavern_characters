@@ -1,0 +1,50 @@
+<%_{
+const stat = getvar('stat_data') || {};
+const j = (v) => JSON.stringify(v);
+const events = _.get(stat, '系统状态.待处理事件', {});
+const eventData = events['表露真心事件'];
+if (eventData && typeof eventData === 'object') {
+  const charType = eventData.type || '性斗士'; // '性斗士' / '一般NPC'
+  const charName = eventData.name || '某人';
+  const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+  const phase = _.get(stat, '进程.阶段', '');
+
+  let charInfo = {};
+  if (charType === '性斗士') {
+    const roster = _.get(stat, '记录.性斗士名录', {});
+    charInfo = roster[charName] || {};
+  } else {
+    const npcs = _.get(stat, '记录.一般NPC名录', {});
+    charInfo = npcs[charName] || {};
+  }
+  const charIdentity = charInfo.身份描述 || charInfo.身份 || charName;
+  const charPersonality = charInfo.性格特质 || charInfo.性格 || '';
+  const charRace = charInfo.种族 || '';
+  const displayName = charType === '性斗士' ? (charInfo.擂台代号 || charName) : charName;
+_%>
+# 指令: 表露真心
+
+event_handler:
+  event_name: "表露真心"
+  character: "<%= displayName %>"
+  type: "<%= charType %>"
+  context: "<%= displayName %>对<%= alias %>的好感度已经达到了顶点。在擂台上下的日日夜夜、在废街的酒吧里、在暗渠的走廊中——这些累积的相处终于推开了一扇门。<%= charType === '性斗士' ? '作为一名同行的性斗士' : '作为' + charIdentity %>，ta选择在这个时刻向<%= alias %>袒露自己内心最真实的情感和欲望。"
+
+  narrative_guidance:
+    - "描写<%= displayName %>向<%= alias %>表露真心的场景——ta选择了什么样的场合和时机？是在一场比赛后的更衣室、是废街酒吧角落的深夜、还是在暗渠某个安静的走廊里单独叫住了你？场合的选择反映了ta的性格和你们的相处模式。"
+    - "描写ta的言行方式——根据ta的身份（<%= charIdentity %>）和性格（<%= charPersonality %>），ta会选择怎样的方式表达？是别扭地憋了半天说不出整句、是借着酒劲喊出一串脏话中夹着真情、是安静地在你手心里放了一样东西等待回应、还是直接把你推到墙上用行动代替语言？<% if (charRace) { %>ta的种族（<%= charRace %>）也可能影响表达方式——狼兽人可能会用耳朵和尾巴的细微动作传递信息、魅魔的费洛蒙在情绪激动时失控弥漫、触手怪的一根触须会不自觉缠上你的手腕。<% } %>"
+    - "表露的内容不仅是爱慕——可以是对你性斗技艺的崇拜、对你人品性格的认可、对你们共同经历的回忆、或者是最直白赤裸的性欲宣告。ta的声音和身体语言比平时更暴露脆弱，但ta选择在这个时刻不再设防。"
+    - "结尾留给<%= alias %>的反应空间——你已经听到了ta最真实的心意。在你的沉默、回应、或者触碰中，叙事收束。"
+
+  prohibitions:
+    - "严禁让<%= alias %>在没有玩家输入的情况下做出回应——叙事在ta表露完毕后、主角尚未回应的瞬间收束。"
+    - "严禁在表露真心阶段引入其他角色或外部事件打断。"
+    - "叙事保持黑曜市底层社区的语言风格——粗俗直白中夹杂着平时说不出口的柔软。"
+
+  mandatory_data_sync:
+    instruction: "叙事完成后，移除此事件标记。"
+    patch_code: |
+      [
+        {"op":"remove","path":"/系统状态/待处理事件/表露真心事件"}
+      ]
+<%_ } } _%>

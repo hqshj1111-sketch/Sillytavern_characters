@@ -1,0 +1,55 @@
+<div class="mvu-update-box" style="background:rgba(10,10,30,0.55);backdrop-filter:blur(14px) saturate(150%);border:1px solid rgba(255,255,255,0.06);border-radius:12px;margin:6px 0;overflow:hidden;font-family:'Courier New','Noto Sans SC',monospace;font-size:12px;color:#c0c0d8;box-shadow:0 0 30px rgba(0,0,0,0.5),inset 0 0 30px rgba(179,71,234,0.03);position:relative;">
+<style>
+.mvu-update-box { --mvu-pink: #ff2d95; --mvu-cyan: #00d4ff; --mvu-purple: #b347ea; --mvu-green: #50fa7b; --mvu-yellow: #f1fa8c; }
+.mvu-update-box::before {
+  content: ''; position: absolute; top: -1px; left: 20%; right: 20%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,212,255,0.3), rgba(179,71,234,0.3), transparent);
+  z-index: 3; border-radius: 50%;
+}
+.mvu-update-box details { position: relative; z-index: 2; }
+.mvu-update-box summary {
+  display:flex; align-items:center; gap:8px; padding:8px 14px;
+  background:rgba(179,71,234,0.06); border-bottom:1px solid rgba(255,255,255,0.05);
+  cursor:pointer; user-select:none; list-style:none; transition:background .2s;
+  font-family:'Rajdhani',sans-serif; font-size:0.78rem; font-weight:600;
+  color:#d0c0f0; letter-spacing:2px;
+}
+.mvu-update-box summary::-webkit-details-marker { display: none; }
+.mvu-update-box summary::marker { display: none; }
+.mvu-update-box summary:hover { background:rgba(179,71,234,0.12); }
+.mvu-update-box summary .mvu-icon { color:var(--mvu-cyan); font-size:1rem; }
+.mvu-update-box summary .mvu-arrow {
+  margin-left:auto; font-size:0.7rem; transition:transform .3s; color:var(--mvu-sub, #8888aa);
+}
+.mvu-update-box details[open] summary { border-bottom-color: rgba(179,71,234,0.15); }
+.mvu-update-box details[open] summary .mvu-arrow { transform:rotate(180deg); }
+.mvu-update-box .mvu-body { padding:10px 14px; }
+.mvu-update-box .mvu-body pre {
+  background:rgba(0,0,0,0.3); border-radius:8px; padding:12px 14px;
+  margin:0; font-size:11px; line-height:1.6; color:#a8a8c0;
+  white-space:pre-wrap; word-break:break-all; overflow-x:auto;
+  border:1px solid rgba(255,255,255,0.05);
+  max-height:300px; overflow-y:auto;
+  backdrop-filter: blur(6px);
+}
+.mvu-update-box .mvu-body pre .op { color:var(--mvu-pink); }
+.mvu-update-box .mvu-body pre .path { color:var(--mvu-yellow); }
+.mvu-update-box .mvu-body pre .value { color:var(--mvu-green); }
+.mvu-update-box .mvu-body pre .brace { color:var(--mvu-sub, #8888aa); }
+.mvu-update-box .mvu-footer {
+  padding:6px 14px; border-top:1px solid rgba(255,255,255,0.04);
+  font-size:0.62rem; color:var(--mvu-sub, #8888aa); text-align:right; opacity:0.4;
+  font-family:'Rajdhani',sans-serif; letter-spacing:1px;
+}
+</style>
+<details>
+<summary>
+  <span class="mvu-icon">⚡</span> 系统数据更新
+  <span class="mvu-arrow">▼</span>
+</summary>
+<div class="mvu-body">
+  <pre>$1</pre>
+</div>
+</details>
+<div class="mvu-footer">MVU Variable Sync · JSON Patch</div>
+</div>

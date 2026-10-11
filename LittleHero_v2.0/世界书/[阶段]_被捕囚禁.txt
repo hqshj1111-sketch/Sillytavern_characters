@@ -1,0 +1,253 @@
+<%_
+{
+const stat = getvar('stat_data');
+const phase = _.get(stat, '进程.阶段');
+const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+
+if (phase === '被捕囚禁' && personality === '英雄') {
+    const isBrainwashing = _.get(stat, '主角.囚禁状态.洗脑中', false) === true;
+    const remainingTurns = _.get(stat, '主角.囚禁状态.洗脑剩余回合', 0);
+    const prisonDay = _.get(stat, '主角.囚禁状态.监禁天数', 1);
+    const prisonTurn = _.get(stat, '主角.囚禁状态.监禁回合', 1);
+    const freedom = _.get(stat, '主角.囚禁状态.自由度', '严密监禁');
+    const isHighFreedom = ['半自由', '信任囚徒'].includes(freedom);
+    const freedomMod = _.get(stat, '主角.囚禁状态.自由度加值', 0);
+    const escProgress = _.get(stat, '主角.囚禁状态.逃脱进度', 0);
+    const brainProgress = _.get(stat, '主角.囚禁状态.洗脑进度', 0);
+    const enemyType = _.get(stat, '世界.当前关卡.战斗类型', '魔物');
+    const bossName = _.get(stat, '世界.当前关卡.名称', '未知怪人');
+
+    const hp = _.get(stat, '主角.核心状态.体力值.当前', 100);
+    const strength = _.get(stat, '主角.核心状态.基础强度', 50);
+    const corruption = _.get(stat, '主角.快感状态.侵蚀度', 0);
+    const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
+    const isExhausted = hp <= 5;
+
+    // --- 1d20 引擎计算 ---
+    const freedomBonus = { '严密监禁': -4, '有限活动': 0, '半自由': 2, '信任囚徒': 4 }[freedom] || -4;
+    const hpPenalty = isExhausted ? 6 : (hp < 40 ? 3 : 0);
+    const corruptionPenalty = Math.floor(corruption / 25);
+    const guardDC = enemyType === '小英雄' ? 14 : (enemyType === '人类' ? 12 : 10);
+
+    const pNatRoll = _.random(1, 20);
+    const eNatRoll = _.random(1, 20);
+    const pBaseMod = Math.floor(strength / 5);
+    const pTotal = Math.max(0, pNatRoll + pBaseMod + freedomBonus - hpPenalty - corruptionPenalty);
+    const eTotal = Math.max(0, eNatRoll + guardDC);
+    const diff = pTotal - eTotal;
+
+    const defaultTactic = isBrainwashing ? '反抗' : (isHighFreedom ? '探索' : '观察');
+    const rawTactic = _.get(stat, '主角.战斗临时.战斗方式', defaultTactic);
+
+    // 检定与指令预计算
+    let outcomeLabel = "";
+    let narrativeHint = "";
+    let gainEsc = 0;
+    let gainBrain = 0;
+    let gainPleasure = 0;
+    let gainHp = 0;
+    let deltaFreedom = 0;
+    let gainDarkXp = 0;
+    let combatLog = "";
+
+    if (isBrainwashing) {
+        // ── 洗脑审讯对抗分支 ──
+        if (rawTactic === '反抗') {
+            if (isExhausted) {
+                outcomeLabel = "力尽受制";
+                gainEsc = 0; gainBrain = 10; gainPleasure = 40; gainHp = -2;
+                narrativeHint = "主角体力彻底耗尽，试图挣扎却连手臂都抬不起来，在看守无情的侵犯下剧烈发颤。";
+                combatLog = `力尽受制|体力耗尽无法抗拒|洗脑+10%|快感+40|体力-2|T:EXHAUSTED`;
+            } else if (pNatRoll === 20 || diff >= 8) {
+                outcomeLabel = "极大成功";
+                gainEsc = 25; gainBrain = 0; gainPleasure = 0; deltaFreedom = -5;
+                narrativeHint = "主角迸发出惊人的意志力，猛然扭动身体推开看守或咬破舌尖强行清醒，守住了心神并抓到关键破绽。看守对其顽抗感到恼怒。";
+                combatLog = `极大成功|D20(${pNatRoll})+${pBaseMod}+${freedomBonus}[自由]-${hpPenalty}[虚弱]-${corruptionPenalty}[侵蚀]=${pTotal} vs DC:${eTotal}|逃脱+25%|戒备收紧|T:CRIT_SUCCESS`;
+            } else if (diff >= 2) {
+                outcomeLabel = "有效抵抗";
+                gainEsc = 15; gainBrain = 0; gainPleasure = 15;
+                narrativeHint = "主角在强烈的色情刺激下死死咬牙，凭借正义信念坚决抗拒，未让洗脑趁虚而入，并暗中寻找脱困机会。";
+                combatLog = `有效抵抗|D20(${pNatRoll})+${pBaseMod}+${freedomBonus}[自由]-${hpPenalty}[虚弱]-${corruptionPenalty}[侵蚀]=${pTotal} vs DC:${eTotal}|逃脱+15%|快感+15|T:SUCCESS`;
+            } else if (diff >= -1) {
+                outcomeLabel = "僵局拉扯";
+                gainEsc = 5; gainBrain = 5; gainPleasure = 30; gainHp = -5;
+                narrativeHint = "虽然拼死抵抗，但身体受制于敌人的技巧与药物，双方陷入胶着拉扯，主角体力被进一步消耗。";
+                combatLog = `僵局拉扯|D20(${pNatRoll})+${pBaseMod}+${freedomBonus}[自由]-${hpPenalty}[虚弱]-${corruptionPenalty}[侵蚀]=${pTotal} vs DC:${eTotal}|逃脱+5%|洗脑+5%|快感+30|体力-5|T:STALEMATE`;
+            } else if (diff >= -7) {
+                outcomeLabel = "受制压制";
+                gainEsc = 0; gainBrain = 10; gainPleasure = 50; gainHp = -5;
+                narrativeHint = "反抗被看守残酷压制。敏感带遭到针对性刺激，快感与精神暗示如潮水般涌入脑海。";
+                combatLog = `受制压制|D20(${pNatRoll})+${pBaseMod}+${freedomBonus}[自由]-${hpPenalty}[虚弱]-${corruptionPenalty}[侵蚀]=${pTotal} vs DC:${eTotal}|洗脑+10%|快感+50|体力-5|T:FAIL`;
+            } else {
+                outcomeLabel = "大失败/沦陷";
+                gainEsc = -10; gainBrain = 15; gainPleasure = 75; gainHp = -8; deltaFreedom = -5;
+                narrativeHint = "主角的防线被彻底击溃。看守施加了更残酷的调教手段，身体在剧烈快感中痉挛，洗脑意识大幅加深，拘束被进一步收紧。";
+                combatLog = `防线沦陷|D20(${pNatRoll})+${pBaseMod}+${freedomBonus}[自由]-${hpPenalty}[虚弱]-${corruptionPenalty}[侵蚀]=${pTotal} vs DC:${eTotal}|逃脱-10%|洗脑+15%|快感+75|体力-8|T:CRIT_FAIL`;
+            }
+        } else if (rawTactic === '忍耐') {
+            outcomeLabel = "隐忍保存";
+            gainEsc = 5; gainBrain = 5; gainPleasure = 20; gainHp = -2;
+            narrativeHint = "主角紧闭双眼咬牙隐忍，尽量放松身体以减少体力损耗，在羞耻与刺激中默默积蓄力量。";
+            combatLog = `隐忍保存|保存体力坚守底线|逃脱+5%|洗脑+5%|快感+20|体力-2|T:IDLE`;
+        } else if (rawTactic === '动摇') {
+            outcomeLabel = "防线动摇";
+            gainEsc = 0; gainBrain = 10; gainPleasure = 50;
+            narrativeHint = "在看守的下流调教与言语刺激下，主角的眼神开始恍惚迷离，喉间溢出喘息，信念产生动摇。";
+            combatLog = `防线动摇|快感侵蚀意志动摇|洗脑+10%|快感+50|T:FAIL`;
+        } else if (rawTactic === '顺从') {
+            outcomeLabel = "彻底顺从";
+            gainEsc = 0; gainBrain = 20; gainPleasure = 85; deltaFreedom = 10; gainDarkXp = 20;
+            narrativeHint = "主角放弃了抵抗，身体主动迎合看守的摆布与侵犯，在狂乱的快感中接纳洗脑暗示。看守见状大喜，戒心大幅降低。";
+            combatLog = `彻底顺从|主动迎合戒心大降|洗脑+20%|快感+85|自由度+10|印记+20XP|T:CRISIS`;
+        }
+    } else {
+        // ── 日常监禁周旋分支 ──
+        if (rawTactic === '观察') {
+            if (pNatRoll + pBaseMod + freedomBonus >= guardDC) {
+                outcomeLabel = "敏锐察觉";
+                gainEsc = 12; deltaFreedom = 5;
+                narrativeHint = "主角敏锐地注意到了看守换岗的死角、巡视规律或门禁线路的一处微小破绽，暗中记在心中。";
+                combatLog = `敏锐察觉|D20(${pNatRoll})+${pBaseMod}+${freedomBonus}[自由]=${pNatRoll+pBaseMod+freedomBonus} vs DC:${guardDC}|逃脱+12%|自由度+5|T:SUCCESS`;
+            } else {
+                outcomeLabel = "搜寻无果";
+                gainEsc = 0;
+                narrativeHint = "基地防卫森严，巡逻毫无死角，四处都是冷冰冰的监控与警卫，主角未能发现明显机会。";
+                combatLog = `搜寻无果|D20(${pNatRoll})+${pBaseMod}+${freedomBonus}[自由]=${pNatRoll+pBaseMod+freedomBonus} vs DC:${guardDC}|防卫森严无破绽|T:FAIL`;
+            }
+        } else if (rawTactic === '挣扎') {
+            if (pNatRoll + pBaseMod >= 12) {
+                outcomeLabel = "暗中松动";
+                gainEsc = 18; gainHp = -5;
+                narrativeHint = "主角尝试松动周身的物理束缚并寻找脱困机会，动作隐蔽且取得了切实进展，消耗了少量体力。";
+                combatLog = `暗中松动|D20(${pNatRoll})+${pBaseMod}=${pNatRoll+pBaseMod} vs DC:12|逃脱+18%|体力-5|T:SUCCESS`;
+            } else {
+                outcomeLabel = "动作败露";
+                gainEsc = 0; gainHp = -10; deltaFreedom = -5;
+                narrativeHint = "挣扎动作引起了看守的注意与警惕，受到警卫的制止与惩戒，身上的束缚装置被进一步加固。";
+                combatLog = `动作败露|D20(${pNatRoll})+${pBaseMod}=${pNatRoll+pBaseMod} vs DC:12|束缚加固|自由度-5|受惩-10HP|T:FAIL`;
+            }
+        } else if (rawTactic === '对话') {
+            if (pNatRoll + pBaseMod >= 11) {
+                outcomeLabel = "交涉得当";
+                gainEsc = 8; deltaFreedom = 5;
+                narrativeHint = "主角主动与走过的看守或怪人攀谈交涉，言语周旋得体，套取了部分基地运作情报，看守的戒心进一步降低。";
+                combatLog = `交涉得当|D20(${pNatRoll})+${pBaseMod}=${pNatRoll+pBaseMod} vs DC:11|逃脱+8%|自由度+5|T:SUCCESS`;
+            } else {
+                outcomeLabel = "引起怀疑";
+                deltaFreedom = -3;
+                narrativeHint = "言语试探引起了对方的警惕与怀疑，遭到冷淡呵斥并被警告安分守己。";
+                combatLog = `引起怀疑|D20(${pNatRoll})+${pBaseMod}=${pNatRoll+pBaseMod} vs DC:11|言语败露|自由度-3|T:FAIL`;
+            }
+        } else if (rawTactic === '探索') {
+            if (pNatRoll + pBaseMod >= 11) {
+                outcomeLabel = "发现通道";
+                gainEsc = 18; gainHp = -2;
+                narrativeHint = "主角利用活动范围放宽的机会，在基地内主动探查逃脱路线与安防漏洞，成功锁定了关键通路。";
+                combatLog = `发现通道|D20(${pNatRoll})+${pBaseMod}=${pNatRoll+pBaseMod} vs DC:11|逃脱+18%|体力-2|T:SUCCESS`;
+            } else {
+                outcomeLabel = "排查受阻";
+                gainEsc = 0;
+                narrativeHint = "虽然能在一定区域内走动，但关键通道均有重兵把守与权限门禁，未能找到可乘之机。";
+                combatLog = `排查受阻|D20(${pNatRoll})+${pBaseMod}=${pNatRoll+pBaseMod} vs DC:11|重兵把守门禁受阻|T:FAIL`;
+            }
+        } else if (rawTactic === '休息') {
+            outcomeLabel = "闭目调息";
+            gainHp = 25; gainPleasure = -20;
+            narrativeHint = "主角背靠着墙壁闭目调息，平复体内翻腾的情欲与疲惫，体力得到了有效恢复。";
+            combatLog = `闭目调息|闭目静养平复躁热|体力+25|快感-20|T:IDLE`;
+        } else if (rawTactic === '思考') {
+            if (pNatRoll + pBaseMod >= 10) {
+                outcomeLabel = "意志坚固";
+                gainBrain = -3; gainPleasure = -10;
+                narrativeHint = "主角默默回忆昔日作为英雄守护市民的誓言与伙伴的笑容，驱散了脑海中的迷茫与污秽，精神防线重新稳固。";
+                combatLog = `意志坚固|D20(${pNatRoll})+${pBaseMod}=${pNatRoll+pBaseMod} vs DC:10|坚定信念|洗脑-3%|快感-10|T:SUCCESS`;
+            } else {
+                outcomeLabel = "胡思乱想";
+                gainPleasure = 10;
+                narrativeHint = "独处时脑海中却不断闪回被俘与被调教时的羞耻画面，小腹莫名泛起躁热，难以静心。";
+                combatLog = `胡思乱想|D20(${pNatRoll})+${pBaseMod}=${pNatRoll+pBaseMod} vs DC:10|羞耻闪回小腹躁热|快感+10|T:FAIL`;
+            }
+        }
+    }
+
+    // 构建 Patch 补丁
+    let patchList = [];
+    if (gainEsc !== 0) patchList.push(`{ "op": "delta", "path": "/主角/囚禁状态/逃脱进度", "value": ${gainEsc} }`);
+    if (gainBrain !== 0) patchList.push(`{ "op": "delta", "path": "/主角/囚禁状态/洗脑进度", "value": ${gainBrain} }`);
+    if (gainPleasure !== 0) patchList.push(`{ "op": "delta", "path": "/主角/快感状态/快感值", "value": ${gainPleasure} }`);
+    if (gainHp !== 0) patchList.push(`{ "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": ${gainHp} }`);
+    if (deltaFreedom !== 0) patchList.push(`{ "op": "delta", "path": "/主角/囚禁状态/自由度加值", "value": ${deltaFreedom} }`);
+    if (gainDarkXp > 0) patchList.push(`{ "op": "delta", "path": "/主角/黑暗印记/经验", "value": ${gainDarkXp} }`);
+    if (combatLog) patchList.push(`{ "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": "${combatLog}" }`);
+_%>
+---
+captured_prison_session:
+  phase_mode: "<%= isBrainwashing ? '【洗脑审讯中】' : '【日常监禁中】' %>"
+  session_status:
+    day: "第 <%= prisonDay %> 天 (总回合: <%= prisonTurn %>)"
+    freedom_tier: "<%= freedom %> (加值: <%= freedomMod >= 0 ? '+' + freedomMod : freedomMod %>)"
+    escape_progress: "<%= escProgress %>% / 100%"
+    brainwash_progress: "<%= brainProgress %>% / 100%"
+<%_ if (isBrainwashing) { _%>
+    brainwash_session_countdown: "本轮审讯剩余 <%= remainingTurns %> 回合"
+<%_ } _%>
+
+  enemy_profile:
+    handler_type: "<%= enemyType %>"
+    handler_name: "<%= bossName %>"
+
+  tactical_action_evaluation:
+    locked_tactic: "<%= rawTactic %>"
+    action_outcome: "<%= outcomeLabel %>"
+    dice_calculation: "主角检定[d20(<%= pNatRoll %>)+<%= pBaseMod %><%= freedomBonus >= 0 ? '+' + freedomBonus : freedomBonus %>[自由]-<%= hpPenalty %>[虚弱]-<%= corruptionPenalty %>[侵蚀]=<%= pTotal %>] vs 看守阻力[d20(<%= eNatRoll %>)+<%= guardDC %>=<%= eTotal %>] | 差值: <%= diff %>"
+    narrative_mandate: "<%= narrativeHint %>"
+
+  environmental_and_enemy_guidance:
+<%_ if (isBrainwashing) { _%>
+    scene_type: "高压色情审讯与肉体调教"
+<%_ if (enemyType === '小英雄') { _%>
+    enemy_behavior:
+      - "【堕落同类主导】<%= bossName %>亲自执行调教。两人近距离接触，动作兼具侵略性与同类之间的暧昧亲密。"
+      - "针对主角的敏感带进行持续刺激与抚弄，迫使主角发出喘息，借由快感同化主角的心智。"
+<%_ } else if (enemyType === '人类') { _%>
+    enemy_behavior:
+      - "【科技审讯程序】怪人组织干部与审讯官使用特制精神脉冲设备与电极探针固定主角身体。"
+      - "操作仪器刺激主角的敏感神经与重点部位，伴随催眠投影与言语引导，强行灌输服从意识。"
+<%_ } else { _%>
+    enemy_behavior:
+      - "【生化改造调教】生化实验室内，触手器官缠绕固定主角身体，注入催情孢子气体与生物黏液。"
+      - "触手针对后穴与敏感孔穴进行持续侵入与开发，诱发强烈的生理发情反应。"
+<%_ } _%>
+<%_ } else { _%>
+    scene_type: "日常监禁与基地周旋"
+    non_brainwash_mandate: "【核心叙事禁令】当前处于日常监禁中，非洗脑状态。绝对禁止描写看守对主角进行洗脑、精神催眠或大型调教实验。叙事必须专注于基地日常活动、走动周旋、环境互动与主角的心理活动。"
+    freedom_tier_context:
+<%_ if (freedom === '严密监禁') { _%>
+      description: "处于最高警戒监禁。主角被关押在封闭独立房间或实验舱中，行动受到严格限制，无法离开关押处。"
+<%_ } else if (freedom === '有限活动') { _%>
+      description: "活动范围扩大至走廊、食堂或训练区边缘。脱去了部分重型拘束，但随身佩戴定位装置，受到看守人员的视线监视。"
+<%_ } else if (freedom === '半自由') { _%>
+      description: "看守戒备大幅降低，允许主角在基地公共区域走动，可旁观日常行动。怪人开始以对待潜在同伴的态度与其接触。"
+<%_ } else { _%>
+      description: "信任囚徒待遇。主角获得高度行动信任，可自由出入基地大部分区域并随同出行。"
+<%_ } _%>
+<%_ if (enemyType === '小英雄') { _%>
+    daily_flavor: "走廊内偶遇其他怪人向主角投来视线，<%= bossName %>偶尔前来与主角交谈，展现出对同类的关注。"
+<%_ } else if (enemyType === '人类') { _%>
+    daily_flavor: "基地内广播播报日常指令，科研与安保人员按规程巡逻，偶尔对主角进行常规生理检查。"
+<%_ } else { _%>
+    daily_flavor: "生化实验区内魔物低鸣，空气中弥漫着湿润气味，低阶魔物会靠近主角停留。"
+<%_ } _%>
+<%_ } _%>
+
+  system_patch_requirements:
+    instruction: "请在本次输出的 JSONPatch 数组中包含以下预计算好的数值变更："
+    mandatory_patch: |
+      [
+        <%- patchList.join(',\n        ') %>
+      ]
+
+  player_intent_lock:
+    tactic_variable: "/主角/战斗临时/战斗方式"
+    enforcement: "系统已根据 UI 战术完成分支锁定，AI 必须严格按照 action_outcome 与 narrative_mandate 推进剧情，严禁擅自脱困或违背判定。"
+<%_ }} _%>

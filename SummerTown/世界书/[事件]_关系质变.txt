@@ -1,0 +1,155 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  let relSignals = _.get(stat, '系统状态.待处理事件.关系变化事件', []);
+  
+  // 确保为数组
+  if (!Array.isArray(relSignals)) {
+    relSignals = [];
+  }
+  
+  if (relSignals.length > 0) {
+    const mcLoc = _.get(stat, '主角.当前状态.当前地点', '');
+    let selectedIdx = -1;
+    
+    // 查找第一个满足地点一致的事件
+    for (let i = 0; i < relSignals.length; i++) {
+      const signal = relSignals[i];
+      if (!signal || signal.length < 2) continue;
+      const target = signal[0];
+      const npcLoc = _.get(stat, `NPC数据.${target}.当前状态.当前地点`, '');
+      if (npcLoc === mcLoc) {
+        selectedIdx = i;
+        break;
+      }
+    }
+    
+    if (selectedIdx !== -1) {
+      const signal = relSignals[selectedIdx];
+      const target = signal[0];
+      const type = signal[1];
+      const loc = _.get(stat, `NPC数据.${target}.当前状态.当前地点`, '此处');
+      const currentRel = _.get(stat, `NPC数据.${target}.主角关系.当前关系`, '未知');
+
+      const intimacy = parseInt(_.get(stat, `NPC数据.${target}.主角关系.亲密度`, 0), 10) || 0;
+      const lust = parseInt(_.get(stat, `NPC数据.${target}.主角关系.情欲度`, 0), 10) || 0;
+
+      const getStage = (val) => {
+        if (val >= 75) return 4;
+        if (val >= 50) return 3;
+        if (val >= 25) return 2;
+        return 1;
+      };
+
+      let currentVal = type === '亲密度' ? intimacy : lust;
+      let newStage = getStage(currentVal);
+      let oldStage = newStage - 1;
+      if (oldStage < 1) oldStage = 1;
+
+      const stageNames = {1:'阶段1', 2:'阶段2', 3:'阶段3', 4:'阶段4'};
+      const allTraits = _.get(stat, `NPC数据.${target}.性特质`, {});
+      const newTraits = allTraits[stageNames[newStage]] || [];
+      const oldTraits = allTraits[stageNames[oldStage]] || [];
+
+      let newOnlyTraits = [];
+      let updatedTraits = [];
+      newTraits.forEach((trait, idx) => {
+        if (idx >= oldTraits.length) {
+          newOnlyTraits.push(trait);
+        } else if (trait !== oldTraits[idx]) {
+          updatedTraits.push({ old: oldTraits[idx], new: trait });
+        }
+      });
+
+      // 获取印象变化
+      const matrix = _.get(stat, `NPC数据.${target}.看法矩阵`, {});
+      let oldILevel, oldLLevel, newILevel, newLLevel;
+      if (type === '亲密度') {
+        oldILevel = Math.max(0, newStage - 2);
+        oldLLevel = getStage(lust) - 1;
+        newILevel = newStage - 1;
+        newLLevel = getStage(lust) - 1;
+      } else {
+        oldILevel = getStage(intimacy) - 1;
+        oldLLevel = Math.max(0, newStage - 2);
+        newILevel = getStage(intimacy) - 1;
+        newLLevel = newStage - 1;
+      }
+      const oldImpression = matrix[`${oldILevel}-${oldLLevel}`] || '之前的印象';
+      const newImpression = matrix[`${newILevel}-${newLLevel}`] || '全新的印象';
+      
+      // 构建移除本事件后剩余的事件数组
+      const remaining = relSignals.filter((_, idx) => idx !== selectedIdx);
+      const remainingJson = JSON.stringify(remaining);
+_%>
+# 关系进阶即时信号
+event_initiator:
+  event_name: "关系蜕变"
+  involved_character: "<%= target %>"
+  trigger_type: "<%= type %>突破"
+  location: "<%= loc %>"
+  prior_relationship: "蜕变前，二人互为【<%= currentRel %>】"
+  focus: "<%= type === '亲密度' ? '情感信任加深，壁垒瓦解' : '身体吸引升级，欲望越界' %>"
+  impression_shift: "主角在他/她心中的印象，正从“<%= oldImpression %>”转变为“<%= newImpression %>”"
+  new_stage: "<%= stageNames[newStage] %>"
+
+  narrative_guidance:
+    - "你刚刚经历的互动，让<%= target %>对你的<%= type %>悄然突破了临界点。在此之前，你们互为【<%= currentRel %>】。请将这一变化自然地织入本回合正在发生的场景，无需另起炉灶宣告。"
+    <%_ if (type === '亲密度') { _%>
+    - "侧重于信任的加深：一个愿意暴露的脆弱之处、一句不再客套的称呼、一次下意识寻求依靠的动作。展现‘只有你能看到’的柔软。"
+    <%_ } else { _%>
+    - "侧重于身体的吸引：目光不自觉地游移、呼吸节奏的微妙改变、借着夏日燥热而缩短的物理距离。让生理冲动与暑气交织。"
+    <%_ } _%>
+    - "请结合印象的演变（从“<%= oldImpression %>”到“<%= newImpression %>”）来展现变化的细节。无需在本回合完成全部演变，但必须抛出变化的种子。"
+    <%_ if (newOnlyTraits.length > 0 || updatedTraits.length > 0) { _%>
+    - "【特质变化指引】请在本回合互动中自然展现以下特质变迁："
+    <%_ if (newOnlyTraits.length > 0) { _%>
+      - "▼ 新增特质：<%= newOnlyTraits.join('；') %> ——让他/她的言行首次表现出该倾向。"
+    <%_ } _%>
+    <%_ if (updatedTraits.length > 0) { _%>
+      - "▼ 进化特质：<% updatedTraits.forEach((u,i) => { %>“<%= u.old %>” 进化为 “<%= u.new %>”<%= i<updatedTraits.length-1 ? '；' : '' %><% }); %> ——着重展现原特质的深化或转变。"
+    <%_ } _%>
+    <%_ } _%>
+    
+    <%_ 
+    // 称谓阶段变化检测
+    const getAppellationStage = (val) => {
+        if (val >= 75) return 4;
+        if (val >= 50) return 3;
+        if (val >= 25) return 2;
+        return 1;
+    };
+    let stageCur, stageOld;
+    if (type === '亲密度') {
+        const stageLust = getAppellationStage(lust);
+        const stageIntNew = getAppellationStage(intimacy);
+        const stageIntOld = Math.max(1, stageIntNew - 1);
+        stageCur = Math.max(stageLust, stageIntNew);
+        stageOld = Math.max(stageLust, stageIntOld);
+    } else { // 情欲度
+        const stageIntimacy = getAppellationStage(intimacy);
+        const stageLustNew = getAppellationStage(lust);
+        const stageLustOld = Math.max(1, stageLustNew - 1);
+        stageCur = Math.max(stageIntimacy, stageLustNew);
+        stageOld = Math.max(stageIntimacy, stageLustOld);
+    }
+    const appellations = _.get(stat, `NPC数据.${target}.主角关系.称谓`, {});
+    const oldApp = appellations['阶段' + stageOld] || '';
+    const newApp = appellations['阶段' + stageCur] || '';
+    if (newApp && oldApp !== newApp) {
+    _%>
+    - "称谓跃进：<%= target %> 对你的称呼将从「<%= oldApp %>」自然过渡为「<%= newApp %>」。请在接下来的互动中，不经意地让他/她改口，或用口误、停顿等方式展现这一转变。"
+    <%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "若你已在本回合的叙事中切实展现了关系的微妙进步，请在 <UpdateVariable> 的 <JSONPatch> 块中输出以下强制指令："
+    note: "【当前关系】描述的是二人互相之间的双向关系标签（如“姑侄”、“姐弟”、“青梅竹马”等），请结合角色原有社会身份与蜕变后的看法，拟定一个更进一步的具体关系称谓。"
+    patch_code: |
+      [
+        { "op": "replace", "path": "/系统状态/待处理事件/关系变化事件", "value": <%- remainingJson %> }, //严格复制执行
+        { "op": "replace", "path": "/NPC数据/<%= target %>/主角关系/当前关系", "value": "[新关系标签]" }
+      ]
+<%_
+    } 
+  }
+} _%>

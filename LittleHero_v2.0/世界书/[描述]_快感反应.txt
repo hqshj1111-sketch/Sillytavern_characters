@@ -1,0 +1,122 @@
+<%_{
+// --- [描述] 快感反应 (小英雄 v2.0 全境自适应版) ---
+// 逻辑: 根据 [战斗] / [幕间H事件] / [被捕囚禁] / [日常隐忍] 四大场景与 [英雄/反派] 人格，动态输出生理与心理反应指导。
+
+const stat = getvar('stat_data');
+if (stat && _.get(stat, '系统状态.主角创建完毕')) {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+    const isFallen = (personality === '反派' || personality === '恶堕' || personality === '堕落');
+    const pleasure = parseInt(_.get(stat, '主角.快感状态.快感值', 0), 10);
+    const threshold = Math.max(1, parseInt(_.get(stat, '主角.快感状态.高潮阈值', 100), 10));
+    const pRatio = pleasure / threshold;
+    const phase = _.get(stat, '进程.阶段', '幕间休息');
+    const hEventName = _.get(stat, '世界.幕间H事件.名称', '无');
+
+    const isCombat = ['战斗准备', '战斗回合', '终结回合', '战斗败北'].includes(phase);
+    const isHEvent = (phase === '幕间休息' && hEventName !== '无');
+    const isCaptivity = (phase === '被捕囚禁');
+    const isDaily = (phase === '幕间休息' && hEventName === '无');
+
+    // 当有快感积累，或者反派处于日常时激活
+    if (pleasure > 0 || (isFallen && isDaily)) {
+        let stageText = '';
+        let modeLabel = '';
+        let coreInstruction = '';
+        let stageNum = '1/5';
+
+        if (isCombat) {
+            // ── 场景 1：战斗受阻模式 ──
+            modeLabel = '【战斗状态】';
+            coreInstruction = isFallen
+                ? '战斗交锋中，快感与混沌能量产生共鸣。这是对应其当前快感阶段的战斗感官描写指导。'
+                : '战斗交锋中，快感正在对主角的神经与行动造成直接阻碍。请根据当前快感档位表现动作变形与喘息。';
+
+            if (isFallen) {
+                if (pRatio <= 0.25) { stageNum = '1/5'; stageText = '战斗的肢体碰撞唤醒了肉体快感，嘴角泛起享受与挑逗的微笑。'; }
+                else if (pRatio <= 0.50) { stageNum = '2/5'; stageText = '呼吸变得急促灼热，但这让他更加兴奋，攻防动作中主动夹杂着肉体贴靠与调情。'; }
+                else if (pRatio <= 0.75) { stageNum = '3/5'; stageText = '面色潮红，混沌能量随着快感一同高涨，主动索求更激烈、更有温度的碰撞交缠。'; }
+                else if (pRatio < 1.0) { stageNum = '4/5'; stageText = '快感大量蓄积，粗重甜腻的吐息压抑不住地流露，在欲望的浪潮中狂热作战。'; }
+                else { stageNum = '5/5 (高潮)'; stageText = '抵达绝顶高潮！伴随着混沌能量的爆发，毫无羞耻地在战斗中享受绝顶狂喜。'; }
+            } else {
+                if (pRatio <= 0.25) { stageNum = '1/5'; stageText = '快感尚未对身心构成明显阻碍，主角能保持正常的战斗姿态与判断。'; }
+                else if (pRatio <= 0.50) { stageNum = '2/5'; stageText = '身体敏感带开始发热，激烈的攻防动作引发体内阵阵酥麻，呼吸节奏被打乱，战斗容易分神。'; }
+                else if (pRatio <= 0.75) { stageNum = '3/5'; stageText = '行动严重受阻！原本敏捷的闪避因膝盖瞬间的酸软无力而变形，只能勉强格挡，面色潮红，频繁漏出急促闷哼。'; }
+                else if (pRatio < 1.0) { stageNum = '4/5'; stageText = '快感积累逼近极限！四肢发软无力，大口大口漏出甜腻沉重的喘息，战意在强烈的官能冲击下剧烈动摇。'; }
+                else { stageNum = '5/5 (高潮)'; stageText = '高潮爆发！主角因绝顶痉挛而全身脱力无法动弹，陷入强烈的生理空白，处于极度危险的受制状态。'; }
+            }
+        } else if (isHEvent) {
+            // ── 场景 2：幕间H事件模式 ──
+            modeLabel = '【幕间H事件进行中】';
+            coreInstruction = isFallen
+                ? '遭遇了日常色情危机，反派主角正顺从欲望享受其中。这是对应其快感阶段的交互指导。'
+                : '遭遇了日常突发H危机，主角正试图在快感侵蚀下坚守理智。这是对应其快感阶段的挣扎与屈服指导。';
+
+            if (isFallen) {
+                if (pRatio <= 0.25) { stageNum = '1/5'; stageText = '身体涌动着隐约的快感，带着玩味的态度期待接下来的乐趣。'; }
+                else if (pRatio <= 0.50) { stageNum = '2/5'; stageText = '快感涌起，主动扭动腰肢配合对方的动作与深入。'; }
+                else if (pRatio <= 0.75) { stageNum = '3/5'; stageText = '沉浸在愉悦中，放浪地娇喘呻吟，主动索求更深层次的侵犯与刺激。'; }
+                else if (pRatio < 1.0) { stageNum = '4/5'; stageText = '快感大量累积带来极致的满足与发情，主动引导对方直击敏感点。'; }
+                else { stageNum = '5/5 (高潮)'; stageText = '在狂乱的高潮中露出幸福甜美的笑容，彻底沉沦于快感之中。'; }
+            } else {
+                if (pRatio <= 0.25) { stageNum = '1/5'; stageText = '身体尚无剧烈反应，保持清醒理智，尝试口头拒绝并寻找脱困机会。'; }
+                else if (pRatio <= 0.50) { stageNum = '2/5'; stageText = '嘴上抗拒斥责，但被侵犯的敏感部位与战衣下已开始发热变软，眼眶泛红。'; }
+                else if (pRatio <= 0.75) { stageNum = '3/5'; stageText = '理智与本能激烈斗争！在下流刺激下身体本能颤抖，反抗动作逐渐变得绵软无力。'; }
+                else if (pRatio < 1.0) { stageNum = '4/5'; stageText = '羞耻防线被快感狂潮冲垮，咬紧牙关却压抑不住娇媚喘息，身体不由自主地随着节奏迎合。'; }
+                else { stageNum = '5/5 (高潮)'; stageText = '抵达甜蜜高潮，在极致的快感爆发中失神瘫软，泪水与喘息交织。'; }
+            }
+        } else if (isCaptivity) {
+            // ── 场景 3：被捕囚禁 / 调教审讯模式 ──
+            modeLabel = '【囚禁调教状态】';
+            coreInstruction = isFallen
+                ? '身处监禁设施，反派主角把调教当成别具情调的游乐。'
+                : '身陷囹圄遭受调教审讯，快感正作为瓦解小英雄意志的武器。请表现快感侵蚀下的防线动摇。';
+
+            if (isFallen) {
+                if (pRatio <= 0.25) { stageNum = '1/5'; stageText = '即使身处囚牢也毫不在意，把监禁当成别具情调的游乐场。'; }
+                else if (pRatio <= 0.50) { stageNum = '2/5'; stageText = '享受拘束器具带来的束缚感，主动用言语挑逗看守。'; }
+                else if (pRatio <= 0.75) { stageNum = '3/5'; stageText = '沉浸在监禁调教的愉悦中，主动摇曳身体迎合器械与侵犯。'; }
+                else if (pRatio < 1.0) { stageNum = '4/5'; stageText = '欲望高涨，催促看守加大调教力度。'; }
+                else { stageNum = '5/5 (高潮)'; stageText = '在囚室中享受绝顶高潮的快乐。'; }
+            } else {
+                if (pRatio <= 0.25) { stageNum = '1/5'; stageText = '虽身陷囹圄，但意志坚定，紧咬牙关冷眼面对看守与拘束器具。'; }
+                else if (pRatio <= 0.50) { stageNum = '2/5'; stageText = '拘束装置与看守的下流调教刺激着敏感带，体内泛起屈辱的燥热，努力克制身体颤抖。'; }
+                else if (pRatio <= 0.75) { stageNum = '3/5'; stageText = '审讯调教带来的快感逐渐盖过意志，身体在刑具或侵犯中发软痉挛，眼神出现短暂动摇。'; }
+                else if (pRatio < 1.0) { stageNum = '4/5'; stageText = '意志濒临崩溃，身体在持续的快感电击/侵犯中彻底背叛理智，泪眼汪汪地被迫承受与喘息。'; }
+                else { stageNum = '5/5 (高潮)'; stageText = '在审讯台上迎来惨烈的高潮，身心在剧烈的绝顶余韵中陷入瘫软脱力。'; }
+            }
+        } else {
+            // ── 场景 4：日常隐忍模式 ──
+            modeLabel = '【日常状态】';
+            coreInstruction = isFallen
+                ? '主角正处于幕间生活，这是对应其当前快感阶段的描写指导。'
+                : '剧情属于幕间和日常探索，请根据快感积累谨慎表现隐忍与微小失态。';
+
+            if (isFallen) {
+                if (pleasure <= 5) { stageNum = '0/5'; stageText = '身体完全没有快感反应，让他不禁觉得日常有点无聊。'; }
+                else if (pRatio <= 0.25) { stageNum = '1/5'; stageText = '心情愉悦，身体残留的余韵带来放松和惬意。'; }
+                else if (pRatio <= 0.50) { stageNum = '2/5'; stageText = '眼神变得有些拉丝，偶尔会做出舔嘴唇或轻抚自己敏感部位的小动作。'; }
+                else if (pRatio <= 0.75) { stageNum = '3/5'; stageText = '毫不掩饰身体的燥热，散发着诱人的雄性色气与发情气息。'; }
+                else if (pRatio < 1.0) { stageNum = '4/5'; stageText = '主动渴望着刺激，可能会用大腿摩擦或寻找慰藉来缓解这份焦躁。'; }
+                else { stageNum = '5/5 (高潮)'; stageText = '在日常中迎来高潮，并享受这种感觉。'; }
+            } else {
+                if (pRatio <= 0.25) { stageNum = '1/5'; stageText = '平静安宁地度过日常，身体无异样影响。'; }
+                else if (pRatio <= 0.50) { stageNum = '2/5'; stageText = '体内积蓄的余温让主角注意力无法完全集中，偶尔会因战衣摩擦私密处而脸红分神。'; }
+                else if (pRatio <= 0.75) { stageNum = '3/5'; stageText = '身体燥热难以压抑，日常对话中吐息微促，坐立不安，频繁需要夹紧双腿或调整姿势。'; }
+                else if (pRatio < 1.0) { stageNum = '4/5'; stageText = '快感积累极为明显，肌肤滚烫，内裤/战衣湿润，日常行走动作都受到极大影响。'; }
+                else { stageNum = '5/5 (高潮)'; stageText = '在日常环境中迎来猝不及防的高潮，必须拼命掩饰自己的失态。'; }
+            }
+        }
+%>
+<pleasure_response_guide>
+pleasure_monitor:
+  current_status: "<%= pleasure %> / <%= threshold %> (<%= Math.round(pRatio * 100) %>%)"
+  scene_mode: "<%= modeLabel %>"
+  core_instruction: "<%= coreInstruction %>"
+  stage_guidance:
+    stage: "<%= stageNum %>"
+    physical_reaction: "<%= stageText %>"
+</pleasure_response_guide>
+<%_
+    }
+} }
+_%>

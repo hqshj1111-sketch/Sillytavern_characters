@@ -1,0 +1,49 @@
+<%_
+{
+    const stat = getvar('stat_data');
+    const events = _.get(stat, '系统状态.待处理事件', {});
+    const raw = events['幕间牵绊事件'];
+    if (raw && typeof raw === 'string') {
+        const [realName, bondType] = raw.split('|');
+        const hero = _.get(stat, '世界.小英雄名录', {})[realName] || {};
+        const heroName = (hero.人格阵营 === '英雄' ? hero.英雄名 : hero.堕落英雄名) || hero.英雄名 || realName;
+        const isLust = bondType === '情欲';
+        const campLabel = hero.人格阵营 === '反派' ? '堕落小英雄' : '小英雄';
+        const protagonistPersonality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+        const differentCamp = hero.人格阵营 !== protagonistPersonality;
+_%>
+event_handler:
+  event_name: "与<%= heroName %>的牵绊事件"
+  event_type: "<%= isLust ? '情欲导向' : '亲密导向' %>"
+  context: "幕间休息中，主角与<%= campLabel %><%= heroName %>（<%= realName %>）发生了一次不期而至的交织。"
+  hero_info:
+    立场: "<%= hero.人格阵营 || '英雄' %>"
+    能力: "<%= (hero.人格阵营 === '英雄' ? hero.英雄核心能力 : hero.反派核心能力) || '未知' %>"
+    外貌: "<%= hero.外貌身材 || '未知' %>"
+
+<%_ if (isLust) { _%>
+  narrative_directives:
+    - "这是一次由双方身体的本能吸引引发的色情事件。可以从偶然的补魔需求开始，或是战斗后的残留快感被重新点燃，或是邂逅时彼此压抑的欲望突然爆发。"
+    - "聚焦于完整的交合与补魔过程——前戏、插入、内射。描写双方的生理反应和快感释放。"
+    - "避免引入复杂的剧情线或宏大的幕后势力。这不需是一场你死我活的战斗，而是一场纯粹的情欲释放。"
+<%_ } else { _%>
+  narrative_directives:
+    - "这是一次非色情的亲密事件，聚焦于两人之间的情感联结与无声的陪伴。可以是一次偶然的街角相遇、共处同一空间的日常片段，或是在受伤后为对方做的一件小事。"
+    - "让对话和互动自然展开——两人可能谈论近况，可能沉默地并肩坐着，也可能在不经意间流露出对彼此处境的关切。"
+    - "避免引入复杂的剧情线或宏大的幕后势力。保持日常感，聚焦于两人之间的关系发展。"
+<%_ } _%>
+<%_ if (differentCamp) { _%>
+    - "【敌对阵营】：<%= heroName %>与主角分属不同阵营。这次事件中，两人之间除了当下的互动主题外，还存在着阵营差异带来的微妙张力——彼此的身份既是吸引的一部分，也是无法忽略的隔阂。这种张力可以体现在对话中的试探、肢体接触时的迟疑、或事后各自回到阵营时的复杂情绪中。但不要将此次事件演变为战斗或冲突。"
+<%_ } _%>
+
+  system_tasks:
+    instruction: "根据互动性质更新相关变量，事件结束后用以下指令清理本事件并将幕间事件标记为完成："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/系统状态/幕间事件完成", "value": true },
+        { "op": "remove", "path": "/系统状态/待处理事件/幕间牵绊事件" }
+      ]
+<%_
+    }
+}
+_%>

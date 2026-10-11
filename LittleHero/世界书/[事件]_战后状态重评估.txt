@@ -8,18 +8,18 @@ if (events['状态演化事件']) {
   const coreCapacity = _.get(stat, '主角.生理状态.能量核心状态.最大容量', 50);
 %>
 # 指令任务: 战后身体演化重评估
-请在输出底部的 <Analysis> 中，评估他的身体是否因近期的遭遇发生了不可逆的【永久性变化】（例如：发色改变/留下伤疤，长期榨精导致胸部发育，极限扩张导致器官形态改变等）。
+请在输出底部的 <Analysis> 中，评估他的身体是否因近期的遭遇发生了不可逆的【永久性变化】（例如：发色改变/留下伤疤，长期榨精导致阴茎发育，极限扩张导致器官形态改变等）。
 
 hidden_paths_mapping:
   instruction: "以下为主角当前所有生理外观数据及其 JSON Path。若需永久修改，请在 <JSONPatch> 中调用对应的 path 进行 replace 操作。"
-  
+
   appearance_traits:
     发型与发色: { value: "<%= face.发型与发色 %>", path: "/主角/相貌特征/发型与发色" }
     眼睛颜色: { value: "<%= face.眼睛颜色 %>", path: "/主角/相貌特征/眼睛颜色" }
     五官: { value: "<%= face.五官 %>", path: "/主角/相貌特征/五官" }
     脸型: { value: "<%= face.脸型 %>", path: "/主角/相貌特征/脸型" }
     特殊记号: { value: "<%= face.特殊记号 %>", path: "/主角/相貌特征/特殊记号" }
-  
+
   body_metrics:
     身高: { value: "<%= body.身高 %>", path: "/主角/身材细节/身高" }
     三围: { value: "<%= body.三围 %>", path: "/主角/身材细节/三围" }
@@ -27,14 +27,15 @@ hidden_paths_mapping:
     体脂率: { value: "<%= body.体脂率 %>", path: "/主角/身材细节/体脂率" }
     肌肉线条: { value: "<%= body.肌肉线条 %>", path: "/主角/身材细节/肌肉线条" }
     皮肤状态: { value: "<%= body.皮肤状态 %>", path: "/主角/身材细节/皮肤状态" }
-  
+
   intimate_traits:
     胸部形态: { value: "<%= sexual.胸部形态 %>", path: "/主角/性器官特征/胸部形态" }
     乳头: { value: "<%= sexual.乳头颜色 %>", path: "/主角/性器官特征/乳头颜色" }
-    阴茎形态: { value: "<%= sexual.阴茎形态 %>", path: "/主角/性器官特征/阴茎形态" }
+     阴茎形态: { value: "<%= sexual.阴茎形态 %>", path: "/主角/性器官特征/阴茎形态" }
+     后穴形态: { value: "<%= sexual.后穴形态 %>", path: "/主角/性器官特征/后穴形态" }
     体毛状况: { value: "<%= sexual.体毛状况 %>", path: "/主角/性器官特征/体毛状况" }
     天生敏感度: { value: "<%= sexual.天生敏感度 %>", path: "/主角/性器官特征/天生敏感度" }
-    
+
   context_reference:
     当前能量核心容量: "<%= coreCapacity %>ml"
 

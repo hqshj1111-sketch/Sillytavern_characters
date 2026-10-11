@@ -1,0 +1,32 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const tanEvent = _.get(stat, '系统状态.待处理事件.晒黑事件');
+  
+  if (tanEvent) {
+      const sunnyDays = parseInt(_.get(stat, '进程.累计晴天数', 0));
+      
+      let stageName = sunnyDays >= 14 ? "深度晒黑与彻底同化" : "初见晒痕与褪去拘束";
+      let skinValue = sunnyDays >= 14 ? "健康的小麦色，有着清晰的夏日晒痕" : "浮现出浅浅的晒痕，不再是初来时的白皙";
+_%>
+# 事件：夏日印记 (<%= stageName %>)
+event_initiator:
+  event_name: "晒黑事件"
+  
+  narrative_guidance:
+    - "主角今早在小镇醒来，洗漱或换衣服时，注意到了自己身体的变化。都市人的娇贵正在褪去。"
+    - "请描写主角观察到自己肤色变黑（当前状态：<%= skinValue %>），对炎热的逐渐适应，主动换上更清凉夏装的过程。表现出一种融入夏日小镇的慵懒感。"
+    - "同时，通过身边角色的台词或反应，侧面烘托主角身体的变化。"
+    
+  mandatory_data_sync:
+    instruction: "在 <UpdateVariable> 的 <JSONPatch> 块中必须输出以下指令，以完成肤色与着装的更新，并移除本事件："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/晒黑事件" },
+        { "op": "replace", "path": "/主角/身材细节/皮肤状态", "value": "[新的皮肤状态]" },
+        { "op": "replace", "path": "/主角/当前状态/当前着装", "value": "[更清凉的着装]" }
+      ]
+<%_ 
+  } 
+}
+_%>

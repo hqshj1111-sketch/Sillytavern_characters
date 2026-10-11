@@ -1,0 +1,35 @@
+<%_
+{
+  const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+  // 遍历待处理事件，寻找季节变换类的 Key
+  const seasonEventKey = Object.keys(events).find(k => k.startsWith('季节变换·'));
+  
+  if (seasonEventKey) {
+    const season = seasonEventKey.replace('季节变换·', '');
+    const atmosphere = events[seasonEventKey]; // 取到描述词，如'春暖花开'
+_%>
+# 指令：季节流转
+season_transition_handler:
+  event_name: "<%= seasonEventKey %>"
+  current_season: "<%= season %>"
+  atmosphere_hint: "<%= atmosphere %>"
+  
+  narrative_guidance: |
+    时光流逝，世界步入了<%= season %>季。请在当前的幕间日常叙事中，以寥寥数笔侧写季节更迭给城市、校园或主角心境带来的细微变化。
+    - 可以是一句环境描写（如：窗外传来了今年的第一声蝉鸣）。
+    - 可以是主角的衣着或小动作（如：将校服外套脱下搭在臂弯）。
+    - 主角的同伴也可能对季节变化做出有趣的反应。
+    
+    注意：不要大段铺陈，一笔带过即可，重点仍是推进当前的主要剧情。
+
+  mandatory_data_sync:
+    instruction: "处理完毕后，必须在 <JSONPatch> 中移除本事件，防止重复触发："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/<%= seasonEventKey %>" }
+      ]
+---
+<%_ 
+  }
+}
+_%>"

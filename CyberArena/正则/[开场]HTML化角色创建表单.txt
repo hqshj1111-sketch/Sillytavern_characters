@@ -1,0 +1,476 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>黑曜擂台 · 角色创建</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;700&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+.cy-create-outer {
+  --text: #d8d8f0; --sub: #8888aa; --purple: #b347ea; --cyan: #00d4ff; --pink: #ff2d95;
+  --gold: #ffe080;
+  --glass-deep: rgba(8,8,24,0.55); --glass-mid: rgba(10,10,30,0.45); --glass-light: rgba(14,14,38,0.35);
+  font-family: 'Noto Sans SC', sans-serif; background: transparent;
+  padding: 12px 4px; width: 100%; box-sizing: border-box;
+}
+.cy-create-outer .glass-3 {
+  background: var(--glass-deep); backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 4px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 0 40px rgba(179,71,234,0.03);
+  position: relative;
+}
+.cy-create-outer .glass-3::before {
+  content: ''; position: absolute; top: -1px; left: 20%; right: 20%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,212,255,0.4), rgba(179,71,234,0.4), rgba(255,45,149,0.4), transparent);
+  z-index: 3; border-radius: 50%;
+}
+.cy-create-outer .glass-2 {
+  background: var(--glass-mid); backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 2px;
+}
+.cy-create-outer .wrapper {
+  max-width: 880px; margin: 0 auto;
+  background: var(--glass-light); backdrop-filter: blur(8px) saturate(120%);
+  border: 1px solid rgba(255,255,255,0.04); border-radius: 12px;
+  padding: 30px 34px; position: relative; overflow: hidden; box-sizing: border-box;
+}
+.cy-create-outer .wrapper::before, .cy-create-outer .wrapper::after {
+  content:''; position:absolute; border-radius:50%; filter:blur(60px); pointer-events:none; z-index:0;
+}
+.cy-create-outer .wrapper::before { top:-50px; left:-50px; width:200px; height:200px; background:rgba(179,71,234,0.06); }
+.cy-create-outer .wrapper::after { bottom:-50px; right:-50px; width:220px; height:220px; background:rgba(0,212,255,0.04); }
+.cy-create-outer .header { text-align:center; margin-bottom:26px; position:relative; z-index:1; }
+.cy-create-outer .header .icon { font-size:2rem; display:block; }
+.cy-create-outer .header .title {
+  font-family:'Orbitron',sans-serif; font-size:1.7rem; font-weight:900; color:#fff;
+  letter-spacing:4px; margin:4px 0;
+  text-shadow: 0 0 14px rgba(179,71,234,0.5), 0 0 30px rgba(255,45,149,0.3);
+}
+.cy-create-outer .header .sub {
+  color: var(--cyan); font-family:'Rajdhani',sans-serif; font-size:0.75rem;
+  letter-spacing:6px; margin-top:6px; font-weight:600;
+}
+.cy-create-outer .section { margin-bottom:22px; position:relative; z-index:1; }
+.cy-create-outer .section-title {
+  color: var(--purple); font-family:'Rajdhani',sans-serif; font-size:0.85rem; font-weight:700;
+  letter-spacing:2px; padding:0 0 8px 0; margin-bottom:14px;
+  border-bottom:1px solid rgba(179,71,234,0.15);
+}
+.cy-create-outer .field-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px;
+}
+.cy-create-outer .field-grid.single { grid-template-columns:1fr; }
+.cy-create-outer .field { display:flex; flex-direction:column; gap:4px; }
+.cy-create-outer .field.full-width { width: 100%; }
+.cy-create-outer .field label {
+  color: var(--sub); font-size:0.72rem; font-family:'Rajdhani',sans-serif;
+  font-weight:600; letter-spacing:1px;
+}
+.cy-create-outer .field input, .cy-create-outer .field select, .cy-create-outer .field textarea {
+  background: rgba(12,12,28,0.35); backdrop-filter: blur(8px);
+  border:1px solid rgba(255,255,255,0.05); border-radius:8px;
+  color: var(--text); padding:9px 12px; font-size:0.85rem; font-family:inherit;
+  transition: all .25s ease; box-sizing:border-box; width: 100%;
+}
+.cy-create-outer .field input:hover, .cy-create-outer .field select:hover, .cy-create-outer .field textarea:hover {
+  border-color: rgba(0,212,255,0.2);
+}
+.cy-create-outer .field input:focus, .cy-create-outer .field select:focus, .cy-create-outer .field textarea:focus {
+  border-color: var(--cyan); outline:none;
+  box-shadow: 0 0 12px rgba(0,212,255,0.12), inset 0 0 6px rgba(0,212,255,0.04);
+}
+.cy-create-outer .field textarea {
+  resize: none; min-height: 64px; max-height: 180px; line-height: 1.6; overflow-y: auto;
+}
+.cy-create-outer .field textarea::placeholder { color: rgba(120,124,153,0.5); }
+.cy-create-outer .field select { cursor: pointer; }
+.cy-create-outer .field .hint { color: var(--sub); font-size:0.7rem; opacity:0.65; }
+
+/* Profile Manager */
+.profile-manager {
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  background:rgba(12,12,28,0.3); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.04); border-radius:10px;
+  padding:10px 14px; margin-bottom:22px; position:relative; z-index:1;
+}
+.profile-manager label {
+  color:var(--sub); font-size:0.68rem; font-family:'Rajdhani',sans-serif;
+  font-weight:600; letter-spacing:1px; white-space:nowrap;
+}
+.profile-manager select {
+  background:rgba(12,12,28,0.5); border:1px solid rgba(255,255,255,0.06);
+  border-radius:6px; color:var(--text); padding:5px 8px;
+  font-size:0.75rem; font-family:inherit; cursor:pointer;
+  min-width:140px;
+}
+.manager-btn {
+  padding:5px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.03); color:var(--sub);
+  font-family:'Rajdhani',sans-serif; font-size:0.62rem; font-weight:600;
+  cursor:pointer; transition:all 0.3s; letter-spacing:0.5px;
+}
+.manager-btn:hover { border-color:rgba(179,71,234,0.35); color:#fff; background:rgba(179,71,234,0.1); }
+.manager-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+.cy-create-outer .submit-area { text-align:center; margin-top:28px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; align-items:center; }
+.cy-create-outer .action-btn {
+  border: none; border-radius: 12px; padding: 12px 28px; font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+  font-size: 0.95rem; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.3s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.cy-create-outer #generate-btn {
+  background: linear-gradient(135deg, rgba(179,71,234,0.35), rgba(0,212,255,0.2));
+  border: 1px solid rgba(179,71,234,0.4); color: #fff;
+  box-shadow: 0 0 14px rgba(179,71,234,0.2), inset 0 0 10px rgba(255,255,255,0.05);
+}
+.cy-create-outer #generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px); box-shadow: 0 0 22px rgba(179,71,234,0.3), 0 0 40px rgba(0,212,255,0.1);
+  filter: brightness(1.1);
+}
+.cy-create-outer #generate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.cy-create-outer #notification {
+  text-align: center; font-size: 0.7rem; min-height: 20px; margin-top: 8px;
+  color: var(--cyan); opacity: 0; transition: opacity 0.3s;
+  font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;
+}
+.cy-create-outer .footer-sig {
+  text-align:center; margin-top:20px; font-size:0.72rem; color: var(--sub);
+  opacity:0.35; font-family:'Rajdhani',sans-serif; position:relative; z-index:1; letter-spacing:3px;
+}
+</style>
+</head>
+<body>
+<div class="cy-create-outer">
+<div class="glass-3"><div class="glass-2"><div class="wrapper">
+<form id="creator-form">
+<div class="header">
+  <span class="icon">⚡</span>
+  <h1 class="title">黑曜市地下擂台</h1>
+  <div class="sub">· Fighter Registration ·</div>
+</div>
+
+<!-- 方案管理器 -->
+<div class="profile-manager">
+  <label for="profile-select">方案</label>
+  <select id="profile-select">
+    <option value="">-- 尚无已存方案 --</option>
+  </select>
+  <button id="save-profile-btn" type="button" class="manager-btn">保存</button>
+  <button id="load-profile-btn" type="button" class="manager-btn" disabled>读取</button>
+  <button id="delete-profile-btn" type="button" class="manager-btn" disabled>删除</button>
+  <span style="flex:1"></span>
+  <button id="export-profiles-btn" type="button" class="manager-btn" disabled>导出</button>
+  <button id="import-profiles-btn" type="button" class="manager-btn">导入</button>
+  <input type="file" id="import-file-input" accept=".json" style="display:none" />
+</div>
+
+<div class="section">
+  <div class="section-title">基本信息</div>
+  <div class="field-grid">
+    <div class="field"><label>真实姓名</label><input type="text" id="char-name" placeholder="角色的真实姓名" /></div>
+    <div class="field"><label>年龄</label><input type="text" id="char-age" placeholder="如 22" /></div>
+    <div class="field"><label>种族</label><select id="char-race">
+      <option value="人类">人类</option><option value="狼兽人">狼兽人</option><option value="虎兽人">虎兽人</option>
+      <option value="龙兽人">龙兽人</option><option value="鲨鱼兽人">鲨鱼兽人</option><option value="熊兽人">熊兽人</option>
+      <option value="狐兽人">狐兽人</option><option value="魅魔">魅魔</option><option value="史莱姆">史莱姆</option>
+      <option value="触手怪">触手怪</option><option value="改造人">改造人</option><option value="混血">混血</option>
+    </select></div>
+    <div class="field"><label>擂台代号</label><input type="text" id="char-alias" placeholder="在擂台上使用的名字" /></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">身份与性格</div>
+  <div class="field-grid single">
+    <div class="field"><label>身份 / 背景</label><input type="text" id="char-identity" placeholder="如 废街的拾荒者、破产的前企业战士" /></div>
+    <div class="field"><label>性格特质</label><input type="text" id="char-traits" placeholder="如 外表冷漠但内心渴望被认可，对弱者有怜悯心但对强者充满战意" /></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">简要外貌（AI将基于此扩写）</div>
+  <div class="field full-width"><label>外貌关键词</label><textarea id="appearance-keywords" name="appearance-keywords" autocomplete="on" placeholder="例如：轮廓分明的消瘦面庞，鼻梁高挺..."></textarea></div>
+  <div class="field full-width" style="margin-top:10px;"><label>肉体关键词</label><textarea id="body-keywords" name="body-keywords" autocomplete="on" placeholder="例如：178cm，精瘦结实，肌肉线条明显..."></textarea></div>
+</div>
+
+<div class="section">
+  <div class="section-title">人际关系</div>
+  <div class="field-grid single">
+    <div class="field"><label>重要之人</label><textarea id="char-relationships" name="char-relationships" autocomplete="on" placeholder="描述主角身边的重要角色，AI会在生成时将其录入角色名录..."></textarea></div>
+  </div>
+</div>
+
+<div class="submit-area">
+  <button id="generate-btn" type="button" class="action-btn"><span>⚡ 报名参赛</span></button>
+  <button id="reset-form-btn" type="button" class="action-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.1);font-size:0.8rem;">重置表单</button>
+  <p id="notification"></p>
+</div>
+</form>
+
+<div class="footer-sig">Designed for CyberArena · 黑曜市地下擂台 v1.0</div>
+</div></div></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('creator-form');
+    const generateBtn = document.getElementById('generate-btn');
+    const resetFormBtn = document.getElementById('reset-form-btn');
+    const notification = document.getElementById('notification');
+    const initialButtonHTML = generateBtn.innerHTML;
+    const allInputs = Array.from(form.querySelectorAll('input, textarea, select'));
+
+    const profileSelect = document.getElementById('profile-select');
+    const loadProfileBtn = document.getElementById('load-profile-btn');
+    const saveProfileBtn = document.getElementById('save-profile-btn');
+    const deleteProfileBtn = document.getElementById('delete-profile-btn');
+    const exportProfilesBtn = document.getElementById('export-profiles-btn');
+    const importProfilesBtn = document.getElementById('import-profiles-btn');
+    const importFileInput = document.getElementById('import-file-input');
+
+    const AUTOSAVE_KEY = 'cyberarena_AutoSave_v1';
+    const PROFILE_STORAGE_KEY = 'cyberarena_ProfileManager_v1';
+    let saveTimeout;
+
+    // --- 文本框高度自适应 ---
+    const textareas = document.querySelectorAll('textarea');
+    const autoResizeTextarea = (ta) => {
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 'px';
+    };
+    textareas.forEach(ta => {
+        ta.addEventListener('input', () => { autoResizeTextarea(ta); debouncedAutoSave(); });
+    });
+
+    const showNotification = (message, color = 'var(--cyan)') => {
+        notification.textContent = message;
+        notification.style.color = color;
+        notification.style.opacity = '1';
+        clearTimeout(notification.timeoutId);
+        notification.timeoutId = setTimeout(() => { notification.style.opacity = '0'; }, 3500);
+    };
+
+    const getCurrentFormData = () => {
+        const data = {};
+        allInputs.forEach(input => {
+            if (input.id) data[input.id] = input.value;
+        });
+        return data;
+    };
+
+    const populateForm = (data) => {
+        if (!data) return;
+        allInputs.forEach(input => {
+            const key = input.id;
+            if (data[key] !== undefined) {
+                input.value = data[key];
+            } else if (input.type === 'text' || input.tagName === 'TEXTAREA') {
+                input.value = '';
+            }
+        });
+        setTimeout(() => { textareas.forEach(ta => autoResizeTextarea(ta)); }, 10);
+    };
+
+    const saveAutoSave = () => localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(getCurrentFormData()));
+    const debouncedAutoSave = () => { clearTimeout(saveTimeout); saveTimeout = setTimeout(saveAutoSave, 500); };
+
+    const loadAutoSave = () => {
+        const autoSavedData = localStorage.getItem(AUTOSAVE_KEY);
+        if (autoSavedData) {
+            populateForm(JSON.parse(autoSavedData));
+        }
+    };
+
+    const getProfiles = () => JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY)) || {};
+    const saveProfiles = (profiles) => localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+
+    const populateDropdown = () => {
+        const profiles = getProfiles();
+        const profileNames = Object.keys(profiles);
+        profileSelect.innerHTML = '';
+        if (profileNames.length === 0) {
+            profileSelect.innerHTML = '<option value="">-- 尚无已存方案 --</option>';
+            loadProfileBtn.disabled = true;
+            deleteProfileBtn.disabled = true;
+            exportProfilesBtn.disabled = true;
+        } else {
+            profileSelect.innerHTML = '<option value="">-- 选择一个方案 --</option>';
+            profileNames.sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                profileSelect.appendChild(option);
+            });
+            loadProfileBtn.disabled = false;
+            deleteProfileBtn.disabled = false;
+            exportProfilesBtn.disabled = false;
+        }
+    };
+
+    form.addEventListener('input', debouncedAutoSave);
+
+    saveProfileBtn.addEventListener('click', () => {
+        const defaultName = document.getElementById('char-name').value || '未命名方案';
+        const profileName = prompt('请输入方案名称：', defaultName);
+        if (profileName && profileName.trim() !== '') {
+            const profiles = getProfiles();
+            profiles[profileName.trim()] = getCurrentFormData();
+            saveProfiles(profiles);
+            populateDropdown();
+            profileSelect.value = profileName.trim();
+            showNotification(`方案 "${profileName.trim()}" 已保存！`);
+        }
+    });
+
+    loadProfileBtn.addEventListener('click', () => {
+        const selectedName = profileSelect.value;
+        if (selectedName) {
+            const profiles = getProfiles();
+            if (profiles[selectedName]) {
+                populateForm(profiles[selectedName]);
+                debouncedAutoSave();
+                showNotification(`已读取方案 "${selectedName}"。`);
+            }
+        } else {
+            showNotification('请先从下拉栏中选择一个方案。', 'var(--pink)');
+        }
+    });
+
+    deleteProfileBtn.addEventListener('click', () => {
+        const selectedName = profileSelect.value;
+        if (selectedName) {
+            if (confirm(`确定要永久删除方案 "${selectedName}" 吗？此操作无法撤销。`)) {
+                const profiles = getProfiles();
+                delete profiles[selectedName];
+                saveProfiles(profiles);
+                populateDropdown();
+                showNotification(`方案 "${selectedName}" 已被删除。`, 'var(--pink)');
+            }
+        } else {
+            showNotification('请先从下拉栏中选择一个要删除的方案。', 'var(--pink)');
+        }
+    });
+
+    exportProfilesBtn.addEventListener('click', () => {
+        const profiles = getProfiles();
+        if (Object.keys(profiles).length === 0) return;
+        const dataStr = JSON.stringify(profiles, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `cyberarena-profiles-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showNotification('所有方案已成功导出！');
+    });
+
+    importProfilesBtn.addEventListener('click', () => importFileInput.click());
+
+    importFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedProfiles = JSON.parse(e.target.result);
+                if (typeof importedProfiles !== 'object' || importedProfiles === null) { throw new Error('无效的文件格式。'); }
+                let currentProfiles = getProfiles();
+                let importedCount = 0, skippedCount = 0;
+                for (const name in importedProfiles) {
+                    if (currentProfiles[name]) {
+                        if (confirm(`已存在同名方案 "${name}"，是否要覆盖它？`)) { currentProfiles[name] = importedProfiles[name]; importedCount++; }
+                        else { skippedCount++; }
+                    } else { currentProfiles[name] = importedProfiles[name]; importedCount++; }
+                }
+                saveProfiles(currentProfiles);
+                populateDropdown();
+                showNotification(`成功导入 ${importedCount} 个方案，跳过 ${skippedCount} 个。`);
+            } catch (error) {
+                showNotification('导入失败！请确保文件格式正确。', 'var(--pink)');
+                console.error("Import error:", error);
+            } finally {
+                importFileInput.value = '';
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    resetFormBtn.addEventListener('click', () => {
+        if (confirm('确定要清空当前所有填写的内容，并将表单重置为默认状态吗？')) {
+            form.reset();
+            debouncedAutoSave();
+            showNotification('表单已重置为默认状态。', 'var(--cyan)');
+        }
+    });
+
+    generateBtn.addEventListener('click', () => {
+        saveAutoSave();
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<span>正在报名...</span>';
+        notification.style.opacity = '0';
+
+        const data = getCurrentFormData();
+        const formatValue = (value, placeholder = '[AI请填充]') => {
+            const trimmedValue = (value || "").trim();
+            return trimmedValue === '' ? placeholder : `"${trimmedValue}"`;
+        };
+
+        const yamlString = `<init_data>
+\`\`\`yaml
+# AI任务指令：解析以下用户创角档案，生成开场白并初始化所有变量。
+# 对于值为 "[AI请填充]" 的字段，你【必须】基于已有设定进行富有想象力的、合理的填充。
+
+创角档案:
+  基本信息:
+    姓名: ${formatValue(data['char-name'], '')}
+    年龄: ${formatValue(data['char-age'])}
+    种族: ${formatValue(data['char-race'])}
+    擂台代号: ${formatValue(data['char-alias'])}
+  身份与性格:
+    身份: ${formatValue(data['char-identity'])}
+    性格特质: ${formatValue(data['char-traits'])}
+  简要外貌:
+    外貌关键词: ${formatValue(data['appearance-keywords'])}
+    肉体关键词: ${formatValue(data['body-keywords'])}
+  人际关系: ${formatValue(data['char-relationships'], '无')}
+\`\`\`
+</init_data>`;
+
+        setTimeout(() => {
+            try {
+                const inputArea = window.parent.document.querySelector('#send_textarea');
+                const sendButton = window.parent.document.querySelector('#send_but');
+                if (inputArea && sendButton) {
+                    inputArea.value = yamlString;
+                    inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                    sendButton.click();
+                    showNotification('报名成功！等待AI回应...');
+                    generateBtn.innerHTML = '<span>报名已发送</span>';
+                } else { throw new Error('SillyTavern UI not found.'); }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                generateBtn.innerHTML = '<span>发送失败</span>';
+                navigator.clipboard.writeText(yamlString).then(() => {
+                    showNotification('自动发送失败！已复制到剪贴板。', 'var(--pink)');
+                });
+            }
+            setTimeout(() => {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = initialButtonHTML;
+            }, 5000);
+        }, 500);
+    });
+
+    // 初始化
+    populateDropdown();
+    loadAutoSave();
+});
+</script>
+</body>
+</html>
+```

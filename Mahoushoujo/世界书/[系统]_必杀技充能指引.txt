@@ -1,0 +1,45 @@
+<%_{
+// --- [系统] 必杀充能指引 (合并版) ---
+const stat = getvar('stat_data');
+const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+const isFallen = personality === '堕落';
+const phase = _.get(stat, '进程.阶段');
+
+if (phase === '战斗回合') {
+    const ultVar = isFallen ? '主角.核心状态.污秽魔力' : '主角.核心状态.净化之力';
+    const ult = parseInt(_.get(stat, ultVar, 0), 10);
+
+    if (ult > 0 && ult < 100) {
+        let desc = '';
+        if (isFallen) {
+            if (ult < 50) desc = '战斗的刺激与快感化作甜美的毒药，在体内转化为污秽魔力。';
+            else if (ult < 90) desc = '魔力与情欲深度融合。';
+            else desc = '污秽魔力已达临界！';
+        } else {
+            if (ult < 70) desc = '在承受屈辱与伤害时，内心的不甘会化作力量。';
+            else if (ult < 95) desc = '身体虽然被迫承受着快感，但反击的意志却愈发坚定。';
+            else desc = '净化之力已达临界点！绝地反击的时刻即将到来。';
+        }
+
+        const objective = isFallen
+            ? '在战斗中，主角通过以下方式积蓄【污秽魔力】。'
+            : '在战斗中，主角主动攻击的意志和承受侵犯的屈辱会转化为反击的力量。';
+
+        const warning = isFallen
+            ? '请将这种力量的积蓄自然融入到她的姿态、色气的反击和享受的表情中。【严禁】生硬地重复「她正在积攒污秽魔力」这种机械废话！'
+            : '请将这股力量自然地融入到主角的神态与感官描写中。【严禁】描写「她正在积攒净化之力」这种 META 用语！';
+_%>
+ultimate_charge_aura:
+  objective: "<%= objective %>"
+<%_ if (isFallen) { _%>
+  accumulation_methods:
+    - source: "主动侵蚀：当主角成功诱惑了敌人，或是利用身体/魔力让敌人陷入了快感、动摇了敌人的战意时。"
+      action: "适当增加污秽魔力。"
+    - source: "汲取战斗的愉悦：当描述主角享受战斗、或从与强敌的交锋中获得满足感时。"
+      action: "为主角适当增加对应的【污秽魔力】。"
+<%_ } _%>
+  narrative_guidance:
+    - "<%= desc %>"
+    - "<%= warning %>"
+<%_ } } _%>
+<%_ }_%>

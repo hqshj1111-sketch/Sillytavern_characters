@@ -1,5 +1,5 @@
-﻿<%_
-var personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '英雄');
+﻿<%_{
+const personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '英雄');
 if (personality === '英雄') {
     if (
       _.get(getvar('stat_data'), '主角.核心状态.正义充能') >= 100 &&
@@ -14,9 +14,12 @@ action_trigger:
     good_example:
       - "通过主角的感官的思路进行描写必杀的准备。"
       - "在描写的结尾引导性地、自然地将行动权交给玩家。"
-
-
+  <%_ if (_.get(getvar('stat_data'), '进程.阶段') === '战斗败北') { _%>
+  comeback_context: |
+    主角的正义充能达到顶峰。
+    如果主角选择用最后的意志释放全部力量，在叙事完成后，AI必须使用JSONPatch将Boss韧性值减至0来表现必杀技的毁灭性效果，并将阶段切换至战斗胜利。
+  <%_ } _%>
 <%_
     }
-}
+}}
 _%>

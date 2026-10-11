@@ -1,0 +1,224 @@
+<%_
+{
+const s = getvar('stat_data');
+if (s && s.主角 && s.进程) {
+    const time = s.进程 || {};
+    const state = s.主角.当前状态 || {};
+    const inv = s.主角.特殊物品栏 || {};
+    const exp = s.主角.性经验记录 || {};
+
+    // 计算当前时段与描述
+    const nowMinutes = (parseInt(_.get(s, '进程.当前时间戳', 0)) || 0) + 540;
+    const days = Math.floor(nowMinutes / 1440) + 1;
+    const timeStr = String(Math.floor((nowMinutes % 1440) / 60)).padStart(2, '0') + ':' + String(nowMinutes % 60).padStart(2, '0');
+    const hour = Math.floor((nowMinutes % 1440) / 60);
+    let periodName = '';
+    let periodDesc = '';
+    if (hour >= 6 && hour < 9) {
+      periodName = '清晨';
+      periodDesc = '晨光微露，空气清新微凉，小镇渐渐从沉睡中苏醒。';
+    } else if (hour >= 9 && hour < 12) {
+      periodName = '上午';
+      periodDesc = '太阳渐高，气温攀升，街上开始变得热闹起来。';
+    } else if (hour >= 12 && hour < 14) {
+      periodName = '正午';
+      periodDesc = '烈日当空，蝉鸣震耳，一天中最闷热的时段，多数人在室内避暑或午睡。';
+    } else if (hour >= 14 && hour < 17) {
+      periodName = '下午';
+      periodDesc = '热浪稍缓，但空气依然粘腻，镇上到处可见闲逛、玩闹的身影。';
+    } else if (hour >= 17 && hour < 19) {
+      periodName = '傍晚';
+      periodDesc = '夕阳染红天际，海风送来凉意，正是外出散步、觅食的好时候。';
+    } else if (hour >= 19 && hour < 23) {
+      periodName = '晚上';
+      periodDesc = '夜色降临，但小镇的夜生活才刚开始。居酒屋、浴场、祭典广场、公园仍活跃着人群，大部分人直到深夜11点后才准备入睡。';
+    } else if (hour >= 23 || hour < 4) {
+      periodName = '深夜';
+      periodDesc = '万籁俱寂，虫鸣与月光为伴，只有少数夜猫子或失眠的人还在游荡。';
+    } else if (hour >= 4 && hour < 6) {
+      periodName = '凌晨';
+      periodDesc = '天边泛起鱼肚白，小镇即将迎接黎明，偶有早起的居民开始活动。';
+    }
+_%>
+# 全局动态档案
+
+## 1. 当前环境
+[当前时间]: 暑假第<%= time.暑假天数 || 1 %>天 | 本回合开始时间: <%= timeStr %> 
+[当前时段]: <%= periodName %> | <%= periodDesc %>
+[当日天气]: <%= time.当日天气 || '晴' %> | 气温<%= time.当日气温 || 32 %>℃
+<%_
+  const todayDay = parseInt(time.暑假天数) || 1;
+  const allEvents = _.get(s, '活动日历', []);
+  const todayEvent = allEvents.find(e => e.日期 === todayDay); 
+  if (todayEvent) {
+_%>
+[今日活动]: <%= todayEvent.名称 %> (地点: <%= todayEvent.地点 %> | 时间: <%= todayEvent.持续时间 %>) - <%= todayEvent.描述 %>
+<%_
+  }
+_%>
+
+## 2. 主角当前状态
+[当前地点]: <%= state.当前区域 || '未知' %> - <%= state.当前地点 || '未知' %>
+[生理与着装]: 着装: <%= state.当前着装 || '未知' %> | 生理: <%= state.当前生理动态 || '未知' %>
+[特殊物品]: 
+<%_ 
+    const invKeys = Object.keys(inv);
+    if (invKeys.length > 0) {
+        invKeys.forEach(name => {
+            const item = inv[name];
+_%>
+- 【<%= name %>】: <%= item.描述 || '暂无描述' %> (来源: <%= item.来源 || '未知' %>)
+<%_ 
+        });
+    } else { 
+_%>
+(当前物品栏为空)
+<%_ } _%>
+<%_ if (_.get(s, '主角.露出主播.注册', false)) {
+    const fans = _.get(s, '主角.露出主播.粉丝数', 0);
+    let popularity = '';
+    if (fans === 0) {
+        popularity = '毫无名气的新人主播';
+    } else if (fans <= 100) {
+        popularity = '偶尔有人驻足的小透明';
+    } else if (fans <= 1000) {
+        popularity = '开始积累固定观众的小主播';
+    } else if (fans <= 10000) {
+        popularity = '小有名气的露出系红人';
+    } else {
+        popularity = '色情直播界的一颗人气新星';
+    }
+_%>
+[主播信息]: 主播名: <%= _.get(s, '主角.露出主播.主播名字', '') %> | 粉丝: <%= fans %>（人气：<%= popularity %>）| 直播态度: <%= _.get(s, '主角.露出主播.态度', '好奇') %>
+<%_ } _%>
+
+## 3. NPC实时沙盒与羁绊状态
+【核心原则】：夏日小镇的情感是自由且包容的，严禁出现沉重、排他的极端占有欲。
+【相处指导】：结合角色人设及其与主角的羁绊和关系，描写二人的互动和相处方式。
+
+<%_ 
+    const npcData = s.NPC数据 || {};
+    const npcNames = Object.keys(npcData);
+    if (npcNames.length > 0) {
+        npcNames.forEach(name => {
+            const npc = npcData[name];
+            const locStr = `${npc.当前状态.当前区域 || '未知'} - ${npc.当前状态.当前地点 || '未知'}`;
+            const actionStr = npc.当前状态.当前动作 || '未知';
+            const statusStr = npc.当前状态.当前生理 || '未知';   // 使用“当前生理”字段
+        
+            // 计算已持续回合数
+            const curTurn = parseInt(_.get(s, '进程.当前回合数', 1), 10) || 1;
+            const locStartTurn = parseInt(npc.当前状态.当前地点开始回合, 10) || 0;
+            const locDuration = Math.max(0, curTurn - locStartTurn); // 若未记录，按0回合
+        
+            // 计算动作已持续时间
+            const nowM = parseInt(_.get(s, '进程.当前时间戳', 0)) || 0;
+            const actStart = parseInt(npc.当前状态.当前动作开始时间, 10) || nowM; // 未记录则视为刚刚开始
+            const diff = Math.max(0, nowM - actStart);
+            const actHours = Math.floor(diff / 60);
+            const actMinutes = diff % 60;
+
+            const npcGoal = npc.当前状态.当前目标 || '未知';
+            const goalEstimated = npc.当前状态.当前目标预计用时 || '未设定';
+            const goalStart = parseInt(npc.当前状态.当前目标开始时间, 10);
+            const goalDiff = Math.max(0, nowM - goalStart);
+            const goalH = Math.floor(goalDiff / 60);
+            const goalM = goalDiff % 60;
+            
+            const rel = npc.主角关系 || {};
+            const intimacy = parseInt(rel.亲密度, 10) || 0;
+            const lust = parseInt(rel.情欲度, 10) || 0;
+            const currentTag = rel.当前关系 || '未定义';
+
+            let iLevel = intimacy >= 75 ? 3 : (intimacy >= 50 ? 2 : (intimacy >= 25 ? 1 : 0));
+            let lLevel = lust >= 75 ? 3 : (lust >= 50 ? 2 : (lust >= 25 ? 1 : 0));
+            const impression = _.get(npc, `看法矩阵.${iLevel}-${lLevel}`, '待设定');
+
+            let constraintStr = "";
+            if (intimacy < 75 && (intimacy > 0 || lust > 0)) {
+                constraintStr = "【阶段约束: 尚未达到恋人程度，保持在友达/暧昧或纯肉体边界内，勿表现出情侣的理所当然】";
+            }
+
+            const maxRel = Math.max(intimacy, lust);
+            let currentAppellation = '未设定';
+            const appellationObj = npc.主角关系?.称谓 || {};
+            if (maxRel >= 75) currentAppellation = appellationObj.阶段4 || '未设定';
+            else if (maxRel >= 50) currentAppellation = appellationObj.阶段3 || '未设定';
+            else if (maxRel >= 25) currentAppellation = appellationObj.阶段2 || '未设定';
+            else currentAppellation = appellationObj.阶段1 || '未设定';
+
+            // 在遍历NPC的循环中，添加秘密发现判断逻辑
+            let secretHint = "";
+            if (name === '月下雪乃' || name === '神崎莲') {
+                const discovered = _.get(npc, '秘密发现', false);
+                if (name === '月下雪乃') {
+                    secretHint = discovered 
+                        ? "主角已察觉她隐藏的淫乱本性和主播身份。" 
+                        : "主角尚未发现她那温婉外表下掩盖着超人气露出主播身份。";
+                } else if (name === '神崎莲') {
+                    secretHint = discovered 
+                        ? "主角已发现了他那隐藏起来的女装癖好。" 
+                        : "主角尚未知晓他藏有女装癖的可爱秘密。";
+                }
+            }
+
+            const firstMet = _.get(npc, '初次见面', false);
+            let firstMetHint = "";
+            if (!firstMet) {
+                firstMetHint = `⚠️ 尚未正式见面：主角对【${name}】的认知仅停留在童年模糊记忆中，严禁描写任何对其当前性格、身体、生活的具体了解。互动必须以完全陌生的姿态开始。`;
+            }
+_%>
+
+- [<%= name %>]:
+  > 位置: 位于 <%= locStr %> (已持续 <%= locDuration %> 回合)
+  > 动作: <%= actionStr %> (已持续 <%= actHours %>小时<%= actMinutes %>分钟)
+  > 目标: <%= npcGoal %> (预计用时: <%= goalEstimated %>，已耗时: <%= goalH %>小时<%= goalM %>分钟) 
+  > 生理状态: <%= statusStr %>
+  <%_ if (name === '希克') { _%>
+  > 当前性别: <%= _.get(npc, '当前性别', '男') %> | 注意: 按<%= _.get(npc, '当前性别', '男') === '男' ? '男性' : '女性' %>身体特征进行描写
+  <%_ } _%>
+  > 羁绊与态度: [关系]: <%= currentTag %> | [看法]: <%= impression %> | [称呼]: <%= currentAppellation %> | <%= constraintStr %>
+  <%_ if (name === '月下雪乃' || name === '神崎莲') { _%>
+  > 秘密察觉: <%= secretHint %>
+  <%_ } _%>
+  <%_ if (!firstMet) { _%>
+  > <%= firstMetHint %>
+  <%_ } _%>
+  > 今日完成事项: <%_ 
+    const todayTaskList = npc.今日完成事项列表 || [];
+    if (todayTaskList.length > 0) { _%><%= todayTaskList.join('、') %><%_ } else { _%>无<%_ } _%>
+
+<%_ }); _%>
+## NPC沙盒推演细则
+sandbox_rules:
+  驱动模式: "目标驱动。NPC的行为由当前目标决定，时间仅用于辅助判断进度。"
+  
+  推演闭环 (逐位NPC执行):
+    步骤1_审视目标:
+      - 读取 当前目标、当前动作、当前动作持续时间。
+      - 结合 当前动作、当前动作持续时间，判断目标完成度（刚开始/进行中/快完成了/已完成）。
+    步骤2_分支处理:
+      - 若 已耗时 < 预计用时 → 未达成；否则 → 已达成。
+      - 未达成 → 更新 当前动作 ，继续推进。
+      - 已达成 → 严格对齐当前时间至NPC个人日程[上午/下午/晚上]专属时段，基于该时段基准设定生成新 当前目标。禁止跨时段粘滞单一行为（如全日沉迷同种爱好）。新目标严禁与该NPC的【今日完成事项】发生任何语义雷同。同时必须为其设定一个合理的 当前目标预计用时。随后生成相应的 当前动作。
+      - 若到了固定时间节点，如吃晚饭、睡觉等，可以强制终止当前目标，生成新的 当前目标 和 当前目标预计用时。
+    步骤3_地点联动:
+      - 新动作需换场景 → 更新 当前区域 和 当前地点（须从汐见沢町标准地点列表中选）。
+      - 原地可完成 → 保持区域和地点不变。
+      - 叙事上发生变化 → 更新 当前区域 和 当前地点。
+    步骤4_生理附随:
+      - 上述任何字段发生变更 → 必须同步更新 当前生理，用一句话描述此刻身体状态。
+    步骤5_前台覆写:
+      - 若NPC于正文交互登场，判定为前台状态。必须依据最新叙事表现，强制更新其 当前动作 与 当前生理；若交互导致其位置、意图改变，同步更新 当前地点 当前目标 与 当前目标预计用时。
+  
+  自主性要求:
+    - NPC的行为主要服务于自己的日程、爱好和目标，不得所有行动都围绕主角。
+    - 仅当NPC与主角处于同一地点，或有近期互动未完待续时，目标才可轻微关联主角。
+    - 当NPC独处时，可以基于其日程与性特质，自发进行自慰、观看色情内容、尝试情趣用品等私人情欲行为。
+  
+  示例 (下午两点，晴天，34°C):
+    雨宫凉子（目标：“晾晒被褥”，预计30分钟，已耗时25分钟）→ 快完成了但未超时 → 动作推进为“拍打最后一个枕头的灰尘”。
+    神崎莲（目标：“挑选猫咪挂件”，预计30分钟，已耗时1.5小时）→ 远超预计 → 判定完成，日程下午“街头闲逛” → 新目标：“找个没人的地方试戴新发卡”，预计15分钟，新动作：“往公共厕所的镜子走”。
+<%_  } else { _%>
+(当前暂无记录的NPC动态)
+<%_ }}} _%>

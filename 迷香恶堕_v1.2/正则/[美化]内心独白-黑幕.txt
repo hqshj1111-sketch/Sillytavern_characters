@@ -1,0 +1,8 @@
+<span class="mxe-spoiler mxe-spoiler-thought" title="鼠标悬停查看角色内心独白"><style>
+.mxe-spoiler { display: inline-flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; margin: 2px 3px; padding: 2px 8px; border-radius: 6px; transition: all 0.3s ease; vertical-align: middle; cursor: pointer; text-decoration: none; font-size: inherit; max-width: 100%; box-sizing: border-box; }
+.mxe-spoiler-thought { background: #130d22; border: 1px solid rgba(168,85,247,0.35); box-shadow: 0 0 8px rgba(168,85,247,0.15); }
+.mxe-spoiler-thought .spoiler-tag { font-family: 'Rajdhani', 'Noto Sans SC', sans-serif; font-size: 0.74rem; font-weight: 700; color: #c084fc; background: rgba(168,85,247,0.2); padding: 1px 6px; border-radius: 4px; user-select: none; flex-shrink: 0; line-height: 1.4; margin-top: 2px; }
+.mxe-spoiler-thought .spoiler-text { color: transparent; background: rgba(0,0,0,0.92); border-radius: 4px; padding: 1px 4px; filter: blur(5px); transition: all 0.3s ease; user-select: none; white-space: pre-wrap; word-break: break-word; flex: 1 1 auto; line-height: 1.6; }
+.mxe-spoiler-thought:hover, .mxe-spoiler-thought:active { background: #26163e; border-color: #a855f7; box-shadow: 0 0 14px rgba(168,85,247,0.35); }
+.mxe-spoiler-thought:hover .spoiler-text, .mxe-spoiler-thought:active .spoiler-text { color: #ffd08a; background: transparent; filter: blur(0); user-select: text; }
+</style><span class="spoiler-tag">💭 内心</span><span class="spoiler-text">$1</span></span>

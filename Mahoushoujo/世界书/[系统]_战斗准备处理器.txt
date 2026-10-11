@@ -1,18 +1,18 @@
-<%_{
+<%{
 const stat = getvar('stat_data');
 if (stat && _.get(stat, '进程.阶段') === '战斗准备') {
     const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
     const isFallen = (personality === '堕落');
-    
+
     // 确保默认值为 '魔物'，防越界
     const rawCombatType = _.get(stat, '世界.当前关卡.战斗类型', '魔物');
     const combatType = ['魔物', '魔法少女', '人类'].includes(rawCombatType) ? rawCombatType : '魔物';
-    
+
     const bossName = _.get(stat, '世界.当前关卡.名称', '未知');
     const bossStrength = _.get(stat, '世界.当前关卡.Boss基础强度', 50);
     const playerStrength = _.get(stat, '主角.核心状态.基础强度', 50);
-    const rawThemes = _.get(stat, '世界.当前关卡.核心主题',[]);
-    const themes = (Array.isArray(rawThemes) ? rawThemes :[]).filter(t => t !== "$__META_EXTENSIBLE__$").join(' / ');
+    const rawThemes = _.get(stat, '世界.当前关卡.核心主题', []);
+    const themes = (Array.isArray(rawThemes) ? rawThemes : []).filter(t => t !== "$__META_EXTENSIBLE__$").join(' / ');
 
     // --- 0. 动态称呼生成 ---
     let enemyNoun = '敌人';
@@ -26,44 +26,51 @@ if (stat && _.get(stat, '进程.阶段') === '战斗准备') {
         else enemyNoun = '魔物';
     }
 
-    // --- 1. 危机值读取 ---
+    // --- 1. 危机值与威胁等级读取 ---
     const alertnessStr = _.get(stat, '系统状态.待处理事件.环境警戒度', '0');
     let alertness = parseInt(alertnessStr, 10) || 0;
+    const threatLevel = parseInt(_.get(stat, '世界.威胁等级', 2), 10);
 
-    // --- 2. 战前检定骰子引擎 ---
-    const DIVISOR = 10;
-    const DICE_FACE = 20;
+    // --- 2. 战前单骰检定引擎 (强力压迫版) ---
+    const pNatRoll = _.random(1, 20);
+    const eNatRoll = _.random(1, 20);
 
-    const pDiceCount = Math.max(1, Math.floor(playerStrength / DIVISOR));
-    const envDiceCount = Math.max(1, Math.floor(bossStrength / DIVISOR)); 
+    const pBaseMod = Math.floor(playerStrength / 5);
+    const eBaseMod = Math.floor(bossStrength / 5);
 
-    let pRoll = 0; for(let i=0; i<pDiceCount; i++) pRoll += _.random(1, DICE_FACE);
-    let eTotal = 0; for(let i=0; i<envDiceCount; i++) eTotal += _.random(1, DICE_FACE);
-    
-    // --- 3. 淫纹发情机制 (阵营分化) ---
+    // 【改动点1】：警戒度 1:1 转化为敌方加值，随试探急剧升高
+    const alertMod = Math.round(alertness * 1.0); 
+
+    // 【改动点2】：战前引入威胁等级修正 (Lv.1 -2, Lv.2 0, Lv.3 +4)
+    const threatMod = (threatLevel === 3) ? 4 : (threatLevel === 1 ? -2 : 0);
+
+    // 发情与未变身修正
     const curseXp = _.get(stat, '主角.淫纹.经验', 0);
-    const curseLv = curseXp <= 0 ? 0 : (curseXp < 100 ? 1 : (curseXp < 300 ? 2 : 3));
+    const curseLv = curseXp <= 0 ? 0 : (curseXp < 150 ? 1 : (curseXp < 400 ? 2 : 3));
     const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
     const threshold = _.get(stat, '主角.快感状态.高潮阈值', 100);
     const ratio = Math.min(1, pleasure / threshold);
 
-    let estrusMod = 0;
-    if (curseLv > 0 && ratio > 0.4) {
-        estrusMod = Math.floor(curseLv * 4);
-    }
+    let estrusMod = (curseLv > 0 && ratio > 0.4) ? (curseLv * 2) : 0;
     
-    const pTotal = Math.max(0, isFallen ? pRoll + estrusMod : pRoll - estrusMod);
-    const buffLabel = isFallen ? '爱欲优势' : '发情减益';
-    const sign = isFallen ? '+' : '-';
+    // 主角总点数
+    const pTotal = Math.max(0, pNatRoll + pBaseMod + (isFallen ? estrusMod : -estrusMod));
+    // 敌方总点数 (基础 + 警戒锁定 + 威胁级别)
+    const eTotal = Math.max(0, eNatRoll + eBaseMod + alertMod + threatMod);
 
-    eTotal += alertness; 
-    
     const difference = pTotal - eTotal;
 
-    const pFormula = estrusMod > 0 ? `${pDiceCount}d${DICE_FACE}${sign}${estrusMod}[${buffLabel}]=${pTotal}` : `${pDiceCount}d${DICE_FACE}=${pTotal}`;
-    const eFormula = alertness > 0 ? `${envDiceCount}d${DICE_FACE}+${alertness}[警戒]=${eTotal}` : `${envDiceCount}d${DICE_FACE}=${eTotal}`;
+    // 构建详细对账公式
+    const pFormula = estrusMod > 0 
+        ? `d20(${pNatRoll})+${pBaseMod}${isFallen?'+':'-'}${estrusMod}=${pTotal}` 
+        : `d20(${pNatRoll})+${pBaseMod}=${pTotal}`;
 
-// --- 4. 敌方特化叙事矩阵 (NARRATIVE_DB 泛化重构版) ---
+    let eFormulaParts = [`d20(${eNatRoll})`, `+${eBaseMod}`];
+    if (alertMod > 0) eFormulaParts.push(`+${alertMod}[警戒锁定]`);
+    if (threatMod !== 0) eFormulaParts.push(threatMod > 0 ? `+${threatMod}[强敌]` : `${threatMod}[弱敌]`);
+    const eFormula = `${eFormulaParts.join('')}=${eTotal}`;
+
+    // --- 4. 敌方特化叙事矩阵 (NARRATIVE_DB 泛化重构版) ---
     const NARRATIVE_DB = {
         '善良': {
             'CRIT_SUCCESS': {
@@ -111,50 +118,53 @@ if (stat && _.get(stat, '进程.阶段') === '战斗准备') {
         }
     };
 
-    // --- 5. 结果分级与数值生成 ---
+// --- 5. 结果分级 ---
     let tier, outcomeLabel, narrativeGuide;
     let hpLoss = 0, pleasureGain = 0, rawBossStrDebuff = 0;
     let isAmbushed = false;
     let alertInc = 0;
 
     let pKey = isFallen ? '堕落' : '善良';
+    const rawTactic = _.get(stat, '主角.战斗临时.战斗方式', '周旋');
+    const isEngageTactic = (rawTactic === '开战');
 
-    if (alertness >= 20) {
-        tier = 'FAIL'; 
-        outcomeLabel = isFallen ? "全面反扑" : "危机爆发";
-        alertInc = 0;
-        hpLoss = _.random(15, 25); pleasureGain = _.random(15, 25);
-        isAmbushed = true;
-        narrativeGuide = `[警戒度已达极限！] ` + NARRATIVE_DB[pKey]['FAIL'][combatType];
-    } else if (difference > 15) {
-        tier = 'CRIT_SUCCESS'; 
-        outcomeLabel = isFallen ? "致命诱导" : "完美潜行";
+    if (alertness >= 10) {
+        if (isEngageTactic) {
+            tier = 'ENGAGE_AT_MAX';
+            outcomeLabel = isFallen ? "堂堂正正" : "对决！";
+            narrativeGuide = `主角不再躲藏，主动开战！`;
+        } else {
+            tier = 'FAIL';
+            outcomeLabel = "危机爆发";
+            hpLoss = _.random(15, 25); pleasureGain = _.random(15, 25);
+            isAmbushed = true;
+            narrativeGuide = `[警戒度已满！] ` + NARRATIVE_DB[pKey]['FAIL'][combatType];
+        }
+    } else if (pNatRoll === 20 || difference >= 8) { 
+        tier = 'CRIT_SUCCESS';
+        outcomeLabel = pNatRoll === 20 ? "大成功！" : (isFallen ? "优势玩弄" : "完美周旋");
         rawBossStrDebuff = _.random(5, 8);
-        let actualDebuff = Math.min(rawBossStrDebuff, bossStrength - 1);
-        alertInc = actualDebuff * 2; 
-        narrativeGuide = NARRATIVE_DB[pKey]['CRIT_SUCCESS'][combatType] + ` (大幅削减敌方强度，但敌方警戒度成倍飙升)`;
-    } else if (difference > 0) {
-        tier = 'SUCCESS'; 
-        outcomeLabel = isFallen ? "欲擒故纵" : "艰难周旋";
+        alertInc = 5;
+        narrativeGuide = NARRATIVE_DB[pKey]['CRIT_SUCCESS'][combatType];
+    } else if (difference >= 2) { 
+        tier = 'SUCCESS';
+        outcomeLabel = isFallen ? "欲擒故纵" : "有效周旋";
         rawBossStrDebuff = _.random(2, 4);
-        let actualDebuff = Math.min(rawBossStrDebuff, bossStrength - 1);
-        alertInc = actualDebuff * 2; 
-        narrativeGuide = NARRATIVE_DB[pKey]['SUCCESS'][combatType] + ` (微幅削弱敌方，警戒度上升)`;
-    } else if (difference > -15) {
-        tier = 'STALEMATE'; 
+        alertInc = 4;
+        narrativeGuide = NARRATIVE_DB[pKey]['SUCCESS'][combatType];
+    } else if (difference >= -3) { 
+        tier = 'STALEMATE';
         outcomeLabel = isFallen ? "玩火摩擦" : "小幅失误";
-        alertInc = _.random(3, 5); 
-        hpLoss = _.random(5, 10); pleasureGain = _.random(5, 15);
-        narrativeGuide = NARRATIVE_DB[pKey]['STALEMATE'][combatType] + ` (受到轻伤与快感惩罚，危机感微升)`;
+        alertInc = 4;
+        hpLoss = _.random(4, 8); pleasureGain = _.random(8, 15);
+        narrativeGuide = NARRATIVE_DB[pKey]['STALEMATE'][combatType];
     } else {
-        tier = 'FAIL'; 
-        outcomeLabel = isFallen ? "猎物暴起" : "遭遇突袭";
-        alertInc = 0; 
-        hpLoss = _.random(15, 25); pleasureGain = _.random(20, 30);
-        isAmbushed = true; 
-        narrativeGuide = `[判定大失败！] ` + NARRATIVE_DB[pKey]['FAIL'][combatType];
+        tier = 'FAIL';
+        outcomeLabel = pNatRoll === 1 ? "大失败！" : (isFallen ? "猎物暴起" : "遭遇突袭");
+        hpLoss = _.random(10, 15); pleasureGain = _.random(18, 28);
+        isAmbushed = true;
+        narrativeGuide = `[陷入危机！] ` + NARRATIVE_DB[pKey]['FAIL'][combatType];
     }
-
     const actualBossStrDebuff = Math.min(rawBossStrDebuff, bossStrength - 1);
     const nextAlertness = alertness + alertInc;
 
@@ -167,24 +177,64 @@ if (stat && _.get(stat, '进程.阶段') === '战斗准备') {
         if (hpLoss > 0) patchA.push({ "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": -hpLoss });
         if (pleasureGain > 0) patchA.push({ "op": "delta", "path": "/主角/快感状态/快感值", "value": pleasureGain });
         patchA.push({ "op": "replace", "path": "/系统状态/待处理事件/环境警戒度", "value": String(nextAlertness) });
-        patchA.push({ "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": `战前:${outcomeLabel}|P:${pFormula}|E:${eFormula}|差:${difference}` });
+        patchA.push({ "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": `战前:${outcomeLabel}|P:${pFormula}|E:${eFormula}|差:${difference}|T:${tier}` });
     }
 
     let patchB = [
         { "op": "replace", "path": "/进程/阶段", "value": "战斗回合" },
         { "op": "remove", "path": "/系统状态/待处理事件/环境警戒度" },
-        { "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": `遭遇:${outcomeLabel}|P:${pFormula}|E:${eFormula}|差:${difference}` }
+        { "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": `遭遇:${outcomeLabel}|P:${pFormula}|E:${eFormula}|差:${difference}|T:${tier}` }
     ];
     if (isAmbushed) {
         if (hpLoss > 0) patchB.push({ "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": -hpLoss });
         if (pleasureGain > 0) patchB.push({ "op": "delta", "path": "/主角/快感状态/快感值", "value": pleasureGain });
     }
 
+        // --- 方案强化：变身爆发伤害计算 ---
+    // 主角以未变身姿态周旋越久，环境警戒度越高；在开战瞬间完成变身，
+    // 以「当前警戒度」等额重创 Boss 韧性（0~20）。高风险：警戒度满 20 后继续周旋即遭突袭。
+    const burstDamage = Math.max(0, alertness);
+
     let patchC = [
         { "op": "replace", "path": "/进程/阶段", "value": "战斗回合" },
-        { "op": "remove", "path": "/系统状态/待处理事件/环境警戒度" },
-        { "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": "遭遇:直面交锋|进入战斗阶段" }
+        { "op": "replace", "path": "/主角/核心状态/变身状态", "value": true },
+        { "op": "remove", "path": "/系统状态/待处理事件/环境警戒度" }
     ];
+
+    // 若积攒了警戒度，结算等额斩击伤害
+    if (burstDamage > 0) {
+        patchC.push({ "op": "delta", "path": "/世界/当前关卡/Boss韧性值", "value": -burstDamage });
+    }
+
+    // 格式化战斗日志（|T: 为状态栏染色用的机器可读档位标记，勿删）
+    const engageLog = burstDamage > 0
+        ? `遭遇:华丽登场|警戒威慑:-${burstDamage}HP|T:${tier}`
+        : `遭遇:直面交锋|进入战斗阶段|T:${tier}`;
+    patchC.push({ "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": engageLog });
+let mode;
+if (isEngageTactic) {
+    mode = 'engage';        // 玩家主动开战 → 优先，无论警戒度
+} else if (isAmbushed) {
+    mode = 'ambush';        // 骰点大失败 / 警戒满 + 非开战 → 突袭
+} else {
+    mode = 'scout';
+}
+
+    // 语义化提示
+const TACTIC_HINTS = {
+    '周旋': '对峙、简单的进攻或战前交手',
+    '探索': '收集情报、观察环境、隐匿行踪',
+    '交涉': '对话、问话、劝降',
+    '开战': '解除封印、华丽变身'
+};
+
+    // scout 分支的语义细分提示
+const SCOUT_SUB_HINTS = {
+    '周旋': '（玩家选择了周旋：侧重与敌人的对峙与简单交手，试探性地接触战局。）',
+    '探索': '（玩家选择了探索：侧重观察环境、搜集情报、隐匿行踪，为后续行动积累信息。）',
+    '交涉': '（玩家选择了交涉：侧重与敌人的对话、问话或劝降。可能是试图了解对方的目的、喊话要求放人，或试探其真实意图。）'
+};
+
 _%>
 # 战前周旋与准备阶段
 这是正式接敌前的试探与准备阶段。主角正在通过自己的方式与暗处的威胁进行交锋。
@@ -194,39 +244,52 @@ pre_combat_phase:
     target_enemy: "<%= bossName %>"
     enemy_type: "<%= combatType %>"
     enemy_themes: "<%= themes %>"
-    current_alertness_bonus: "+<%= alertness %> -> +<%= nextAlertness %> (敌方骰子加成)"
+    alertness_meter: "<%= alertness %>/10 (本轮后升至: <%= nextAlertness %>/10)"
+    enemy_perception_bonus: "+<%= alertMod %> "
   dynamic_adaptation: "请根据当前关卡的核心主题与敌方类型，自适应地描写本阶段的周旋方式。"
+
+<%_ const isTransformedCheck = _.get(stat, '主角.核心状态.变身状态', false); _%>
+<%_ if (!isTransformedCheck) { _%>
+  transformation_alert:
+    warning: "主角当前处于未变身的状态。"
+    instruction: "如果主角变身或使用变身道具，你须在接下来的 <JSONPatch> 数组中添加 `{ \"op\": \"replace\", \"path\": \"/主角/核心状态/变身状态\", \"value\": true }`。"
+<%_ } _%>
+
   dice_check:
     player_roll: "<%= pFormula %>"
     enemy_roll: "<%= eFormula %>"
     result: "【<%= outcomeLabel %>】"
 
-  instruction: "请仔细阅读玩家的最新回复，并在你的 <Analysis> 块中判断其行为属于以下哪一种情况。**严格挑选对应的情况进行叙事，并只能输出属于该情况的 <JSONPatch> 代码块。**"
-  
+  player_intent_lock:
+    tactic_variable: "/主角/战斗临时/战斗方式"
+    current_value: "<%= rawTactic %>"
+    resolved_mode: "<%= mode %>"
+    narrative_hint: "<%= TACTIC_HINTS[rawTactic] || '未定义' %>"
+
   situations:
-<%_ if (isAmbushed) { _%>
+<%_ if (mode === 'ambush') { _%>
     - name: "【危机爆发 / 遭遇突袭】"
-      condition: "由于主角检定大失败或敌方警戒加值过高，潜行彻底暴露，冲突已经无可避免地爆发！"
       narrative_guidance: "<%= narrativeGuide %>"
       mandatory_patch: |
 <%= formatPatchBlock(patchB).split('\n').map(l => '        ' + l).join('\n') %>
-<%_ } else { _%>
+<%_ } else if (mode === 'scout') { _%>
     - name: "【继续周旋与试探】"
-      condition: "玩家没有明确大喊变身或直接冲脸开战，而是试图通过行动隐匿、色诱、搜集线索或挣脱暗中的控制。"
-      narrative_guidance: "<%= narrativeGuide %>"
+      narrative_guidance: "<%= narrativeGuide %><%= SCOUT_SUB_HINTS[rawTactic] || '' %>"
       mandatory_patch: |
 <%= formatPatchBlock(patchA).split('\n').map(l => '        ' + l).join('\n') %>
-<%_ } _%>
-
-    - name: "【主动开战 / 破局】"
-      condition: "玩家明确主动结束了试探阶段（如大喊变身、释放大范围魔法、正面迎敌）。"
-      narrative_guidance: "周旋阶段结束，战斗一触即发！描绘主角与【<%= bossName %>】正式对峙、短兵相接的瞬间。"
+<%_ } else { _%>
+    - name: "【主动开战 / 变身破局】"
+      narrative_guidance: "<%_ if (burstDamage > 0) { _%>主角不再躲藏，完成华丽变身！借由此前周旋所积攒的高度紧张与对峙氛围，主角变身刹那，成功对眼前的【<%= bossName %>】造成了震慑或击退！请描绘主角抓住时机或破绽，在重要关头完成变身，让敌人产生动摇或受到伤害。<%_ } else { _%>主角不再躲藏，完成华丽变身！虽完成了变身，但未能借助时机形成先手威慑打击，双方直接进入正面对决。<%_ } _%>正文在登场的定格中结束，战斗一触即发！"
       mandatory_patch: |
 <%= formatPatchBlock(patchC).split('\n').map(l => '        ' + l).join('\n') %>
+<%_ } _%>
 
   prohibitions:
-<%_ if (!isAmbushed) { _%>
-    - "【严禁】在'继续周旋与试探'的情况下让敌方直接展开肆无忌惮的正面侵犯或立刻进入真正的战斗！战前危机应由暗中揩油、精神侵蚀、陷阱或喽啰试探构成，必须保持拉扯感。"
+<%_ if (mode === 'scout') { _%>
+    - "【严禁】在'继续周旋与试探'的情况下，让敌方直接展开肆无忌惮的正面侵犯或立刻进入真正的战斗！战前危机应由暗中揩油、精神侵蚀、陷阱或喽啰试探构成，必须保持拉扯感。"
 <%_ } _%>
-    - "【严禁】将多种情况的 Patch 混合输出！请在 <Analysis> 中做好决定后，只输出唯一的 JSON 数组！"
+<%_ if (mode === 'engage') { _%>
+    - "【严禁】在'主动开战'分支中让主角因犹豫而退回到周旋状态！战斗已经爆发，本回合必须完成战斗的正式开场。"
+<%_ } _%>
+    - "【严禁】在战前周旋过程中，让主角或敌人离开现场，脱离叙事！这场战斗必须继续，即使一方想要离开也不能允许其离开！"
 <%_ }} _%>

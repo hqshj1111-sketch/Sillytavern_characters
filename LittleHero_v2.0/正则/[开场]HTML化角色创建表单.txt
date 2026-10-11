@@ -1,0 +1,1374 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小英雄角色创建器 v4.8</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap');
+
+        :root {
+            --bg-color: transparent;
+            --card-bg: rgba(26, 27, 38, 0.75);
+            --text-color: #c0caf5;
+            --text-secondary: #787c99;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(0, 0, 0, 0.3);
+            --accent-color: #bb9af7;
+            --accent-glow: rgba(187, 154, 247, 0.35);
+            --success-color: #9ece6a;
+            --error-color: #f7768e;
+            --font-family: 'Noto Serif SC', serif;
+        }
+
+        .theme-fallen {
+            --accent-color: #f7768e;
+            --accent-glow: rgba(247, 118, 142, 0.35);
+            --border-color: rgba(247, 118, 142, 0.25);
+        }
+
+        body, html { scroll-behavior: smooth; margin: 0; padding: 0; }
+
+        .creator-card-container {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 15px 10px;
+            font-size: 14px;
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .creator-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px 35px;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.8), 0 0 25px -5px var(--accent-glow);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .creator-card header { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); transition: border-color 0.5s ease; }
+        .creator-card h2 { margin: 0; font-size: 1.6em; font-weight: 600; color: var(--accent-color); text-shadow: 0 0 15px var(--accent-glow); transition: color 0.5s ease, text-shadow 0.5s ease; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 1px;}
+        .creator-card header p { margin: 8px 0 0; color: var(--text-secondary); font-size: 0.95em; }
+
+        .profile-manager {
+            margin-bottom: 12px; padding: 12px 18px;
+            background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 10px;
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+            transition: border-color 0.5s ease;
+        }
+        .manager-left { display: flex; align-items: center; gap: 10px; flex-grow: 1; min-width: 250px;}
+        .profile-manager label { font-weight: 600; color: var(--accent-color); font-size: 0.95em; flex-shrink: 0; transition: color 0.5s ease;}
+
+        select.form-select, #profile-select {
+            background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px;
+            padding: 8px 32px 8px 12px; color: var(--text-color); font-family: inherit; font-size: 0.95em; cursor: pointer;
+            transition: all 0.3s ease; outline: none; box-sizing: border-box; width: 100%;
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23787c99' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center; background-size: 1.2em;
+        }
+        select.form-select:focus, #profile-select:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px var(--accent-glow); }
+        select.form-select option, #profile-select option { background: #1a1b26; color: var(--text-color); }
+
+        #profile-select { flex-grow: 1; width: auto; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c0caf5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");}
+
+        .manager-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .manager-btn {
+            font-size: 0.85em; padding: 8px 12px; border: 1px solid transparent; border-radius: 6px;
+            background: rgba(255,255,255,0.05); color: var(--text-color); cursor: pointer;
+            transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .manager-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); transform: translateY(-1px); border-color: currentColor; }
+        .manager-btn:active:not(:disabled) { transform: translateY(0); }
+        .manager-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+
+        #save-profile-btn { color: var(--success-color); }
+        #delete-profile-btn { color: var(--error-color); }
+        #export-selected-profile-btn { color: #7dcfff; }
+        #import-profiles-btn { color: #7aa2f7; border-left: 1px solid rgba(255,255,255,0.1); border-radius: 0 6px 6px 0;}
+        #export-profiles-btn { color: #e0af68; margin-right: -8px;}
+
+        /* ═══ 内联通知横幅 ═══ */
+        .inline-notification {
+            display: none;
+            margin-bottom: 20px;
+            padding: 11px 18px;
+            background: rgba(26, 27, 38, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--success-color);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            border-right: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            box-shadow: 0 6px 20px -6px rgba(0,0,0,0.6);
+            color: var(--text-color);
+            transition: border-color 0.3s ease;
+        }
+        .inline-notification.visible {
+            display: flex;
+            animation: notifSlideIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .inline-notification.success {
+            border-left-color: var(--success-color);
+            box-shadow: 0 6px 20px -6px rgba(0,0,0,0.6), -8px 0 25px -12px var(--success-color);
+        }
+        .inline-notification.error {
+            border-left-color: var(--error-color);
+            box-shadow: 0 6px 20px -6px rgba(0,0,0,0.6), -8px 0 25px -12px var(--error-color);
+        }
+        .inline-notification i { font-size: 1.1em; flex-shrink: 0; }
+        .inline-notification.success i { color: var(--success-color); }
+        .inline-notification.error i { color: var(--error-color); }
+        .inline-notification .notif-text {
+            flex: 1; min-width: 0;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        @keyframes notifSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══ 导出署名弹出层 ═══ */
+        .signature-popover {
+            position: fixed;
+            z-index: 9999;
+            background: rgba(26, 27, 38, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 14px;
+            width: 260px;
+            max-width: calc(100vw - 20px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7), 0 0 25px -5px var(--accent-glow);
+            opacity: 0; visibility: hidden;
+            transform: translateY(-6px) scale(0.97);
+            transform-origin: top right;
+            transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0.22s;
+            pointer-events: none;
+        }
+        .signature-popover.visible {
+            opacity: 1; visibility: visible;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+        .signature-popover::before {
+            content: '';
+            position: absolute;
+            top: -6px; right: 18px;
+            width: 10px; height: 10px;
+            background: rgba(26, 27, 38, 0.97);
+            border-left: 1px solid var(--accent-color);
+            border-top: 1px solid var(--accent-color);
+            transform: rotate(45deg);
+            transition: border-color 0.5s ease;
+        }
+        .signature-popover.arrow-bottom::before {
+            top: auto; bottom: -6px;
+            transform: rotate(225deg);
+        }
+        .sig-pop-header {
+            display: flex; align-items: center; gap: 7px;
+            font-size: 0.85em; font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 10px; letter-spacing: 0.5px;
+        }
+        .sig-pop-header i { font-size: 0.9em; }
+        .sig-pop-input {
+            width: 100%; box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-color);
+            border-radius: 7px;
+            padding: 8px 11px;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 0.9em;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+        .sig-pop-input:focus {
+            border-color: var(--accent-color);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+        .sig-pop-input::placeholder { color: rgba(120, 124, 153, 0.5); }
+        .sig-pop-hint {
+            font-size: 0.72em; color: var(--text-secondary);
+            opacity: 0.7; margin-top: 6px; line-height: 1.4;
+        }
+        .sig-pop-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .sig-pop-btn {
+            flex: 1;
+            padding: 8px 10px;
+            border-radius: 7px;
+            border: 1px solid transparent;
+            font-family: inherit;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .sig-pop-btn.confirm {
+            background: var(--accent-color);
+            color: #1a1b26;
+            box-shadow: 0 3px 12px -3px var(--accent-glow);
+        }
+        .sig-pop-btn.confirm:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px -4px var(--accent-glow);
+        }
+        .sig-pop-btn.cancel {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+        }
+        .sig-pop-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+
+        /* 折叠式主模块样式 */
+        details.form-section { margin-bottom: 25px; border: none; padding: 0; }
+        details.form-section summary {
+            font-size: 1.15em; font-weight: 600; color: var(--text-color);
+            border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 16px;
+            width: 100%; transition: border-color 0.5s ease; display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; user-select: none; outline: none;
+        }
+        details.form-section summary .title-left { display: flex; align-items: center; gap: 8px; }
+        details.form-section summary .title-left::before { content: ''; display: block; width: 4px; height: 16px; background: var(--accent-color); border-radius: 2px; transition: background 0.5s ease;}
+        details.form-section summary::after { content: '\f0d7'; font-family: "Font Awesome 6 Free"; font-weight: 900; transition: transform 0.3s; color: var(--text-secondary); opacity: 0.7;}
+        details.form-section[open] summary::after { transform: rotate(180deg); opacity: 1;}
+        details.form-section[open] summary { border-color: rgba(255,255,255,0.2); }
+        details.form-section .form-grid { animation: sectionFadeIn 0.3s ease; }
+        @keyframes sectionFadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { color: var(--text-secondary); font-size: 0.9em; font-weight: 600; }
+
+        input[type="text"], input[type="number"], textarea {
+            background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 10px 14px; color: var(--text-color); font-family: inherit; font-size: 0.95em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; width: 100%;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+            outline: none; border-color: var(--accent-color); background: rgba(0,0,0,0.5); box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        input[type="text"]::placeholder, input[type="number"]::placeholder, textarea::placeholder { color: rgba(120, 124, 153, 0.5); }
+        textarea { resize: none; min-height: 42px; max-height: 160px; line-height: 1.5; overflow-y: auto; }
+
+        input[type="number"] { -moz-appearance: textfield; }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .radio-group { display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); transition: border-color 0.5s ease; }
+        .radio-group label {
+            flex: 1; text-align: center; padding: 8px 10px; border-radius: 6px; cursor: pointer;
+            transition: all 0.3s ease; margin: 0; color: var(--text-secondary); font-weight: 600; font-size: 0.95em;
+        }
+        .radio-group input[type="radio"] { display: none; }
+        .radio-group input[type="radio"]:checked + label { background: var(--accent-color); color: #1a1b26; box-shadow: 0 2px 10px var(--accent-glow); }
+
+        .color-picker-group { display: flex; align-items: center; gap: 10px; }
+        .color-picker-group input[type="text"] { flex-grow: 1; }
+        .color-wrapper { position: relative; width: 42px; height: 42px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); flex-shrink: 0; transition: border-color 0.3s ease;}
+        .color-wrapper:focus-within { border-color: var(--accent-color); box-shadow: 0 0 0 2px var(--accent-glow); }
+        input[type="color"] { position: absolute; top: -10px; left: -10px; width: 62px; height: 62px; padding: 0; border: none; cursor: pointer; background: transparent; }
+
+        #master-field { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.5s ease, opacity 0.4s ease, margin-top 0.4s ease; margin-top: 0; }
+        #master-field.visible { max-height: 100px; opacity: 1; margin-top: 10px; }
+
+        #manual-time-field { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.5s ease, opacity 0.4s ease, margin-top 0.4s ease; margin-top: 0; }
+        #manual-time-field.visible { max-height: 100px; opacity: 1; margin-top: 10px; }
+
+        .time-picker-row { display: flex; gap: 10px; align-items: center; }
+        .time-picker-row input[type="number"] { flex: 1; text-align: center; font-weight: 600; letter-spacing: 1px; }
+        .time-picker-row .unit-label { color: var(--text-secondary); font-size: 0.95em; flex-shrink: 0; user-select: none; }
+
+        /* ═══ 声望快捷填充 chip ═══ */
+        .quick-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .quick-chip {
+            font-size: 0.82em;
+            padding: 5px 11px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .quick-chip:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-color);
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+        .quick-chip:active { transform: translateY(0); }
+
+        /* 折叠性癖组件样式 */
+        details.kink-details {
+            background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 8px; transition: border-color 0.5s ease;
+        }
+        details.kink-details:focus-within { border-color: var(--accent-color); }
+        details.kink-details summary {
+            padding: 12px 14px; cursor: pointer; color: var(--text-secondary); font-weight: 600; font-size: 0.95em;
+            user-select: none; outline: none; display: flex; align-items: center; justify-content: space-between;
+        }
+        details.kink-details summary::after {
+            content: '\f0d7'; font-family: "Font Awesome 6 Free"; font-weight: 900; transition: transform 0.3s;
+        }
+        details.kink-details[open] summary::after { transform: rotate(180deg); }
+        details.kink-details[open] summary { color: var(--accent-color); border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        .kink-tags-container {
+            display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 12px 4px 12px; max-height: 180px; overflow-y: auto;
+        }
+        .kink-tag {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary);
+            padding: 4px 10px; border-radius: 12px; font-size: 0.85em; cursor: pointer; transition: all 0.2s; user-select: none;
+        }
+        .kink-tag:hover { border-color: var(--accent-color); color: var(--text-color); background: rgba(255,255,255,0.1);}
+        .kink-tag.selected { background: var(--accent-color); border-color: var(--accent-color); color: #1a1b26; box-shadow: 0 0 10px var(--accent-glow); font-weight: 600;}
+
+        /* 日志提示栏 */
+        #zod-sync-log {
+            font-size: 0.8em; margin-top: 4px; margin-bottom: 8px; padding: 0 12px; text-align: right; opacity: 0.8; font-family: 'Consolas', monospace;
+        }
+
+        .submit-area { text-align: center; margin-top: 35px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; align-items: center;}
+        .action-btn {
+            border: none; border-radius: 8px; padding: 12px 28px; font-size: 1.05em; font-family: inherit; font-weight: 600;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+        }
+
+        #generate-btn { background: var(--accent-color); color: #1a1b26; box-shadow: 0 4px 15px -3px var(--accent-glow); }
+        #generate-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px -5px var(--accent-glow); filter: brightness(1.1);}
+        #generate-btn:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 10px -2px var(--accent-glow); }
+
+        #reset-form-btn { background: rgba(255, 255, 255, 0.05); color: var(--text-color); border: 1px solid var(--border-color); }
+        #reset-form-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.3); }
+
+        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.5); transform: none; box-shadow: none; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; transition: background 0.3s ease; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+.lore-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+.lore-card:hover { border-color: rgba(255, 255, 255, 0.2); }
+.lore-card.blue { border-left: 3px solid var(--color-blue, #7aa2f7); }
+.lore-card.pink { border-left: 3px solid var(--color-pink, #f7768e); }
+.lore-card.gold { border-left: 3px solid var(--color-gold, #e0af68); }
+
+.lore-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+.lore-card-title {
+    font-size: 0.95em;
+    font-weight: 700;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.lore-card.blue .lore-card-title i { color: var(--color-blue, #7aa2f7); }
+.lore-card.pink .lore-card-title i { color: var(--color-pink, #f7768e); }
+.lore-card.gold .lore-card-title i { color: var(--color-gold, #e0af68); }
+.lore-card.purple .lore-card-title i { color: #bb9af7; }
+.lore-card.red .lore-card-title i { color: #f7768e; }
+.lore-card-sub { font-size: 0.8em; color: var(--text-secondary); opacity: 0.8; }
+.lore-card textarea {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 8px 10px;
+    font-size: 0.9em;
+    min-height: 48px;
+}
+    </style>
+</head>
+<body>
+    <div class="creator-card-container">
+        <div class="creator-card" id="creator-card">
+            <header>
+                <h2><i class="fa-solid fa-id-card-clip"></i> 小英雄档案 · 灵魂速写</h2>
+                <p>设定你的身份，开启命运的齿轮。所有内容均会自动保存。</p>
+            </header>
+
+            <div class="profile-manager">
+                <div class="manager-left">
+                    <label for="profile-select"><i class="fa-solid fa-box-archive"></i> 方案</label>
+                    <select id="profile-select">
+                        <option value="">-- 尚无已存方案 --</option>
+                    </select>
+                </div>
+                <div class="manager-group">
+                    <button id="load-profile-btn" class="manager-btn" title="读取所选方案"><i class="fa-solid fa-upload"></i> 读取</button>
+                    <button id="save-profile-btn" class="manager-btn" title="保存当前表单"><i class="fa-solid fa-save"></i> 保存</button>
+                    <button id="delete-profile-btn" class="manager-btn" title="删除所选方案"><i class="fa-solid fa-trash"></i> 删除</button>
+                    <div style="width: 1px; background: var(--border-color); margin: 0 4px;"></div>
+                    <button id="export-selected-profile-btn" class="manager-btn" title="导出选中的方案（可用于分享）"><i class="fa-solid fa-file-export"></i></button>
+                    <button id="export-profiles-btn" class="manager-btn" title="导出全部方案（本地备份）"><i class="fa-solid fa-box-archive"></i></button>
+                    <button id="import-profiles-btn" class="manager-btn" title="导入文件"><i class="fa-solid fa-file-import"></i></button>
+                </div>
+                <input type="file" id="import-file-input" accept=".json" style="display: none;">
+            </div>
+
+            <!-- 内联通知横幅（紧贴方案管理栏下方，永远可见） -->
+            <div class="inline-notification" id="inline-notification">
+                <i class="fa-solid fa-circle-check" id="notif-icon"></i>
+                <span class="notif-text" id="notif-text"></span>
+            </div>
+
+            <form id="creator-form" onsubmit="return false;">
+
+                <!-- 第一模块：核心人格 (默认展开) -->
+                <details class="form-section" open>
+                    <summary><div class="title-left"><i class="fa-solid fa-user-tag"></i> 核心人格</div></summary>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="char-name">姓名</label><input type="text" id="char-name" placeholder="你的名字"></div>
+                        <div class="form-group"><label for="char-age">年龄</label><input type="text" id="char-age" placeholder="例如：16岁"></div>
+                        <div class="form-group full-width"><label for="char-identity">表世界身份</label><input type="text" id="char-identity" placeholder="例如：私立学园高中生、大小姐..."></div>
+
+                        <div class="form-group full-width">
+                            <label for="personality-state">人格状态</label>
+                            <div class="radio-group">
+                                <input type="radio" id="state-good" name="personality-state" value="善良" checked><label for="state-good">善良</label>
+                                <input type="radio" id="state-fallen" name="personality-state" value="堕落"><label for="state-fallen">堕落</label>
+                            </div>
+                        </div>
+                        <div class="form-group full-width"><label for="char-traits">性格特质</label><input type="text" id="char-traits" placeholder="例如：活泼开朗、外冷内热、傲娇..."></div>
+                        <div class="form-group full-width" id="master-field"><label for="char-master">【堕落路线专属】侍奉对象</label><input type="text" id="char-master" placeholder="第一只征服你的魔物/主人..."></div>
+
+                        <!-- 性癖折叠栏 -->
+                        <div class="form-group full-width">
+                            <details class="kink-details">
+                                <summary>可能的性癖潜力……</summary>
+                                <div class="kink-tags-container" id="kink-tags-container">
+                                    <div style="width: 100%; text-align: center; opacity: 0.5; font-size: 0.9em;"><i class="fa-solid fa-spinner fa-spin"></i> 正在连接状态机核心...</div>
+                                </div>
+                                <div id="zod-sync-log"></div>
+                                <div style="padding: 0 12px 12px;">
+                                    <input type="text" id="char-kinks" placeholder="【可选】自定义弱点补充，例如：耳根敏感、害怕史莱姆…">
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- 第二模块：英雄武装与能力 (默认展开) -->
+                <details class="form-section" open>
+                    <summary><div class="title-left"><i class="fa-solid fa-bolt"></i> 英雄武装与能力</div></summary>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="char-mg-name">英雄代号</label><input type="text" id="char-mg-name" placeholder="留空则由AI生成代号"></div>
+                        <div class="form-group"><label for="char-ability">核心能力</label><input type="text" id="char-ability" value="操控光的能力"></div>
+                        <div class="form-group"><label for="char-weapon">专属武装</label><input type="text" id="char-weapon" placeholder="例如：光刃、聚能炮、战术拳套..."></div>
+                        <div class="form-group"><label for="char-outfit">紧身战衣风格</label><input type="text" id="char-outfit" placeholder="例如：高科技纳米战衣、经典紧身战服..."></div>
+
+                        <div class="form-group full-width">
+                            <label for="char-color">代表色</label>
+                            <div class="color-picker-group">
+                                <input type="text" id="char-color-text" value="樱粉色">
+                                <div class="color-wrapper"><input type="color" id="char-color-picker" value="#FFB6C1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- 第三模块：开局时间 (默认展开) -->
+                <details class="form-section" open>
+                    <summary><div class="title-left"><i class="fa-solid fa-clock"></i> 开局时间</div></summary>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>日期模式</label>
+                            <div class="radio-group">
+                                <input type="radio" id="time-random" name="start-time-mode" value="随机" checked><label for="time-random">随机</label>
+                                <input type="radio" id="time-manual" name="start-time-mode" value="手动"><label for="time-manual">手动指定</label>
+                            </div>
+                        </div>
+                        <div class="form-group full-width" id="manual-time-field">
+                            <label>指定日期（月 / 日）</label>
+                            <div class="time-picker-row">
+                                <input type="number" id="start-month" min="1" max="12" value="3" placeholder="月">
+                                <span class="unit-label">月</span>
+                                <input type="number" id="start-day" min="1" max="31" value="5" placeholder="日">
+                                <span class="unit-label">日</span>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- 第四模块：开局声望 (默认展开) -->
+                <details class="form-section" open>
+                    <summary><div class="title-left"><i class="fa-solid fa-users"></i> 开局声望</div></summary>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="start-fame">知名度 (0 - 100)</label>
+                            <input type="number" id="start-fame" min="0" max="100" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="start-rep">风评 (-100 - 100)</label>
+                            <input type="number" id="start-rep" min="-100" max="100" value="0">
+                        </div>
+                        <div class="form-group full-width">
+                            <div class="quick-chips" id="rep-quick-chips"></div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- 第五模块：外貌与肉体 (默认折叠) -->
+                <details class="form-section">
+                    <summary><div class="title-left"><i class="fa-solid fa-dna"></i> 外貌与肉体</div></summary>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="char-height">身高</label><input type="text" id="char-height" placeholder="例如：158cm"></div>
+                        <div class="form-group"><label for="char-body-cup">体型与CUP</label><input type="text" id="char-body-cup" placeholder="例如：娇小纤细 C罩杯"></div>
+                        <div class="form-group full-width"><label for="char-sensitivity">天生敏感度</label><input type="text" id="char-sensitivity" placeholder="例如：乳头特化敏感、怕痒、标准..."></div>
+
+                        <div class="form-group full-width"><label for="appearance-keywords">外貌细节补充</label><textarea id="appearance-keywords" placeholder="例如：银色长发，异色瞳，像人偶一样精致..."></textarea></div>
+                        <div class="form-group full-width"><label for="body-keywords">私密/肉体补充</label><textarea id="body-keywords" placeholder="例如：天生白虎、大腿内侧有胎记..."></textarea></div>
+                    </div>
+                </details>
+
+                <!-- 第六模块：世界与扩展设定 (美化版) -->
+                <details class="form-section">
+                    <summary><div class="title-left"><i class="fa-solid fa-book-open"></i> 世界与扩展设定</div></summary>
+                    <div class="form-grid">
+                        <div class="form-group full-width lore-card purple">
+                            <div class="lore-card-header">
+                                <div class="lore-card-title"><i class="fa-solid fa-users"></i> 人际关系与重要之人</div>
+                                <div class="lore-card-sub">同伴、宿敌、青梅竹马（AI将自动录入小英雄/NPC名录）</div>
+                            </div>
+                            <textarea id="char-relationships" placeholder="描述主角身边的重要角色。例如：青梅竹马山田太郎，同为小英雄，性格热血，与主角经常并肩作战；同班同学佐藤健二，知道主角秘密但从不追问；还有一个敌对的堕落小英雄黑羽，是主角的死对头..."></textarea>
+                        </div>
+                        <div class="form-group full-width lore-card red">
+                            <div class="lore-card-header">
+                                <div class="lore-card-title"><i class="fa-solid fa-heart-pulse"></i> 过往性经历与统计</div>
+                                <div class="lore-card-sub">AI将据此推算并初始化性行为统计数值（若无则留空）</div>
+                            </div>
+                            <textarea id="char-sex-history" placeholder="描述主角已有的性经历。例如：和青梅竹马有过几次互相手淫和口交；曾被魔物俘虏并内射过两次；独自在浴室手淫过很多次...（若为初哥纯洁人设可留空）"></textarea>
+                        </div>
+                        <div class="form-group full-width lore-card blue">
+                            <div class="lore-card-header">
+                                <div class="lore-card-title"><i class="fa-solid fa-earth-asia"></i> 世界观与社会背景</div>
+                                <div class="lore-card-sub">社会的常识、小英雄的处境</div>
+                            </div>
+                            <textarea id="world-lore" placeholder="例如：这是个小英雄作为偶像出道的世界、或是魔物肆虐的近未来末日废土..."></textarea>
+                        </div>
+                        <div class="form-group full-width lore-card pink">
+                            <div class="lore-card-header">
+                                <div class="lore-card-title"><i class="fa-solid fa-skull-crossbones"></i> 敌对势力与常识</div>
+                                <div class="lore-card-sub">敌人的侵犯目的、特殊机制</div>
+                            </div>
+                            <textarea id="enemy-lore" placeholder="例如：敌人的邪恶组织名为..."></textarea>
+                        </div>
+                        <div class="form-group full-width lore-card gold">
+                            <div class="lore-card-header">
+                                <div class="lore-card-title"><i class="fa-solid fa-scroll"></i> 补充说明与特殊约束</div>
+                                <div class="lore-card-sub">指定剧情偏好、特定NPC或红线</div>
+                            </div>
+                            <textarea id="extra-notes" placeholder="其他你想让AI严格遵守的规则、特定的剧情约束、或不想见到的特定内容..."></textarea>
+                        </div>
+                    </div>
+                </details>
+
+                <div class="submit-area">
+                    <button id="generate-btn" type="button" class="action-btn"><i class="fa-solid fa-rocket"></i> <span>确认档案并启程</span></button>
+                    <button id="reset-form-btn" type="button" class="action-btn" title="清除当前所有填写内容"><i class="fa-solid fa-rotate-right"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 导出署名浮窗 -->
+    <div class="signature-popover" id="signature-popover">
+        <div class="sig-pop-header">
+            <i class="fa-solid fa-signature"></i>
+            <span>导出署名</span>
+        </div>
+        <input type="text" id="signature-input" class="sig-pop-input" placeholder="留空则不附加署名" maxlength="32" autocomplete="off">
+        <div class="sig-pop-hint">署名会写入 JSON 的 _meta 字段，对方导入时会看到来源。</div>
+        <div class="sig-pop-actions">
+            <button type="button" class="sig-pop-btn cancel" id="cancel-export-btn">取消</button>
+            <button type="button" class="sig-pop-btn confirm" id="confirm-export-btn">
+                <i class="fa-solid fa-check"></i> 导出
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const form = document.getElementById('creator-form');
+            const generateBtn = document.getElementById('generate-btn');
+            const resetFormBtn = document.getElementById('reset-form-btn');
+            const creatorCard = document.getElementById('creator-card');
+            const colorPicker = document.getElementById('char-color-picker');
+            const colorText = document.getElementById('char-color-text');
+            const personalityRadios = document.querySelectorAll('input[name="personality-state"]');
+            const timeModeRadios = document.querySelectorAll('input[name="start-time-mode"]');
+            const masterField = document.getElementById('master-field');
+            const manualTimeField = document.getElementById('manual-time-field');
+            const kinkContainer = document.getElementById('kink-tags-container');
+            const initialButtonHTML = generateBtn.innerHTML;
+            const allInputs = Array.from(form.querySelectorAll('input:not([type="color"]), textarea, select'));
+
+            const profileSelect = document.getElementById('profile-select');
+            const loadProfileBtn = document.getElementById('load-profile-btn');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const deleteProfileBtn = document.getElementById('delete-profile-btn');
+            const exportSelectedProfileBtn = document.getElementById('export-selected-profile-btn');
+            const exportProfilesBtn = document.getElementById('export-profiles-btn');
+            const importProfilesBtn = document.getElementById('import-profiles-btn');
+            const importFileInput = document.getElementById('import-file-input');
+
+            const signaturePopover = document.getElementById('signature-popover');
+            const signatureInput = document.getElementById('signature-input');
+            const confirmExportBtn = document.getElementById('confirm-export-btn');
+            const cancelExportBtn = document.getElementById('cancel-export-btn');
+
+            const inlineNotification = document.getElementById('inline-notification');
+            const notifIcon = document.getElementById('notif-icon');
+            const notifText = document.getElementById('notif-text');
+
+            const startFameInput = document.getElementById('start-fame');
+            const startRepInput = document.getElementById('start-rep');
+            const repQuickChips = document.getElementById('rep-quick-chips');
+
+            const AUTOSAVE_KEY = 'littleHero_AutoSave_v2';
+            const PROFILE_STORAGE_KEY = 'littleHero_ProfileManager_v2';
+            const SIGNATURE_KEY = 'littleHero_Signature_v2';
+            const META_KEY = '_meta';
+
+            // ── 声望快捷 chip（随人格路线切换） ──
+            const REP_CHIPS = {
+                '善良': [
+                    { label: '🌱 出道',  fame: 0,  rep: 0 },
+                    { label: '⭐ 小有名气', fame: 30, rep: 20 },
+                    { label: '🌟 都市名人', fame: 50, rep: 35 },
+                    { label: '👑 久负盛名', fame: 70, rep: 50 }
+                ],
+                '堕落': [
+                    { label: '🌱 初堕',  fame: 0,  rep: 0 },
+                    { label: '⭐ 小有名气', fame: 30, rep: -20 },
+                    { label: '🌟 恶名初显', fame: 50, rep: -45 },
+                    { label: '👑 凶名昭彰', fame: 70, rep: -75 }
+                ]
+            };
+
+            let saveTimeout;
+            let notifTimer;
+
+            const getGlobal = (key) => window[key] || window.parent?.[key] || window.top?.[key];
+
+            // ── 内联通知 ──
+            const showNotification = (message, type = 'success') => {
+                const isError = type === 'error';
+                inlineNotification.classList.remove('visible', 'success', 'error');
+                void inlineNotification.offsetWidth;
+                notifText.textContent = message;
+                notifIcon.className = isError
+                    ? 'fa-solid fa-circle-exclamation'
+                    : 'fa-solid fa-circle-check';
+                inlineNotification.classList.add(type, 'visible');
+
+                clearTimeout(notifTimer);
+                notifTimer = setTimeout(() => {
+                    inlineNotification.classList.remove('visible');
+                }, 3000);
+            };
+
+            // ── 渲染声望快捷 chip ──
+            const renderRepChips = () => {
+                const personality = document.querySelector('input[name="personality-state"]:checked')?.value || '善良';
+                const chips = REP_CHIPS[personality];
+                repQuickChips.innerHTML = '';
+                chips.forEach(c => {
+                    const el = document.createElement('span');
+                    el.className = 'quick-chip';
+                    el.textContent = c.label;
+                    el.title = `知名度 ${c.fame} / 风评 ${c.rep}`;
+                    el.onclick = () => {
+                        startFameInput.value = c.fame;
+                        startRepInput.value = c.rep;
+                        debouncedAutoSave();
+                    };
+                    repQuickChips.appendChild(el);
+                });
+            };
+
+            // ── 署名持久化 ──
+            const loadSignature = () => {
+                const saved = localStorage.getItem(SIGNATURE_KEY);
+                if (saved) signatureInput.value = saved;
+            };
+            signatureInput.addEventListener('input', () => {
+                localStorage.setItem(SIGNATURE_KEY, signatureInput.value);
+            });
+
+            // ── 浮窗定位与显隐 ──
+            const positionPopover = () => {
+                const rect = exportSelectedProfileBtn.getBoundingClientRect();
+                const vw = window.innerWidth || document.documentElement.clientWidth;
+                const vh = window.innerHeight || document.documentElement.clientHeight;
+
+                signaturePopover.style.visibility = 'hidden';
+                signaturePopover.style.top = '-9999px';
+                signaturePopover.style.left = '-9999px';
+                const pw = signaturePopover.offsetWidth || 260;
+                const ph = signaturePopover.offsetHeight || 180;
+
+                let top = rect.bottom + 12;
+                let left = rect.right - pw;
+                let arrowBottom = false;
+
+                if (top + ph > vh - 8) {
+                    top = rect.top - ph - 12;
+                    arrowBottom = true;
+                }
+                if (left < 8) left = 8;
+                if (left + pw > vw - 8) left = vw - pw - 8;
+                if (top < 8) top = 8;
+
+                signaturePopover.style.top = top + 'px';
+                signaturePopover.style.left = left + 'px';
+                signaturePopover.classList.toggle('arrow-bottom', arrowBottom);
+                signaturePopover.style.visibility = '';
+            };
+
+            const openSignaturePopover = () => {
+                signaturePopover.classList.add('visible');
+                positionPopover();
+                setTimeout(() => signatureInput.focus(), 120);
+            };
+
+            const closeSignaturePopover = () => {
+                signaturePopover.classList.remove('visible');
+            };
+
+            document.addEventListener('click', (e) => {
+                if (!signaturePopover.classList.contains('visible')) return;
+                if (signaturePopover.contains(e.target)) return;
+                if (e.target === exportSelectedProfileBtn || exportSelectedProfileBtn.contains(e.target)) return;
+                closeSignaturePopover();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && signaturePopover.classList.contains('visible')) {
+                    closeSignaturePopover();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (signaturePopover.classList.contains('visible')) positionPopover();
+            });
+
+            const loadDynamicKinkList = async () => {
+                let dynamicList = [];
+                let source = 'default';
+                let foundCount = 0;
+
+                for (let attempt = 0; attempt < 5; attempt++) {
+                    try {
+                        const Mvu = getGlobal('Mvu');
+                        if (Mvu && typeof Mvu.getMvuData === 'function') {
+                            const wrapper = Mvu.getMvuData({ type: 'message', message_id: -1 }) || Mvu.getMvuData({ type: 'message', message_id: 0 });
+                            const stat_data = wrapper?.stat_data || wrapper;
+
+                            if (stat_data?.主角?.快感状态?.性癖) {
+                                const keys = Object.keys(stat_data.主角.快感状态.性癖).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$' && !k.startsWith('['));
+                                if (keys.length > 0) {
+                                    return { list: keys, source: 'mvu_data', foundCount: keys.length };
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                    await new Promise(r => setTimeout(r, 200));
+                }
+
+                try {
+                    const characters = getGlobal('characters');
+                    const chid = getGlobal('this_chid');
+
+                    const deepSearchScript = (obj) => {
+                        let found = null;
+                        const visited = new Set();
+                        const search = (o) => {
+                            if (found || !o || typeof o !== 'object' || visited.has(o)) return;
+                            visited.add(o);
+                            if (o.name === '小英雄_zod' && o.content) { found = o.content; return; }
+                            if (typeof o.content === 'string' && o.content.includes('FetishSchema')) { found = o.content; return; }
+                            Object.values(o).forEach(search);
+                        };
+                        search(obj);
+                        return found;
+                    };
+
+                    let targetContent = null;
+                    if (characters) {
+                        if (chid !== undefined && characters[chid]) targetContent = deepSearchScript(characters[chid]);
+                        if (!targetContent) targetContent = deepSearchScript(characters);
+                    }
+
+                    if (targetContent) {
+                        const regex = /"([^"]+)"\s*:\s*FetishSchema/g;
+                        let match;
+                        while ((match = regex.exec(targetContent)) !== null) {
+                            if (!dynamicList.includes(match[1])) dynamicList.push(match[1]);
+                        }
+                        if (dynamicList.length > 0) {
+                            return { list: dynamicList, source: 'regex_scan', foundCount: dynamicList.length };
+                        }
+                    }
+                } catch (e) {
+                    console.warn("[MVU] 性癖库正则穿透抓取失败", e);
+                }
+
+                dynamicList = ["屈服&败北", "露出", "主动侍奉", "背德感", "言语羞辱", "精神控制", "NTR", "蔷薇", "疼痛&M属性", "快感寸止", "爱抚&前戏", "情趣玩具", "体格差&压制", "自慰", "口腔开发", "能量核心开发", "胸部开发", "阴茎开发", "后庭开发", "群交&轮奸", "腔内射精", "精液成瘾", "榨精&溢液", "媚药浸染", "触手play", "异种奸", "机械奸", "拘束&紧缚", "标记&涂鸦", "睡眠奸", "产卵&排出", "偷奸&隐奸", "核心过载"];
+                return { list: dynamicList, source: 'default', foundCount: dynamicList.length };
+            };
+
+            const renderKinks = async () => {
+                const { list, source, foundCount } = await loadDynamicKinkList();
+
+                kinkContainer.innerHTML = '';
+                list.forEach(k => {
+                    const el = document.createElement('div');
+                    el.className = 'kink-tag';
+                    el.textContent = k;
+                    el.onclick = () => {
+                        el.classList.toggle('selected');
+                        debouncedAutoSave();
+                    };
+                    kinkContainer.appendChild(el);
+                });
+
+                const logEl = document.getElementById('zod-sync-log');
+                if (logEl) {
+                    if (source === 'mvu_data') {
+                        logEl.innerHTML = `<i class="fa-solid fa-microchip"></i> 已成功从 状态机核心引擎 提取 ${foundCount} 项性癖数据`;
+                        logEl.style.color = 'var(--success-color)';
+                    } else if (source === 'regex_scan') {
+                        logEl.innerHTML = `<i class="fa-solid fa-code"></i> 已通过 源文件穿透 提取 ${foundCount} 项性癖数据`;
+                        logEl.style.color = 'var(--success-color)';
+                    } else {
+                        logEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 状态机连接超时，已加载预设防崩性癖库`;
+                        logEl.style.color = 'var(--error-color)';
+                    }
+                }
+            };
+
+            await renderKinks();
+
+            const textareas = document.querySelectorAll('textarea');
+            const autoResizeTextarea = (ta) => {
+                ta.style.height = 'auto';
+                ta.style.height = ta.scrollHeight + 'px';
+            };
+            textareas.forEach(ta => {
+                ta.addEventListener('input', () => autoResizeTextarea(ta));
+            });
+
+            const updateUIState = () => {
+                const selectedRadio = document.querySelector('input[name="personality-state"]:checked');
+                const isFallen = selectedRadio?.value === '堕落';
+                creatorCard.classList.toggle('theme-fallen', isFallen);
+                if (isFallen) {
+                    masterField.classList.add('visible');
+                } else {
+                    masterField.classList.remove('visible');
+                }
+
+                const timeModeRadio = document.querySelector('input[name="start-time-mode"]:checked');
+                const isManualTime = timeModeRadio?.value === '手动';
+                manualTimeField.classList.toggle('visible', isManualTime);
+            };
+
+            const getCurrentFormData = () => {
+                const data = {};
+                allInputs.forEach(input => {
+                    if (input.type === 'radio') {
+                        if (input.checked) data[input.name] = input.value;
+                    } else if (input.id) {
+                        data[input.id] = input.value;
+                    }
+                });
+                data['selected-kinks'] = Array.from(document.querySelectorAll('.kink-tag.selected')).map(el => el.textContent);
+                return data;
+            };
+
+            const populateForm = (data) => {
+                if (!data) return;
+                allInputs.forEach(input => {
+                    const key = (input.type === 'radio') ? input.name : (input.id || input.name);
+                    if (data[key] !== undefined) {
+                        if (input.type === 'radio') {
+                           input.checked = (input.value === data[key]);
+                        } else {
+                           input.value = data[key];
+                        }
+                    } else {
+                        if (input.type === 'text' || input.tagName === 'TEXTAREA') {
+                            if (input.id === 'char-color-text') input.value = '樱粉色';
+                            else if (input.id === 'char-ability') input.value = '操控光的能力';
+                            else input.value = '';
+                        } else if (input.type === 'number') {
+                            if (input.id === 'start-month') input.value = '3';
+                            else if (input.id === 'start-day') input.value = '5';
+                            else if (input.id === 'start-fame') input.value = '0';
+                            else if (input.id === 'start-rep') input.value = '0';
+                        } else if (input.tagName === 'SELECT') {
+                            input.selectedIndex = 0;
+                        }
+                    }
+                });
+
+                document.querySelectorAll('.kink-tag').forEach(el => el.classList.remove('selected'));
+                if (data['selected-kinks'] && Array.isArray(data['selected-kinks'])) {
+                    document.querySelectorAll('.kink-tag').forEach(el => {
+                        if (data['selected-kinks'].includes(el.textContent)) el.classList.add('selected');
+                    });
+                }
+
+                updateUIState();
+                renderRepChips();
+                try { colorPicker.value = colorText.value; } catch (err) {}
+                setTimeout(() => {
+                    textareas.forEach(ta => autoResizeTextarea(ta));
+                }, 10);
+            };
+
+            const saveAutoSave = () => localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(getCurrentFormData()));
+            const debouncedAutoSave = () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(saveAutoSave, 500);
+            };
+
+            const rescueOldData = () => {
+                const oldAuto = localStorage.getItem('littleHero_AutoSave_v1') || localStorage.getItem('magicalGirl_AutoSave_v4');
+                if (oldAuto && !localStorage.getItem(AUTOSAVE_KEY)) {
+                    localStorage.setItem(AUTOSAVE_KEY, oldAuto);
+                }
+                const oldProfiles = localStorage.getItem('littleHero_ProfileManager_v1') || localStorage.getItem('magicalGirl_ProfileManager_v4');
+                if (oldProfiles && !localStorage.getItem(PROFILE_STORAGE_KEY)) {
+                    localStorage.setItem(PROFILE_STORAGE_KEY, oldProfiles);
+                }
+            };
+
+            const loadAutoSave = () => {
+                const autoSavedData = localStorage.getItem(AUTOSAVE_KEY);
+                if (autoSavedData) {
+                    populateForm(JSON.parse(autoSavedData));
+                } else {
+                    updateUIState();
+                    renderRepChips();
+                }
+            };
+
+            const getProfiles = () => JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY)) || {};
+            const saveProfiles = (profiles) => localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+
+            const updateExportSelectedBtn = () => {
+                exportSelectedProfileBtn.disabled = !profileSelect.value;
+            };
+
+            const populateDropdown = () => {
+                const profiles = getProfiles();
+                const profileNames = Object.keys(profiles);
+
+                profileSelect.innerHTML = '';
+                if (profileNames.length === 0) {
+                    profileSelect.innerHTML = '<option value="">-- 尚无已存方案 --</option>';
+                    loadProfileBtn.disabled = true;
+                    deleteProfileBtn.disabled = true;
+                    exportProfilesBtn.disabled = true;
+                    exportSelectedProfileBtn.disabled = true;
+                } else {
+                    profileSelect.innerHTML = '<option value="">-- 选择方案 --</option>';
+                    profileNames.sort().forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        profileSelect.appendChild(option);
+                    });
+                    loadProfileBtn.disabled = false;
+                    deleteProfileBtn.disabled = false;
+                    exportProfilesBtn.disabled = false;
+                    updateExportSelectedBtn();
+                }
+            };
+
+            form.addEventListener('input', debouncedAutoSave);
+
+            colorPicker.addEventListener('input', () => {
+                colorText.value = colorPicker.value;
+                debouncedAutoSave();
+            });
+
+            colorText.addEventListener('input', () => {
+                try { colorPicker.value = colorText.value; } catch (err) {}
+                debouncedAutoSave();
+            });
+
+            // ── 人格路线切换：同步 chip 标签 ──
+            personalityRadios.forEach(radio => radio.addEventListener('change', () => {
+                updateUIState();
+                renderRepChips();
+                debouncedAutoSave();
+            }));
+
+            timeModeRadios.forEach(radio => radio.addEventListener('change', () => {
+                updateUIState();
+                debouncedAutoSave();
+            }));
+
+            profileSelect.addEventListener('change', updateExportSelectedBtn);
+
+            saveProfileBtn.addEventListener('click', () => {
+                const defaultName = document.getElementById('char-name').value || '未命名方案';
+                const profileName = prompt('请输入方案名称：', defaultName);
+                if (profileName && profileName.trim() !== '') {
+                    const profiles = getProfiles();
+                    profiles[profileName.trim()] = getCurrentFormData();
+                    saveProfiles(profiles);
+                    populateDropdown();
+                    profileSelect.value = profileName.trim();
+                    updateExportSelectedBtn();
+                    showNotification(`保存成功: "${profileName.trim()}"`);
+                }
+            });
+
+            loadProfileBtn.addEventListener('click', () => {
+                const selectedName = profileSelect.value;
+                if (selectedName && getProfiles()[selectedName]) {
+                    populateForm(getProfiles()[selectedName]);
+                    debouncedAutoSave();
+                    showNotification(`已读取: "${selectedName}"`);
+                } else {
+                    showNotification('请先选择方案', 'error');
+                }
+            });
+
+            deleteProfileBtn.addEventListener('click', () => {
+                const selectedName = profileSelect.value;
+                if (selectedName && confirm(`确定要永久删除方案 "${selectedName}" 吗？`)) {
+                    const profiles = getProfiles();
+                    delete profiles[selectedName];
+                    saveProfiles(profiles);
+                    populateDropdown();
+                    showNotification(`已删除: "${selectedName}"`);
+                }
+            });
+
+            exportSelectedProfileBtn.addEventListener('click', () => {
+                const selectedName = profileSelect.value;
+                if (!selectedName) {
+                    showNotification('请先选择要导出的方案', 'error');
+                    return;
+                }
+                openSignaturePopover();
+            });
+
+            cancelExportBtn.addEventListener('click', () => closeSignaturePopover());
+
+            signatureInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    confirmExportBtn.click();
+                }
+            });
+
+            confirmExportBtn.addEventListener('click', () => {
+                const selectedName = profileSelect.value;
+                if (!selectedName) {
+                    closeSignaturePopover();
+                    return;
+                }
+                const profiles = getProfiles();
+                if (!profiles[selectedName]) {
+                    closeSignaturePopover();
+                    showNotification('方案不存在', 'error');
+                    return;
+                }
+
+                const signature = (signatureInput.value || '').trim();
+
+                const metaBlock = {
+                    generator: '小英雄创角生成器',
+                    version: '4.8',
+                    exportedAt: new Date().toISOString()
+                };
+                if (signature) metaBlock.author = signature;
+
+                const exportData = {
+                    [META_KEY]: metaBlock,
+                    [selectedName]: profiles[selectedName]
+                };
+
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' }));
+                const safeName = selectedName.replace(/[\\/:*?"<>|]/g, '_');
+                a.download = `little-hero-${safeName}-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                closeSignaturePopover();
+                showNotification(signature ? `已导出 "${selectedName}" · 署名: ${signature}` : `已导出 "${selectedName}"`);
+            });
+
+            exportProfilesBtn.addEventListener('click', () => {
+                const profiles = getProfiles();
+                if (Object.keys(profiles).length === 0) return;
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(profiles, null, 2)], {type: 'application/json'}));
+                a.download = `little-hero-profiles-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showNotification('全部方案已导出');
+            });
+
+            importProfilesBtn.addEventListener('click', () => importFileInput.click());
+
+            importFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        const meta = imported[META_KEY];
+                        const authorInfo = (meta && typeof meta === 'object' && meta.author) ? ` · 来自: ${meta.author}` : '';
+
+                        let current = getProfiles(), count = 0;
+                        for (const name in imported) {
+                            if (name === META_KEY || name.startsWith('_')) continue;
+                            const value = imported[name];
+                            if (!value || typeof value !== 'object') continue;
+                            if (!current[name] || confirm(`覆盖同名方案 "${name}" 吗？`)) {
+                                current[name] = value;
+                                count++;
+                            }
+                        }
+                        saveProfiles(current);
+                        populateDropdown();
+                        if (count > 0) {
+                            showNotification(`导入了 ${count} 个方案${authorInfo}`);
+                        } else {
+                            showNotification('未找到有效方案', 'error');
+                        }
+                    } catch (error) {
+                        showNotification('导入失败：文件格式错误', 'error');
+                    }
+                    importFileInput.value = '';
+                };
+                reader.readAsText(file);
+            });
+
+            resetFormBtn.addEventListener('click', () => {
+                if (confirm('确定要清空当前所有内容吗？')) {
+                    form.reset();
+                    document.getElementById('state-good').checked = true;
+                    document.getElementById('time-random').checked = true;
+                    document.getElementById('char-color-text').value = '樱粉色';
+                    document.getElementById('char-color-picker').value = '#FFB6C1';
+                    document.getElementById('char-ability').value = '操控光的能力';
+                    document.getElementById('start-month').value = '3';
+                    document.getElementById('start-day').value = '5';
+                    document.getElementById('start-fame').value = '0';
+                    document.getElementById('start-rep').value = '0';
+                    document.querySelectorAll('.kink-tag').forEach(el => el.classList.remove('selected'));
+                    updateUIState();
+                    renderRepChips();
+                    debouncedAutoSave();
+                    showNotification('表单已重置');
+                }
+            });
+
+            generateBtn.addEventListener('click', () => {
+                saveAutoSave();
+                generateBtn.disabled = true;
+                generateBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>正在启程...</span>`;
+
+                const data = getCurrentFormData();
+
+                const buildPrunedYaml = (data) => {
+                    const lines = [];
+                    const add = (indent, text) => lines.push('  '.repeat(indent) + text);
+                    const quote = (val) => `"${val.replace(/\r?\n/g, ' ').replace(/"/g, '\\"')}"`;
+
+                    const name = (data['char-name'] || '').trim();
+                    const age = (data['char-age'] || '').trim();
+                    const identity = (data['char-identity'] || '').trim();
+                    const traits = (data['char-traits'] || '').trim();
+                    const state = data['personality-state'] || '善良';
+                    const master = (data['char-master'] || '').trim();
+
+const selectedKinks = (data['selected-kinks'] || []).filter(Boolean);
+const kinks = selectedKinks.join('、');
+const customKinks = (data['char-kinks'] || '').trim();
+
+                    const mgName = (data['char-mg-name'] || '').trim();
+                    const ability = (data['char-ability'] || '').trim();
+                    const weapon = (data['char-weapon'] || '').trim();
+                    const outfit = (data['char-outfit'] || '').trim();
+                    const color = (data['char-color-text'] || '').trim();
+
+                    const height = (data['char-height'] || '').trim();
+                    const bodyCup = (data['char-body-cup'] || '').trim();
+                    const sensitivity = (data['char-sensitivity'] || '').trim();
+                    const appearance = (data['appearance-keywords'] || '').trim();
+                    const bodyDetail = (data['body-keywords'] || '').trim();
+
+                    const relationships = (data['char-relationships'] || '').trim();
+                    const sexHistory = (data['char-sex-history'] || '').trim();
+                    const worldLore = (data['world-lore'] || '').trim();
+                    const enemyLore = (data['enemy-lore'] || '').trim();
+                    const extraNotes = (data['extra-notes'] || '').trim();
+
+                    const timeMode = data['start-time-mode'] || '随机';
+                    const startFame = Math.max(0, Math.min(100, parseInt(data['start-fame'], 10) || 0));
+                    const startRep = Math.max(-100, Math.min(100, parseInt(data['start-rep'], 10) || 0));
+
+                    add(0, "创角档案:");
+
+                    add(1, "核心人格:");
+                    add(2, `姓名: ${name ? quote(name) : '"[AI请填充]"'}`);
+                    add(2, `人格路线: "${state}"`);
+                    if (age) add(2, `年龄: ${quote(age)}`);
+                    if (identity) add(2, `表世界身份: ${quote(identity)}`);
+                    if (traits) add(2, `性格特质: ${quote(traits)}`);
+                    if (state === '堕落' && master) add(2, `侍奉主人: ${quote(master)}`);
+                    if (kinks) add(2, `初始性癖: ${quote(kinks)}`);
+                    if (customKinks) add(2, `内容补充: ${quote(customKinks)}`);
+
+                    add(1, "英雄武装与能力:");
+                    if (mgName) add(2, `英雄代号: ${quote(mgName)}`);
+                    if (color) add(2, `代表色与光效: ${quote(color)}`);
+                    if (ability) add(2, `核心超能机制: ${quote(ability)}`);
+                    if (weapon) add(2, `专属武装: ${quote(weapon)}`);
+                    if (outfit) add(2, `紧身战衣材质风格: ${quote(outfit)}`);
+
+                    add(1, "开局时间:");
+                    if (timeMode === '手动') {
+                        const mm = Math.max(1, Math.min(12, parseInt(data['start-month'], 10) || 3));
+                        const dd = Math.max(1, Math.min(31, parseInt(data['start-day'], 10) || 5));
+                        const yyyymmdd = 20400000 + mm * 100 + dd;
+                        add(2, `设定模式: "手动指定"`);
+                        add(2, `目标日期: "2040年${mm}月${dd}日"`);
+                        add(2, `目标日期_YYYYMMDD: ${yyyymmdd}`);
+                        add(2, `初始化指令: "请在变量初始化时，将 /世界/日期 设为 ${yyyymmdd}。此项优先级高于世界书提供的随机日期默认值。"`);
+                    } else {
+                        add(2, `设定模式: "随机"`);
+                        add(2, `初始化指令: "请使用世界书提供的随机日期机制，为 /世界/日期 生成随机初始值。"`);
+                    }
+
+                    add(1, "开局声望:");
+                    add(2, `知名度: ${startFame}`);
+                    add(2, `风评: ${startRep}`);
+
+                    if (height || bodyCup || sensitivity || appearance || bodyDetail) {
+                        add(1, "外貌与肉体特征:");
+                        if (height) add(2, `身高数据: ${quote(height)}`);
+                        if (bodyCup) add(2, `体态与罩杯: ${quote(bodyCup)}`);
+                        if (sensitivity) add(2, `天生敏感度: ${quote(sensitivity)}`);
+                        if (appearance) add(2, `外貌特征补充: ${quote(appearance)}`);
+                        if (bodyDetail) add(2, `私密肉体细节: ${quote(bodyDetail)}`);
+                    }
+
+                    if (relationships || sexHistory || worldLore || enemyLore || extraNotes) {
+                        add(1, "世界设定与环境:");
+
+                        const addMultilineBlock = (label, text) => {
+                            const linesArr = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                            if (linesArr.length === 1) {
+                                add(2, `${label}: ${quote(linesArr[0])}`);
+                            } else if (linesArr.length > 1) {
+                                add(2, `${label}: |`);
+                                linesArr.forEach(l => add(3, l));
+                            }
+                        };
+
+                        if (relationships) addMultilineBlock("人际关系与名录", relationships);
+                        if (sexHistory) addMultilineBlock("初始性经历与统计", sexHistory);
+                        if (worldLore) addMultilineBlock("世界观背景", worldLore);
+                        if (enemyLore) addMultilineBlock("敌对势力与机制", enemyLore);
+                        if (extraNotes) addMultilineBlock("补充规则、设定与约束", extraNotes);
+                    }
+
+                    return lines.join('\n');
+                };
+
+                const yamlString = `<init_data>\n\`\`\`yaml\n# [创角初始化指令]\n# 1. 凡未标注 [AI请填充] 的字段均为用户确认的设定，必须严格遵循并写入变量。\n# 2. 未列出的属性或标注 [AI请填充] 的字段，请基于美学进行富有张力的合理推演。\n# 3. 【开局时间】若为手动指定，必须在初始化时将 /世界/日期 设为指定值，优先级高于世界书随机日期。\n# 4. 【开局声望】请按 [生成] 世界书中的声望初始化协议，派生等级并写入变量。\n\n${buildPrunedYaml(data)}\n\`\`\`\n</init_data>`;
+
+                setTimeout(() => {
+                    try {
+                        const inputArea = window.parent.document.querySelector('#send_textarea');
+                        const sendButton = window.parent.document.querySelector('#send_but');
+                        if (inputArea && sendButton) {
+                            inputArea.value = yamlString;
+                            inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                            sendButton.click();
+                            showNotification('档案已发送！等待AI回应...');
+                            generateBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>档案已发送</span>`;
+                        } else {
+                            throw new Error('SillyTavern UI not found.');
+                        }
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                        generateBtn.innerHTML = `<i class="fa-solid fa-xmark"></i> <span>发送失败</span>`;
+                        navigator.clipboard.writeText(yamlString).then(() => {
+                            showNotification('自动发送失败！已复制到剪贴板', 'error');
+                            alert('自动发送失败！角色信息已复制到您的剪贴板，请手动粘贴并发送。');
+                        });
+                    }
+                    setTimeout(() => {
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = initialButtonHTML;
+                    }, 4000);
+                }, 400);
+            });
+
+            rescueOldData();
+            populateDropdown();
+            loadAutoSave();
+            loadSignature();
+        });
+    </script>
+</body>
+</html>
+```

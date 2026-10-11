@@ -1,0 +1,22 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+const stat = getvar('stat_data');
+if (events['囚禁逃脱机会']) {
+    const escProgress = _.get(stat, '主角.囚禁状态.逃脱进度', 0);
+    const brainProgress = _.get(stat, '主角.囚禁状态.洗脑进度', 0);
+    const prisonTurn = _.get(stat, '主角.囚禁状态.监禁回合', 0);
+_%>
+event_handler:
+  event_name: "逃出生天"
+  context: "经过<%= prisonTurn %>天的囚禁，一个难得的逃脱机会出现了——守卫系统出现漏洞，或外部发生意外袭击引发混乱。玩家可以选择抓住这个机会逃生，或者选择留在基地中继续潜伏。"
+  narrative_directives:
+    - "如果玩家选择逃脱，描绘强而有力的逃出生天过程。逃脱必定成功。"
+    - "如果玩家选择留下，描绘他目送机会流失，继续被囚禁的日常。"
+  system_tasks:
+    instruction: "如果玩家逃脱：将阶段切回幕间休息。如果选择留下：仅移除本事件，后台会继续累积逃脱进度。"
+    mandatory_patch: |
+      [
+        // 逃脱: { "op": "replace", "path": "/进程/阶段", "value": "幕间休息" }
+        // 无论选择: { "op": "remove", "path": "/系统状态/待处理事件/囚禁逃脱机会" }
+      ]
+<%_ }} _%>

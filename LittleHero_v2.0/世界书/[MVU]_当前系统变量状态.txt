@@ -1,0 +1,223 @@
+<%_
+// --- [MVU] 智能变量快照与动态档案 (完整路径还原版) ---
+// 核心逻辑: 还原角色核心信息至变量树，确保 JSONPatch 路径 1:1 可寻址，杜绝模型幻觉。
+
+let s = JSON.parse(JSON.stringify(getvar("stat_data") || {}));
+const isEmpty = (obj) => !obj || Object.keys(obj).length === 0;
+const phase = _.get(s, '进程.阶段', '创角阶段');
+
+let profileHeader = "";
+
+// 1. 剧情视角的身份与环境概览 (创角完成后渲染)
+if (s.主角 && s.世界 && phase !== '创角阶段') {
+    const basic = s.主角.基本信息 || {};
+    const isTransformed = _.get(s, '主角.核心状态.着装状态') === true;
+    const currentName = isTransformed ? (basic.英雄名 || basic.姓名 || '未命名') : (basic.姓名 || '未知');
+    const alignment = _.get(s, '主角.核心状态.人格状态') || '英雄';
+
+    // 日期计算 (支持 YYYYMMDD 与 MMDD 格式)
+    const rawDate = parseInt(_.get(s, '世界.日期', 20400305), 10);
+    let dYear = 2040, dMonth = 3, dDay = 5;
+    if (rawDate > 100000) {
+        dYear = Math.floor(rawDate / 10000);
+        dMonth = Math.floor((rawDate % 10000) / 100);
+        dDay = rawDate % 100;
+    } else {
+        dMonth = Math.floor(rawDate / 100);
+        dDay = rawDate % 100;
+    }
+
+    // 提炼为轻量身份指示
+    profileHeader = `# 角色当前信息与世界观记录备注:\n` +
+      `current_narrative_context:\n` +
+      `  current_call_name: "${currentName}"\n` +
+      `  real_name: "${basic.姓名 || '未知'}"\n` +
+      `  hero_name: "${basic.英雄名 || '未命名'}"\n` +
+      `  is_transformed: ${isTransformed}\n` +
+      `  alignment: "${alignment}"\n` +
+      `  calendar_date: "${dYear}年${dMonth}月${dDay}日"\n`;
+
+    const personaTags = _.get(s, '名声.风评标签', {});
+    const hasAnyTag = personaTags.表世界身份风评 || personaTags.小英雄身份风评 || personaTags.流言;
+    if (hasAnyTag) {
+        profileHeader += `  social_persona:\n` +
+            `    表世界身份风评: "${personaTags.表世界身份风评 || '待设定'}"\n` +
+            `    小英雄身份风评: "${personaTags.小英雄身份风评 || '待设定'}"\n` +
+            `    流言: "${personaTags.流言 || '待设定'}"\n`;
+    }
+
+    // 提取世界观重要备注供剧情参考
+    const notes = s.世界.世界观备注 || {};
+    const noteEntries = Object.entries(notes).filter(([k]) => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+    if (noteEntries.length > 0) {
+        profileHeader += `  world_lore_notes:\n`;
+        for (const [k, v] of noteEntries) {
+            profileHeader += `    - ${k}: "${String(v).replace(/\r?\n/g, ' ')}"\n`;
+        }
+    }
+}
+
+// 2. 状态树清洗 (保留完整基本信息，仅清理纯临时与空无结构)
+if (s.主角) {
+    // 保留 基本信息/个人信息/相貌特征/身材细节/性器官特征！
+    // 使得 /主角/相貌特征/... 等所有 JSONPatch 目标路径完全可见、真实存在。
+    delete s.主角["战斗临时"];
+
+    if (phase !== '被捕囚禁') {
+        delete s.主角.囚禁状态;
+    }
+
+    // 黑暗印记若未激活则不在动态树中制造噪音
+    if (s.主角.黑暗印记 && s.主角.黑暗印记.经验 <= 0) {
+        delete s.主角.黑暗印记;
+    }
+
+    // 生理异物与空节点整理
+    if (s.主角.生理状态) {
+        if (s.主角.生理状态.能量核心内异物 && isEmpty(s.主角.生理状态.能量核心内异物.异物列表)) {
+            delete s.主角.生理状态.能量核心内异物;
+        }
+        if (s.主角.生理状态.后穴状态 && isEmpty(s.主角.生理状态.后穴状态.内部异物)) {
+            delete s.主角.生理状态.后穴状态.内部异物;
+        }
+        if (s.主角.生理状态.体液与分泌 && s.主角.生理状态.体液与分泌.能量核心内精液 && s.主角.生理状态.体液与分泌.能量核心内精液.存量 === 0) {
+            delete s.主角.生理状态.体液与分泌;
+        }
+    }
+
+    // 性癖未觉醒项压缩（节约 Token）
+    if (s.主角.快感状态 && s.主角.快感状态.性癖) {
+        const originalKinks = s.主角.快感状态.性癖;
+        const activeKinks = {};
+        const pendingKeys = [];
+
+        Object.keys(originalKinks).forEach(key => {
+            if (key === '$meta' || key === "$__META_EXTENSIBLE__$") return;
+            const val = originalKinks[key];
+            if ((val.经验 && val.经验 > 0) || (val.等级 && val.等级 > 0)) {
+                activeKinks[key] = val;
+            } else {
+                pendingKeys.push(key);
+            }
+        });
+        s.主角.快感状态.性癖 = activeKinks;
+        if (pendingKeys.length > 0) {
+            s.主角.快感状态.性癖["[待觉醒列表]"] = pendingKeys.join(", ");
+        }
+    }
+
+    if (s.主角.快感状态) {
+        delete s.主角.快感状态.高潮阈值;
+    }
+
+    if (s.主角.核心状态) {
+        if (s.主角.核心状态.主人 === "无") delete s.主角.核心状态.主人;
+        if (s.主角.核心状态.当前战斗姿态 === "非战斗") delete s.主角.核心状态.当前战斗姿态;
+        delete s.主角.核心状态.善堕备份;
+        delete s.主角.核心状态.恶堕备份;
+    }
+
+    // 性行为统计全为0时精简
+    if (s.主角.性行为统计) {
+        const stats = s.主角.性行为统计;
+        const totalActivity = Object.values(stats).reduce((acc, v) => acc + (typeof v === 'number' ? v : 0), 0);
+        if (totalActivity === 0) {
+            delete s.主角.性行为统计;
+        }
+    }
+
+    if (isEmpty(s.主角.永久性身体改造)) {
+        delete s.主角.永久性身体改造;
+    }
+
+    if (isEmpty(s.主角.道具栏)) {
+        delete s.主角.道具栏;
+    }
+}
+
+// 3. 系统状态与关卡过滤
+if (s.系统状态) {
+    const events = s.系统状态.待处理事件 || {};
+    const activeEvents = Object.keys(events).filter(k => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+    if (activeEvents.length === 0) {
+        delete s.系统状态;
+    } else {
+        s.系统状态 = { "待处理事件": events };
+    }
+}
+
+if (s.世界) {
+    delete s.世界.世界观备注; // 已在上方提取渲染
+
+    if (s.世界.当前关卡 && (s.世界.当前关卡.名称 === "无" || s.世界.当前关卡.名称 === "未知的威胁")) {
+        delete s.世界.当前关卡;
+    } else if (s.进程 && s.进程.阶段 === "幕间休息" && s.世界.当前关卡) {
+        delete s.世界.当前关卡.Boss韧性值;
+        delete s.世界.当前关卡.Boss基础强度;
+        delete s.世界.当前关卡.Boss状态;
+        delete s.世界.当前关卡.战斗类型;
+        delete s.世界.威胁等级;
+    }
+
+    if (s.世界.幕间H事件 && s.世界.幕间H事件.名称 === "无") {
+        delete s.世界.幕间H事件;
+    }
+
+    if (s.世界.校园催眠) {
+        delete s.世界.校园催眠.今日在校回合;
+        delete s.世界.校园催眠.今日已增催眠;
+        if (s.世界.校园催眠.结界已破除) {
+            delete s.世界.校园催眠;
+        }
+    }
+
+    if (isEmpty(s.世界.小英雄名录)) {
+        delete s.世界.小英雄名录;
+    }
+}
+
+// 4. 生涯记录轻量化
+if (s.记录) {
+    if (s.记录.已击败Boss计数 === 0) {
+        delete s.记录.已击败的Boss;
+    } else if (s.记录.已击败的Boss) {
+        const historyObj = s.记录.已击败的Boss;
+        const validKeys = Object.keys(historyObj).filter(k => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+
+        if (validKeys.length === 0) {
+            delete s.记录.已击败的Boss;
+        } else {
+            const optimizedHistory = {};
+            validKeys.forEach(name => {
+                const bossData = historyObj[name];
+                if (bossData && typeof bossData === 'object' && bossData.名称 && bossData.名称 !== "$__META_EXTENSIBLE__$") {
+                    optimizedHistory[bossData.名称] = {
+                        "核心主题": bossData.核心主题 || [],
+                        "结果": bossData.结果 || "WIN"
+                    };
+                } else {
+                    optimizedHistory[name] = { "核心主题": [], "结果": "WIN" };
+                }
+            });
+            s.记录.已击败的Boss = optimizedHistory;
+        }
+    }
+
+    if (s.记录.总战败次数 === 0) delete s.记录.总战败次数;
+    if (s.记录.黑化次数 === 0) delete s.记录.黑化次数;
+    if (s.记录.善堕次数 === 0) delete s.记录.善堕次数;
+}
+
+const cleanMeta = (arr) => Array.isArray(arr) ? arr.filter(x => x !== "$__META_EXTENSIBLE__$") : arr;
+if (s.世界 && s.世界.当前关卡) s.世界.当前关卡.核心主题 = cleanMeta(s.世界.当前关卡.核心主题);
+
+// 5. 组装最终纯净输出
+let output = "";
+if (profileHeader) {
+    output += profileHeader + "\n";
+}
+
+output += `# 当前系统变量:\n` +
+          `# 提示：此变量树为最新运行数据，也是执行 JSONPatch 操作时的唯一目标寻址路径。\n` +
+          `<status_current_variables>\n${JSON.stringify(s, null, 2)}\n</status_current_variables>`;
+_%><%- output %>

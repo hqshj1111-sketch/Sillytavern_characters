@@ -1,0 +1,75 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const carnivalQueue = _.get(stat, '系统状态.待处理事件.最后的狂欢事件');
+  const isSpecialOngoing = _.get(stat, '系统状态.特殊事件进行中', false);
+  const specialType = _.get(stat, '特殊事件.类型', '无');
+  const specialObjects = _.get(stat, '特殊事件.对象', []);
+  
+  if (carnivalQueue || (isSpecialOngoing && specialType === '狂欢')) {
+      const specialName = _.get(stat, '特殊事件.名称', '无');
+      const npcs = ['早乙女海斗', '早乙女夏海', '希克', '神崎莲', '神崎乐奈', '月下阳太', '月下雪乃', '雨宮明日香', '雨宮涼子'];
+      
+      // 筛选亲密度达到恋人标准(>=75)的所有角色
+      let lovers = [];
+      npcs.forEach(npc => {
+          const intimacy = parseInt(_.get(stat, `NPC数据.${npc}.主角关系.亲密度`, 0));
+          if (intimacy >= 75) lovers.push(npc);
+      });
+      const targetStr = lovers.length > 0 ? lovers.join('、') : '大家';
+
+      // ==========================================
+      // 阶段 A: 事件初始化（布置狂欢场景）
+      // ==========================================
+      if (!isSpecialOngoing) {
+_%>
+# **高优先级**事件：最后的狂欢触发
+event_initiator:
+  event_name: "最后的狂欢"
+  involved_characters: "<%= targetStr %>"
+  location: "雨宫家老宅 / 主角的房间"
+  focus: "夏日终结、毫无保留的沉溺、所有恋人齐聚的修罗场与狂欢"
+  
+  narrative_guidance:
+    - "今天是暑假的最后一天，离别在即。主角的所有恋人（【<%= targetStr %>】）似乎达成了某种默契，不约而同地齐聚在主角寄宿的雨宫家老宅中。"
+    - "本回合是狂欢事件的开端，请描绘大家相聚时微妙的吃醋、大度的包容，以及即将彻底点燃的燥热氛围。这会是一个极其暧昧且充满张力的多角互动。请抛出引子，不要一回合直接写完整个过程。"
+    
+  mandatory_data_sync:
+    instruction: "若事件已经切实开始，在 <JSONPatch> 块中必须输出以下指令，将其注册为正在进行的事件："
+    patch_code: |
+      [
+        { "op": "insert", "path": "/系统状态/特殊事件进行中", "value": true },
+        { "op": "remove", "path": "/系统状态/待处理事件/最后的狂欢事件" },
+        { "op": "replace", "path": "/特殊事件/名称", "value": "最后的狂欢" },
+        { "op": "replace", "path": "/特殊事件/对象", "value": <%- JSON.stringify(lovers) %> },
+        { "op": "insert", "path": "/特殊事件/类型", "value": "狂欢" }
+      ]
+<%_
+      } else {
+          // ==========================================
+          // 阶段 B: 事件进行中与最终结算
+          // ==========================================
+_%>
+# 事件：最后的狂欢进行中
+event_ongoing:
+  event_name: "最后的狂欢"
+  involved_characters: "<%= targetStr %>"
+  focus: "抛开一切顾虑的爱与欲的交织、夏日完结的余韵"
+  
+  narrative_branch:
+    - condition: "狂欢仍在继续 / 玩家顺势互动"
+      instruction: "详细描写在这夏日的最后一夜，主角与【<%= targetStr %>】之间毫无保留的肉体交融与情感爆发。重点表现多角色互动的淫靡张力、黏腻感，以及那种想要将时间永远停留在这一刻的疯狂。"
+    - condition: "狂欢结束 / 迎来清晨 / 玩家选择结束"
+      instruction: "描绘狂欢过后的疲惫与温馨余韵，以及天亮后即将告别小镇的淡淡不舍。"
+
+  end_protocol:
+    instruction: "当本次狂欢事件【彻底完结】时，请在 <UpdateVariable> 的 <Analysis> 块中直接输出以下补丁清理系统状态："
+    mandatory_cleanup_patch: |
+      [
+        { "op": "replace", "path": "/系统状态/特殊事件进行中", "value": false }
+      ]
+<%_
+      }
+  }
+}
+_%>

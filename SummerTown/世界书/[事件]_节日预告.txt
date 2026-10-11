@@ -1,0 +1,32 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  
+  if (events['节日预告事件']) {
+      const currentDay = _.get(stat, '进程.暑假天数', 1);
+      const calendar = (_.get(stat, '活动日历') || []).map(e => ({ day: e.日期, name: e.名称 }));
+      
+      // 查找当前天数之后的第一个节日
+      const nextEvent = calendar.find(e => e.day > currentDay);
+      
+      if (nextEvent) {
+_%>
+# 事件：节日预告
+<%=  nextEvent.day - currentDay  %>天后，小镇即将迎来【<%= nextEvent.name %>】（在暑假第 <%= nextEvent.day %> 天）。
+
+festival_preview_protocol:
+  event_name: "<%= nextEvent.name %>"
+  instruction: "通过小镇广播、街边的海报、或者NPC们的闲聊与筹备行动，自然地向主角预告这个即将到来的活动。营造出一种夏日特有的期待感。"
+  
+  mandatory_data_sync:
+    instruction: "若该事件已经完成，在 <UpdateVariable> 的 <JSONPatch> 块中必须输出以下指令："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/节日预告事件" }
+      ]
+<%_ 
+      } 
+  } 
+}
+_%>

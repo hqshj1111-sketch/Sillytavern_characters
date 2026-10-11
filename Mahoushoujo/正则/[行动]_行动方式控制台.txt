@@ -1,0 +1,775 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --tc-bg: rgba(20, 21, 33, 0.95);
+            --tc-border: rgba(255, 255, 255, 0.08);
+            --tc-border-hover: rgba(255, 255, 255, 0.22);
+            --tc-text: #e2e8f0;
+            --tc-dim: #9aa5ce;
+            --tc-btn-bg: rgba(255, 255, 255, 0.04);
+            
+            --tc-fight: #f87171;
+            --tc-defend: #7aa2f7;
+            --tc-pause: #bb9af7;
+            --tc-surrender: #f7768e;
+            --tc-finish: #e0af68;
+            --tc-charm: #bb9af7;
+            
+            --tc-flee: #e0af68;
+            --tc-giveup: #ff7675;
+        }
+
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            overflow: hidden !important;
+        }
+
+        .tactics-container {
+            width: 100%;
+            max-width: 95%;
+            margin: 0 auto 6px auto;
+            box-sizing: border-box;
+            display: none;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", 'Sarabun', 'Noto Serif SC', sans-serif;
+            user-select: none;
+        }
+
+        .tactics-panel {
+            background: var(--tc-bg);
+            border: 1px solid var(--tc-border);
+            border-radius: 10px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+            box-sizing: border-box;
+            padding: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ── 视图容器与平滑切换（纯渐变无 3D 晃动） ── */
+        .tc-deck {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 5px;
+            transition: opacity 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .tc-deck.is-hidden {
+            display: none !important;
+        }
+        .tc-deck.fade-out {
+            opacity: 0;
+            transform: scale(0.98);
+        }
+
+        /* ══════════════════════════════════════════
+           正面：常规战斗战术
+           ══════════════════════════════════════════ */
+        .tactics-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--tc-dim);
+            font-size: 0.75em;
+            flex-shrink: 0;
+        }
+
+        .tactics-grid {
+            display: flex;
+            flex: 1;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .tactic-btn {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 3px;
+            background: var(--tc-btn-bg);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 6px;
+            color: var(--tc-dim);
+            font-family: inherit;
+            font-size: 0.75em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            outline: none;
+        }
+
+        .tactic-btn i { font-size: 0.95em; opacity: 0.85; flex-shrink: 0; }
+        .tactic-btn span { overflow: hidden; text-overflow: ellipsis; }
+
+        .tactic-btn:hover:not(:disabled):not(.active) {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        /* 激活态 */
+        .tactic-btn.active.btn-fight     { background: rgba(248, 113, 113, 0.25); border-color: var(--tc-fight);     color: #fff; box-shadow: 0 0 8px rgba(248,113,113,0.35); }
+        .tactic-btn.active.btn-defend    { background: rgba(122, 162, 247, 0.25); border-color: var(--tc-defend);    color: #fff; box-shadow: 0 0 8px rgba(122,162,247,0.35); }
+        .tactic-btn.active.btn-pause     { background: rgba(187, 154, 247, 0.25); border-color: var(--tc-pause);     color: #fff; box-shadow: 0 0 8px rgba(187,154,247,0.35); }
+        .tactic-btn.active.btn-surrender { background: rgba(247, 118, 142, 0.25); border-color: var(--tc-surrender); color: #fff; box-shadow: 0 0 8px rgba(247,118,142,0.35); }
+        .tactic-btn.active.btn-finish    { background: rgba(224, 175, 104, 0.28); border-color: var(--tc-finish);    color: #fff; box-shadow: 0 0 10px rgba(224,175,104,0.45); }
+        .tactic-btn.active.btn-charm     { background: rgba(187, 154, 247, 0.25); border-color: var(--tc-charm);     color: #fff; box-shadow: 0 0 8px rgba(187,154,247,0.35); }
+
+        .tactic-btn.btn-finish.ready:not(.active) {
+            color: var(--tc-finish);
+            animation: tcReady 2s infinite ease-in-out;
+        }
+        @keyframes tcReady { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        .tactic-btn:disabled { opacity: 0.3; cursor: not-allowed; animation: none; }
+
+        /* 进入脱离菜单的触发入口 */
+        .tc-escape-trigger {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--tc-dim);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        .tc-escape-trigger:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* ══════════════════════════════════════════
+           背面：战局决断甲板 (Decision Deck)
+           ══════════════════════════════════════════ */
+        .tc-escape-deck {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 6px;
+        }
+
+        .tc-back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 34px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--tc-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            outline: none;
+        }
+        .tc-back-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .tc-decision-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* 决断卡片主体 */
+        .tc-decision-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 8px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            outline: none;
+            min-width: 0;
+        }
+
+        .tc-decision-card .card-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.82em;
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .tc-decision-card .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .tc-decision-card .card-title {
+            font-size: 0.78em;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tc-decision-card .card-desc {
+            font-size: 0.65em;
+            color: var(--tc-dim);
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tc-decision-card .card-tag {
+            font-size: 0.7em;
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 3px;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        /* 撤退卡片样式 */
+        .tc-decision-card.card-flee .card-icon { color: var(--tc-flee); }
+        .tc-decision-card.card-flee .card-title { color: var(--tc-flee); }
+        .tc-decision-card.card-flee .card-tag { background: rgba(224, 175, 104, 0.15); color: var(--tc-flee); }
+        .tc-decision-card.card-flee:hover {
+            background: rgba(224, 175, 104, 0.08);
+            border-color: rgba(224, 175, 104, 0.35);
+        }
+        .tc-decision-card.card-flee.active {
+            background: rgba(224, 175, 104, 0.22);
+            border-color: var(--tc-flee);
+            box-shadow: 0 0 10px rgba(224, 175, 104, 0.35);
+        }
+
+        /* 投降卡片样式 */
+        .tc-decision-card.card-giveup .card-icon { color: var(--tc-giveup); }
+        .tc-decision-card.card-giveup .card-title { color: var(--tc-giveup); }
+        .tc-decision-card.card-giveup .card-tag { background: rgba(255, 118, 117, 0.15); color: var(--tc-giveup); }
+        .tc-decision-card.card-giveup:hover {
+            background: rgba(255, 118, 117, 0.08);
+            border-color: rgba(255, 118, 117, 0.35);
+        }
+        .tc-decision-card.card-giveup.active {
+            background: rgba(255, 118, 117, 0.22);
+            border-color: var(--tc-giveup);
+            box-shadow: 0 0 10px rgba(255, 118, 117, 0.35);
+        }
+
+        @media (max-width: 440px) {
+            .tactics-panel { padding: 4px; }
+            .tc-decision-card .card-desc { display: none; }
+            .tactic-btn { font-size: 0.7em; padding: 5px 2px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tactics-container" id="tactics-container">
+        <div class="tactics-panel" id="tactics-section">
+            
+            <!-- 视图 1：常规战斗战术 -->
+            <div class="tc-deck" id="deck-combat">
+                <span class="tactics-badge" id="tc-badge"><i class="fa-solid fa-gamepad"></i></span>
+                <div class="tactics-grid" id="tactics-grid"></div>
+                <button class="tc-escape-trigger" id="btn-open-decision" title="脱离 / 投降 选项" style="display:none;">
+                    <i class="fa-solid fa-person-running"></i>
+                </button>
+            </div>
+
+            <!-- 视图 2：战局决断甲板 -->
+            <div class="tc-deck is-hidden" id="deck-decision">
+                <button class="tc-back-btn" id="btn-close-decision" title="返回常规战术">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="tc-decision-grid">
+                    <!-- 撤退卡 -->
+                    <div class="tc-decision-card card-flee" id="card-flee" data-tactic="撤退">
+                        <div class="card-icon"><i class="fa-solid fa-person-running"></i></div>
+                        <div class="card-info">
+                            <div class="card-title">
+                                <span>战术撤退</span>
+                                <span class="card-tag" id="flee-tag">机动检定</span>
+                            </div>
+                            <div class="card-desc">拉开距离脱离交战区</div>
+                        </div>
+                    </div>
+                    <!-- 投降卡 -->
+                    <div class="tc-decision-card card-giveup" id="card-giveup" data-tactic="投降">
+                        <div class="card-icon"><i class="fa-solid fa-flag"></i></div>
+                        <div class="card-info">
+                            <div class="card-title">
+                                <span>弃械投降</span>
+                                <span class="card-tag">直接被俘</span>
+                            </div>
+                            <div class="card-desc">散去魔力，直接判定战败</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const getDeep = (obj, path, def = null) =>
+                path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? def;
+
+            const getConsoleAncestors = () => {
+                const list = [];
+                const push = (d) => { if (d && list.indexOf(d) === -1) list.push(d); };
+                try { push(window.parent && window.parent.document); } catch (e) {}
+                try { push(window.top && window.top.document); } catch (e) {}
+                return list;
+            };
+
+            const getMsgId = () => {
+                try {
+                    if (typeof getCurrentMessageId === 'function') {
+                        const id = Number(getCurrentMessageId());
+                        if (Number.isFinite(id)) return id;
+                    }
+                } catch (e) {}
+                try {
+                    const m = /^TH-message--(\d+)$/.exec((window.frameElement && window.frameElement.id) || '');
+                    if (m) return Number(m[1]);
+                } catch (e) {}
+                return null;
+            };
+            const MSG_ID = getMsgId();
+
+            const findMyMessage = () => {
+                const frame = window.frameElement;
+                if (!frame) return null;
+                for (const doc of getConsoleAncestors()) {
+                    if (MSG_ID !== null) {
+                        const exact = doc.querySelector('#chat > .mes[mesid="' + MSG_ID + '"]');
+                        if (exact) return exact;
+                    }
+                    let node = frame.parentElement;
+                    while (node && node !== doc.documentElement) {
+                        if (node.classList && (node.classList.contains('mes_text') || node.classList.contains('mes'))) return node;
+                        node = node.parentElement;
+                    }
+                    const legacy = frame.closest && frame.closest('.mes_text, .mes, .chat-message');
+                    if (legacy) return legacy;
+                }
+                return null;
+            };
+
+            const updateHostHeight = () => {
+                try {
+                    const frame = window.frameElement;
+                    const panel = document.getElementById('tactics-container');
+                    if (!frame || !panel || panel.style.display === 'none') return;
+                    const apply = () => {
+                        try {
+                            const h = Math.max(panel.scrollHeight || 0, panel.offsetHeight || 0, 36);
+                            frame.style.setProperty('height', (h + 4) + 'px', 'important');
+                        } catch (e) {}
+                    };
+                    if (typeof requestAnimationFrame === 'function') {
+                        requestAnimationFrame(() => requestAnimationFrame(apply));
+                    } else {
+                        setTimeout(apply, 32);
+                    }
+                } catch (e) {}
+            };
+
+            const toggleHostCollapse = (show) => {
+                try {
+                    const frame = window.frameElement;
+                    if (!frame) return;
+                    if (show) {
+                        frame.style.removeProperty('display');
+                        frame.style.removeProperty('margin');
+                        frame.style.removeProperty('padding');
+                        updateHostHeight();
+                    } else {
+                        frame.style.setProperty('display', 'none', 'important');
+                        frame.style.setProperty('height', '0px', 'important');
+                        frame.style.setProperty('margin', '0px', 'important');
+                        frame.style.setProperty('padding', '0px', 'important');
+                    }
+                } catch(e) {}
+            };
+
+            try {
+                if (typeof ResizeObserver === 'function') {
+                    const _tcRO = new ResizeObserver(() => updateHostHeight());
+                    const _tcWrap = document.getElementById('tactics-container');
+                    if (_tcWrap) _tcRO.observe(_tcWrap);
+                }
+            } catch (e) {}
+
+            // ── 按钮配置 ──
+            const BUTTON_CONFIGS = {
+                '战斗回合': {
+                    icon: 'fa-dice-d20',
+                    color: 'var(--tc-fight)',
+                    getButtons: (isFallen) => [
+                        { key: '主动', short: '主动', icon: 'fa-hand-fist',           cls: 'btn-fight',     tip: '主动出击抢占先机。' },
+                        isFallen
+                            ? { key: '诱惑', short: '诱惑', icon: 'fa-fire',           cls: 'btn-charm',     tip: '从容勾引削弱敌意，充能效率极高。' }
+                            : { key: '牵制', short: '牵制', icon: 'fa-feather-pointed', cls: 'btn-charm',     tip: '拉扯走位分散敌意，反伤更小。' },
+                        { key: '推进', short: '推进', icon: 'fa-forward',             cls: 'btn-pause',     tip: '暂缓攻防，延续观察与对话。' },
+                        { key: '危机', short: '危机', icon: 'fa-heart-crack',         cls: 'btn-surrender', tip: '放弃防备承受侵犯，积蓄大量充能。' },
+                        { key: '必杀', short: '必杀', icon: 'fa-wand-magic-sparkles', cls: 'btn-finish',    tip: '释放满额充能一击瓦解 Boss！', isUlt: true }
+                    ]
+                },
+                '战斗准备': {
+                    icon: 'fa-crosshairs',
+                    color: 'var(--tc-finish)',
+                    getButtons: () => [
+                        { key: '周旋', short: '周旋', icon: 'fa-shield-halved',      cls: 'btn-fight',     tip: '试探交手。' },
+                        { key: '探索', short: '探索', icon: 'fa-magnifying-glass',   cls: 'btn-defend',    tip: '搜集情报隐匿行踪。' },
+                        { key: '交涉', short: '交涉', icon: 'fa-bullhorn',           cls: 'btn-surrender', tip: '言语试探与喊话。' },
+                        { key: '开战', short: '开战', icon: 'fa-wand-magic-sparkles', cls: 'btn-finish',    tip: '解除伪装正式开战。' }
+                    ]
+                },
+                'H事件': {
+                    icon: 'fa-heart-pulse',
+                    color: 'var(--tc-surrender)',
+                    getButtons: () => [
+                        { key: '抗拒', short: '抗拒', icon: 'fa-hand',                cls: 'btn-defend',    tip: '意志抗拒（1d20对抗）。' },
+                        { key: '忍耐', short: '忍耐', icon: 'fa-heart-crack',         cls: 'btn-surrender', tip: '保存体力，承受少量快感。' },
+                        { key: '魔力爆发', short: '爆发', icon: 'fa-wand-magic-sparkles', cls: 'btn-pause',  tip: '消耗 30MP 瞬间脱困。' },
+                        { key: '迎合', short: '迎合', icon: 'fa-fire',                cls: 'btn-finish',    tip: '顺应欲望，直奔高潮。' }
+                    ]
+                }
+            };
+
+            const getActiveConfig = (stat) => {
+                const phase = getDeep(stat, '进程.阶段', '幕间休息');
+                const hEventName = getDeep(stat, '世界.幕间H事件.名称', '无');
+                if (phase === '战斗回合' || phase === '终结回合') return BUTTON_CONFIGS['战斗回合'];
+                if (phase === '战斗准备') return BUTTON_CONFIGS['战斗准备'];
+                if (phase === '幕间休息' && hEventName !== '无') return BUTTON_CONFIGS['H事件'];
+                return null;
+            };
+
+            // ── 战术切换与数据派发 ──
+            window.setCombatTactic = async (tactic) => {
+                try {
+                    _tcSig = null;
+                    const Mvu = getMvu();
+                    if (!Mvu) return;
+                    const mvuData = Mvu.getMvuData({ type: 'message', message_id: -1 });
+                    if (!mvuData) return;
+
+                    if (typeof _ !== 'undefined' && _.set) {
+                        _.set(mvuData, 'stat_data.主角.战斗临时.战斗方式', tactic);
+                    } else {
+                        mvuData.stat_data.主角.战斗临时.战斗方式 = tactic;
+                    }
+
+                    await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: -1 });
+                    const cleanData = JSON.parse(JSON.stringify(mvuData.stat_data || mvuData));
+
+                    const targets = [];
+                    const pushT = (t) => { if (t && targets.indexOf(t) === -1) targets.push(t); };
+                    pushT(document);
+                    try { pushT(window.parent && window.parent.document); } catch (e) {}
+                    try { pushT(window.top && window.top.document); } catch (e) {}
+                    try { pushT(window.parent); } catch (e) {}
+                    try { pushT(window.top); } catch (e) {}
+                    targets.forEach((t) => {
+                        try {
+                            t.dispatchEvent(new CustomEvent(Mvu.events.VARIABLE_UPDATE_ENDED, {
+                                detail: { stat_data: cleanData },
+                                bubbles: true
+                            }));
+                        } catch (e) {}
+                    });
+                } catch (e) {
+                    console.error("[Tactics Error]", e);
+                }
+            };
+
+            const isSameMessageFrame = (f) => {
+                try {
+                    if (MSG_ID === null) return false;
+                    const m = /^TH-message--(\d+)$/.exec(f.id || '');
+                    return !!m && Number(m[1]) === MSG_ID;
+                } catch (e) { return false; }
+            };
+
+            const hasQuickOptionsSibling = () => {
+                try {
+                    const frame = window.frameElement;
+                    if (!frame) return false;
+                    const containers = [];
+                    const push = (d) => { if (d && containers.indexOf(d) === -1) containers.push(d); };
+                    try { push((frame.ownerDocument && frame.ownerDocument.querySelector('.mes_text')) || null); } catch (e) {}
+                    try { push(frame.parentElement); } catch (e) {}
+                    const mesEl = findMyMessage();
+                    if (mesEl) {
+                        push(mesEl);
+                        try { push(mesEl.querySelector('.mes_text')); } catch (e) {}
+                    }
+                    for (const scope of containers) {
+                        let frames = [];
+                        try { frames = scope.querySelectorAll('iframe'); } catch (e) { frames = []; }
+                        for (const f of frames) {
+                            if (f === frame) continue;
+                            if (!isSameMessageFrame(f)) continue;
+                            try {
+                                const d = f.contentDocument;
+                                if (!d) continue;
+                                if (!d.getElementById('options-container')) continue;
+                                if (d.querySelector('.tactics-section.visible')) return true;
+                            } catch (e) {}
+                        }
+                    }
+                } catch (e) {}
+                return false;
+            };
+
+            // ── 视图切换（平移动画替代 3D 旋转） ──
+            let _isDecisionMode = false;
+            const switchDeck = (toDecision) => {
+                const deckCombat = document.getElementById('deck-combat');
+                const deckDecision = document.getElementById('deck-decision');
+                if (!deckCombat || !deckDecision) return;
+                
+                _isDecisionMode = toDecision;
+                const activeDeck = toDecision ? deckDecision : deckCombat;
+                const inactiveDeck = toDecision ? deckCombat : deckDecision;
+
+                inactiveDeck.classList.add('fade-out');
+                setTimeout(() => {
+                    inactiveDeck.classList.add('is-hidden');
+                    activeDeck.classList.remove('is-hidden');
+                    activeDeck.classList.add('fade-out');
+                    requestAnimationFrame(() => {
+                        activeDeck.classList.remove('fade-out');
+                        updateHostHeight();
+                    });
+                }, 140);
+            };
+
+            // ── 决断卡片点击绑定（无原生 confirm 弹窗） ──
+            const initDecisionCards = () => {
+                const btnOpen = document.getElementById('btn-open-decision');
+                const btnClose = document.getElementById('btn-close-decision');
+                const cardFlee = document.getElementById('card-flee');
+                const cardGiveup = document.getElementById('card-giveup');
+
+                if (btnOpen) btnOpen.onclick = () => switchDeck(true);
+                if (btnClose) btnClose.onclick = () => {
+                    const curTactic = getDeep(window._lastStat, '主角.战斗临时.战斗方式', '');
+                    if (curTactic === '撤退' || curTactic === '投降') {
+                        window.setCombatTactic('主动');
+                    }
+                    switchDeck(false);
+                };
+
+                if (cardFlee) cardFlee.onclick = () => {
+                    window.setCombatTactic('撤退');
+                };
+                if (cardGiveup) cardGiveup.onclick = () => {
+                    window.setCombatTactic('投降');
+                };
+            };
+
+            let _tcSig = null;
+            const render = (stat) => {
+                const container = document.getElementById('tactics-container');
+                if (!container || !stat || typeof stat !== 'object') return;
+                window._lastStat = stat;
+
+                if (hasQuickOptionsSibling()) {
+                    if (container.style.display !== 'none') {
+                        _tcSig = null;
+                        container.style.display = 'none';
+                        toggleHostCollapse(false);
+                    }
+                    return;
+                }
+
+                const config = getActiveConfig(stat);
+                if (!config) {
+                    container.style.display = 'none';
+                    toggleHostCollapse(false);
+                    return;
+                }
+
+                container.style.display = 'block';
+                toggleHostCollapse(true);
+
+                const phase = getDeep(stat, '进程.阶段', '');
+                const isCombatRound = (phase === '战斗回合');
+                const isFallen = getDeep(stat, '主角.核心状态.人格状态', '善良') === '堕落';
+                const buttons = config.getButtons ? config.getButtons(isFallen) : [];
+                const currentTactic = getDeep(stat, '主角.战斗临时.战斗方式', buttons[0]?.key || '');
+                const fleeAttempts = parseInt(getDeep(stat, '主角.战斗临时.撤退尝试', 0), 10);
+
+                // 徽章
+                const badge = document.getElementById('tc-badge');
+                if (badge) {
+                    badge.innerHTML = `<i class="fa-solid ${config.icon}"></i>`;
+                    badge.style.color = config.color;
+                }
+
+                // 只有战斗回合才展示抉择入口
+                const btnOpen = document.getElementById('btn-open-decision');
+                if (btnOpen) {
+                    btnOpen.style.display = isCombatRound ? 'flex' : 'none';
+                }
+
+                // 动态构建常规战术按键
+                const grid = document.getElementById('tactics-grid');
+                const signature = buttons.map(b => b.key).join('|');
+                if (grid.dataset.signature !== signature) {
+                    grid.dataset.signature = signature;
+                    grid.innerHTML = '';
+                    buttons.forEach(b => {
+                        const btn = document.createElement('button');
+                        btn.className = 'tactic-btn ' + b.cls;
+                        btn.dataset.tactic = b.key;
+                        btn.title = b.tip;
+                        btn.innerHTML = `<i class="fa-solid ${b.icon}"></i><span>${b.short}</span>`;
+                        btn.onclick = () => window.setCombatTactic(b.key);
+                        grid.appendChild(btn);
+                    });
+                }
+
+                // 同步常规按键高亮
+                const ultPower = parseInt(getDeep(stat, isFallen ? '主角.核心状态.污秽魔力' : '主角.核心状态.净化之力', 0), 10);
+                const isUltReady = ultPower >= 100;
+                grid.querySelectorAll('.tactic-btn').forEach(btn => {
+                    const key = btn.dataset.tactic;
+                    const cfg = buttons.find(b => b.key === key);
+                    btn.classList.toggle('active', key === currentTactic);
+                    if (cfg && cfg.isUlt) {
+                        btn.disabled = !isUltReady;
+                        btn.classList.toggle('ready', isUltReady);
+                    } else {
+                        btn.disabled = false;
+                    }
+                });
+
+                // 同步战局决断卡片状态
+                const cardFlee = document.getElementById('card-flee');
+                const cardGiveup = document.getElementById('card-giveup');
+                const fleeTag = document.getElementById('flee-tag');
+
+                if (cardFlee) cardFlee.classList.toggle('active', currentTactic === '撤退');
+                if (cardGiveup) cardGiveup.classList.toggle('active', currentTactic === '投降');
+                
+                // 动态显示撤退惩罚点数
+                if (fleeTag) {
+                    if (fleeAttempts > 0) {
+                        fleeTag.innerText = `惩罚 -${fleeAttempts * 3}`;
+                        fleeTag.style.background = 'rgba(248, 113, 113, 0.2)';
+                        fleeTag.style.color = '#ff7675';
+                    } else {
+                        fleeTag.innerText = '机动检定';
+                        fleeTag.style.background = 'rgba(224, 175, 104, 0.15)';
+                        fleeTag.style.color = 'var(--tc-flee)';
+                    }
+                }
+
+                // 若当前状态是撤退或投降，直接展示决断页；否则展示战斗页
+                const wantsDecisionDeck = isCombatRound && (currentTactic === '撤退' || currentTactic === '投降');
+                if (wantsDecisionDeck !== _isDecisionMode) {
+                    switchDeck(wantsDecisionDeck);
+                }
+            };
+
+            const getMvu = () => (window.Mvu || window.parent?.Mvu || window.top?.Mvu || null);
+
+            const pullStatData = () => {
+                const Mvu = getMvu();
+                if (!Mvu || typeof Mvu.getMvuData !== 'function') return null;
+                for (const o of [{ type: 'message', message_id: -1 }, { type: 'message', message_id: 'latest' }]) {
+                    try {
+                        const wrapper = Mvu.getMvuData(o);
+                        const stat = wrapper?.stat_data || wrapper;
+                        if (stat && typeof stat === 'object') return stat;
+                    } catch (e) {}
+                }
+                return null;
+            };
+
+            const fetchAndRender = () => {
+                const stat = pullStatData();
+                if (stat) render(stat);
+                updateHostHeight();
+            };
+
+            const init = () => {
+                initDecisionCards();
+                const Mvu = getMvu();
+                if (Mvu && Mvu.events) {
+                    try {
+                        document.addEventListener(Mvu.events.VARIABLE_UPDATE_ENDED, (e) => {
+                            const stat = e?.detail?.stat_data;
+                            if (stat) { _tcSig = null; render(stat); updateHostHeight(); }
+                        });
+                    } catch (e) {}
+                } else {
+                    setTimeout(init, 300);
+                }
+
+                fetchAndRender();
+                [100, 300, 800, 1500].forEach((delay) => setTimeout(fetchAndRender, delay));
+
+                try {
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', fetchAndRender);
+                    }
+                    window.addEventListener('load', fetchAndRender);
+                    window.addEventListener('resize', () => updateHostHeight());
+                } catch (e) {}
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>
+```
+<StatusPlaceHolderREADY/>

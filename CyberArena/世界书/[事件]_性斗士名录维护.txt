@@ -1,0 +1,85 @@
+<%# [事件] 性斗士名录维护 %>
+<%_ {
+const stat = getvar('stat_data') || {};
+const j = (v) => JSON.stringify(v);
+const events = _.get(stat, '系统状态.待处理事件', {});
+const rosterEvent = events['性斗士名录维护事件'];
+if (rosterEvent && typeof rosterEvent === 'string') {
+  const fighterName = rosterEvent;
+  const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+
+  const T = ['公猪','公狗','野猫','鬣狗','猎豹','猛虎','雄狮'];
+  const RACES = ['人类','狼兽人','虎兽人','龙兽人','熊兽人','鲨鱼兽人','狐兽人','马兽人','狗兽人','猫兽人','雄性魅魔','人形史莱姆','人形触手怪','胶狼兽人','胶龙兽人','胶鲨兽人'];
+  const BUILDS = ['精瘦','匀称','健壮','肥胖'];
+  const PENIS_TABLE = { '人类':[12,22],'狼兽人':[16,28],'虎兽人':[18,30],'龙兽人':[15,35],'熊兽人':[20,32],'鲨鱼兽人':[14,26],'狐兽人':[12,24],'马兽人':[25,50],'狗兽人':[15,28],'猫兽人':[10,20],'雄性魅魔':[14,26],'人形史莱姆':[10,30],'人形触手怪':[8,25],'胶狼兽人':[16,28],'胶龙兽人':[15,35],'胶鲨兽人':[14,26] };
+  const SKILL_ENDUR_TOTAL = { '公猪':[80,120],'公狗':[110,160],'野猫':[160,220],'鬣狗':[210,280],'猎豹':[280,360],'猛虎':[350,440],'雄狮':[440,600] };
+  const PHYS_TOTAL = { '公猪':[280,360],'公狗':[340,440],'野猫':[400,520],'鬣狗':[460,600],'猎豹':[530,690],'猛虎':[600,780],'雄狮':[700,950] };
+
+  function rand(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
+  function pick(arr) { return arr[rand(0,arr.length-1)]; }
+  function randomAge() { var r = Math.random(); if (r < 0.6) return rand(16,26); if (r < 0.9) return rand(27,40); return rand(41,50); }
+  function randomRace() { return Math.random() < 0.5 ? '人类' : pick(RACES); }
+  // 段位: 以中间多两头少方式随机
+  function randomTier() { var r = Math.random(); if (r < 0.15) return T[0]; if (r < 0.25) return T[6]; return T[rand(1,5)]; }
+  var ftier = randomTier();
+  var sr = SKILL_ENDUR_TOTAL[ftier]; var totalSkill = rand(sr[0], sr[1]);
+  var skill = Math.max(20, Math.floor(totalSkill * (0.3 + Math.random()*0.4)));
+  var endur = totalSkill - skill;
+  var pr = PHYS_TOTAL[ftier]; var totalPhys = rand(pr[0], pr[1]);
+  var physA = Math.max(50, Math.floor(totalPhys * (0.2+Math.random()*0.3)));
+  var physB = Math.max(50, Math.floor((totalPhys-physA) * (0.3+Math.random()*0.4)));
+  var physC = totalPhys - physA - physB;
+  if (physC < 50) { var over = 50-physC; physC=50; physA-=Math.floor(over/2); physB-=Math.ceil(over/2); physA=Math.max(50,physA); physB=Math.max(50,physB); }
+  var rc = randomRace(); var pz = PENIS_TABLE[rc] || [12,22];
+  var bmod = Math.random() < 0.5;
+  var build = pick(BUILDS);
+_%>
+# 指令: 性斗士名录维护
+
+event_handler:
+  event_name: "登记新性斗士"
+  target_name: "<%= fighterName %>"
+  context: "<%= alias %>最近与<%= fighterName %>有过互动。擂台系统对每一个性斗士的信息完全收录并公开——是时候将<%= fighterName %>正式录入名录了。所有字段必须填入具体内容，禁止出现'未知'、'待设定'或空值。"
+
+  field_sources:
+    from_interaction_history:
+      description: "以下字段根据<%= alias %>与<%= fighterName %>的互动历史中的已知信息填入，若互动中无此信息则AI根据已知信息合理推断。"
+      fields:
+        - "姓名: '<%= fighterName %>'"
+        - "擂台代号: 若互动中对方提过代号则用代号，否则AI根据对方的性格/种族/风格创造。禁止写'未知'。"
+        - "身份: 根据互动中对方的角色。若互动中未明确，AI根据场景合理推断。"
+        - "性格: 根据互动中对方的言行表现总结。"
+        - "外貌: 根据互动中对对方外观的描写整理。"
+        - "身材: 根据互动中对对方身材的描写整理，若无，则基于体型'<%= build %>'，AI结合外貌描写设计身高体重并描写身体细节。"
+        - "阴茎描述: 根据互动中对对方鸡巴的描写整理，若无，则基于尺寸<%= rand(pz[0], pz[1]) %>cm，AI结合种族'<%= rc %>'设计形态描写。"
+        - "后穴描述: 根据互动中对对方后穴的描写整理，若无，则AI根据体型和种族合理设计。"
+        - "性斗风格: AI根据互动中表现出的性格和已知性技数值合理设计。"
+        - "性行为偏好: AI根据互动历史和对方性格设计几种偏好的性行为与体位。"
+        - "身体改造: 根据互动中对对方身体改造的描写整理，若无，<% if (bmod) { %>AI根据种族和互动中外观描写创意设计一件改造。<% } else { %>无改造。<% } %>"
+        - "历史战绩: AI根据段位'<%= ftier %>'设计符合的胜/负/平数据。"
+        - "与主角关系: 根据互动历史，用一句叙述性文字概括当前两人的关系。"
+        - "好感度: 根据互动历史中的相处氛围评定一个合理的数值。"
+
+    from_random_code:
+      description: "以下字段由代码随机生成，禁止手动修改。"
+      fields:
+        - "擂台段位: '<%= ftier %>'"
+        - "擂台积分: <%= rand(T.indexOf(ftier)*500, (T.indexOf(ftier)+1)*500-1) %>"
+        - "年龄: <%= randomAge() %>"
+        - "种族: '<%= rc %>'"
+        - "性技: <%= skill %>"
+        - "忍耐度: <%= endur %>"
+        - "体力上限: <%= physA %>"
+        - "精力上限: <%= physB %>"
+        - "快感阈值: <%= physC %>"
+        - "人气: <%= rand(0, 200) %>"
+        - "与主角对战记录: { 胜:0, 负:0, 平:0 }"
+
+  mandatory_data_sync:
+    instruction: "将所有字段（来自互动、随机代码、AI设计）合并为完整档案，insert到性斗士名录，key为姓名。完成后移除此事件。禁止任何字段为'未知'、空值或'待设定'。"
+    patch_code: |
+      [
+        {"op":"insert","path":"/记录/性斗士名录/<%= j(fighterName) %>","value":{ "姓名":"<%= fighterName %>", "擂台代号":"[根据互动历史填入或AI设计]", "擂台积分":<%= rand(T.indexOf(ftier)*500, (T.indexOf(ftier)+1)*500-1) %>, "擂台段位":"<%= ftier %>", "年龄":<%= randomAge() %>, "种族":"<%= rc %>", "身份":"[根据互动历史填入]", "性格":"[根据互动历史填入]", "外貌":"[根据互动历史填入]", "身材":"[AI设计——基于<%= build %>体型]", "性斗风格":"[AI设计——基于互动信息+性技<%= skill %>]", "性行为偏好":"[AI设计]", "性技":<%= skill %>, "忍耐度":<%= endur %>, "体力上限":<%= physA %>, "精力上限":<%= physB %>, "快感阈值":<%= physC %>, "阴茎描述":"[AI设计——尺寸已由代码生成]", "后穴描述":"[AI设计]", "身体改造":"<% if (bmod) { %>[AI设计——有改造]<% } else { %>无改造<% } %>", "历史战绩":{ "胜":[AI根据段位设计], "负":[AI根据段位设计], "平":[AI根据段位设计] }, "与主角对战记录":{ "胜":0, "负":0, "平":0 }, "人气":<%= rand(0, 200) %>, "好感度":[根据互动历史评定], "与主角关系":"[根据互动历史填入]" }},
+        {"op":"remove","path":"/系统状态/待处理事件/性斗士名录维护事件"}
+      ]
+<%_ } } _%>

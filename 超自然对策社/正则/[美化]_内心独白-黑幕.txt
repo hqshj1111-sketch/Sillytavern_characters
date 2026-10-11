@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://testingcf.jsdelivr.net/gh/StageDog/tavern_sync/dist/schema/regex.zh.json
+名称: '[美化]_内心独白-黑幕'
+描述: '将括号内的隐秘心声与心理独白美化为带有神秘感的黑幕渐变样式'
+启用: true
+查找正则: '“（([^）]+)）”'
+替换正则: '<span class="inner-monologue" style="color:#a8a29e;font-style:italic;background:rgba(0,0,0,0.25);padding:2px 6px;border-radius:4px;border-left:3px solid #f43f5e;">“$1”</span>'
+作用位置:
+  - 角色消息
+  - 用户消息

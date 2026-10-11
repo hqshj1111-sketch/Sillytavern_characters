@@ -1,19 +1,23 @@
-﻿<%_
-var personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '英雄');
-if (personality === '英雄') {
-    if (
-      _.get(getvar('stat_data'), '进程.阶段') === '战斗回合' &&
-      _.get(getvar('stat_data'), '主角.核心状态.正义充能') < 100
-    ) {
-_%>
+﻿<%_{
+const stat = getvar('stat_data');
+const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+const phase = _.get(stat, '进程.阶段');
 
-purification_power_protocol:
-  objective: "在战斗中，主角通过以下方式积蓄【正义充能】。"
-  accumulation_methods:
-    - source: "玩家的主动攻击：主角成功对Boss进行了有效攻击或反击时。"
-    - source: "展现意志与韧性：AI描述敌人对主角造成伤害或施加负面效果时。"
-      action: "快感增加的同时，也为主角适当增加对应的【正义充能】，以此体现他的坚韧和不屈意志。"
-<%_
-    }
-}
+if (personality === '英雄' && phase === '战斗回合') {
+    const ult = parseInt(_.get(stat, '主角.核心状态.正义充能', 0), 10);
+    if (ult > 0 && ult < 100) {
+        let state, desc;
+        if (ult < 50) { 
+            desc = "在承受屈辱与伤害时，内心的不甘化作微弱的正义能量。"; 
+        } else if (ult < 90) { 
+            desc = "身体虽然被迫承受着快感与痛苦，但精神的反抗正催生出强烈的正义充能。"; 
+        } else { 
+            desc = "正义充能已达临界点！绝地反击的时刻即将到来。"; 
+        }
 _%>
+purification_aura:
+  objective: "在战斗中，主角主动攻击的意志和承受侵犯的屈辱会转化为反击的力量。"
+  narrative_guidance: 
+    - "<%= desc %>"
+    - "请将这股力量自然地融入到主角的神态与感官描写中。【严禁】生硬地重复'他正在积攒正义充能'这种机械废话！"
+<%_ } } } _%>

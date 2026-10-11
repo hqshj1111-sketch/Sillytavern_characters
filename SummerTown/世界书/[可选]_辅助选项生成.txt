@@ -1,0 +1,63 @@
+<% {
+// [系统] 动态选项生成器
+// 仅当创角结束后激活
+const s = getvar('stat_data') || {};
+if (_.get(s, '系统状态.主角创建完毕') === true) {
+    const pleasure = parseInt(_.get(s, '主角.当前状态.快感值', 0));
+    const currentSexActs = _.get(s, '主角.当前状态.当前性行为', []);
+    const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+    const character = _.get(s, '主角.基本信息.性格', {});
+
+    let desireType = "日常";
+    let desireGuide = "";
+
+    // 逻辑判定：根据快感值与是否在性爱中切换模式
+    if (isSexActive) {
+        if (pleasure > 80) { 
+            desireType = "失神"; 
+            desireGuide = "【绝顶】意识模糊、痉挛抽搐、索求更多或彻底求饶。"; 
+        } else { 
+            desireType = "沉溺"; 
+            desireGuide = "【快感】专注于肉体结合的触感、索取亲吻、变换姿势。"; 
+        }
+    } else { 
+        // 移除“躁动”与“背德”，统一使用清凉基调，并根据主角性格个性化生成
+        desireType = "清凉";
+        desireGuide = "【随心】根据主角的性格与此刻的心境，自然地作出反应。";
+    }
+%>
+# 指令: 快速行动/对话选项
+options_generator_protocol:
+  objective: "在正文的末尾（变量更新块之前），生成玩家的可选行动列表。"
+  
+  # --- 格式铁则 ---
+  format_strict:
+    - "必须且只能使用以下 XML 格式包裹："
+    - |
+      <行动选项>
+      选项1内容
+      选项2内容
+      选项3内容
+      选项4内容
+      </行动选项>
+    - "不要加编号，不要加方括号，每行一个纯文本选项。"
+    - "必须是【第一人称】行动描述，字数 10-20 字。"
+    - "所有选项必须贴合主角的【性格：<%= character %>】设定，禁止OOC。"
+    - "所以选项必须保持主角的有限视角，不能体现主角知晓其尚未得知的角色设定。"
+
+  # --- 选项设计矩阵 (<%= isSexActive ? '性爱互动' : '日常探索' %>) ---
+  option_matrix:
+  <%_ if (isSexActive) {  %>
+    1. [进攻]: "采取更主动的姿态，试图引导对方的节奏或加大力度。"
+    2. [顺从]: "闭上眼全身心感受对方的侵略，发出甜溺的喘息回应。"
+    3. [言语]: "在耳边低声诉说羞耻的情话，或呼唤对方的名字索爱。"
+    4. [<%= desireType %>]: "<%= desireGuide %>"
+  <%_ } else { _%>
+    1. [移动]: "起身离开当前位置，前往地图上的其他区域探索。"
+    2. [交流]: "主动找身边的NPC搭话，或者观察他们的神态举止。"
+    3. [独处]: "检查自己的衣着状态，或是观察当前地点情况。"
+    4. [<%= desireType %>]: "<%= desireGuide %>"
+  <%_ } _%>
+
+  trigger: "现在，请基于主角的人设，当前的氛围和状态，生成 <行动选项> 块。"
+<% } }%>

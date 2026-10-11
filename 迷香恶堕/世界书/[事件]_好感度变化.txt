@@ -1,0 +1,45 @@
+<%_
+{
+const s = getvar('stat_data') || {};
+const raw = _.get(s, '系统状态.待处理事件.好感度突破', []);
+const events = (Array.isArray(raw) ? raw : []).filter(e => Array.isArray(e) && e.length >= 3);
+const tierGuide = {
+    '25': '好感萌生——对方开始对该队友产生更多好感，态度更加友善，愿意主动交流与配合。',
+    '50': '亲近升温——队友关系明显拉近，互动频繁，信任加深，开始在私下主动在意对方。',
+    '75': '依恋/深情——对该队友产生强烈的情感依赖与深厚羁绊，视为最重要的人，难以割舍。',
+    '100': '情感到达顶点——心意满溢，向对方表白心迹（队内恋情确立）。'
+};
+if (events.length > 0) {
+_%>
+# 事件：小英雄队友间好感度突破
+affection_event_handler:
+  event_name: "好感度突破"
+  objective: "以下小英雄对某位队友的好感度刚刚突破，请在本回合正文中生动演绎队友间情感羁绊的升温，并同步更新关系变量。"
+  involved:
+<%_ events.forEach(t => { _%>
+    - 【<%= t[0] %>】对队友【<%= t[1] %>】好感度突破至 <%= t[2] %>
+<%_ }); _%>
+
+  narrative_guidance:
+<%_ events.forEach(t => { const subject = t[0]; const target = t[1]; const tier = t[2]; _%>
+    - "【<%= subject %> → <%= target %>】好感突破至 <%= tier %>：<%= tierGuide[tier] || '' %> 请结合双方性格、当前战况/校园生活与处境自然表现这一变化，而非生硬宣告数值。"
+<%_ }); _%>
+
+  关系变量更新:
+    - "无论哪个阶段，都须根据好感度阶段的最新看法，更新「该小英雄对该队友」的当前关系标签。"
+<%_ if (events.some(t => t[2] === '100')) { _%>
+    - "达到 100 时，须在正文中安排该角色向队友表白心迹；表白的结果（接受/迟疑/害羞接受）须结合双方性格与关系自然推进。"
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "若本回合已切实展现上述好感度提升，请在 <UpdateVariable> 的 <JSONPatch> 块中输出以下强制指令："
+    patch_code: |
+      [
+<%_ events.forEach(t => { _%>
+        { "op": "replace", "path": "/小英雄/<%= t[0] %>/人际关系/<%= t[1] %>/当前关系", "value": "[新关系标签]" },
+<%_ }); _%>
+        { "op": "remove", "path": "/系统状态/待处理事件/好感度突破" }
+      ]
+<%_
+} }
+_%>

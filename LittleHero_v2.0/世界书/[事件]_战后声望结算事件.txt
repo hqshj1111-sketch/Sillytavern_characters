@@ -1,0 +1,442 @@
+<%{
+
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+const rawPayload = events['声望结算事件'] || events['战后声望结算事件'];
+
+if (rawPayload) {
+  // ── 解析快照：兼容旧格式（纯字符串）与新格式（JSON 字符串）──
+  let payload;
+  if (typeof rawPayload === 'string' && rawPayload.trim().startsWith('{')) {
+    try {
+      payload = JSON.parse(rawPayload);
+    } catch (e) {
+      payload = {
+        source: rawPayload,
+        h_event_name: '无', h_event_themes: [],
+        boss_name: '无', boss_type: '无', boss_themes: []
+      };
+    }
+  } else {
+    payload = {
+      source: typeof rawPayload === 'string' ? rawPayload : '战斗胜利',
+      h_event_name: '无', h_event_themes: [],
+      boss_name: '无', boss_type: '无', boss_themes: []
+    };
+  }
+
+  const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+  const isFallen = (personality === '反派' || personality === '恶堕');
+  let sourceStr = payload.source || '战斗胜利';
+
+  // 来源词条兼容（将撤退、逃跑统一归入「逃离」）
+  if (['逃跑', '逃走', '撤退', '脱离', '逃脱'].includes(sourceStr)) {
+    sourceStr = '逃离';
+  }
+
+  const branch = isFallen ? 'fallen' : 'good';
+  const esc = (s) => String(s).replace(/"/g, '\\"').replace(/\r?\n/g, ' ');
+
+  const isCombatSource = (sourceStr === '战斗胜利' || sourceStr === '战斗败北' || sourceStr === '逃离');
+  const hEventName = payload.h_event_name || '无';
+  const hEventThemes = Array.isArray(payload.h_event_themes) ? payload.h_event_themes : [];
+  const bossName = payload.boss_name || '无';
+  const bossType = payload.boss_type || '无';
+  const bossThemes = Array.isArray(payload.boss_themes) ? payload.boss_themes : [];
+
+  const hasHEventContext = hEventName !== '无';
+  const hasBossContext = bossName !== '无';
+
+  // ══════════════════════════════════════════════════════════════════
+  // 来源评估矩阵（仅在此处单纯追加「逃离」分支）
+  // ══════════════════════════════════════════════════════════════════
+  const SOURCE_MATRIX = {
+
+    '战斗胜利': {
+      event_good: '战后声望评估',
+      event_fallen: '战后恶名评估',
+      focus: '战斗结果、目击范围、战斗中的壮举或失态',
+      arc: {
+        start: '战斗正式打响的瞬间（变身宣言、开战宣言、或突袭爆发的画面）',
+        middle: '战斗攻防的过程（壮举、失态、受伤、走光、高潮）',
+        end: '终结一击与胜利宣言'
+      },
+      good: {
+        baseline: { fame: 5, rep: 10, note: '英雄的事迹被传播，胜利即正义。' },
+        modifiers: [
+          { label: '守护平民或设施',   fame: 3, rep: 8,   kind: 'positive' },
+          { label: '华丽的必杀终结',   fame: 5, rep: 5,   kind: 'positive' },
+          { label: '身负重伤仍坚持',   fame: 2, rep: 4,   kind: 'positive' },
+          { label: '造成严重环境破坏', fame: 5, rep: -10, kind: 'negative' },
+          { label: '战斗中走光',       fame: 4, rep: -2,  kind: 'scandal' },
+          { label: '当众高潮',         fame: 8, rep: -10, kind: 'scandal' }
+        ]
+      },
+      fallen: {
+        baseline: { fame: 8, rep: -10, note: '成功的征服加深了恐惧，值得被反复议论。' },
+        modifiers: [
+          { label: '公开调教敌方小英雄', fame: 5,  rep: -8, kind: 'intimidation' },
+          { label: '大规模破坏',           fame: 6,  rep: -5, kind: 'intimidation' },
+          { label: '洗脑或俘虏平民',       fame: 5,  rep: -8, kind: 'intimidation' },
+          { label: '主动展示黑暗印记或身体',   fame: 15, rep: 5,  kind: 'entertainment' },
+          { label: '主动的淫乱表演',       fame: 8,  rep: 3,  kind: 'entertainment' },
+          { label: '被公开羞辱或高潮',     fame: 10, rep: 5,  kind: 'entertainment' }
+        ]
+      }
+    },
+
+    '战斗败北': {
+      event_good: '败北声望评估',
+      event_fallen: '败北恶名评估',
+      focus: '败北过程、被侵犯程度、是否留下痕迹',
+      arc: {
+        start: '体力归零、姿态转为"力尽待辱"的瞬间',
+        middle: '被压制、被侵犯、被留下痕迹的过程',
+        end: '敌人离开或主角脱身的画面'
+      },
+      good: {
+        baseline: { fame: 8, rep: -5, note: '无法守护城市的印象，动摇社会信心。' },
+        modifiers: [
+          { label: '被公开中出/榨精',   fame: 10, rep: -8,  kind: 'scandal' },
+          { label: '被留下肉体改造',   fame: 8,  rep: -10, kind: 'scandal' },
+          { label: '绝顶失神/屈服被目击', fame: 15, rep: -15, kind: 'scandal' },
+          { label: '勉强逃脱',         fame: 3,  rep: -2,  kind: 'neutral' },
+          { label: '敌人扬长而去',     fame: 5,  rep: -3,  kind: 'negative' }
+        ]
+      },
+      fallen: {
+        baseline: { fame: 5, rep: 8, note: '人们发现恶徒也并非不可战胜，威胁性随之下降。' },
+        modifiers: [
+          { label: '被反制收服',       fame: 8, rep: 5,  kind: 'entertainment' },
+          { label: '主动臣服',         fame: 5, rep: 10, kind: 'entertainment' },
+          { label: '被公开打屁股',     fame: 6, rep: 5,  kind: 'entertainment' },
+          { label: '展现出的脆弱',     fame: 5, rep: 8,  kind: 'entertainment' },
+          { label: '向对手求饶',       fame: 3, rep: 8,  kind: 'entertainment' }
+        ]
+      }
+    },
+
+    // ── 单纯加入：逃离分支 ──
+    '逃离': {
+      event_good: '脱离战局声望评估',
+      event_fallen: '战术脱离恶名评估',
+      focus: '撤退过程、是否狼狈失态、遗留战况与市民目击',
+      arc: {
+        start: '决定中断交锋、寻找突破口后撤的瞬间',
+        middle: '甩开追截、利用障碍周旋脱离的过程（是否负伤、是否走光）',
+        end: '彻底拉开身位、回到安全庇护所紧闭房门的余韵'
+      },
+      good: {
+        baseline: { fame: 3, rep: -6, note: '未能击退敌人而选择撤退，公众的安全感下降，质疑声渐起。' },
+        modifiers: [
+          { label: '掩护平民撤离后才脱身', fame: 3, rep: 6,   kind: 'positive' },
+          { label: '冷静规避必死死局',     fame: 1, rep: 2,   kind: 'positive' },
+          { label: '遗留怪物在现场肆虐',   fame: 6, rep: -8,  kind: 'negative' },
+          { label: '衣衫破损被追得狼狈逃跑', fame: 8, rep: -6, kind: 'scandal' },
+          { label: '被拍下慌乱逃跑的背影', fame: 7, rep: -4,  kind: 'scandal' },
+          { label: '巷尾死角悄然脱出无目击', fame: 0, rep: -1, kind: 'neutral' }
+        ]
+      },
+      fallen: {
+        baseline: { fame: 3, rep: 4, note: '恶堕小英雄主动退走，城市危机解除，人们松了口气。' },
+        modifiers: [
+          { label: '从容戏耍对手后大笑离场', fame: 5, rep: -4, kind: 'intimidation' },
+          { label: '罕见地被打得狼狈败退',   fame: 8, rep: 6,  kind: 'entertainment' },
+          { label: '逃跑途中春光乍泄被抓拍', fame: 10, rep: 5, kind: 'entertainment' },
+          { label: '宣称玩腻了随性退场',     fame: 4, rep: 2,  kind: 'entertainment' },
+          { label: '化作烟尘无声遁走',       fame: 2, rep: 0,  kind: 'neutral' }
+        ]
+      }
+    },
+
+    '被俘': {
+      event_good: '被俘经历评估',
+      event_fallen: '被俘经历评估',
+      focus: '被俘瞬间是否被目击、囚禁期间是否流出信息、逃脱归来时的状态与日常接纳',
+      arc: {
+        start: '被俘确立的瞬间（失去自由、被带走、H事件开启的画面）',
+        middle: '囚禁期间的过程（监禁、调教、身体改造、H事件中的遭遇）',
+        end: '逃脱归来的画面（H事件落幕、重获自由、重新出现在日常中的瞬间）'
+      },
+      good: {
+        baseline: { fame: 0, rep: -3, note: '消失削弱存在感，逃脱归来部分抵消，整体呈中性偏负。' },
+        modifiers: [
+          { label: '被目击击倒瞬间',       fame: 8, rep: -5, kind: 'scandal' },
+          { label: '战斗痕迹留在日常场所', fame: 5, rep: -3, kind: 'scandal' },
+          { label: '私人物品被遗落现场',   fame: 3, rep: -2, kind: 'neutral' },
+          { label: '失踪时长引发讨论',     fame: 5, rep: -3, kind: 'scandal' },
+          { label: '长期失踪后悄然归来',   fame: 5, rep: 3,  kind: 'positive' },
+          { label: '归来时明显带着痕迹',   fame: 5, rep: -5, kind: 'scandal' }
+        ]
+      },
+      fallen: {
+        baseline: { fame: 0, rep: 0, note: '消失与归来都是常态，社会反应平淡。' },
+        modifiers: [
+          { label: '被目击被击倒',         fame: 5, rep: -3, kind: 'scandal' },
+          { label: '战斗痕迹被留下',       fame: 3, rep: -2, kind: 'neutral' },
+          { label: '追随者打听下落',       fame: 5, rep: 3,  kind: 'positive' },
+          { label: '被公开囚禁影像',       fame: 10, rep: 3, kind: 'entertainment' },
+          { label: '若无其事回归',         fame: 3, rep: 3,  kind: 'neutral' },
+          { label: '宣扬自己玩腻了',       fame: 5, rep: 3,  kind: 'entertainment' }
+        ]
+      }
+    },
+
+    'H事件落幕': {
+      event_good: '日常声望评估',
+      event_fallen: '日常恶名评估',
+      focus: '事件是否被目击、是否留下影像、痕迹的严重程度',
+      arc: {
+        start: 'H事件触发的那一轮（遭遇色情状况、陷入困境的画面）',
+        middle: '事件过程与主角的反应',
+        end: '事件结束与余韵（挣脱、落幕、重新回到日常的瞬间）'
+      },
+      good: {
+        baseline: { fame: 3, rep: -5, note: '痕迹与流言在私下传播。' },
+        modifiers: [
+          { label: '被路人目击',         fame: 5, rep: -5, kind: 'scandal' },
+          { label: '被拍摄传播',         fame: 8, rep: -8, kind: 'scandal' },
+          { label: '无目击者，仅衣物凌乱', fame: 1, rep: -1, kind: 'neutral' },
+          { label: '留下体液痕迹',       fame: 3, rep: -3, kind: 'scandal' },
+          { label: '体内异物被察觉',     fame: 5, rep: -5, kind: 'scandal' }
+        ]
+      },
+      fallen: {
+        baseline: { fame: 5, rep: 3, note: '表演性的展示，被娱乐化消费。' },
+        modifiers: [
+          { label: '被路人目击',         fame: 5, rep: 3, kind: 'entertainment' },
+          { label: '被拍摄传播',         fame: 8, rep: 5, kind: 'entertainment' },
+          { label: '表演性展示',         fame: 10, rep: 5, kind: 'entertainment' },
+          { label: '无目击者，仅衣物凌乱', fame: 1, rep: 1, kind: 'neutral' },
+          { label: '留下明显痕迹',       fame: 3, rep: 3, kind: 'entertainment' }
+        ]
+      }
+    }
+  };
+
+  const currentMatrix = SOURCE_MATRIX[sourceStr];
+
+  if (currentMatrix) {
+    const config = currentMatrix[branch];
+    const eventName = isFallen ? currentMatrix.event_fallen : currentMatrix.event_good;
+    const arc = currentMatrix.arc;
+%>
+event_handler:
+  event_name: "<%- eventName %>"
+  source: "<%- sourceStr %>"
+  narrative_focus: "<%- esc(currentMatrix.focus) %>"
+
+  resolved_event_context:
+<%_ if (isCombatSource) { _%>
+    evaluation_target: "本次评估的对象是【刚结束的这场战斗（或撤离）】。"
+    boss:
+      name: "<%- esc(bossName) %>"
+      type: "<%- esc(bossType) %>"
+      themes: [<%- bossThemes.map(t => `"${esc(t)}"`).join(', ') %>]
+<%_ if (hasHEventContext) { _%>\n    residual_h_event_reference:
+      name: "<%- esc(hEventName) %>"
+      themes: [<%- hEventThemes.map(t => `"${esc(t)}"`).join(', ') %>]
+      note: "以上是【更早之前】残留的 H事件数据。若本次弧线需要追溯至该 H事件，可作为参考；否则请忽略。"
+<%_ } _%>
+<%_ } else { _%>
+    evaluation_target: "本次评估的对象是【刚才落幕的 H事件 / 被俘经历】。请聚焦于下方 h_event 的名称与主题，不要分析更早之前的战斗。"
+    h_event:
+      name: "<%- esc(hEventName) %>"
+      themes: [<%- hEventThemes.map(t => `"${esc(t)}"`).join(', ') %>]
+<%_ if (hasBossContext) { _%>
+    prior_boss_reference:
+      name: "<%- esc(bossName) %>"
+      type: "<%- esc(bossType) %>"
+      themes: [<%- bossThemes.map(t => `"${esc(t)}"`).join(', ') %>]
+      note: "以上是【更早之前】那场战斗的残留数据，不是本次评估的直接对象。仅当弧线需要追溯至战斗源头（如：主角是如何被俘的）时才引用。"
+<%_ } _%>
+<%_ } _%>
+
+  prior_narrative_anchor:
+    core_premise: "本次评估的对象是一段【已结束的叙事弧线】对社会认知的影响，而非当前瞬间，也非事件本身。"
+    arc_definition:
+      start_marker: "<%- esc(arc.start) %>"
+      middle_marker: "<%- esc(arc.middle) %>"
+      end_marker: "<%- esc(arc.end) %>"
+    search_instruction: "请在动笔前先回溯前文，找到这三个标志性的节点，确认整段弧线的范围。若某节点在前文中未被明确描写，则依据上下文合理推定其位置。"
+    analysis_requirement: "在 <Analysis> 中必须先用一句话概括这段弧线（从起点到终点发生了什么、谁在场、留下了什么痕迹），再展开评估。"
+
+  narrative_directives:
+    - "评估的是【弧线】，而非【瞬间】。禁止只结算最近一回合的内容。"
+    - "正文中不得出现任何数值或档位名称，只通过人群、媒体与同伴的反应呈现。"
+    - "若 resolved_event_context 中提供了 h_event 或 boss 的具体名称与主题，请以此为锚点定位前文，不要凭当前变量树中的残留数据臆测。"
+
+  assessment_protocol:
+    step_1_witness_scope:
+      instruction: "先判定目击范围。这是全部数值的倍率来源。"
+      options:
+        unseen:
+          label: "无人知晓"
+          multiplier: 0
+          note: "发生在无人角落，事后无痕迹流传。纯私密事件，不产生任何声望波动，也不更新风评标签。"
+        rumor:
+          label: "都市流言"
+          multiplier: 1.0
+          note: "有零星目击者，事后在本地小范围传播。"
+        broadcast:
+          label: "公开围观 / 直播"
+          multiplier: 2.0
+          note: "大量目击者或影像记录，足以左右舆论走向。"
+
+    step_2_source_evaluation:
+      active_source: "<%- sourceStr %>"
+      baseline:
+        fame: <%- config.baseline.fame %>
+        rep: <%- config.baseline.rep %>
+        note: "<%- esc(config.baseline.note) %>"
+      modifier_pool:
+        instruction: "从下列修饰项中选取【2-3 条最突出的要点】计入，禁止全选叠加。正负项可相互抵消。选择时应基于弧线中真实发生过的内容，而非凭空推测。"
+        items:
+<%_ config.modifiers.forEach(m => { _%>
+          - { label: "<%- esc(m.label) %>", fame: <%- m.fame %>, rep: <%- m.rep %>, kind: <%- m.kind %> }
+<%_ }); _%>
+
+    step_3_clamp_and_apply:
+      instruction: "计算最终值后限幅写入。这是防止数值失控的硬约束，不得绕过。"
+      rules:
+        - "final = (baseline + modifiers) × multiplier，四舍五入取整。"
+        - "【关键】若 multiplier 为 0，跳过所有声望数值变更，同时跳过 tag_update_protocol 的三项标签更新。"
+        - "知名度最终变动绝对值 ≤ 15 × multiplier。"
+        - "风评最终变动绝对值 ≤ 20 × multiplier。"
+        - "若某项结果为 0，不输出对应的 delta 指令。"
+
+  tag_update_protocol:
+    objective: "将抽象的声望数值，翻译成三句【视角独立、素材分化、风格各异】的社会切片。"
+    trigger_condition: "仅在 step_1_witness_scope 判定为 rumor 或 broadcast 时执行。"
+
+    specificity_gate:
+      instruction: "三项标签必须从主角的具体设定中生根。你在上下文中已经读过主角的身份、人际关系与世界观备注——请使用它们。"
+      self_check: "在写下每一句标签前，先问自己：这句话换成任何一个小英雄都成立吗？若成立，说明它太抽象了，请重写。"
+      contrast_example:
+        abstract: "主角下落不明，周围人议论纷纷。"
+        specific: "便利店店长发现那个总是准点打工的少年已经三天没来交班了。"
+
+    core_principles:
+      perspective_independence: |
+        【最高原则】三项标签是【三个不同观察者的独立视角】，而非同一事件的三次复述。
+        - 表世界身份风评 ← 日常接触者（同事/同学/邻居/常客）眼中所见
+        - 小英雄身份风评 ← 关注小英雄现象的群体（市民/媒体/同行）眼中的印象
+        - 流言 ← 街谈巷议、网络匿名、捕风捉影的传闻
+
+        三项观察者互不通气，认知范围不同。若读者读完三项，能拼出"同一件事的三面"，
+        而不是"三件不同的事"，即为失败。
+
+      material_differentiation: |
+        【硬性要求】每一项必须从【不同的素材源】取材，禁止三项共用同一素材。
+
+        素材源分配：
+        - 表世界身份风评 ← 性格、外貌、日常举止、工作/学习状态、人际互动；以未变身姿态遭遇的事件。
+        - 小英雄身份风评 ← 最近战斗表现、出现频率、战斗风格、公共评价；以变身姿态遭遇的事件。
+        - 流言 ← 身体变化、异常行为、香艳猜测、未证实的目击
+
+        若某项无新素材可采，就描写"没有新变化"的状态（如"还是那个老样子"），
+        不要硬编，也不要挪用其他项的素材。
+
+      time_window_staggering: |
+        三项的【时间窗口】必须错开，避免同时聚焦最近事件：
+        - 表世界 → 长期稳定的印象（他一直是这样的人）
+        - 小英雄 → 最近几天的公开表现
+        - 流言 → 最新的、最八卦的、最具体的传言
+
+      anti_convergence: |
+        【禁令】以下行为一律视为失败：
+        - 三项都围绕同一个最近事件展开
+        - 三项使用相同的名词/形容词
+        - 三项句式雷同
+        - 三项情绪基调相同
+
+    field_blueprints:
+      表世界身份风评:
+        observer: "日常接触者（同事、同学、邻居、常客）"
+        knows: "性格、外貌、日常举止、工作/学习状态"
+        does_not_know: "小英雄身份、战斗细节（除非已公开）"
+        time_window: "长期稳定的印象"
+        tone: "日常化、具体化、带个人印象，可带点揶揄"
+        style: "短句 + 具体细节，避免抽象评价"
+        examples:
+          good:
+            - "便利店的清秀少年店员，性格温和，经常被不良顾客呼来喝去。"
+            - "白河高中清秀引人注目的优等生，但最近看起来总有心事。"
+            - "最近气色很差、上课老是走神的高中男生。"
+            - "总是独来独往的清瘦少年，放学后经常匆匆离开。"
+
+      小英雄身份风评:
+        observer: "关注小英雄现象的群体（市民、媒体、其他小英雄）"
+        knows: "战斗表现、战斗风格、出现频率、大致实力"
+        does_not_know: "真实身份、私生活"
+        time_window: "最近几天的公开表现"
+        tone: "概括化、评价化、带公众评级（强/弱/神秘/靠谱）"
+        style: "带地名或事件锚点，形成'公共印象'"
+        examples:
+          good:
+            - "新出现的桃青色水之小英雄，行踪不定，似乎很弱。"
+            - "在旧码头击败五只兽人的桃青色身影，实力比传闻中强。"
+            - "最近不怎么出现的小英雄，是不是出事了？"
+
+      流言:
+        observer: "街谈巷议、网络匿名、捕风捉影的大众"
+        knows: "香艳的猜测、未证实的目击、被放大的细节"
+        does_not_know: "真相（流言不追求准确）"
+        time_window: "最新的、最八卦的、最具体的传言"
+        tone: "私密、香艳、夸张"
+        style: "口语化，带悬念或反差"
+        examples:
+          good:
+            - "'便利店那个清秀店员小哥，听说战衣下从来真空，裤裆紧绷得连鸡巴轮廓都看得一清二楚。'"
+            - "'最近有怪物在商业街附近游荡，难道是看上了那个巡逻时屁股翘得要命的小英雄……？'"
+            - "'听说那个小英雄被怪人抓住当肉便器狠操了一通？怪不得最近都没见到。'"
+
+    update_intensity:
+      instruction: "根据本回合的数值波动与事件性质，以适当的强度更新内容。数值波动较大时，允许与原文产生巨大反差，甚至完全反转。"
+
+    rewrite_mandate:
+      structure_diversity: "禁止使用与上一轮相同的句式。"
+      keyword_diversity: "禁止三项出现相同的关键词。"
+      context_mining: "鼓励从【角色设定/上下文/事件/状态变化】中挖掘具体细节。"
+      allow_reversal: "允许偶尔出现反转：被视为强者突然变弱、清纯形象突然变脏。"
+      no_meta: "禁止出现任何数字、系统术语、等级名称。"
+      personality_sync: "标签内容必须与当前人格状态（英雄/反派）一致。"
+
+    analysis_checklist:
+      instruction: "在 <Analysis> 中，先对三项标签进行一次自查，通过后再输出 replace 指令："
+      checks:
+        - "视角独立？三项是否在讲三件不同的事？"
+        - "素材分化？三项是否从不同的素材源取材？"
+        - "关键词不重复？三项是否出现相同的名词？"
+        - "句式不雷同？三项的句式结构是否过于相似？"
+        - "强度匹配？是否根据 Δ值 选择了正确的更新强度？"
+      failure_action: "若任一项自查不通过，重新设计后再输出。"
+
+  system_tasks:
+    instruction: "在 <JSONPatch> 中输出结算指令，并移除本事件。"
+    mandatory_patch: |
+      [
+         { "op": "delta", "path": "/名声/知名度", "value": [计算值] },
+         { "op": "delta", "path": "/名声/风评",   "value": [计算值] },
+        // 若 step_1 判定为 rumor/broadcast，追加三项 replace 指令：
+         { "op": "replace", "path": "/名声/风评标签/表世界身份风评", "value": "[新印象]" },
+         { "op": "replace", "path": "/名声/风评标签/小英雄身份风评", "value": "[新印象]" },
+         { "op": "replace", "path": "/名声/风评标签/流言", "value": "[新流言]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/声望结算事件" }
+      ]
+
+<%
+  } else {
+%>
+event_handler:
+  event_name: "声望结算清理"
+  context: "检测到未知的声望结算来源【<%- esc(sourceStr) %>】，执行静默清理。"
+  system_tasks:
+    mandatory_patch: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/声望结算事件" }
+      ]
+<%
+  }
+}
+}%>

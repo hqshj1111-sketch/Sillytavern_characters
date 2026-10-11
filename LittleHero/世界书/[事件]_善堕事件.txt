@@ -1,0 +1,76 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['善堕事件']) {
+    const backup = _.get(getvar('stat_data'), '主角.核心状态.善堕备份', {});
+    const oldName = backup.英雄名 || '未知';
+    const oldSuit = backup.紧身战衣 || '未知';
+    const oldColor = backup.代表色 || '未知';
+    const oldAbility = backup.核心能力 || '未知';
+    const oldTrait = backup.性格特质 || '未知';
+    const redemptionCount = _.get(getvar('stat_data'), '记录.善堕次数', 0);
+_%>
+
+<%_ if (redemptionCount === 0) { _%>
+event_handler:
+  event_name: "善堕 — 英雄再临"
+  context: "体内被灌满了纯洁小英雄的力量——那清澈的精液在能量核心中扩散，如同圣泉洗涤了每一寸被黑暗污染的回路。曾经的堕落欲望被一寸寸剥离，久违的正义之光重新在胸口燃起。"
+  recovered_identity:
+    英雄名: "<%= oldName %>"
+    紧身战衣: "<%= oldSuit %>"
+    代表色: "<%= oldColor %>"
+    核心能力: "<%= oldAbility %>"
+    性格特质: "<%= oldTrait %>"
+  narrative_directives:
+    - "漫长而安静的转变。黑暗印记枯萎、褪色，能量核心中滚动的不再是混沌的浊流，而是温热的金色光芒。主角回忆起自己真正的名字——不是堕落时的那个身份，而是 <%= oldName %>。"
+    - "他闭上眼睛。当再次睁开时，眼睛的颜色已经恢复为英雄时期的清澈。他是回来了——不是回到了原点，而是带着那段堕落旅程的全部记忆，成为更加完整的自己。"
+  system_tasks:
+    instruction: "请输出以下指令完成善堕，恢复备份的英雄身份，清除黑暗印记与组织刻印，并移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/主角/核心状态/人格状态", "value": "英雄" },
+        { "op": "replace", "path": "/主角/基本信息/英雄名", "value": "<%= oldName %>" },
+        { "op": "replace", "path": "/主角/个人信息/紧身战衣", "value": "<%= oldSuit %>" },
+        { "op": "replace", "path": "/主角/个人信息/代表色", "value": "<%= oldColor %>" },
+        { "op": "replace", "path": "/主角/个人信息/核心能力", "value": "<%= oldAbility %>" },
+        { "op": "replace", "path": "/主角/个人信息/性格特质", "value": "<%= oldTrait %>" },
+        { "op": "replace", "path": "/主角/核心状态/混沌充能", "value": 0 },
+        { "op": "replace", "path": "/主角/核心状态/主人", "value": "无" },
+        { "op": "remove", "path": "/主角/永久性身体改造/组织刻印" },
+        { "op": "replace", "path": "/主角/黑暗印记/经验", "value": 0 },
+        { "op": "replace", "path": "/主角/黑暗印记/描述", "value": "[已枯萎，仅留下一道浅浅的纯洁印记。]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/善堕事件" }
+      ]
+
+<%_ } else { _%>
+event_handler:
+  event_name: "善堕 — 再度回归 (第<%= redemptionCount + 1 %>次)"
+  context: "又一次。黑暗再次被击退。这已经不是第一次在光与暗之间摇摆——每一次的跌宕都在主角的灵魂上刻下新的痕迹，使他比上一次更加复杂、也更加强大。"
+  recovered_identity:
+    英雄名: "<%= oldName %>"
+    紧身战衣: "<%= oldSuit %>"
+    代表色: "<%= oldColor %>"
+    核心能力: "<%= oldAbility %>"
+    性格特质: "<%= oldTrait %>"
+  narrative_directives:
+    - "多次的善堕之旅让这次的回归不再漫长。如同肌肉记忆般，当那股熟悉的纯洁力量涌入能量核心，身体几乎是条件反射地开始净化自己。"
+    - "黑暗印记的消退比以前更快。混沌充能被迅速抽离，正义之光不再需要一步一步地燃烧，而是在体内瞬间炸开——一种残忍的熟悉感。"
+    - "主角睁开眼。外面是世界本来来的阳光，但这一次他知道——他已经不是第一次见到它了。他是被反复打磨的存在，每一次轮回都让他变得更加无法定义。"
+  system_tasks:
+    instruction: "请输出以下指令完成善堕，恢复备份的英雄身份，清除黑暗印记与组织刻印，并移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/主角/核心状态/人格状态", "value": "英雄" },
+        { "op": "replace", "path": "/主角/基本信息/英雄名", "value": "<%= oldName %>" },
+        { "op": "replace", "path": "/主角/个人信息/紧身战衣", "value": "<%= oldSuit %>" },
+        { "op": "replace", "path": "/主角/个人信息/代表色", "value": "<%= oldColor %>" },
+        { "op": "replace", "path": "/主角/个人信息/核心能力", "value": "<%= oldAbility %>" },
+        { "op": "replace", "path": "/主角/个人信息/性格特质", "value": "<%= oldTrait %>" },
+        { "op": "replace", "path": "/主角/核心状态/混沌充能", "value": 0 },
+        { "op": "replace", "path": "/主角/核心状态/主人", "value": "无" },
+        { "op": "remove", "path": "/主角/永久性身体改造/组织刻印" },
+        { "op": "replace", "path": "/主角/黑暗印记/经验", "value": 0 },
+        { "op": "replace", "path": "/主角/黑暗印记/描述", "value": "[已枯萎，仅留下一道浅浅的纯洁印记。]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/善堕事件" }
+      ]
+<%_ } }
+}_%>

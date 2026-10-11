@@ -1,0 +1,47 @@
+# 可攻略角色静态设定档案
+<%_ {
+const s = getvar('stat_data');
+const npcData = s.NPC数据 || {};
+const npcNames = Object.keys(npcData);
+if (npcNames.length > 0) {
+    npcNames.forEach(name => {
+        const npc = npcData[name];
+        const identity = npc.身份信息 || {};
+        const appearance = npc.外貌 || {};
+        const body = npc.身体 || {};
+        const clothing = npc.着装 || {};
+        const personality = npc.性格 || {};
+        const hobbies = npc.爱好 || [];
+        const schedule = npc.日程 || {};
+        const rel = npc.主角关系 || {};
+        const intimacy = parseInt(rel.亲密度, 10) || 0;
+        const lust = parseInt(rel.情欲度, 10) || 0;
+
+        const maxVal = Math.max(intimacy, lust);
+        let currentStage = '阶段1';
+        if (maxVal >= 75) currentStage = '阶段4';
+        else if (maxVal >= 50) currentStage = '阶段3';
+        else if (maxVal >= 25) currentStage = '阶段2';
+        
+        const traits = npc.性特质 || {};
+        const currentTraits = traits[currentStage] || traits['阶段1'] || [];
+        const currentTraits_str = currentTraits.join('；');
+_%>
+## <%= name %>
+- 身份：<%= identity.年龄 %> | <%= identity.身份 %>
+- 儿时印象：<%= identity.儿时印象 || '无' %>
+- 外貌：<%= appearance.脸型与发型 %> | <%= appearance.眼睛 %> | <%= appearance.皮肤 %>
+- 身体：<%= body.身高 %> | <%= body.三围 %> | <%= body.体态 %>
+- 体毛：<%= body.体毛 %>
+- 性器官: <%= body.性器官描述 %>
+- 着装：居家(<%= clothing.居家 %>) / 外出(<%= clothing.外出 %>) / 泳装(<%= clothing.泳装 %>)
+- 性格：表面<%= personality.外在 %>；内在<%= personality.内在 %>
+- 爱好：<%= hobbies.join('、') %>
+- 日程：上午(<%= schedule.上午 %>) | 下午(<%= schedule.下午 %>) | 晚上(<%= schedule.晚上 %>)
+- 性特质：<%= currentTraits_str %>
+<%_ 
+    });
+} else {
+_%>
+暂无 NPC 档案。
+<%_ } }_%>

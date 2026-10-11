@@ -1,0 +1,30 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+const stat = getvar('stat_data');
+if (events['校园救援成功事件']) {
+    const rescuerName = _.get(stat, '世界.当前关卡.名称', '突入的救援英雄');
+    const instructorName = _.get(stat, '世界.校园催眠.怪人代号', '教官01号');
+%>
+---
+# 事件: 救援英雄击破结界（救援成功）
+event_handler:
+  event_name: "校园救援成功"
+  context: "前来救援的小英雄【<%= rescuerName %>】在苦战中成功制服了受控的主角，并趁势施展必杀技击碎了【<%= instructorName %>】的催眠结界发生核心！笼罩全校的催眠结界瞬间破裂瓦解。"
+
+  narrative_directives:
+    - "【结界破裂与唤醒】：催眠核心被击碎的瞬间，紫色目镜微光熄灭，全校弥漫的精神迷雾消散。主角脑海中剧烈轰鸣，从狂热战斗员的人格中猛然惊醒，褪去洗脑状态，震惊地看着自己的双手和眼前的战况。"
+    - "【救援同伴的安慰】：【<%= rescuerName %>】上前扶起脱力虚弱的主角，安慰并确认主角的神智恢复正常，帮助主角脱下全包紧身衣与目镜，协助善后。"
+    - "【刻骨铭心的后遗症】：虽然结界被打破、主角恢复了自我认知，但曾在完全催眠状态下作为狂热战斗员受训、侍奉教官甚至向同伴刀刃相向的荒淫记忆与肉体快感已被永久烙印在潜意识深处。"
+
+  mandatory_consequences:
+    instruction: "请在 JSONPatch 中破除结界，解除完全催眠，切换回幕间休息，并移除本事件（系统后台将自动处理生理恢复、后遗症备注与性癖成长）："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/世界/校园催眠/结界已破除", "value": true },
+        { "op": "replace", "path": "/世界/校园催眠/完全催眠阶段", "value": false },
+        { "op": "replace", "path": "/世界/校园催眠/主角在校", "value": false },
+        { "op": "replace", "path": "/进程/阶段", "value": "幕间休息" },
+        { "op": "replace", "path": "/系统状态/幕间回合计数", "value": 0 },
+        { "op": "remove", "path": "/系统状态/待处理事件/校园救援成功事件" }
+      ]
+<%_ }} _%>

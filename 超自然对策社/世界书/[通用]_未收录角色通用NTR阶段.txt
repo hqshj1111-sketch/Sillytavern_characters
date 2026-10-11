@@ -1,0 +1,137 @@
+<%_
+{
+const s = getvar('stat_data') || {};
+const presetNames = ['浅野华代', '浅野莉绪', '早坂葵', '七海诗织', '九条绚音', '白石结衣', '克里斯汀·温斯顿'];
+const allFemales = s.重要女性角色 || {};
+const unrecordedNames = Object.keys(allFemales).filter(n => !presetNames.includes(n) && n !== '$meta' && n !== '$__META_EXTENSIBLE__$');
+
+const yStageMap = {
+  1: {
+    title: '阶段 1 · 礼貌防备 (好感 0~24 / 屈服 0~24)',
+    desc: '目标角色对神宫寺夜保持标准的社交礼仪与天然戒备心，无任何亲密接触意图。神宫寺夜以精英绅士姿态展开接触，严格禁止过早暴露意图。'
+  },
+  2: {
+    title: '阶段 2 · 防线松动 (好感 25~49 或 屈服 25~49)',
+    desc: '因神宫寺夜的优雅魅力或突发的把柄/施压，目标的心理防线开始松动，默许私下独处或轻微肢体接触，产生微弱的心动或受制动摇。'
+  },
+  3: {
+    title: '阶段 3 · 深度顺从 (好感 50~74 或 屈服 50~74)',
+    desc: '目标角色的心理天平严重倾斜，在神宫寺夜面前展现明显的依附与服从，开始主动对<user>及外界隐瞒私下秘密。'
+  },
+  4: {
+    title: '阶段 4 · 彻底归属 (好感 75+ 或 屈服 75+)',
+    desc: '目标角色的道德与心理防线彻底崩溃，身心完全受制于神宫寺夜，将其指令与需求置于一切之上，彻底认同自身的从属地位。'
+  }
+};
+
+const moralBalanceMap = {
+  '纯洁忠贞态': {
+    title: '纯洁忠贞态 (对<user>好感高 + 对夜归属低)',
+    desc: '目标角色全心全意信任与依恋<user>，对神宫寺夜的试探保持警惕，毫无越界痕迹。'
+  },
+  '深情背德态': {
+    title: '深情背德态 (对<user>好感高 + 对夜归属高)',
+    desc: '目标在主观情感上依旧深爱或在乎<user>，因背叛承受剧烈内疚与心理撕裂，在<user>面前全力掩饰反常痕迹，构建严密的信息茧房。'
+  },
+  '冷淡疏离态': {
+    title: '冷淡疏离态 (对<user>好感低 + 对夜归属高)',
+    desc: '目标对<user>的情感彻底剥离，日常频繁将<user>的弱小与神宫寺夜的强大对比，对<user>产生明显的嫌弃、敷衍与排斥。'
+  },
+  '彻底蔑视态': {
+    title: '彻底蔑视态 (对<user>好感极低 + 对夜彻底臣服)',
+    desc: '目标完全视<user>为蝼蚁与外人，在神宫寺夜面前主动嘲讽与配合打压<user>。'
+  }
+};
+
+const corruptMap = {
+  1: {
+    title: '纯洁无瑕 (0~24)',
+    desc: '身体敏感度未开发，保持对外界触碰的生理抗拒。'
+  },
+  2: {
+    title: '敏感初醒 (25~49)',
+    desc: '敏感带被神宫寺夜初步唤醒，独处触碰时产生明显的心跳加速与生理燥热。'
+  },
+  3: {
+    title: '肉体成瘾 (50~74)',
+    desc: '肉体已被深度开发成熟，对神宫寺夜的阳气与体液产生依赖，触碰即发软。'
+  },
+  4: {
+    title: '排他绝顶 (75~100)',
+    desc: '肉体彻底成瘾，激活生理排他性，对除神宫寺夜外的任何男性（包括<user>）接触产生生理性厌恶与抗拒。'
+  }
+};
+
+function evalYStage(yAff, ySub) {
+  const maxV = Math.max(yAff, ySub);
+  if (maxV >= 75) return 4;
+  if (maxV >= 50) return 3;
+  if (maxV >= 25) return 2;
+  return 1;
+}
+
+function evalMoral(kAff, yStage) {
+  if (kAff >= 50) {
+    return yStage >= 3 ? '深情背德态' : '纯洁忠贞态';
+  } else {
+    return yStage >= 4 ? '彻底蔑视态' : '冷淡疏离态';
+  }
+}
+
+function evalCorrupt(cor) {
+  if (cor >= 75) return 4;
+  if (cor >= 50) return 3;
+  if (cor >= 25) return 2;
+  return 1;
+}
+_%>
+## 未收录女性角色通用 NTR 阶段规范（客观系统动态判定）
+
+<%_ if (unrecordedNames.length > 0) { _%>
+### 【动态录入女性角色实时阶段】
+<%_
+  unrecordedNames.forEach(name => {
+    const c = allFemales[name] || {};
+    const kAff = Number(_.get(c, '人际关系.苦主.好感值', 50));
+    const yAff = Number(_.get(c, '人际关系.黄毛.好感值', 0));
+    const ySub = Number(_.get(c, '人际关系.黄毛.屈服值', 0));
+    const cor = Number(_.get(c, '人际关系.黄毛.肉体沉沦值', 0));
+    const lewd = Number(_.get(c, '淫乱值', 0));
+
+    const ySt = evalYStage(yAff, ySub);
+    const moralKey = evalMoral(kAff, ySt);
+    const cSt = evalCorrupt(cor);
+    const isAlliance = (cor >= 75 && (yAff >= 75 || ySub >= 75));
+_%>
+#### 【<%= name %>】（实时数值: <user>好感 <%= kAff %> | 黄毛好感 <%= yAff %> | 黄毛屈服 <%= ySub %> | 肉体沉沦 <%= cor %> | 淫乱值 <%= lewd %>）
+* **【对夜心境判定】**：<%= yStageMap[ySt].title %>
+  * *客观系统描述*：<%= yStageMap[ySt].desc %>
+* **【对<user>道德天平】**：<%= moralBalanceMap[moralKey].title %>
+  * *客观系统描述*：<%= moralBalanceMap[moralKey].desc %>
+* **【生理沉沦判定】**：<%= corruptMap[cSt].title %>
+  * *客观系统描述*：<%= corruptMap[cSt].desc %>
+<%_ const brainwash = _.get(c, '洗脑条目', []); _%>
+<%_ if (Array.isArray(brainwash) && brainwash.length > 0) { _%>
+* **【洗脑烙印生效中】**：
+<%_ brainwash.forEach((bw, bIdx) => { _%>
+  * 烙印<%= bIdx + 1 %>: <%= bw %>
+<%_ }); _%>
+<%_ } _%>
+<%_ if (isAlliance) { _%>
+* **【恶堕共犯同盟】（已达成条件：沉沦 ≥ 75 且 好感/屈服 ≥ 75）**：
+  * *客观系统规则*：
+    1. 该角色被赋予【共犯特质】，面对神宫寺夜攻略新女性时，绝对禁止产生嫉妒争宠行为，视其为主人的绝对特权；
+    2. 角色会主动充当内应，在<user>面前打掩护，并利用自身人际关系为神宫寺夜创造攻略新人的契机。
+<%_ } _%>
+---
+<%_ }); _%>
+<%_ } else { _%>
+* **【当前状态】**：当前暂无其他动态录入的未收录女性角色。
+* **【通用判定机制说明】**：
+  * 若故事中登场新女性（如其他班级同学、路人NPC、女教师等），系统将依据其在 `重要女性角色` 中的变量（好感/屈服/沉沦/<user>好感）自动套用对应阶段：
+    - **对夜心境**：阶段 1 礼貌防备 (0~24) $\to$ 阶段 2 防线松动 (25~49) $\to$ 阶段 3 深度顺从 (50~74) $\to$ 阶段 4 彻底归属 (75+)
+    - **道德天平**：纯洁忠贞态 (爱<user>+夜低) $\to$ 深情背德态 (爱<user>+夜高) $\to$ 冷淡疏离态 (嫌<user>+夜高) $\to$ 彻底蔑视态 (嫌<user>+夜彻底臣服)
+    - **生理沉沦**：纯洁无瑕 (0~24) $\to$ 敏感初醒 (25~49) $\to$ 肉体成瘾 (50~74) $\to$ 排他绝顶 (75~100)
+    - **恶堕共犯同盟**：沉沦 $\ge 75$ 且 (好感 $\ge 75$ 或 屈服 $\ge 75$) 时激活内应与无嫉妒特质。
+<%_ } _%>
+<%_ } _%>

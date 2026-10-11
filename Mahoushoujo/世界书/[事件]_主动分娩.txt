@@ -1,0 +1,35 @@
+<%_{
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+const pregState = _.get(stat, '主角.生理状态.子宫状态.受孕状态', '未受孕');
+
+if (events['分娩事件'] && pregState !== '未受孕') {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+    const isFallen = personality === '堕落';
+    const babySource = _.get(stat, '主角.生理状态.子宫状态.孕育信息.孕育源', '未知生父');
+_%>
+# 指令: 诞下新生命 (分娩事件)
+event_handler:
+  event_name: "生命诞生与分娩"
+  context: "孕期终于迎来了临盆终点。主角的羊水破裂，强烈的宫缩与阵痛宣告着新生命的降临。"
+  maternal_context:
+    father_source: "<%= babySource %>"
+    alignment_flavor: "<%= isFallen ? '堕落苗床的欢愉生产：沉浸在孕育完成的充实感与母性愉悦中。' : '魔法少女的受难分娩：隐忍着阵痛与屈辱，最终迎来解脱与奇妙的母性悸动。' %>"
+  narrative_directives:
+    - "【生理过程】: 细腻描绘分娩过程。魔法少女的体质让生产过程避开血腥创伤，侧重于宫缩感、温热、小腹由极限鼓胀到骤然平复的虚脱与释怀。"
+    - "【新生命降生】: 根据父系来源【<%= babySource %>】，构思新诞下子嗣的名字、外貌特征等等，展现可爱新生命。"
+    - "【严禁】在正文中输出任何代码或指令字眼，保持第一人称/第三人称小说的极致沉浸感。"
+  system_tasks:
+    instruction: "分娩叙事完成后，必须在 <JSONPatch> 中输出以下状态重置、子嗣归档与事件清理指令："
+    mandatory_patch: |
+      [
+        { "op": "insert", "path": "/记录/诞下的子嗣/[由你构思的子嗣名称]", "value": { "名称": "[由你构思的名字]", "来源": "<%= babySource %>", "特征": "[由你构思的外貌与特征]" } },
+        { "op": "replace", "path": "/主角/生理状态/子宫状态/受孕状态", "value": "未受孕" },
+        { "op": "replace", "path": "/主角/生理状态/子宫状态/孕育信息/孕育源", "value": "无" },
+        { "op": "replace", "path": "/主角/生理状态/子宫状态/孕育信息/妊娠计数器", "value": 0 },
+        { "op": "replace", "path": "/主角/核心状态/产后状态", "value": "恢复期" },
+        { "op": "replace", "path": "/主角/核心状态/产后日期", "value": <%= _.get(stat, '世界.日期', 305) %> }, 
+        { "op": "remove", "path": "/系统状态/待处理事件/分娩事件" }
+      ]
+<%_ } _%>
+<%_ } _%>

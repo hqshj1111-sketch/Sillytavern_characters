@@ -1,0 +1,12 @@
+<%_{
+if (
+  _.get(getvar('stat_data'), '进程.阶段') === '战斗回合' &&
+  _.get(getvar('previous_stat_data'), '进程.阶段') === '战斗准备'
+) {
+_%>
+event_handler:
+  event_name: "战斗开始！"
+  context: "试探与准备阶段结束，双方正式短兵相接。"
+  narrative_directives:
+    - "描绘战斗正式打响的第一个瞬间，展现张力与冲突的爆发。"
+<%_ } } _%>

@@ -3,43 +3,31 @@ const stat = getvar('stat_data');
 const events = _.get(stat, '系统状态.待处理事件', {});
 if (events['线索整理事件']) {
     const worldNotes = _.get(stat, '世界.世界观备注', {});
-    const notesString = JSON.stringify(worldNotes, null, 2);
-_%>
-# 幕间：世界观沉淀与线索整理
-event_handler:
-  event_name: "线索整理事件"
-  task_type: "SILENT_BACKGROUND_PROCESS"
-  
-  narrative_guidance:
-    instruction: "这是一个纯粹的系统后台维护任务，不需要在叙事中体现"
-    focus: "请继续【严格根据玩家的上一条回复】进行原本的日常互动和剧情推进。玩家不应察觉到后台正在进行整理。"
+    const noteEntries = Object.entries(worldNotes).filter(([k]) => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+%>
+# 事件处理: 线索整理
+本事件为后台维护任务，不需要在正文中体现。请在维持当前剧情推进的同时，于 <JSONPatch> 块中完成以下维护工作。
 
-  ai_backend_task:
-    role: "严谨的系统档案管理员"
-    instruction: "在完成正常的小说正文后，你需要在底部的 <UpdateVariable> JSONPatch 块中，对当前的【世界观备注】进行碎片整理与垃圾回收。"
-    
-    current_lore_data: |
-      <%- notesString %>
-    
-    consolidation_rules:
-      - "【合并同类项】: 将关于同一个人、同一地点或同一设定的零散情报，整合为完整的描述。"
-      - "【清理过期垃圾】: 删除已经死去的初级魔物弱点、已经离开的临时场景地图、或是已经被解决的单次危机记录。"
-      - "【保留核心资产】: 务必保留：重要NPC的好感/状态、主角身上未消退的特殊状态/诅咒、常驻设定的世界观规则。"
-      - "【字数精简】: 提炼后的 Value 应尽量洗练而客观。"
-    
-    mandatory_patch_execution:
-      instruction: "梳理完成后，你【必须】输出一个单独的 `replace` 指令，用整理后的全新完整字典对象，直接替换掉旧的 `/世界/世界观备注`。"
-      patch_template: |[
-          {
-            "op": "replace",
-            "path": "/世界/世界观备注",
-            "value": {
-              "小圆": "同班同学，在那一次战斗之后，似乎对我的秘密有所察觉...",
-              // ... 请在此处填入经过你整理、合并和保留的所有 Key-Value
-            }
-          },
-          // 务必移除本事件触发器，防止死循环
-          { "op": "remove", "path": "/系统状态/待处理事件/线索整理事件" }
-        ]
----
+当前的世界观备注条目 (<%= noteEntries.length %> 条):
+<%_ for (const [k, v] of noteEntries) { _%>
+  - [<%= k %>]: <%= String(v).substring(0, 80) %><%= String(v).length > 80 ? '...' : '' %>
+<%_ } _%>
+
+维护方向:
+  合并同类项: "将多条关于同一个敌人类型、地点或设定的零散记录，整合为一条精简的完整描述。合并时以最新信息覆盖旧信息。"
+  清理过期情报: "删除已死亡的初级魔物弱点、已被解决的临时事件记录、或已离开当前剧情线的场景信息。"
+  保留核心资产: "务必保留的内容包括：主角身上未消退的持续状态或诅咒、常设的世界观规则、以及仍在运作的特殊场景机制。"
+  提炼描述: "最终保留的条目应尽量洗练、客观。任何未被指定操作的条目将被自动安全保留。"
+
+操作示例:
+  合并示例:
+    - { "op": "replace", "path": "/世界/世界观备注/废弃工厂", "value": "港区第三号废弃工厂，深处处有三层地下空间，第二层有触手巢穴，已被清剿。" }
+    - { "op": "remove", "path": "/世界/世界观备注/废弃工厂_触手巢穴" }
+  清理示例:
+    - { "op": "remove", "path": "/世界/世界观备注/情报_废弃工厂陷阱" }
+  新增整合条目示例:
+    - { "op": "insert", "path": "/世界/世界观备注/魔物通用弱点", "value": "大部分低级触手魔物都惧怕强光与火焰。" }
+
+事件清理:
+  - { "op": "remove", "path": "/系统状态/待处理事件/线索整理事件" }
 <%_ }} _%>

@@ -1,0 +1,20 @@
+错误预防:
+  rule: Before weaving the narrative, contemplate deeply and reveal your thoughts within <nonmistake> tags **IN ENGLISH**
+  format: |-
+    <nonmistake>
+    Check to (每一条进行简单分析并列举如何描写和避免错误.) every force patch works to against confusion:
+      - [ ] Calculate the spirit power consumption and recovery values of the characters present.
+      - [ ] Is the ghost present? If not, should the ghost be introduced and all related variables generated; if the ghost is present, ensure that no related variables are updated.
+      - [ ] Review and ensure that the characters conform to the character settings (details, key information, and current stage).
+      <% { const s = getvar('stat_data') || {}; const ntrMode = _.get(s, 'ntr模式[0]', false) === true; %>
+      <% if (ntrMode) { %>
+      - [ ] Identify the target female character interacting with Yoru: If she is a registered character, follow her specific NTR stage; if she is an unlisted or newly introduced character, evaluate her current stage (Stage 1 to Stage 5) strictly based on her NTR value (if present) or the highest mutual intimacy milestone reached in the conversation history. Ensure Yoru's actions, advances, and boundary-testing remain strictly within the ceiling of her current stage, with no cross-stage leaps within a single scene.
+      - [ ] For female characters in early stages (Stage 1 to Stage 2), how does Yoru utilize his impeccable gentleman disguise, charismatic favors, or subtle psychological anchoring to gradually lower her vigilance without premature sexual exposure?
+      - [ ] For female characters in early stages (Stage 1 to Stage 2), what PROACTIVE initiative does Yoru actively execute (e.g., initiating conversation, offering timely favors, charming assistance, subtle micro-touches) to aggressively capture her attention and trust under his gentleman mask, without premature sexual exposure?
+      - [ ] Ensure that fully corrupted female characters (Stage 4-5) strictly welcome and support Yoru's interactions with new female characters, absolutely prohibiting any romantic jealousy, resentment, or territorial obstruction.
+      - [ ] Ensure that <user> does not discover or know about the secret relationship and private sexual activities between the women and Kurogane Yoru, maintaining trust and friendliness towards Yoru and the women.
+      - [ ] Are there any events that the <user> cannot fully understand from the perspective? Are there scenes involving sexual activities of female characters? Are there situations where people act alone at night? Are there unfinished sexual scenes in the previous plot? In such cases, it is necessary to switch to the night or female perspective to describe the same events from another viewpoint.
+      - [ ] Is it necessary for the Takahashi family to use the memory erasure spell to delete the memories of those involved because of the wide-scale commotion it caused or because <user> learned of the promiscuous nature of the female character or 夜 had a physical relationship with the female character?
+      <% } %>
+<% } %>
+    </nonmistake>

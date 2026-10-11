@@ -1,0 +1,43 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+const targetName = events['名录小英雄恶堕事件'];
+if (targetName && typeof targetName === 'string') {
+    const roster = _.get(getvar('stat_data'), '世界.小英雄名录', {});
+    const hero = roster[targetName] || {};
+    const isFirst = (hero.恶堕次数 || 0) === 0 && (hero.善堕次数 || 0) === 0;
+_%>
+event_handler:
+  event_name: "<%= targetName %> 恶堕"
+  context: "<%= targetName %> 在一次次被主角以反派身份内射之后，体内的黑暗终于压过了信仰。他的英雄之路走到了尽头。"
+
+<%_ if (isFirst) { _%>
+  narrative_directives:
+    - "这是 <%= targetName %> 第一次恶堕。请为他设计一个全新的反派身份："
+    - "【堕落英雄名】：取代他原有英雄名的新名字。"
+    - "【反派核心能力】：他原有的能力「<%= hero.英雄核心能力 %>」如何被黑暗扭转。"
+    - "【反派代表色】：变深或变得妖艳的色调。"
+    - "【反派性格特质】：性格上加入了更沉溺于快乐、狂放或纵欲的特质。"
+  system_tasks:
+    instruction: "请在叙事中完成以上设计并展示，然后用以下指令切换阵营并清理事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/人格阵营", "value": "反派" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/堕落英雄名", "value": "[新堕落名]" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/反派核心能力", "value": "[新能力]" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/反派代表色", "value": "[新色]" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/反派性格特质", "value": "[新性格]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/名录小英雄恶堕事件" }
+      ]
+<%_ } else { _%>
+  narrative_directives:
+    - "<%= targetName %> 已经不是第一次堕落了。黑暗再次将他吞噬，但这一次更快——身体和灵魂都记得这条路。"
+    - "他曾以「<%= hero.堕落英雄名 || '未知' %>」的身份活跃在黑暗中，代表着「<%= hero.反派代表色 || '未知' %>」的妖艳色调，性格里多了毫不掩饰的「<%= hero.反派性格特质 || '未知' %>」。恢复这个身份，反派核心能力「<%= hero.反派核心能力 || '未知' %>」在他体内苏醒。"
+  system_tasks:
+    instruction: "描绘他的复堕，恢复已有的反派身份，并清理事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/人格阵营", "value": "反派" },
+        { "op": "remove", "path": "/系统状态/待处理事件/名录小英雄恶堕事件" }
+      ]
+<%_ } _%>
+<%_ }} _%>

@@ -1,0 +1,73 @@
+<%_
+{
+const s = getvar('stat_data') || {};
+const showAge = (s.显示 !== false) && (_.get(s, '系统状态.显示') !== false);
+const heroes = _.get(s, '小英雄', {});
+const heroNames = ['夜守真白', '虎渡太阳', '槌谷陆', '风祭优羽'];
+_%>
+# 小英雄静态设定档案
+> 【说明】: 以下信息供上帝视角/AI 演绎使用参考，怪人主角方仅得知其中有限信息（见各角色「怪人主角已知信息」）。AI 在以怪人主角第一人称或描写怪人主角心智时，严禁使用其未获知的隐秘信息。
+
+<%_
+    heroNames.forEach(name => {
+        const h = heroes[name] || {};
+        const info = h.基本信息 || {};
+        const face = h.相貌特征 || {};
+        const body = h.身材细节 || {};
+        const sex = h.性器官特征 || {};
+        const schedule = h.日程 || {};
+        const camp = _.get(h, '恶堕状态.阵营归属', '正义');
+        const isFallen = camp === '彻底恶堕';
+        const showPersonality = isFallen ? (h.恶堕性格 && h.恶堕性格 !== '待设定' ? h.恶堕性格 : h.性格) : h.性格;
+        const showAbility = isFallen ? (h.恶堕能力 && h.恶堕能力 !== '待设定' ? h.恶堕能力 : h.能力) : h.能力;
+        const showSuit = isFallen ? (h.恶堕战衣 && h.恶堕战衣 !== '待设定' ? h.恶堕战衣 : h.紧身战衣) : h.紧身战衣;
+
+        const known = h.怪人主角已知信息 || ['基本信息', '相貌', '身材', '能力', '紧身战衣', '日常常服'];
+        function checkKnown(keys) {
+            return Array.isArray(known) && keys.some(k => known.includes(k));
+        }
+
+        const items = [
+            { key: '基本信息', check: ['基本信息', '基本'], text: `基本信息: ${info.物种 || ''}${showAge ? ` | ${info.年龄 || '?'}岁` : ''} | 性格: ${showPersonality || ''} | 背景: ${info.背景 || ''}` },
+            { key: '相貌', check: ['相貌特征', '相貌'], text: `相貌: ${face.脸型五官 || ''} | 毛发: ${face.毛发 || ''}` },
+            { key: '身材', check: ['身材细节', '身材'], text: `身材: 身高 ${body.身高 || '?'} | 体态 ${body.体态 || ''} | 肌肉线条 ${body.肌肉线条 || ''}` },
+            { key: '能力', check: ['能力', '特殊能力'], text: `能力: ${showAbility || ''}` },
+            { key: '紧身战衣', check: ['紧身战衣', '战衣'], text: `紧身战衣: ${showSuit || ''}` },
+            { key: '日常常服', check: ['日常常服', '常服'], text: `日常常服: ${h.常服 || ''}` },
+            { key: '贴身内衣', check: ['贴身内衣', '内衣'], text: `贴身内衣: ${h.内衣 || ''}` },
+            { key: '性器官特征', check: ['性器官特征', '性器官'], text: `性器官: 阴茎(${sex.阴茎形态 || ''}) | 后穴(${sex.后穴形态 || ''}) | 乳头(${sex.乳头形态 || ''}) | 体毛(${sex.体毛状况 || ''})` },
+            { key: '性生活情况', check: ['性生活情况', '性经历'], text: `性生活情况: ${h.性生活情况 || '无'}` },
+            { key: '隐秘性癖', check: ['隐秘性癖', '性癖'], text: `隐秘性癖: ${h.隐秘性癖 || ''}` },
+            { key: '住处', check: ['住处', '住所'], text: `住处: ${h.住处 || ''}` },
+            { key: '爱好', check: ['爱好', '个人爱好'], text: `爱好: ${(h.爱好 || []).join('、')}` },
+            { key: '日程', check: ['日程', '日常日程'], text: `日程(大学): 上午[${(schedule.上学?.上午 || []).join('、')}] / 下午[${(schedule.上学?.下午 || []).join('、')}] / 晚上[${(schedule.上学?.晚上 || []).join('、')}] / 深夜[${(schedule.上学?.深夜 || []).join('、')}] | 日程(休息): 上午[${(schedule.休息?.上午 || []).join('、')}] / 下午[${(schedule.休息?.下午 || []).join('、')}] / 晚上[${(schedule.休息?.晚上 || []).join('、')}] / 深夜[${(schedule.休息?.深夜 || []).join('、')}]` },
+            { key: '长期目标', check: ['长期目标', '目标'], text: `长期目标: ${h.长期目标 || ''}` },
+        ];
+
+        const knownItems = items.filter(it => checkKnown(it.check));
+        const unknownItems = items.filter(it => !checkKnown(it.check));
+_%>
+## <%= name %>（英雄名：<%= info.英雄名 || '' %>）
+### 【怪人主角已知信息】
+<%_ if (knownItems.length) { _%>
+<%_ knownItems.forEach(it => { _%>
+- <%= it.text %>
+<%_ }); _%>
+<%_ } else { _%>
+- （暂无已知信息）
+<%_ } _%>
+
+### 【怪人主角未知信息】（仅供AI上帝视角演绎，怪人主角未知）
+<%_ if (unknownItems.length) { _%>
+<%_ unknownItems.forEach(it => { _%>
+- <%= it.text %>
+<%_ }); _%>
+<%_ } else { _%>
+- （全部信息已为怪人主角所掌握）
+<%_ } _%>
+<%_ if (isFallen) { _%>
+- 恶堕印记: <%= h.恶堕印记 || '' %> | 恶堕代号: <%= h.恶堕代号 || '' %>
+<%_ } _%>
+<%_
+    });
+} _%>

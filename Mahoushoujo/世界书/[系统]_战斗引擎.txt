@@ -4,275 +4,289 @@ const stat = getvar('stat_data');
 
 // --- 1. 配置常量池 ---
 const CONSTANTS = {
-    // 判定阈值
-    THRESHOLDS: { CRIT_SUCCESS: 40, SUCCESS: 10, STALEMATE: -15, FAIL: -40 }, 
-    
-    // 威胁等级叙事指导
     THREAT_CONFIG: {
         '善良': {
-            1: "【Lv.1 骚扰级】敌人专注于色情本身，滑稽、尴尬、恼人，不致命。严禁残酷描写。",
-            2: "【Lv.2 侵犯级】标准的战斗H。目标明确地进行骚扰，旨在性交。",
-            3: "【Lv.3 支配级】极度危险。敌人追求身心的彻底征服，手段过激。"
+            1: "Lv.1 骚扰级：敌方威胁较低，倾向于试探与干扰，不具备致命危险。",
+            2: "Lv.2 侵犯级：标准的战斗遭遇，敌方具备明确的压制与掠夺意图。",
+            3: "Lv.3 支配级：高危冲突，敌方实力强劲，追求身心防线的全面击溃。"
         },
         '堕落': {
-            1: "【Lv.1 玩物级】轻松。主角掌握着主导权。",
-            2: "【Lv.2 狩猎级】势均力敌。值得一战的猎物，能带来刺激。",
-            3: "【Lv.3 强敌级】危险的对手，更高位的魔物或强力魔法少女。"
-        }
-    },
-
-    // 人格与结果对应的文案库
-    TEXT_MAP: {
-        '善良': {
-            'CRIT_SUCCESS': "【大成功】行动完美执行。由主角完全主导本回合。重创敌人或是有效反击，化解危机或夺回战局主动权。",
-            'SUCCESS': "【成功】行动达成预期。主角维持防线并造成有效打击。平稳地描写攻防交互，主角达成行动目标。",
-            'STALEMATE': "【纠缠】双方互有胜负。请交替分配镜头，既要描写主角的行动有效，也要描写敌方的反扑和骚扰。",
-            'FAIL': "【失败】敌人占据上风！主导权转移至敌方。描写主角如何失败，并让敌方成功实施符合其设定的骚扰和侵犯。",
-            'CRIT_FAIL': "【大失败】主角遭遇了意料之外的大失败。请描写主角完全陷入被动，被迫承受敌方的核心侵犯行为，或是被剥夺反抗能力。"
-        },
-        '堕落': {
-            'CRIT_SUCCESS': "【大成功】单方面的压制。主角掌控节奏，游刃有余地化解敌方行动。",
-            'SUCCESS': "【成功】主角占优。请描写主角在挑逗玩弄敌人的同时，将自身的特质融入到攻防动作中。",
-            'STALEMATE': "【纠缠】拉锯战。攻防界限模糊。请描写双方的接触变得混乱，战斗与核心能力的互相试探在同一时间发生。",
-            'FAIL': "【失败】遭到有效反制。敌方夺回攻势。请描写主角因轻敌或追求刺激而受挫，在本回合中转为不得不被动应对的一方。",
-            'CRIT_FAIL': "【大失败】彻底脱离掌控。敌方猛烈反扑。主角的余裕被打破，在敌方超预期的强势进攻下陷入劣势。"
+            1: "Lv.1 玩物级：敌方实力悬殊，主角处于绝对的主导地位。",
+            2: "Lv.2 狩猎级：势均力敌的对手，能够提供切实的交锋刺激。",
+            3: "Lv.3 强敌级：高位威胁，具备可能反制主角的压迫感与手段。"
         }
     }
 };
 
-// 辅助函数: 生成 Patch 对象与 XML 包装
-const mkPatch = (op, path, val) => ({ "op": op, "path": path, "value": val });
-const formatPatchBlock = (patchObj) => {
-    return `<JSONPatch>\n[\n${patchObj.map(p => '  ' + JSON.stringify(p)).join(',\n')}\n]\n</JSONPatch>`;
+// --- 2. 战术定义（补全 撤退 与 投降） ---
+const TACTIC_DEFINITIONS = {
+    '主动': "主动：主角采取主动姿态，将战局推向自己有利的方向。争取主导权的主动行为。",
+    '牵制': "牵制：用姿态与动作分散敌人的注意力与战意。伤害较低，但充能效率更高，反伤更少。",
+    '诱惑': "诱惑：从容地勾引猎物，享受玩弄敌人的过程。自身快感会上涨，但充能效率极高。",
+    '推进': "推进：暂缓战斗动作，延续当前叙事。观察环境、对话、或沉浸于当前画面。",
+    '危机': "危机：在本轮遭遇了敌人的情色侵犯，被动承受。",
+    '必杀': "必杀：主角准备发动决定胜负的终极一击。",
+    '撤退': "撤退：中断交战，利用机动拉开身位脱离战场。需要机动检定，失败会遭追击。",
+    '投降': "投降：主动散去魔力放弃抵抗，任由敌人捕获处置。直接宣告战败被俘。"
 };
 
-// --- 2. 主逻辑开始 ---
+const mkPatch = (op, path, val) => ({ "op": op, "path": path, "value": val });
+const formatPatchBlock = (patchObj) => `<JSONPatch>\n[\n${patchObj.map(p => '  ' + JSON.stringify(p)).join(',\n')}\n]\n</JSONPatch>`;
+
+// --- 3. 主逻辑 ---
 if (_.get(stat, '进程.阶段') === '战斗回合') {
     const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
-    const pKey = personality === '善良' ? '善良' : '堕落';
+    const isFallen = personality === '堕落';
+    const pKey = isFallen ? '堕落' : '善良';
     const posture = _.get(stat, '主角.核心状态.当前战斗姿态');
 
-    // 仅在有效战斗姿态下计算
     if (['战斗中', '劣势'].includes(posture)) {
-        
-        // --- 必杀技状态预判 ---
+        const tactic = _.get(stat, '主角.战斗临时.战斗方式', '主动');
+        const tacticDesc = TACTIC_DEFINITIONS[tactic] || TACTIC_DEFINITIONS['主动'];
+
+        // 必杀充能判定
         const purificationPower = _.get(stat, '主角.核心状态.净化之力', 0);
         const corruptPower = _.get(stat, '主角.核心状态.污秽魔力', 0);
-        const isUltimateReady = purificationPower >= 100 || corruptPower >= 100;
-        const ultType = purificationPower >= 100 ? '净化' : '堕落';
+        const isUltimateReady = (isFallen ? corruptPower : purificationPower) >= 100;
+        const ultType = isFallen ? '堕落' : '净化';
+        const ultPath = isFallen ? "/主角/核心状态/污秽魔力" : "/主角/核心状态/净化之力";
 
-        // --- 常规骰子计算 ---
+        // 基础数据
+        const isTransformed = _.get(stat, '主角.核心状态.变身状态', false);
         const playerStrength = _.get(stat, '主角.核心状态.基础强度', 50);
         const bossStrength = _.get(stat, '世界.当前关卡.Boss基础强度', 50);
-        const threatLevel = _.get(stat, '世界.威胁等级', 2);
-
-        const DIVISOR = 10;   
-        const DICE_FACE = 20; 
-        const pDiceCount = Math.max(1, Math.floor(playerStrength / DIVISOR));
-        const bDiceCount = Math.max(1, Math.floor(bossStrength / DIVISOR));
-
-        // 执行初始投掷
-        let pRoll = 0; for (let i = 0; i < pDiceCount; i++) { pRoll += _.random(1, DICE_FACE); }
-        let bTotal = 0; for (let i = 0; i < bDiceCount; i++) { bTotal += _.random(1, DICE_FACE); }
-
-        // --- 淫纹机制：发情影响实时计算 ---
-        const curseXp = _.get(stat, '主角.淫纹.经验', 0);
-        const curseLv = curseXp <= 0 ? 0 : (curseXp < 100 ? 1 : (curseXp < 300 ? 2 : 3));
-        const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
-        const threshold = _.get(stat, '主角.快感状态.高潮阈值', 100);
-        const ratio = threshold > 0 ? Math.min(1, pleasure / threshold) : 0;
-        const isFallen = personality === '堕落';
-
-        let estrusMod = 0;
-        if (curseLv > 0 && ratio > 0.4) {
-            estrusMod = Math.floor(curseLv * 4);
-        }
-        
-        const pTotal = Math.max(0, isFallen ? pRoll + estrusMod : pRoll - estrusMod);
-        const buffLabel = isFallen ? '爱欲' : '发情';
-        const sign = isFallen ? '+' : '-';
-
-        let bossModStr = "";
-        if (threatLevel === 1) {
-            const penalty = _.random(1, DICE_FACE);
-            bTotal = Math.max(0, bTotal - penalty);
-            bossModStr = ` - D${DICE_FACE}(${penalty})[Lv.1劣势]`;
-        } else if (threatLevel === 3) {
-            const bonus = _.random(1, DICE_FACE);
-            bTotal += bonus;
-            bossModStr = ` + D${DICE_FACE}(${bonus})[Lv.3强敌]`;
-        }
-
-        const difference = pTotal - bTotal;
-        const pFormula = estrusMod > 0 ? `${pDiceCount}d${DICE_FACE}${sign}${estrusMod}[${buffLabel}]=${pTotal}` : `${pDiceCount}d${DICE_FACE} = ${pTotal}`;
-        const bFormula = `${bDiceCount}d${DICE_FACE}${bossModStr} = ${bTotal}`;
-
-        // 判定结果层级
-        let tier, damageRange, powerRange, counterRange;
-        if (difference > CONSTANTS.THRESHOLDS.CRIT_SUCCESS) {
-            tier = 'CRIT_SUCCESS'; damageRange = [30, 60]; powerRange = [20, 35]; counterRange = [0, 0];
-        } else if (difference > CONSTANTS.THRESHOLDS.SUCCESS) {
-            tier = 'SUCCESS'; damageRange = [15, 30]; powerRange = [15, 20]; counterRange = [0, 0];
-        } else if (difference > CONSTANTS.THRESHOLDS.STALEMATE) {
-            tier = 'STALEMATE'; damageRange = [10, 20]; powerRange = [5, 10]; counterRange = [5, 15];
-        } else if (difference > CONSTANTS.THRESHOLDS.FAIL) {
-            tier = 'FAIL'; damageRange = [0, 0]; powerRange = [5, 15]; counterRange = [10, 25];
-        } else {
-            tier = 'CRIT_FAIL'; damageRange = [0, 0]; powerRange = [20, 35]; counterRange = [30, 50];
-        }
-
-        const damageDealt = _.random(...damageRange);
-        const powerGained = _.random(...powerRange);
-        const counterDamageTaken = _.random(...counterRange);
-        
-        const outcomeLabel = {'CRIT_SUCCESS':'大成功','SUCCESS':'成功','STALEMATE':'纠缠','FAIL':'失败','CRIT_FAIL':'大失败'}[tier];
-        const actionOutcomeGuidance = CONSTANTS.TEXT_MAP[pKey][tier];
-        const threatNarrative = CONSTANTS.THREAT_CONFIG[pKey][threatLevel] || CONSTANTS.THREAT_CONFIG[pKey][2];
-
-        // 战局前瞻判定计算
-        const currentBossToughness = _.get(stat, '世界.当前关卡.Boss韧性值', 100);
+        const threatLevel = parseInt(_.get(stat, '世界.威胁等级', 2), 10);
         const currentPlayerHP = _.get(stat, '主角.核心状态.体力值.当前', 100);
         const currentMaxHP = _.get(stat, '主角.核心状态.体力值.最大', 100);
-        
-        const projectedToughness = Math.max(0, currentBossToughness - damageDealt);
-        const projectedPlayerHP = Math.max(0, currentPlayerHP - counterDamageTaken);
+        const bossName = _.get(stat, '世界.当前关卡.名称', '未知敌人');
+        const bossType = _.get(stat, '世界.当前关卡.战斗类型', '魔物');
+
+        // ========== 1d20 经典加值引擎 ==========
+        const pNatRoll = _.random(1, 20); // 主角裸骰
+        const bNatRoll = _.random(1, 20); // 敌方裸骰
+
+        const pBaseMod = Math.floor(playerStrength / 5);
+        const bBaseMod = Math.floor(bossStrength / 5);
+
+        // 生理与发情修正
+        const curseXp = _.get(stat, '主角.淫纹.经验', 0);
+        const curseLv = curseXp <= 0 ? 0 : (curseXp < 150 ? 1 : (curseXp < 400 ? 2 : 3));
+        const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
+        const threshold = _.get(stat, '主角.快感状态.高潮阈值', 100);
+        const ratio = threshold > 0 ? (pleasure / threshold) : 0;
+
+        let estrusMod = (curseLv > 0 && ratio > 0.4) ? (curseLv * 2) : 0;
+        const humanPenalty = !isTransformed ? 4 : 0;
+
+        // 撤退累积惩罚（越逃越难）
+        const fleeAttempts = parseInt(_.get(stat, '主角.战斗临时.撤退尝试', 0), 10);
+        const fleePenalty = (tactic === '撤退') ? (fleeAttempts * 3) : 0;
+
+        // 主角总点数
+        const pTotal = Math.max(0, pNatRoll + pBaseMod - humanPenalty - fleePenalty + (isFallen ? estrusMod : -estrusMod));
+
+        // Boss 总点数
+        let bThreatMod = (threatLevel === 1) ? -3 : (threatLevel === 3 ? 3 : 0);
+        const bTotal = Math.max(0, bNatRoll + bBaseMod + bThreatMod);
+
+        const difference = pTotal - bTotal;
+
+        // 生成高可读性表达式
+        let pExpr = `D20(${pNatRoll})+${pBaseMod}`;
+        if (humanPenalty > 0) pExpr += `-4[未变身]`;
+        if (fleePenalty > 0) pExpr += `-${fleePenalty}[已试${fleeAttempts}次]`;
+        if (estrusMod > 0) pExpr += isFallen ? `+${estrusMod}[爱欲]` : `-${estrusMod}[发情]`;
+        pExpr += `=${pTotal}`;
+
+        let bExpr = `D20(${bNatRoll})+${bBaseMod}`;
+        if (bThreatMod !== 0) bExpr += (bThreatMod > 0 ? `+${bThreatMod}[强敌]` : `${bThreatMod}[弱敌]`);
+        bExpr += `=${bTotal}`;
+
+        const logTail = `P:${pExpr}|E:${bExpr}|差:${difference > 0 ? '+' : ''}${difference}`;
+
+        // 身体状况速写
         const hpRatio = currentMaxHP > 0 ? (currentPlayerHP / currentMaxHP) : 0;
+        let bodyState = { name: "状态稳固 (HP > 75%)", posture: "体力充沛，防线完整。" };
+        if (hpRatio <= 0.30) bodyState = { name: "力竭边缘 (HP <= 30%)", posture: "体能见底，任何刺激都可能造成决定性击溃。" };
+        else if (hpRatio <= 0.75) bodyState = { name: "破绽显露 (30% < HP <= 75%)", posture: "防御架势动摇，衣物破损，敏感带暴露。" };
 
-        // 基于体力值的动态战斗H阶段指导
-        // 1. 阶段判定
-        const hpStage = hpRatio > 0.7 ? 1 : (hpRatio > 0.35 ? 2 : 3);
-        const hpStageName = {
-            1: "【阶段一】瓦解防线 (HP > 70%)",
-            2: "【阶段二】进行侵犯 (35% < HP <= 70%)",
-            3: "【阶段三】彻底调教 (HP <= 35%)"
-        }[hpStage];
+        const threatNarrative = CONSTANTS.THREAT_CONFIG[pKey][threatLevel] || CONSTANTS.THREAT_CONFIG[pKey][2];
 
-        // 2. 确保战斗类型安全
-        const combatType = _.get(stat, '世界.当前关卡.战斗类型', '魔物');
-        const cType = ['魔物', '人类', '魔法少女'].includes(combatType) ? combatType : '魔物';
+        // 必杀技拦截
+        let effectiveTactic = tactic;
+        let ultimateBlocked = false;
+        if (tactic === '必杀' && !isUltimateReady) { effectiveTactic = '主动'; ultimateBlocked = true; }
 
-        // 3. 战斗H风格指导矩阵
-// 3. 战斗H风格指导矩阵 (全主体为BOSS的行动指导)
-        const STAGE_DB = {
-            '善良': {
-                1: { // 阶段一：爆衣与前戏
-                    '魔物': "利用力量或物种特性破坏主角衣物，限制其行动，进行前戏挑逗。尚未进行深度侵入。",
-                    '人类': "使用暴力或能力扒下主角的衣物，或通过胁迫/催眠手段逼迫主角脱衣妥协。",
-                    '魔法少女': "使用魔法压制、常识束缚。破坏主角衣物的同时打破其防御姿态。"
-                },
-                2: { // 阶段二：插入与压制
-                    '魔物': "异种器官直接接触敏感带，强行插入并抽插，试图用快感与粘液瓦解主角的抵抗意志。",
-                    '人类': "将主角捕获压制，强行搂抱插入，或命令主角进行极度羞耻的强制侍奉。",
-                    '魔法少女': "进行百合式的体术压制与深吻，魔力强行侵入主角体内引发情潮。"
-                },
-                3: { // 阶段三：内射和调教
-                    '魔物': "彻底压制并暴露出交配本能，对主角进行狂暴的抽插内射，或试图将其化作苗床。",
-                    '人类': "肆意侵犯无力反抗的主角，进行体内中出，或使其精神崩溃沦为听话的性奴隶。",
-                    '魔法少女': "对魔力枯竭的主角进行百合高潮折磨与深度肉体交缠，彻底摧毁其意志。"
-                }
-            },
-            '堕落': {
-                1: { // 阶段一：爆衣与前戏
-                    '魔物': "被主角的荷尔蒙吸引，用野蛮的力量撕扯衣物，并对主角进行粗暴的肉体抚摸。",
-                    '人类': "被主角的放荡姿态挑起欲火，迫不及待地破坏衣物，或进行下流的猥亵动作。",
-                    '魔法少女': "试图用魔法惩罚主角，但在交锋中不自觉地被卷入色气挑逗与衣物破坏的拉扯中。"
-                },
-                2: { // 阶段二：插入与交媾
-                    '魔物': "顺从发情本能，狂热地将异种器官插入主角体内，进行干柴烈火般的激烈抽插。",
-                    '人类': "完全沉迷于主角的肉体，进行深度的搂抱与实质性插入，在交合中试图掌握主导权。",
-                    '魔法少女': "防线被色气攻破，开始与主角进行深度的百合交缠与魔力侵入，在半推半就中互相索取。"
-                },
-                3: { // 阶段三：内射与沉沦
-                    '魔物': "彻底沦为交尾的野兽，将大量浓浊的精液注入主角体内，试图填满这个堕落的容器。",
-                    '人类': "在极致的快感中失去理智，将体液倾泻在主角体内，彻底沦为情欲的俘虏与施暴者。",
-                    '魔法少女': "在魔力与体液的深度交融中放弃了矜持，与主角一同在百合高潮中迎来彻底的沉沦。"
-                }
+        let outcomeLabel = "", narrativeGuide = "", finalPatch = [];
+
+        // ── 1. 必杀技 ──
+        if (tactic === '必杀' && isUltimateReady) {
+            outcomeLabel = "必杀终结";
+            const ultName = ultType === '净化' ? "净化之光" : "福音领域";
+            narrativeGuide = `主角发动必杀技【${ultName}】！给予绝杀打击，Boss 韧性归零，战斗宣告胜利。`;
+            finalPatch = [
+                mkPatch("replace", "/世界/当前关卡/Boss韧性值", 0),
+                mkPatch("replace", ultPath, 0),
+                mkPatch("replace", "/主角/战斗临时/当前战斗日志", `必杀终结！|P:ULTIMATE|E:KO|T:ULT`)
+            ];
+
+        // ── 2. 撤退脱离判定 ──
+        } else if (effectiveTactic === '撤退') {
+            const isEscapeSuccess = (pNatRoll === 20 || difference >= 2);
+            if (isEscapeSuccess) {
+                outcomeLabel = "成功脱离";
+                narrativeGuide = `主角审时度势，借助掩体或魔力爆发果断拉开距离，甩开【${bossName}】的追截，彻底脱离交战区域！描写主角回到安全避难所、关上房门靠在门后剧烈喘息的闭环画面。宣告本次遭遇战正式平息。`;
+                finalPatch = [
+    mkPatch("replace", "/进程/阶段", "幕间休息"),
+    mkPatch("replace", "/主角/核心状态/当前战斗姿态", "非战斗"),
+    mkPatch("replace", "/主角/核心状态/变身状态", false),
+    mkPatch("replace", "/世界/当前关卡/名称", "无"),
+    mkPatch("replace", "/系统状态/幕间回合计数", 0),
+    mkPatch("insert", "/系统状态/待处理事件/声望结算事件", JSON.stringify({
+        source: "逃离",
+        boss_name: bossName,
+        boss_type: bossType
+    })),
+    mkPatch("replace", "/主角/战斗临时/当前战斗日志", `撤退成功！|${logTail}|T:CRIT_SUCCESS`)
+];
+            } else {
+                const recoil = _.random(8, 14);
+                const pl = _.random(15, 25);
+                outcomeLabel = "撤退受阻";
+                narrativeGuide = `主角试图转身逃离，但动作被【${bossName}】识破拦截！不仅未能拉开距离，反而在慌乱撤退中露出严重破绽，遭到贴身或侵犯，被迫重新退回战圈！`;
+                finalPatch = [
+                    mkPatch("delta", "/主角/核心状态/体力值/当前", -recoil),
+                    mkPatch("delta", "/主角/快感状态/快感值", pl),
+                    mkPatch("delta", "/主角/战斗临时/撤退尝试", 1),
+                    mkPatch("replace", "/主角/战斗临时/当前战斗日志", `撤退受阻！|${logTail}|T:FAIL`)
+                ];
             }
-        };
 
-        const hpStageGuide = STAGE_DB[personality][hpStage][cType];
+        // ── 3. 主动投降 ──
+        } else if (effectiveTactic === '投降') {
+            outcomeLabel = "主动投降";
+            narrativeGuide = `主角彻底放弃了战斗意愿，主动垂下手臂、散去武装魔力，向【${bossName}】宣告投降。敌人带着狂喜与支配欲将失去防备的主角彻底捆绑俘获并带回巢穴。描绘主角主动放弃尊严、被捕获带走的沉沦开端。`;
+            finalPatch = [
+                mkPatch("replace", "/进程/阶段", "战斗败北"),
+                mkPatch("replace", "/主角/核心状态/当前战斗姿态", "力尽待辱"),
+                mkPatch("delta", "/记录/总战败次数", 1),
+                mkPatch("insert", "/系统状态/待处理事件/战败被俘结算", true),
+                mkPatch("replace", "/主角/战斗临时/当前战斗日志", `主动投降|放弃抵抗|T:SURRENDER`)
+            ];
 
-        let battleResultHint = `本次判定结算后主角剩余HP: ${projectedPlayerHP}，敌人剩余韧性: ${projectedToughness}。`;
-        if (projectedToughness <= 0) {
-            battleResultHint += "这招确认能击溃敌人！(请顺势引导敌方溃败的描写)";
-        } else if (projectedPlayerHP <= 0) {
-            battleResultHint += "主角体力已耗尽！(请顺势引导主角失去反抗能力倒下的描写)";
+        // ── 4. 推进 ──
+        } else if (effectiveTactic === '推进') {
+            outcomeLabel = "叙事延续";
+            narrativeGuide = "主角暂缓直接攻防动作。描写战况对峙、微小细节、言语试探或心理拉扯。不结算伤害。不推进战斗节点：不结算伤害、不改变 Boss 韧性、不触发充能。若玩家连续使用超过 3 轮，请让剧情自然推进（敌人主动进攻、环境异变、或主角被察觉），避免叙事停滞。";
+            finalPatch = [
+                mkPatch("delta", "/主角/快感状态/快感值", _.random(-3, 3)),
+                mkPatch("replace", "/主角/战斗临时/当前战斗日志", `叙事延续|无骰点|T:IDLE`)
+            ];
+
+        // ── 5. 危机 ──
+        } else if (effectiveTactic === '危机') {
+            const hpCost = _.random(8, 15);
+            const pleasureGain = _.random(40, 60);
+            const chargeGain = _.random(18, 25);
+            outcomeLabel = "遭遇侵犯";
+            narrativeGuide = "主动放弃防备，敌人发起一轮充斥感官冲击的激烈侵犯。主角忍耐并大幅积蓄充能。";
+            finalPatch = [
+                mkPatch("delta", ultPath, chargeGain),
+                mkPatch("delta", "/主角/快感状态/快感值", pleasureGain),
+                mkPatch("delta", "/主角/核心状态/体力值/当前", -hpCost),
+                mkPatch("replace", "/主角/战斗临时/当前战斗日志", `遭遇侵犯|无骰点|T:CRISIS`)
+            ];
+
+        // ── 6. 战技检定 (主动 / 牵制 / 诱惑) ──
         } else {
-            battleResultHint += "战斗继续。";
-        }
-        
-        // --- 3. JSONPatch 组装 ---
-        
-        // A. 常规战斗 Patch
-        let activePatch = [];
-        if (damageDealt > 0) activePatch.push(mkPatch("delta", "/世界/当前关卡/Boss韧性值", -damageDealt));
-        if (powerGained > 0) {
-            const powerPath = personality === '善良' ? "/主角/核心状态/净化之力" : "/主角/核心状态/污秽魔力";
-            activePatch.push(mkPatch("delta", powerPath, powerGained));
-        }
-        if (counterDamageTaken > 0) activePatch.push(mkPatch("delta", "/主角/核心状态/体力值/当前", -counterDamageTaken));
-        activePatch.push(mkPatch("replace", "/主角/战斗临时/当前战斗日志", `结果:${outcomeLabel}|P:${pFormula}|E:${bFormula}|差:${difference}`));
+            let tier;
+            if (pNatRoll === 20) {
+                tier = 'CRIT_SUCCESS';
+                outcomeLabel = "极大成功";
+            } else if (pNatRoll === 1) {
+                tier = 'CRIT_FAIL';
+                outcomeLabel = "极大失败";
+            } else if (difference >= 8) {
+                tier = 'CRIT_SUCCESS';
+                outcomeLabel = "大成功";
+            } else if (difference >= 3) {
+                tier = 'SUCCESS';
+                outcomeLabel = "成功";
+            } else if (difference >= -2) {
+                tier = 'STALEMATE';
+                outcomeLabel = "纠缠拉扯";
+            } else if (difference >= -7) {
+                tier = 'FAIL';
+                outcomeLabel = "受挫失守";
+            } else {
+                tier = 'CRIT_FAIL';
+                outcomeLabel = "大失败";
+            }
 
-        // B. 被动/剧情交互 Patch
-        let passivePatch = [];
-        // 剧情交互虽然无激烈对抗，但妥协、承受侵犯或听从命令同样会消耗意志与体力
-        const passiveHPLoss = _.random(5, 10);
-        passivePatch.push(mkPatch("delta", "/主角/核心状态/体力值/当前", -passiveHPLoss));
-        passivePatch.push(mkPatch("replace", "/主角/战斗临时/当前战斗日志", `结果:剧情交互|HP-${passiveHPLoss}|${outcomeLabel}`));
+            if (effectiveTactic === '牵制' || effectiveTactic === '诱惑') {
+                const configMap = {
+                    'CRIT_SUCCESS': { dmg: [18, 26], charge: [25, 35], recoil: [0, 0], pl: isFallen ? 10 : 0, txt: "极尽挑逗与牵制，敌人被彻底打乱节律，战意溃散！" },
+                    'SUCCESS':      { dmg: [10, 16], charge: [20, 26], recoil: [0, 0], pl: isFallen ? 8 : 0,  txt: "动作巧妙牵制了敌人，使其攻势放缓，主角游刃有余。" },
+                    'STALEMATE':    { dmg: [5, 10],  charge: [14, 20], recoil: [4, 8], pl: 12,                txt: "双方陷入近身纠缠，挑逗的同时被敌人反咬一口，身体泛起潮热。" },
+                    'FAIL':         { dmg: [0, 0],   charge: [10, 16], recoil: [8, 14], pl: 25,               txt: "玩火自焚！牵制失败，反被敌人借势贴身侵犯，陷入被动。" },
+                    'CRIT_FAIL':    { dmg: [0, 0],   charge: [15, 22], recoil: [15, 22], pl: 40,              txt: "猎物反噬！挑逗彻底激怒了敌人，遭到全面压制与粗暴侵犯！" }
+                }[tier];
 
-        // C. 必杀技 Patch (条件生成)
-        let ultimatePatch = [];
-        let ultName = "必杀技";
-        if (isUltimateReady) {
-            ultName = (ultType === '净化') ? "净化必杀" : "福音领域";
-            ultimatePatch.push(mkPatch("replace", "/世界/当前关卡/Boss韧性值", 0));
-            const powerPath = (ultType === '净化') ? "/主角/核心状态/净化之力" : "/主角/核心状态/污秽魔力";
-            ultimatePatch.push(mkPatch("replace", powerPath, 0));
-            ultimatePatch.push(mkPatch("replace", "/主角/战斗临时/当前战斗日志", `结果:${ultName}|无视判定|终结`));
+                const dmgDealt = _.random(...configMap.dmg);
+                const chargeDealt = _.random(...configMap.charge);
+                const recoilTaken = _.random(...configMap.recoil);
+                narrativeGuide = configMap.txt;
+
+                finalPatch = [
+                    ...(dmgDealt > 0 ? [mkPatch("delta", "/世界/当前关卡/Boss韧性值", -dmgDealt)] : []),
+                    ...(chargeDealt > 0 ? [mkPatch("delta", ultPath, chargeDealt)] : []),
+                    ...(recoilTaken > 0 ? [mkPatch("delta", "/主角/核心状态/体力值/当前", -recoilTaken)] : []),
+                    ...(configMap.pl > 0 ? [mkPatch("delta", "/主角/快感状态/快感值", configMap.pl)] : []),
+                    mkPatch("replace", "/主角/战斗临时/当前战斗日志", `${outcomeLabel}！|${logTail}|T:${tier}`)
+                ];
+            } else {
+                const configMap = {
+                    'CRIT_SUCCESS': { dmg: [25, 35], charge: [20, 28], recoil: [0, 0],   txt: "战意如虹！精准命中破绽，对敌人造成毁灭性重创并夺得主导权！" },
+                    'SUCCESS':      { dmg: [15, 22], charge: [15, 22], recoil: [0, 0],   txt: "有效压制！攻势顺利得手，狠狠击退了敌人的企图。" },
+                    'STALEMATE':    { dmg: [8, 14],  charge: [8, 14],  recoil: [5, 10],  txt: "势均力敌。主角打出了伤害，但自身也承受了敌人的反扑与揩油。" },
+                    'FAIL':         { dmg: [0, 0],   charge: [8, 14],  recoil: [10, 18], txt: "反击受阻。敌人识破动作并趁隙反击，防线被撕开缺口！" },
+                    'CRIT_FAIL':    { dmg: [0, 0],   charge: [12, 18], recoil: [18, 26], txt: "惨烈失守！主角陷入重大破绽，遭到毫无保留的击溃与侵扰！" }
+                }[tier];
+
+                const dmgDealt = _.random(...configMap.dmg);
+                const chargeDealt = _.random(...configMap.charge);
+                const recoilTaken = _.random(...configMap.recoil);
+                narrativeGuide = configMap.txt;
+
+                finalPatch = [
+                    ...(dmgDealt > 0 ? [mkPatch("delta", "/世界/当前关卡/Boss韧性值", -dmgDealt)] : []),
+                    ...(chargeDealt > 0 ? [mkPatch("delta", ultPath, chargeDealt)] : []),
+                    ...(recoilTaken > 0 ? [mkPatch("delta", "/主角/核心状态/体力值/当前", -recoilTaken)] : []),
+                    mkPatch("replace", "/主角/战斗临时/当前战斗日志", `${outcomeLabel}！|${logTail}|T:${tier}`)
+                ];
+                if (tier === 'CRIT_SUCCESS' && !isFallen) finalPatch.push(mkPatch("delta", "/主角/快感状态/污染度", -5));
+            }
         }
+
+        const ultimateBlockedNotice = ultimateBlocked
+            ? `\nultimate_blocked:\n  reason: "主角试图发动必杀技，但${isFallen ? '污秽魔力' : '净化之力'}充能未完成。"\n  current_charge: ${isFallen ? corruptPower : purificationPower}\n  fallback_tactic: "主动"\n  instruction: "叙事中应体现主角试图蓄力但力量不足的瞬间，本回合按【主动】结算。"`
+            : '';
 _%>
-combat_engine_protocol:
-  context:
-    current_status: "主角当前HP: <%= currentPlayerHP %> | 敌人当前HP: <%= currentBossToughness %>"
-    keep_fighting: "在一方HP归零之前不能让战斗结束，或是使一方在叙事上被击败！"
-    threat_vibe: "<%= threatNarrative %>"
-    erotic_combat_directive: "维持【战斗H】基调。战斗的核心是情色抗争与肉体交缠，绝非单纯的物理死斗。"
-    enemy_combat_logic: 
-      hp_abstraction: "HP不仅是物理血量，更是【抵抗意志】。即便没有伤害，主角被迫脱衣、承受快感或听从胁迫也会消耗意志(HP)。"
-      stage: "<%= hpStageName %>"
-      guidance: "<%= hpStageGuide %>"
-      yielding_override: "如果玩家在回复中明确表现出【主动放弃抵抗】、【顺从命令(如脱衣/张开腿)】或【渴望推进】，敌方应立刻顺水推舟，无视当前的 HP 阶段限制，直接进入更深度的侵犯与本番环节！"
 
-  instruction: |
-    【核心判定规则】：请严格阅读玩家的最新回复，并作出绝对唯一的选择！
-    1. 若玩家采取了攻击、防御、挣脱、施法等主动对抗行为 -> 必须执行【常规战斗对抗】。
-    2. 若玩家仅在说话、内心独白、或单方面放弃抵抗承受侵犯 -> 必须执行【被动/剧情交互】。
-    你必须在 <Analysis> 中声明你选择了哪个分支，且【仅输出该分支对应的 mandatory_patch】！
-
-  situations:
-    - name: "【常规战斗对抗】"
-      result_tier: "<%= outcomeLabel %>"
-      projected_outcome: "<%= battleResultHint %>"
-      narrative_guidance: "<%= actionOutcomeGuidance %>"
-      mandatory_patch: |
-<%- formatPatchBlock(activePatch).split('\n').map(l => '        ' + l).join('\n') %>
-
-    - name: "【被动/剧情交互】"
-      narrative_guidance: "忽略本次骰子判定的血量扣除！放弃伤害计算！顺从玩家的互动流向继续描写，可描绘敌人趁机靠近、言语羞辱或轻度骚扰。"
-      mandatory_patch: |
-<%- formatPatchBlock(passivePatch).split('\n').map(l => '        ' + l).join('\n') %>
-
-<%_ if (isUltimateReady) { _%>
-    - name: "【必杀技终结】"
-      narrative_guidance: "玩家宣告并释放了 <%= ultName %>。描绘毁灭性的终结攻击，Boss彻底溃败。"
-      mandatory_patch: |
-<%- formatPatchBlock(ultimatePatch).split('\n').map(l => '        ' + l).join('\n') %>
+# 战斗描写指南：
+threat_context: "<%= threatNarrative %>"
+body_status: "<%= bodyState.name %> (<%= bodyState.posture %>)"
+<%_ if (!isTransformed) { _%>
+transformation_notice: "主角当前未变身。若本轮变身，请在 JSONPatch 中将 /主角/核心状态/变身状态 设为 true。"
 <%_ } _%>
+combat_resolution:
+  current_tactic: "<%= tacticDesc %>"
+  outcome_level: "<%= outcomeLabel %>"
+  narrative_directive: "<%= narrativeGuide %>"
+<%- ultimateBlockedNotice %>
 
-  general_prohibitions:
-    - "【严禁】手动修改 `/世界/当前关卡/Boss状态` 或私自改写战斗日志。"
-    - "【严禁】将多种情况的 Patch 混合输出！你必须只能输出一组 <JSONPatch> 代码块！"
-    - "【注意】所有数值的增减已由系统在 Patch 中计算完毕，你需要将所有数值转化为合适的文字描写，任何数值/XX值不能出现在正文内。"
+mandatory_patch: |
+<%- formatPatchBlock(finalPatch).split('\n').map(l => '  ' + l).join('\n') %>
 <%_
     }
 }

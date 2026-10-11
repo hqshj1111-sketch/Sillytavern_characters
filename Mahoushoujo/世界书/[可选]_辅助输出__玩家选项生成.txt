@@ -1,56 +1,163 @@
-<%{
-// [系统] 动态选项生成器
-// 仅当角色创建完毕后激活
+<%_{
 if (_.get(getvar('stat_data'), '系统状态.主角创建完毕') === true) {
-    const phase = _.get(getvar('stat_data'), '进程.阶段');
-    const isCombat = ['战斗回合', '战斗准备', '终结回合'].includes(phase);
-    const corruption = _.get(getvar('stat_data'), '主角.快感状态.污染度', 0);
-    const pleasure = _.get(getvar('stat_data'), '主角.快感状态.快感值', 0);
-    const isFallen = _.get(getvar('stat_data'), '主角.核心状态.人格状态') === '堕落';
-    
-    let desireType = "本能";
-    let desireGuide = "";
-    
-    if (isCombat) {
-        if (isFallen || corruption > 80) { desireType = "嗜虐"; desireGuide = "【堕落】戏弄对手、故意破绽、享受痛楚。"; }
-        else if (pleasure > 50) { desireType = "动摇"; desireGuide = "【失态】因快感而呻吟、腿软求饶、拼命压抑。"; }
-        else { desireType = "爆发"; desireGuide = "【情感】愤怒、决心、绝境的爆发。"; }
-    } else { 
-        if (isFallen) { desireType = "享乐"; desireGuide = "【放纵】追求感官刺激、经营巢穴的堕落日常。"; }
-        else { desireType = "私欲"; desireGuide = "【个人】普通少女的爱好、小秘密或放松行为。"; }
+    const stat = getvar('stat_data');
+    const phase = _.get(stat, '进程.阶段', '幕间休息');
+    const hEventName = _.get(stat, '世界.幕间H事件.名称', '无');
+    const isCaptured = _.get(stat, '系统状态.被俘状态') === true;
+    const isFallen = _.get(stat, '主角.核心状态.人格状态', '善良') === '堕落';
+
+    const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
+    const threshold = _.get(stat, '主角.快感状态.高潮阈值', 100);
+    const pRatio = threshold > 0 ? pleasure / threshold : 0;
+    const lockedTactic = _.get(stat, '主角.战斗临时.战斗方式', '');
+
+    // ── 场景判定 + 内容组装 ──
+    let sceneLabel, sceneRules = [], goodEx = [], badEx = [], matrix = [];
+
+    if (isCaptured) {
+        sceneLabel = '被俘监禁';
+        sceneRules = ['选项应体现「在拘束中寻找生机」的张力，聚焦物理受限下的具体挣扎或观察。'];
+        goodEx = [
+            '用力扭动手腕，试图让绑绳松开一点缝隙。',
+            '停下挣扎，竖起耳朵听门外的脚步声。',
+            '压低声音开口，想从看守嘴里套出些情报。',
+            isFallen ? '放松身体，主动贴向看守的手掌。' : '咬紧牙关，暗暗数着看守换岗的节奏。'
+        ];
+        badEx = ['努力挣扎', '想逃出去'];
+        matrix = [
+            '【反抗】具体的挣脱、反击或咬击动作',
+            '【观察】扫视环境、留意看守、寻找逃脱线索',
+            '【言语】对看守发问、威胁、谈判或挑衅',
+            isFallen ? '【沉溺】主动迎合、索求、享受被囚禁的放纵' : '【隐忍】压抑身体异样、保存体力、等待时机'
+        ];
+    } else if (hEventName !== '无' && phase === '幕间休息') {
+        sceneLabel = '幕间H事件';
+        sceneRules = [
+            '选项必须「具体化」身体反应与动作，严禁复述战术按钮的词汇。',
+            '每个选项都应落在某个具体的身体部位、声音或动作上。'
+        ];
+        goodEx = [
+            '用力夹紧双腿，试图阻止那股酥麻蔓延。',
+            '伸手抓住旁边的栏杆，用尽力气把自己拉起来。',
+            isFallen ? '扭过腰，主动把最敏感的地方送到它跟前。' : '咬住下唇，把呻吟硬生生咽回喉咙里。'
+        ];
+        badEx = ['忍耐快感', '迎合对方'];
+        matrix = [
+            '【肢体】具体的推拒、扭动、夹紧或攀附动作',
+            '【声音】具体的台词、喘息、呻吟或求助话语',
+            '【破局】伸手够向道具、观察破绽、尝试呼救',
+            isFallen ? '【放纵】主动索求、配合、引导对方深入' : '【自持】咬牙忍耐、集中精神、调动魔力'
+        ];
+    } else if (['战斗准备', '战斗回合', '终结回合'].includes(phase)) {
+        sceneLabel = '战斗';
+        sceneRules = [
+            '选项必须是「叙事层的具体动作」（如「将星光凝成利刃斩向触手根部」），而非抽象战术。',
+            lockedTactic
+                ? `当前已锁定战术【${lockedTactic}】，选项应围绕该方向细化。`
+                : '选项应覆盖多个方向（进攻/防御/策略/情绪），避免全部趋同。'
+        ];
+
+        if (pRatio > 0.7) {
+            goodEx = [
+                '把所有魔力灌进魔杖，朝它张开的嘴轰过去。',
+                '侧身滚向墙角，把背贴住墙壁稳住重心。',
+                '死死咬住下唇，用疼痛把快要涣散的意识拉回来。',
+                isFallen ? '故意瘫软下去，让它以为已经放弃了抵抗。' : '朝着使魔的方向喊出最后一声指令。'
+            ];
+            badEx = ['拼命抵抗', '释放必杀技'];
+            matrix = [
+                '【强攻】孤注一掷的具体攻击动作',
+                '【防御】翻滚闪避、撑起护盾或格挡',
+                '【压抑】强压快感、调整呼吸的具体动作',
+                isFallen ? '【挑衅】用言语或姿态挑逗敌人' : '【求援】呼唤使魔、观察队友、寻找掩护'
+            ];
+        } else if (pRatio > 0.4) {
+            goodEx = [
+                '借着它的冲击力往后一跃，拉开半条街的距离。',
+                '撕下衣角缠住手腕，防止魔力再从掌心泄漏。',
+                '一边后退，一边扫视周围有没有可以利用的地形。',
+                isFallen ? '故意露了个破绽，看它会不会上钩。' : '把动摇的心按回原位。'
+            ];
+            badEx = ['观察战局', '使用道具'];
+            matrix = [
+                '【强攻】具体的攻击动作',
+                '【牵制】制造幻象、绕后突袭等具体扰乱手段',
+                '【策略】观察弱点、调整战术、使用道具',
+                isFallen ? '【戏耍】玩弄敌人、故意露出破绽' : '【振作】集中精神、回忆守护的理由'
+            ];
+        } else {
+            goodEx = [
+                '将魔力聚在指尖，试探性地朝它挥出一道弧光。',
+                '往侧方跨出一步，抢占能看清它全身的位置。',
+                '盯着它的关节部位，想找出它动作的规律。',
+                isFallen ? '放低姿态，用一种漫不经心的语气跟它搭话。' : '开口问它，到底为什么要袭击这座城市。'
+            ];
+            badEx = ['攻击敌人', '寻找弱点'];
+            matrix = [
+                '【强攻】具体的攻击动作',
+                '【机动】走位、闪避、抢占地形优势',
+                '【策略】观察敌人、寻找弱点、使用道具',
+                isFallen ? '【引诱】主动放低姿态、勾起敌人的兴趣' : '【交涉】对敌人发问、劝降或试图沟通'
+            ];
+        }
+    } else {
+        sceneLabel = '日常';
+        sceneRules = ['选项应聚焦「推进剧情」或「深化角色关系」，避免突然引入战斗或危机。'];
+        goodEx = [
+            '收起手机，转身往那家咖啡店走去。',
+            '蹲下来，伸手揉了揉使魔毛茸茸的耳朵。',
+            '打开抽屉，想找找上次留下的那本笔记。',
+            isFallen ? '窝在沙发上，享受这份难得的慵懒。' : '泡了杯热茶，坐到窗边发一会儿呆。'
+        ];
+        badEx = ['进行日常活动', '和使魔互动'];
+        matrix = [
+            '【推进】前往某地、联系某人、处理某件正事',
+            '【互动】与使魔、同伴或 NPC 的具体互动',
+            '【探索】调查异常、检查身体、整理装备或笔记',
+            isFallen ? '【放纵】享受日常、追求刺激、经营领地' : '【生活】日常小事（做饭、读书、散步、发呆）'
+        ];
     }
-%>
-# 指令: 快速对话选项
-options_generator_protocol:
-  objective: "在正文的末尾（变量更新块之前），生成玩家的可选行动列表。"
-  
-  format_strict:
-    - "必须且只能使用以下 XML 格式包裹："
-    - |
-      <行动选项>
-      选项1的具体内容
-      选项2的具体内容
-      选项3的具体内容
-      选项4的具体内容
-      </行动选项>
-    - "每一行代表一个选项。不要加编号（1.），不要加方括号（[]），只写纯文本。"
-    - "选项内容应为【第一人称】的【一句话】行动描述，字数控制在 10-20 字之间。"
 
-  # 选项设计： (<%= isCombat ? '战斗模式' : '日常模式' %>) 
+    const ruleLines   = sceneRules.map(r => `      - "${r}"`).join('\n');
+    const goodLines   = goodEx.map(e => `      - "${e}"`).join('\n');
+    const badLines    = badEx.map(e => `      - "${e}"`).join('\n');
+    const matrixLines = matrix.map(m => `      - "${m}"`).join('\n');
+_%>
+# 指令: 动态行动选项生成
+action_options_protocol:
+  scene: "<%= sceneLabel %>"
+
+  output_position:
+    sequence: "小说正文 → <行动选项> → <UpdateVariable>"
+    rule: "正文结束后、UpdateVariable 前单独输出，禁止插在正文中间或放在其后。"
+
+  format:
+    wrapper: "<行动选项> ... </行动选项>"
+    lines: "4 行，每行一个，10-20 字，第一人称。"
+    ban:
+      - "编号、方括号、引号、破折号或任何装饰符号"
+      - "< 或 > 等可能干扰 XML 解析的符号"
+      - "预设结果（如'成功躲开'、'被抓住'）"
+      - "元语言（如'选项'、'系统'、'HP'、'阶段'）"
+
+  scene_rules:
+<%= ruleLines %>
+
+  examples:
+    good:
+<%= goodLines %>
+    bad:
+<%= badLines %>
+
   option_matrix:
-  <%_ if (isCombat) { _%>
-    1. [勇猛]: "发起高风险、高收益的直接攻击。针对弱点。"
-    2. [智略]: "观察战局，利用地形、道具或采取防御姿态。"
-    3. [魔导]: "使用招牌魔法、必杀技前置或召唤使魔协助。"
-    4. [<%= desireType %>]: "<%= desireGuide %>"
-  <%_ } else { _%>
-    1. [行动]: "直奔目标地点，或开启新话题，推进主线。"
-    2. [交互]: "与身边角色（使魔、朋友）互动，或检查身体。"
-    3. [探索]: "调查环境、研究道具、整理状况。"
-    4. [<%= desireType %>]: "<%= desireGuide %>"
-  <%_ } _%>
+    instruction: "按以下 4 个方向各生成 1 个选项："
+    directions:
+<%= matrixLines %>
 
-  trigger: "现在，基于上述矩阵，生成 <行动选项> 块。"
-<%
-} }
-%>
+  final_check: "自问：如果我是玩家，看到这个选项，会不会想点？"
+<%_
+}
+_%>
+<%_
+}
+_%>

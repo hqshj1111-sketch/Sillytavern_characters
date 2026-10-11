@@ -1,0 +1,17 @@
+﻿<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['强制解除着装']) {
+_%>
+event_handler:
+  event_name: "强制解除着装"
+  context: "主角的能量值归零，无法维持着装，遭遇了强制解除。"
+  narrative_directives:
+    - "描绘主角因能量耗尽而无法维持着装形态的危机场面。"
+  system_tasks:
+    instruction: "必须输出以下指令以确认解除状态："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/主角/核心状态/着装状态", "value": false },
+        { "op": "remove", "path": "/系统状态/待处理事件/强制解除着装" }
+      ]
+<%_ } } _%>

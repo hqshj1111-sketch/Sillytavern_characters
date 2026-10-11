@@ -1,34 +1,41 @@
 <%_
 {
-const stat = getvar('stat_data');
-const currentPhase = _.get(stat, '进程.阶段', '创角阶段');
-const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
-const corruption = _.get(stat, '主角.快感状态.污染度', 0);
-const isFallen = personality === '堕落';
+  const stat = getvar('stat_data');
+  const currentPhase = _.get(stat, '进程.阶段', '创角阶段');
+  const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+  const corruption = _.get(stat, '主角.快感状态.污染度', 0);
+  const isFallen = personality === '堕落';
 
-const eventsObj = _.get(stat, '系统状态.待处理事件', {});
-const activeEvents = Object.keys(eventsObj).filter(k => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+  const eventsObj = _.get(stat, '系统状态.待处理事件', {});
+  const activeEvents = Object.keys(eventsObj).filter(k => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
 
-const phaseMode = {
-    '创角阶段': '角色创建',
-    '幕间休息': isFallen ? '巢穴经营/享乐' : '日常生活/剧情铺垫',
-    '战斗准备': '战前铺垫',
-    '战斗回合': '回合制战斗',
-    '终结回合': '终结演出',
-    '战斗胜利': '胜利结算',
-    '战斗败北': isFallen ? '败北受辱' : '败北受辱',
-    '战后处理': '战后过渡'
-}[currentPhase] || '未知';
+  const isCaptured = _.get(stat, '系统状态.被俘状态') === true;
+  const hEventName = _.get(stat, '世界.幕间H事件.名称', '无');
+  const hasHEvent = hEventName !== '无';
 
-const hEventName = _.get(stat, '世界.幕间H事件.名称', '无');
-const hasHEvent = hEventName !== '无';
-const bossName = _.get(stat, '世界.当前关卡.名称', '无');
-const hasValidBoss = bossName !== '无' && bossName !== '预警威胁';
+  let modeText = '未知';
+  if (currentPhase === '幕间休息') {
+      if (isCaptured) modeText = '战败囚禁/禁锢调教';
+      else if (hasHEvent) modeText = '幕间危机/感官拉扯';
+      else modeText = isFallen ? '巢穴经营/享乐' : '日常生活/剧情铺垫';
+  } else {
+      modeText = {
+          '创角阶段': '角色创建',
+          '战斗准备': '战前铺垫',
+          '战斗回合': '回合制战斗H',
+          '终结回合': '终结演出',
+          '战斗胜利': '胜利结算',
+          '战斗败北': '败北受辱',
+          '战后处理': '战后过渡'
+      }[currentPhase] || '未知';
+  }
+  const bossName = _.get(stat, '世界.当前关卡.名称', '无');
+  const hasValidBoss = bossName !== '无' && bossName !== '预警威胁';
 _%>
 global_state_broadcast:
   current_status:
     phase: "<%= currentPhase %>"
-    mode: "<%= phaseMode %>"
+    mode: "<%= modeText %>"
 <%_ if (['战斗准备', '战斗回合', '终结回合'].includes(currentPhase) && hasValidBoss) { _%>
     target_enemy: "<%= bossName %>"
 <%_ } _%>
@@ -53,6 +60,7 @@ global_state_broadcast:
 <%_ if (personality === '善良' && corruption >= 100) { _%>
     - "【警报】污染度已达100%！主角正处于堕落临界点，请在叙事中强烈展现她的精神与生理状态！"
 <%_ } _%>
-<%_
-}
-_%>
+<%_ if (isCaptured) { _%>
+    - "主角当前处于战败被俘状态，衣衫不整且失去自由。"
+<%_ } _%>
+<%_ } _%>

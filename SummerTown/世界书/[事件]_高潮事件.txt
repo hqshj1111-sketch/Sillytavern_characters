@@ -1,0 +1,29 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  
+  if (events['高潮事件']) {
+_%>
+# 事件：高潮绝顶！
+主角的身体已经积攒了过多的刺激，快感在此刻彻底决堤，迎来了无法忍耐的射精高潮。
+
+orgasm_protocol:
+  event_name: "高潮事件"
+  focus: "极致的快感爆发、射精的瞬间与事后的余韵"
+  
+  narrative_guidance:
+    - "请生动描写主角达到高潮、射出精液的瞬间表现。"
+    - "结合当前的环境和正在互动的对象（如果有），描写射精后的身体表现，以及身旁角色的反应和带有暧昧色彩的互动。"
+    
+  mandatory_data_sync:
+    instruction: "在 <UpdateVariable> 的 <JSONPatch> 块中必须输出以下指令，以完成高潮事件的清理与快感清零："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/高潮事件" },
+        { "op": "replace", "path": "/主角/当前状态/快感值", "value": 0 }
+      ]
+<%_ 
+  } 
+}
+_%>

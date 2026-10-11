@@ -1,0 +1,18 @@
+﻿<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['幕间休息完全恢复']) {
+_%>
+event_handler:
+  event_name: "幕间完全恢复"
+  context: "主角在幕间休息中得到了充分的恢复。"
+  narrative_directives:
+    - "请为其提供一个符合设定的叙事解释——如高科技医疗护理、强化体质的自愈能力、或充足的睡眠。"
+  system_tasks:
+    instruction: "请在 <Analysis> 中读取『体力值.最大』和『能量值.最大』，并将『当前值』恢复至满值。"
+    mandatory_patch: |
+      [
+        // 示例: { "op": "replace", "path": "/主角/核心状态/体力值/当前", "value": [最大值] }
+        // 示例: { "op": "replace", "path": "/主角/核心状态/能量值/当前", "value": [最大值] }
+        { "op": "remove", "path": "/系统状态/待处理事件/幕间休息完全恢复" }
+      ]
+<%_ }} _%>

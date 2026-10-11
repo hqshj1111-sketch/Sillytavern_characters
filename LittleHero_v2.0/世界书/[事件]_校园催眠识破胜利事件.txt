@@ -1,0 +1,28 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+const stat = getvar('stat_data');
+if (events['校园催眠识破胜利事件']) {
+    const instructorName = _.get(stat, '世界.校园催眠.怪人代号', '教官01号');
+%>
+---
+# 事件: 校园催眠结界破除（识破决战胜利）
+event_handler:
+  event_name: "校园催眠识破胜利"
+  context: "主角在激烈的决战中彻底击败了【<%= instructorName %>】，并击碎了支配学园的催眠结界核心！笼罩在整个学校上空的紫色催眠力场彻底崩解。"
+
+  narrative_directives:
+    - "【结界崩塌】：<%= instructorName %>发出不甘的怒吼倒下溃散，教室与走廊上空浮现的紫色支配光阵如玻璃般寸寸碎裂。"
+    - "【全校苏醒】：原本面容呆滞、动作机械的全班师生纷纷从催眠中清醒过来，茫然地看着自己身上的漆黑全包紧身衣与讲台前的狼藉，随后爆发出如梦初醒的惊呼与对主角的感激。"
+    - "【记忆烙印与后遗症】：虽然校园恢复了和平与正常教学，但主角曾在结界下作为战斗员被严格调教、当众侍奉与体会到的强烈快感，已被永久深深烙印在潜意识深处。每当穿戴紧身战衣或承受强压时，肉体与能量核心仍会产生条件反射般的顺从快感与燥热。"
+
+  mandatory_consequences:
+    instruction: "请在 JSONPatch 中标记结界破除，切换回幕间休息，并移除本事件（系统后台将自动处理生理恢复、后遗症备注与性癖成长）："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/世界/校园催眠/结界已破除", "value": true },
+        { "op": "replace", "path": "/世界/校园催眠/主角在校", "value": false },
+        { "op": "replace", "path": "/进程/阶段", "value": "幕间休息" },
+        { "op": "replace", "path": "/系统状态/幕间回合计数", "value": 0 },
+        { "op": "remove", "path": "/系统状态/待处理事件/校园催眠识破胜利事件" }
+      ]
+<%_ }} _%>

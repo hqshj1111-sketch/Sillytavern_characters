@@ -1,0 +1,108 @@
+<%_
+{
+const stat = getvar('stat_data');
+const phase = _.get(stat, '进程.阶段');
+const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+
+if (phase === '被捕囚禁' && personality === '英雄') {
+    const corruption = _.get(stat, '主角.快感状态.侵蚀度', 0);
+    const freedom = _.get(stat, '主角.囚禁状态.自由度', '严密监禁');
+    const escProgress = _.get(stat, '主角.囚禁状态.逃脱进度', 0);
+    const brainProgress = _.get(stat, '主角.囚禁状态.洗脑进度', 0);
+    const prisonTurn = _.get(stat, '主角.囚禁状态.监禁回合', 0);
+    const enemyType = _.get(stat, '世界.当前关卡.战斗类型', '魔物');
+    const bossName = _.get(stat, '世界.当前关卡.名称', '未知');
+_%>
+captured_prison_phase:
+  context: "英雄战败被俘，正被关押在怪人组织的秘密基地中。外部世界将他视为下落不明。他的英雄战衣已被剥去，取而代之的是怪人组织统一制式的黑色紧身战斗服——贴合身体曲线的冰冷材质，被注入微量压制能量，时刻提醒着他囚徒的身份。"
+
+  current_status:
+    days_imprisoned: <%= prisonTurn %>
+    freedom_level: "<%= freedom %>"
+    escape_progress: <%= escProgress %>/100
+    brainwash_progress: <%= brainProgress %>/100
+
+<%_ if (enemyType === '小英雄') { _%>
+  enemy_context:
+    handler: "<%= bossName %>"
+    description: "击败主角的堕落小英雄亲自掌管对他的囚禁。他以过来人的身份，致力于让主角理解'堕落才是解放'。他频繁出现在主角面前，用同类的口吻和蔷薇色气的触碰来动摇防线。"
+<%_ } else if (enemyType === '人类') { _%>
+  enemy_context:
+    handler: "怪人组织干部"
+    description: "组织派遣了专门的干部和科技团队来管理主角的囚禁。冰冷的监控设备、精密的能量压制器、以及系统性的审讯构成了日常。他们视主角为研究对象和潜在的新兵源。"
+<%_ } else { _%>
+  enemy_context:
+    handler: "组织生化研究部门"
+    description: "被捕获后交由组织的实验部门管控。研究员们利用魔物的体液、触手器官和生物技术对他进行改造——既是惩罚，也是将他重塑为组织兵器的实验。"
+<%_ } _%>
+
+  freedom_guidance:
+    instruction: "主角的【自由度】由后台根据侵蚀度自动调整。请基于当前等级和主导者的特性，描绘他在基地中的活动范围与遭遇："
+<%_ if (corruption < 30) { _%>
+    current_tier: "严密监禁"
+<%_ if (enemyType === '小英雄') { _%>
+    description: "被<%= bossName %>亲自锁在私人囚室中。他时常前来'看望'，带着危险的温柔回忆两人昔日的战斗，用同类的口吻讲述堕落后的解放感。"
+<%_ } else if (enemyType === '人类') { _%>
+    description: "被关在科技感十足的监牢中，电子镣铐监测每一丝能量波动。定时接受审讯和药物注射，干部们用数据和话术剥开他的一层层防线。"
+<%_ } else { _%>
+    description: "被锁在实验舱中，触手拘束具伸缩自如。研究员远程监控着一切，定时释放催情气体测试他的耐受度。被动承受各种生物实验。"
+<%_ } _%>
+<%_ } else if (corruption < 60) { _%>
+    current_tier: "有限活动"
+<%_ if (enemyType === '小英雄') { _%>
+    description: "<%= bossName %>允许他在自己管辖的区域活动——但视线从不离开。偶尔被带到他的私人起居室，在看似日常的对话中被灌输堕落的价值观。"
+<%_ } else if (enemyType === '人类') { _%>
+    description: "被允许在指定区域活动——食堂、训练场。干部偶尔以近乎平和的语气交谈，试探他的心理状态。基地广播循环播放着组织的教义。"
+<%_ } else { _%>
+    description: "在实验区有限的范围内走动，经过一排排关押着其他魔物和实验体的培养舱。偶尔被要求协助安抚新捕获的魔物——他天生能与它们'沟通'。"
+<%_ } _%>
+<%_ } else if (corruption < 80) { _%>
+    current_tier: "半自由"
+<%_ if (enemyType === '小英雄') { _%>
+    description: "<%= bossName %>带他旁观自己的任务。夕阳下并肩坐在天台边缘，他展示着'自由堕落后'的生活有多精彩——被敬畏、被簇拥、被所有怪人当作偶像。"
+<%_ } else if (enemyType === '人类') { _%>
+    description: "被允许参与组织的低阶行动——巡逻、押送、甚至旁听干部会议。干部们暗示'你其实很适合这里'，调教转为色气的引导而非强迫。"
+<%_ } else { _%>
+    description: "不再需要拘束具——他已经能自然地与基地中的低阶魔物和平共处。研究员饶有兴致地观察着这种罕见的'共存样本'。"
+<%_ } _%>
+<%_ } else { _%>
+    current_tier: "信任囚徒"
+<%_ if (enemyType === '小英雄') { _%>
+    description: "两人几乎已是搭档。<%= bossName %>公开称他为'我的人'，带他参与核心任务。在深夜的私密房间里，最后的仪式正在逼近——不是药物，而是情感上彻底的同化。"
+<%_ } else if (enemyType === '人类') { _%>
+    description: "可以自由出入基地大部分区域。干部们以'准干部'的眼光看待他，开始交予独立任务。洗脑仪式在高级审讯室中进行——不是折磨，而是以'入职典礼'的仪式感呈现。"
+<%_ } else { _%>
+    description: "某种微妙的变化发生了——看到魔物时，他的第一反应不再是想战斗，而是下意识想去理解对方。研究员指出这是长期共处后的'心理同化现象'。这种感觉让他恐惧，但恐惧本身越来越轻。"
+<%_ } _%>
+<%_ } _%>
+
+  brainwash_stage_guidance:
+    instruction: "根据当前洗脑进度，主角的意志抵抗和精神状态呈现明显差异："
+<%_ if (brainProgress < 20) { _%>
+    current_stage: "初入囚笼"
+    demeanor: "眼神坚毅，言语中仍充满对正义的坚守。对洗脑处于完全排斥的状态。"
+    narrative_hint: "重点描绘他如何在被侮辱时紧咬牙关、在被注射药物后努力维持清醒。"
+<%_ } else if (brainProgress < 50) { _%>
+    current_stage: "意志磨损"
+    demeanor: "开始出现恍惚的片刻。反驳看守的语气不再如初般坚定，偶尔露出疲惫和迷茫。"
+    narrative_hint: "描绘他在独处时反复默念自己名字和英雄名以保持自我的挣扎，以及在昏迷中无意识说出组织教条的惊恐。"
+<%_ } else if (brainProgress < 80) { _%>
+    current_stage: "信念裂缝"
+    demeanor: "开始对自己的信仰产生怀疑。偶尔主动与看守交谈，甚至有心情在有限活动时与怪人开些无关紧要的玩笑。"
+    narrative_hint: "重点描绘他在听到'英雄无用论'时下意识想反驳、却发现喉咙发不出声音的瞬间。"
+<%_ } else { _%>
+    current_stage: "摇摇欲坠"
+    demeanor: "时常无意识地重复组织的口号。看到怪人时不再恐惧，反而产生淡淡的亲近感。正义的念头变得遥远而模糊。"
+    narrative_hint: "描绘他被带去看望其他囚犯时，内心产生'他们是对的'的危险想法，以及他拼命用仅存的理智与之对抗的内心撕裂。"
+<%_ } _%>
+
+  escape_guidance:
+    instruction: "玩家可以采取行动尝试逃脱。根据行动的合理性和当前自由度，使用 delta 适当增加逃脱进度。当逃脱进度达到 100% 时，后台会推送「囚禁逃脱事件」——那将是一次必定成功的逃脱窗口。"
+    delta_example: |
+      { "op": "delta", "path": "/主角/囚禁状态/逃脱进度", "value": 15 }
+
+  special_restrictions:
+    - "禁止主角突然觉醒超强力量秒杀全场逃走。逃脱应当是周密的计划和逐步的执行。"
+    - "日系成人作品的囚禁美学：拘束具是色情的皮质绑带，审讯是快感与痛觉的交替，药物注射伴随迷离的恍惚与性兴奋。"
+    - "严禁通过 JSONPatch 直接修改进程/阶段脱离本阶段（除非玩家成功逃脱）！"
+<%_ }} _%>

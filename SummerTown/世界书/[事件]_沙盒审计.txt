@@ -1,0 +1,33 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  
+  if (events['沙盒审计事件']) {
+_%>
+# 后台事件：沙盒推演审计
+sandbox_audit:
+  event_name: "周期性沙盒审计"
+  priority: "BACKGROUND"
+  purpose: "对全体NPC进行一次完整的沙盒推演，防止长期未互动角色的状态冻结。"
+
+  audit_logic: 
+    rule: "严格按照【全局动态档案-NPC沙盒推演细则】的完整闭环，逐位重新评估所有NPC。"
+    emphasis: 
+      - "本次为全量审计，不适用'无变化则跳过'的日常规则。必须为每位NPC重新走一遍完整的推演闭环。"
+      - "尤其关注那些多回合未与主角互动、日常推演中可能被反复跳过的NPC。"
+      - "若某NPC的当前动作或地点已持续异常久（动作超2小时、地点超3回合），即使目标未完成也应考虑自然切换。"
+      - "不能忽略与主角互动中的前台角色，也要完整推演更新状态。"
+
+  output_requirement:
+    - "审计结果以 JSONPatch 形式输出在回复底部的 <UpdateVariable> 块中。"
+    - "正文继续推进主角剧情，不被审计打断。"
+
+  mandatory_data_sync:
+    instruction: "审计完成后，务必移除本事件标记，防止下回合重复触发："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/沙盒审计事件" }
+      ]
+---
+<%_ } } _%>

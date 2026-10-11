@@ -1,0 +1,43 @@
+<%_{
+const stat = getvar('stat_data');
+const phase = _.get(stat, '进程.阶段', '');
+const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+const oppName = _.get(stat, '擂台状态.对手名字', '对手');
+const mcScore = _.get(stat, '主角.擂台数据.擂台积分', 0);
+const oppScore = _.get(stat, '擂台状态.对手积分', 0);
+const mcRank = _.get(stat, '主角.擂台数据.擂台段位', '公猪');
+const oppRank = _.get(stat, '擂台状态.对手段位', '公猪');
+const mcOdds = _.get(stat, '擂台状态.主角赔率', 1.0);
+const oppOdds = _.get(stat, '擂台状态.对手赔率', 1.0);
+const lowerIsFirst = mcScore <= oppScore;
+const firstAttacker = lowerIsFirst ? '主角' : '对手';
+_%>
+<%_ if (phase !== '性斗入场') { _%>
+<%_ } else { _%>
+# 系统指令: 性斗入场
+
+system_handler:
+  phase: "性斗入场"
+  first_attacker: "<%= firstAttacker %>（积分较低的一方率先进攻）"
+
+  narrative_guidance:
+    - "描写双方从擂台两侧通道入场的场景——霓虹灯柱在两人身上扫过、全息投影将擂台代号和赔率以巨大字体投向空中（<%= alias %><%= mcOdds %> vs <%= oppName %><%= oppOdds %>）、擂台地板传来的低频震动。用色情的目光打量和描述双方的身材和外貌——<%= alias %>的身体线条在霓虹灯下的呈现、<%= oppName %>入场时观众对他身体特定部位的起哄和直白的评论。"
+    - "描写主持人的介绍——用夸张下流的措辞介绍双方的段位、战绩和性器官特征，把擂台气氛推向狂热。主持人的每一句话都像是在叫床和念赔率之间找到了某种粗俗的平衡。"
+    - "描写观众席的反应——狂热的欢呼、下流的起哄、此起彼伏的口哨和直白的喊话。有人在喊赔率、有人在喊让谁先被操到射、有人已经在观众席上互相摸着对方的胯。擂台还没开始，空气已经稠得像精液。"
+    - "描写<%= alias %>和<%= oppName %>在擂台两端互喷下流的赛前垃圾话——直白的挑衅、对彼此身体和性技水平的嘲讽、关于准备把对方榨成性奴的宣言。垃圾话的内容结合两人的段位和历史交手记录，观众随之起哄。"
+    - "根据积分差（<%= alias %><%= mcScore %>分 vs <%= oppName %><%= oppScore %>分），积分较低的一方——<%= lowerIsFirst ? alias : oppName %>——将率先进攻。描写主持人在宣布这一信息时全场爆发出的起哄声。"
+    - "叙事收束在主持人高举双臂宣布性斗开始的瞬间——擂台顶部最大号的霓虹灯柱同时熄灭再亮起、主持人吼出开始的口令、全息屏幕切换成第一回合的计数面板。在这一刻戛然而止。"
+
+  prohibitions:
+    - "严禁直接进入性斗回合——叙事必须在主持人宣布开始的瞬间停止。"
+    - "严禁描写任何一方的进攻动作——入场阶段没有性交。"
+
+  mandatory_data_sync:
+    instruction: "切换至性斗阶段，设置当前进攻方和回合数。"
+    patch_code: |
+      [
+        {"op":"replace","path":"/进程/阶段","value":"性斗阶段"},
+        {"op":"replace","path":"/擂台状态/当前进攻方","value":"<%= firstAttacker %>"},
+        {"op":"replace","path":"/擂台状态/当前擂台回合数","value":0}
+      ]
+<%_ } }_%>

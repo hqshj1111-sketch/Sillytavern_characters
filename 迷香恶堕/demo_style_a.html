@@ -1,0 +1,3324 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>迷香恶堕 · 状态面板</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* === 核心主题变量字典 (按视角动态注入) === */
+      :root {
+        --bg-main: #0c0915;
+        --theme-primary: #a855f7;
+        --theme-primary-glow: #b347ea;
+        --theme-primary-dim: rgba(168, 85, 247, 0.15);
+        --theme-secondary: #ec4899;
+        --theme-secondary-glow: #ff2d95;
+        --theme-secondary-dim: rgba(236, 72, 153, 0.15);
+        --theme-accent: #ffd08a;
+
+        --glass-deep: rgba(14, 10, 24, 0.85);
+        --glass-card: rgba(22, 16, 38, 0.7);
+        --glass-inner: rgba(30, 22, 52, 0.55);
+        --border-subtle: rgba(255, 255, 255, 0.08);
+        --border-theme: rgba(168, 85, 247, 0.35);
+
+        --text-main: #e2d9f3;
+        --text-sub: #9487b0;
+        --text-dim: #63577d;
+
+        --cyan-glow: #00d4ff;
+        --green-glow: #4ade80;
+        --red-alert: #f43f5e;
+      }
+
+      body.theme-mashiro {
+        --bg-main: #080d1a;
+        --theme-primary: #3b82f6;
+        --theme-primary-glow: #60a5fa;
+        --theme-primary-dim: rgba(59, 130, 246, 0.18);
+        --theme-secondary: #00d4ff;
+        --theme-secondary-glow: #38bdf8;
+        --theme-secondary-dim: rgba(0, 212, 255, 0.15);
+        --border-theme: rgba(59, 130, 246, 0.4);
+        --text-main: #dbeafe;
+        --text-sub: #93c5fd;
+        --glass-deep: rgba(10, 16, 32, 0.85);
+        --glass-card: rgba(16, 26, 48, 0.7);
+      }
+
+      body.theme-taiyo {
+        --bg-main: #141108;
+        --theme-primary: #eab308;
+        --theme-primary-glow: #facc15;
+        --theme-primary-dim: rgba(234, 179, 8, 0.18);
+        --theme-secondary: #f97316;
+        --theme-secondary-glow: #fb923c;
+        --theme-secondary-dim: rgba(249, 115, 22, 0.15);
+        --border-theme: rgba(234, 179, 8, 0.4);
+        --text-main: #fef08a;
+        --text-sub: #fde047;
+        --glass-deep: rgba(24, 20, 10, 0.85);
+        --glass-card: rgba(36, 30, 16, 0.7);
+      }
+
+      body.theme-riku {
+        --bg-main: #140e0a;
+        --theme-primary: #f59e0b;
+        --theme-primary-glow: #fbbf24;
+        --theme-primary-dim: rgba(245, 158, 11, 0.18);
+        --theme-secondary: #10b981;
+        --theme-secondary-glow: #34d399;
+        --theme-secondary-dim: rgba(16, 185, 129, 0.15);
+        --border-theme: rgba(245, 158, 11, 0.4);
+        --text-main: #fef3c7;
+        --text-sub: #fde68a;
+        --glass-deep: rgba(24, 18, 12, 0.85);
+        --glass-card: rgba(38, 28, 18, 0.7);
+      }
+
+      body.theme-yuuha {
+        --bg-main: #160a0d;
+        --theme-primary: #f97316;
+        --theme-primary-glow: #fb923c;
+        --theme-primary-dim: rgba(249, 115, 22, 0.18);
+        --theme-secondary: #ec4899;
+        --theme-secondary-glow: #f472b6;
+        --theme-secondary-dim: rgba(236, 72, 153, 0.15);
+        --border-theme: rgba(249, 115, 22, 0.4);
+        --text-main: #ffedd5;
+        --text-sub: #fed7aa;
+        --glass-deep: rgba(26, 12, 16, 0.85);
+        --glass-card: rgba(40, 18, 24, 0.7);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: transparent;
+        color: var(--text-main);
+        font-family: "Noto Sans SC", sans-serif;
+        font-size: 13px;
+        line-height: 1.45;
+        padding: 8px 4px;
+        display: flex;
+        justify-content: center;
+        transition: background 0.5s ease;
+      }
+
+      #mxe-container {
+        width: 880px;
+        max-width: 100%;
+        position: relative;
+      }
+
+      /* Glass Wrapper */
+      .glass-panel-outer {
+        background: var(--glass-deep);
+        backdrop-filter: blur(24px) saturate(150%);
+        -webkit-backdrop-filter: blur(24px) saturate(150%);
+        border: 1px solid var(--border-theme);
+        border-radius: 20px;
+        padding: 6px;
+        box-shadow:
+          0 16px 50px rgba(0, 0, 0, 0.6),
+          inset 0 0 30px rgba(255, 255, 255, 0.02);
+        position: relative;
+        transition: border-color 0.5s ease;
+      }
+      .glass-panel-outer::before {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: 15%;
+        right: 15%;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--theme-primary-glow),
+          var(--theme-secondary-glow),
+          transparent
+        );
+        border-radius: 50%;
+        transition: background 0.5s ease;
+      }
+      .glass-panel-inner {
+        background: var(--glass-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      /* Header Area */
+      .header-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 18px;
+        background: rgba(0, 0, 0, 0.35);
+        border-bottom: 1px solid var(--border-subtle);
+        gap: 10px;
+      }
+      .brand-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .brand-icon {
+        font-size: 1.3rem;
+        filter: drop-shadow(0 0 8px var(--theme-primary-glow));
+      }
+      .brand-name {
+        font-family: "Rajdhani", sans-serif;
+        font-weight: 700;
+        font-size: 1.15rem;
+        letter-spacing: 2px;
+        color: #fff;
+      }
+      .brand-name span {
+        color: var(--theme-secondary-glow);
+      }
+
+      .env-pills {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        font-family: "Rajdhani", "JetBrains Mono", sans-serif;
+        font-size: 0.8rem;
+      }
+      .pill {
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-sub);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .pill-time {
+        color: var(--theme-accent);
+        font-weight: 700;
+      }
+      .pill-period {
+        background: var(--theme-primary-dim);
+        border-color: var(--border-theme);
+        color: var(--theme-primary-glow);
+        font-weight: 600;
+      }
+      .pill-alert {
+        background: rgba(244, 63, 94, 0.12);
+        border-color: rgba(244, 63, 94, 0.3);
+        color: var(--red-alert);
+      }
+
+      /* Perspective Indicator & Switch Button */
+      .perspective-wrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .perspective-pill {
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: linear-gradient(
+          135deg,
+          var(--theme-primary-dim),
+          var(--theme-secondary-dim)
+        );
+        border: 1px solid var(--border-theme);
+        color: #fff;
+        font-family: "Noto Sans SC", sans-serif;
+        font-size: 0.78rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .perspective-switch-btn {
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border-theme);
+        color: var(--theme-accent);
+        font-family: "Noto Sans SC", sans-serif;
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s ease;
+      }
+      .perspective-switch-btn:hover {
+        background: var(--theme-primary-dim);
+        color: #fff;
+        border-color: var(--theme-secondary-glow);
+        transform: translateY(-1px);
+        box-shadow: 0 0 10px var(--theme-primary-glow);
+      }
+
+      /* Tabs Bar */
+      .tab-bar {
+        display: flex;
+        gap: 6px;
+        padding: 10px 16px 4px;
+        background: rgba(0, 0, 0, 0.2);
+      }
+      .tab-btn {
+        flex: 1;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-sub);
+        font-family: "Rajdhani", sans-serif;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        cursor: pointer;
+        border-radius: 12px;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .tab-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-main);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+      .tab-btn.active {
+        color: #fff;
+        background: linear-gradient(
+          135deg,
+          var(--theme-primary-dim),
+          var(--theme-secondary-dim)
+        );
+        border: 1px solid var(--border-theme);
+        box-shadow:
+          0 0 16px var(--theme-primary-dim),
+          inset 0 0 10px rgba(255, 255, 255, 0.06);
+      }
+
+      /* Tab Panels */
+      .tab-panel {
+        display: none;
+        padding: 16px;
+        animation: fadeIn 0.35s ease;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Card Box */
+      .card-box {
+        background: var(--glass-inner);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        padding: 14px;
+        position: relative;
+        margin-bottom: 12px;
+      }
+      .card-title-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: "Rajdhani", sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        color: var(--theme-primary-glow);
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* Overview Layout */
+      .overview-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 12px;
+      }
+      @media (max-width: 720px) {
+        .overview-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .status-line {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 6px;
+        font-size: 0.82rem;
+      }
+      .status-lbl {
+        color: var(--text-sub);
+        min-width: 80px;
+        font-family: "Rajdhani", sans-serif;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+      }
+      .status-val {
+        color: var(--text-main);
+        font-weight: 500;
+        word-break: break-word;
+      }
+      .status-val.highlight {
+        color: var(--theme-accent);
+        font-weight: 600;
+      }
+
+      /* Progress Gauge with Liquid Shimmer */
+      .progress-group {
+        margin-bottom: 8px;
+      }
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.72rem;
+        margin-bottom: 3px;
+      }
+      .progress-title {
+        font-family: "Rajdhani", sans-serif;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .progress-val-text {
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 700;
+        font-size: 0.76rem;
+      }
+      .bar-track {
+        height: 7px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        position: relative;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 0.6s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      @keyframes shimmerSweep {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(200%);
+        }
+      }
+      .bar-fill::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.4),
+          transparent
+        );
+        transform: translateX(-100%);
+        animation: shimmerSweep 3s infinite linear;
+      }
+      .bar-fill::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        background: #fff;
+        opacity: 0.5;
+        filter: blur(2px);
+      }
+      .bar-miasma {
+        background: linear-gradient(90deg, #7e22ce, #a855f7, #c084fc);
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+      }
+      .bar-slime {
+        background: linear-gradient(90deg, #be185d, #ec4899, #f472b6);
+        box-shadow: 0 0 10px rgba(236, 72, 153, 0.4);
+      }
+      .bar-favor {
+        background: linear-gradient(90deg, #db2777, #f43f5e, #fb7185);
+        box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+      }
+      .bar-collapse {
+        background: linear-gradient(90deg, #b91c1c, #ef4444, #f87171);
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+      }
+
+      /* Hero Cards Grid in Tab 2 */
+      .heroes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 14px;
+      }
+      @media (max-width: 480px) {
+        .heroes-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @keyframes corruptPulse {
+        0%,
+        100% {
+          box-shadow:
+            0 4px 20px rgba(168, 85, 247, 0.25),
+            inset 0 0 15px rgba(236, 72, 153, 0.1);
+          border-color: rgba(168, 85, 247, 0.4);
+        }
+        50% {
+          box-shadow:
+            0 6px 30px rgba(236, 72, 153, 0.5),
+            inset 0 0 25px rgba(168, 85, 247, 0.25);
+          border-color: rgba(236, 72, 153, 0.7);
+        }
+      }
+
+      .hero-card {
+        background: var(--glass-inner);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        padding: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+      .hero-card.corrupt-pulse {
+        animation: corruptPulse 3.5s infinite ease-in-out;
+      }
+      .hero-card:hover {
+        border-color: var(--border-theme);
+        background: rgba(40, 28, 65, 0.65);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+      .hero-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+      }
+      .hero-name-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .hero-avatar-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: linear-gradient(
+          135deg,
+          var(--theme-primary-dim),
+          var(--theme-secondary-dim)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        border: 1px solid var(--border-subtle);
+      }
+      .hero-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #fff;
+      }
+      .hero-alias {
+        font-size: 0.72rem;
+        color: var(--text-sub);
+        font-family: "Rajdhani", sans-serif;
+      }
+      .badge-group {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .badge {
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        font-family: "Rajdhani", sans-serif;
+      }
+      .badge-justice {
+        background: rgba(0, 212, 255, 0.12);
+        color: var(--cyan-glow);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+      }
+      .badge-inside {
+        background: rgba(255, 208, 138, 0.12);
+        color: var(--theme-accent);
+        border: 1px solid rgba(255, 208, 138, 0.3);
+      }
+      .badge-fallen {
+        background: rgba(244, 63, 94, 0.15);
+        color: var(--red-alert);
+        border: 1px solid rgba(244, 63, 94, 0.3);
+      }
+
+      .badge-unknown {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-sub);
+        border: 1px solid var(--border-subtle);
+      }
+      .badge-doubt {
+        background: rgba(255, 208, 138, 0.1);
+        color: var(--theme-accent);
+        border: 1px solid rgba(255, 208, 138, 0.2);
+      }
+      .badge-revealed {
+        background: rgba(236, 72, 153, 0.15);
+        color: var(--theme-secondary-glow);
+        border: 1px solid rgba(236, 72, 153, 0.3);
+      }
+
+      .hero-stats-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin: 6px 0 4px;
+      }
+      .mini-bar-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .mini-bar-lbl {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.68rem;
+        color: var(--text-sub);
+      }
+
+      .hero-relation-strip {
+        font-size: 0.74rem;
+        color: var(--text-sub);
+        padding: 4px 8px;
+        background: rgba(236, 72, 153, 0.08);
+        border-radius: 6px;
+        margin-bottom: 6px;
+        border-left: 2px solid var(--theme-secondary-glow);
+      }
+
+      .hero-details-list {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        border-left: 2px solid var(--theme-primary-glow);
+      }
+      .hero-detail-item {
+        display: flex;
+        gap: 6px;
+      }
+      .hero-detail-k {
+        color: var(--text-sub);
+        flex-shrink: 0;
+        min-width: 60px;
+        font-size: 0.72rem;
+      }
+      .hero-detail-v {
+        color: var(--text-main);
+      }
+
+      /* Quick 2x2 Action Grid */
+      .action-grid-2x2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-subtle);
+      }
+      @media (max-width: 560px) {
+        .action-grid-2x2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .act-btn {
+        padding: 9px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-main);
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 6px;
+        text-align: left;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+      .act-btn:hover {
+        background: var(--theme-primary-dim);
+        border-color: var(--border-theme);
+        color: #fff;
+        box-shadow: 0 0 14px var(--theme-primary-dim);
+        transform: translateY(-1px);
+      }
+      .act-btn.dynamic-btn {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.04),
+          var(--theme-primary-dim)
+        );
+        border: 1px solid var(--border-theme);
+      }
+      .act-btn.dynamic-btn:hover {
+        background: linear-gradient(
+          135deg,
+          var(--theme-primary-dim),
+          var(--theme-secondary-dim)
+        );
+        border-color: var(--theme-secondary-glow);
+        box-shadow: 0 0 16px var(--theme-secondary-dim);
+      }
+      .act-num {
+        font-family: "Rajdhani", sans-serif;
+        font-weight: 700;
+        color: var(--theme-accent);
+        background: rgba(0, 0, 0, 0.35);
+        padding: 1px 6px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+      }
+
+      /* === 迷香恶堕 内心独白与生理动态黑幕 (Spoiler Reveal) === */
+      .mxe-spoiler {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 6px;
+        margin: 2px 3px;
+        padding: 2px 8px;
+        border-radius: 8px;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        vertical-align: middle;
+        cursor: pointer;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .mxe-spoiler .mxe-spoiler-tag {
+        font-family: "Rajdhani", "Noto Sans SC", sans-serif;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 1px 6px;
+        border-radius: 6px;
+        flex-shrink: 0;
+        letter-spacing: 0.5px;
+        line-height: 1.4;
+        margin-top: 2px;
+        transition: all 0.3s ease;
+        user-select: none;
+      }
+      .mxe-spoiler .mxe-spoiler-text {
+        color: transparent;
+        background: rgba(0, 0, 0, 0.92);
+        border-radius: 4px;
+        padding: 1px 4px;
+        filter: blur(5px);
+        transition: all 0.35s ease;
+        user-select: none;
+        white-space: pre-wrap;
+        word-break: break-word;
+        flex: 1 1 auto;
+        line-height: 1.6;
+      }
+      .mxe-spoiler-thought {
+        background: rgba(20, 14, 34, 0.85);
+        border: 1px solid rgba(168, 85, 247, 0.35);
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+      }
+      .mxe-spoiler-thought .mxe-spoiler-tag {
+        background: rgba(168, 85, 247, 0.2);
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.4);
+      }
+      .mxe-spoiler-thought:hover,
+      .mxe-spoiler-thought:active {
+        background: rgba(36, 22, 58, 0.95);
+        border-color: #a855f7;
+        box-shadow: 0 0 16px rgba(168, 85, 247, 0.35);
+      }
+      .mxe-spoiler-thought:hover .mxe-spoiler-text,
+      .mxe-spoiler-thought:active .mxe-spoiler-text {
+        color: #ffd08a;
+        background: transparent;
+        filter: blur(0);
+        user-select: text;
+      }
+      .mxe-spoiler-physio {
+        background: rgba(30, 10, 20, 0.85);
+        border: 1px solid rgba(244, 63, 94, 0.35);
+        box-shadow: 0 0 10px rgba(244, 63, 94, 0.15);
+      }
+      .mxe-spoiler-physio .mxe-spoiler-tag {
+        background: rgba(244, 63, 94, 0.2);
+        color: #fb7185;
+        border: 1px solid rgba(244, 63, 94, 0.4);
+      }
+      .mxe-spoiler-physio:hover,
+      .mxe-spoiler-physio:active {
+        background: rgba(50, 16, 32, 0.95);
+        border-color: #f43f5e;
+        box-shadow: 0 0 16px rgba(244, 63, 94, 0.35);
+      }
+      .mxe-spoiler-physio:hover .mxe-spoiler-text,
+      .mxe-spoiler-physio:active .mxe-spoiler-text {
+        color: #ff9ebb;
+        background: transparent;
+        filter: blur(0);
+        user-select: text;
+      }
+
+      /* Modal Popup Core */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(12px);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 16px;
+      }
+      .modal-overlay.show {
+        display: flex;
+      }
+      .modal-card {
+        background: rgba(16, 11, 28, 0.98);
+        border: 1px solid var(--border-theme);
+        border-radius: 20px;
+        width: 860px;
+        max-width: 98vw;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 22px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
+        position: relative;
+        animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes modalPop {
+        from {
+          opacity: 0;
+          transform: scale(0.95) translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+      .modal-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: rgba(255, 255, 255, 0.06);
+        border: none;
+        color: var(--text-sub);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-close:hover {
+        color: #fff;
+        background: var(--theme-secondary-dim);
+      }
+
+      .modal-split-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+      @media (max-width: 760px) {
+        .modal-split-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .modal-sec-title {
+        font-family: "Rajdhani", sans-serif;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: var(--theme-primary-glow);
+        margin: 10px 0 5px;
+        padding-bottom: 3px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .m-row {
+        display: flex;
+        gap: 6px;
+        padding: 2px 0;
+        font-size: 0.77rem;
+        line-height: 1.4;
+      }
+      .m-lbl {
+        color: var(--text-sub);
+        min-width: 65px;
+        font-size: 0.73rem;
+        flex-shrink: 0;
+      }
+      .m-val {
+        color: var(--text-main);
+      }
+
+      /* Schedule Multi-level Box */
+      .schedule-box {
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 0.75rem;
+        line-height: 1.45;
+        margin-top: 4px;
+      }
+      .schedule-sec {
+        margin-bottom: 6px;
+      }
+      .schedule-sec:last-child {
+        margin-bottom: 0;
+      }
+      .schedule-sec-title {
+        font-weight: 700;
+        color: var(--theme-accent);
+        margin-bottom: 3px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.73rem;
+      }
+      .schedule-period-row {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        gap: 4px;
+        padding: 1px 0;
+        font-size: 0.73rem;
+      }
+      .p-tag {
+        color: var(--text-sub);
+        font-family: "Rajdhani", sans-serif;
+        font-weight: 600;
+      }
+
+      /* Teammate Relation Bar item in modal */
+      .tm-rel-item {
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin-bottom: 6px;
+      }
+      .tm-rel-hd {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.76rem;
+        margin-bottom: 3px;
+      }
+      .tm-rel-desc {
+        font-size: 0.72rem;
+        color: var(--text-sub);
+        line-height: 1.35;
+      }
+
+      /* Perspective Switcher Modal Exclusive */
+      .perspective-modal-card {
+        width: 560px;
+        max-width: 95vw;
+      }
+      .p-select-bar {
+        display: flex;
+        gap: 6px;
+        margin: 12px 0 14px;
+        flex-wrap: wrap;
+      }
+      .p-choice-btn {
+        flex: 1;
+        min-width: 90px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-sub);
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+      }
+      .p-choice-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-main);
+      }
+      .p-choice-btn.active {
+        background: linear-gradient(
+          135deg,
+          var(--theme-primary-dim),
+          var(--theme-secondary-dim)
+        );
+        border-color: var(--theme-primary-glow);
+        color: #fff;
+        box-shadow: 0 0 12px var(--theme-primary-dim);
+      }
+      .p-preview-box {
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 16px;
+      }
+      .modal-btn-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      .modal-btn-cancel {
+        padding: 8px 18px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-sub);
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
+      .modal-btn-confirm {
+        padding: 8px 20px;
+        border-radius: 10px;
+        background: linear-gradient(
+          135deg,
+          var(--theme-primary),
+          var(--theme-secondary)
+        );
+        border: 1px solid var(--theme-primary-glow);
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 0 14px var(--theme-primary-dim);
+      }
+      .modal-btn-confirm:hover {
+        filter: brightness(1.15);
+        transform: translateY(-1px);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mxe-container">
+      <div class="glass-panel-outer">
+        <div class="glass-panel-inner" id="mxe-render-root">
+          <!-- Dynamic Rendered Content -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 视角切换弹窗 (Perspective Switch Modal) ================= -->
+    <div
+      class="modal-overlay"
+      id="perspective-modal"
+      onclick="if (event.target === this) closePerspectiveModal();"
+    >
+      <div class="modal-card perspective-modal-card">
+        <button class="modal-close" onclick="closePerspectiveModal()">✕</button>
+
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+          "
+        >
+          <span style="font-size: 1.3rem">🎭</span>
+          <div style="font-size: 1.05rem; font-weight: 700; color: #fff">
+            第一人称视角切换控制台
+          </div>
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-sub)">
+          选择要切换的角色。确认后将自动更新视角变量并向酒馆发送第一人称视角叙事指令。
+        </div>
+
+        <!-- Role Choice Buttons -->
+        <div class="p-select-bar" id="p-modal-choices">
+          <button
+            class="p-choice-btn active"
+            onclick="selectModalPerspective('怪人主角')"
+          >
+            😈 怪人主角
+          </button>
+          <button
+            class="p-choice-btn"
+            onclick="selectModalPerspective('夜守真白')"
+          >
+            🐱 夜守真白
+          </button>
+          <button
+            class="p-choice-btn"
+            onclick="selectModalPerspective('虎渡太阳')"
+          >
+            🐯 虎渡太阳
+          </button>
+          <button
+            class="p-choice-btn"
+            onclick="selectModalPerspective('槌谷陆')"
+          >
+            🐶 槌谷陆
+          </button>
+          <button
+            class="p-choice-btn"
+            onclick="selectModalPerspective('风祭优羽')"
+          >
+            🦊 风祭优羽
+          </button>
+        </div>
+
+        <!-- Selected Role Live State Preview Box -->
+        <div class="p-preview-box" id="p-modal-preview">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Actions -->
+        <div class="modal-btn-row">
+          <button class="modal-btn-cancel" onclick="closePerspectiveModal()">
+            取消
+          </button>
+          <button
+            class="modal-btn-confirm"
+            onclick="confirmPerspectiveSwitch()"
+          >
+            ✔ 确定切换视角并发送指令
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= 英雄全量静态/私密/恶堕详情弹窗 (Modal) ================= -->
+    <div
+      class="modal-overlay"
+      id="hero-modal"
+      onclick="if (event.target === this) closeModal();"
+    >
+      <div class="modal-card" id="modal-body">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <script>
+      // === 工具安全取值函数 ===
+      var safeStr = function (v, fallback) {
+        return v !== undefined && v !== null && v !== "" && v !== "待设定"
+          ? String(v)
+          : fallback || "---";
+      };
+      var safeNum = function (v) {
+        return v !== undefined && v !== null && !isNaN(Number(v))
+          ? Number(v)
+          : 0;
+      };
+      var pct = function (cur, max) {
+        if (!max || max <= 0) return 0;
+        return Math.min(100, Math.round((cur / max) * 100));
+      };
+
+      // === 全局状态缓存 ===
+      window._mxeCurrentData = null;
+      window._mxeActiveTab = "tab-dynamic";
+      window._mxeModalSelectedRole = "怪人主角";
+      window._mxeDynamicActions = null;
+
+      // === 动态行动选项解析函数 ===
+      function parseActionOptionsText(rawText) {
+        if (!rawText) return null;
+        var lines = rawText
+          .split("\n")
+          .map(function (l) {
+            return l.trim();
+          })
+          .filter(function (l) {
+            return l.length > 0;
+          });
+
+        var parsed = [];
+        lines.forEach(function (line) {
+          var clean = line
+            .replace(
+              /^(\d+[\.、\s\-\)]+|[-*•]\s+|[\[【(（]\d+[\]】)）]\s*|[①②③④⑤⑥⑦⑧⑨⑩]\s*)/,
+              "",
+            )
+            .trim();
+          if (clean) {
+            parsed.push({
+              text: clean,
+              cmd: clean,
+            });
+          }
+        });
+        return parsed.length > 0 ? parsed.slice(0, 4) : null;
+      }
+
+      function getRawActionsFromDOM() {
+        try {
+          var hostMes = document.closest ? document.closest(".mes_text") : null;
+          if (!hostMes && window.parent && window.parent.document) {
+            var allMes = window.parent.document.querySelectorAll(".mes_text");
+            if (allMes.length > 0) hostMes = allMes[allMes.length - 1];
+          }
+          if (hostMes) {
+            var actEl = hostMes.querySelector(".mxe-raw-actions");
+            if (actEl && actEl.textContent.trim()) {
+              return parseActionOptionsText(actEl.textContent.trim());
+            }
+            var rawMatch = hostMes.textContent.match(
+              /<行动选项>\s*([\s\S]*?)\s*<\/行动选项>/i,
+            );
+            if (rawMatch && rawMatch[1].trim()) {
+              return parseActionOptionsText(rawMatch[1].trim());
+            }
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      const PERSPECTIVE_CONFIGS = {
+        怪人主角: {
+          themeClass: "",
+          icon: "🔮",
+          prefix: "迷香恶堕",
+          suffix: "· CORRUPTION",
+          roleTitle: "怪人真身 · 最高杰作",
+          actions: [
+            { text: "💨 释放雄臭 (低浓度)", cmd: "释放雄臭·低浓度" },
+            { text: "🧪 布置欲望之泥", cmd: "布置欲望之泥" },
+            { text: "🐱 伪装搭话·夜守真白", cmd: "伪装搭话·夜守真白" },
+            { text: "🏢 潜入正义联盟基地", cmd: "潜入正义联盟基地" },
+          ],
+        },
+        夜守真白: {
+          themeClass: "theme-mashiro",
+          icon: "🐱",
+          prefix: "夜守真白",
+          suffix: "· NIGHT SHADOW",
+          roleTitle: "队长 · 夜影 (猫)",
+          actions: [
+            { text: "📖 深入研读战术笔记", cmd: "研读战术笔记" },
+            { text: "👃 仔细轻嗅衣领上的微弱气味", cmd: "轻嗅身上的气味" },
+            { text: "📞 致电挚友·虎渡太阳", cmd: "致电虎渡太阳" },
+            { text: "🚶 出门前往街区巡逻", cmd: "前往街角巡逻" },
+          ],
+        },
+        虎渡太阳: {
+          themeClass: "theme-taiyo",
+          icon: "🐯",
+          prefix: "虎渡太阳",
+          suffix: "· WHITE THUNDER",
+          roleTitle: "近战格斗 · 白雷 (白虎)",
+          actions: [
+            { text: "🏋️ 挑战极限卧推加练", cmd: "挑战极限卧推" },
+            { text: "🚿 前往淋浴间偷偷自慰解决", cmd: "去淋浴间自慰" },
+            { text: "🥩 前往商业街大吃烤肉", cmd: "去商业街吃烤肉" },
+            { text: "🐱 找队长真白比试切磋", cmd: "找真白比试" },
+          ],
+        },
+        槌谷陆: {
+          themeClass: "theme-riku",
+          icon: "🐶",
+          prefix: "槌谷陆",
+          suffix: "· WINDCHASER",
+          roleTitle: "嗅觉安抚 · 追风 (犬)",
+          actions: [
+            { text: "🐕 安抚喂养流浪小狗", cmd: "安抚流浪动物" },
+            { text: "🙈 找角落整理顶起的裤裆", cmd: "整理裤裆" },
+            { text: "🍱 为小英雄队友准备便当", cmd: "准备便当" },
+            { text: "🌲 去山镜湖散步吹风", cmd: "去山镜湖散步" },
+          ],
+        },
+        风祭优羽: {
+          themeClass: "theme-yuuha",
+          icon: "🦊",
+          prefix: "风祭优羽",
+          suffix: "· PHANTOM FOX",
+          roleTitle: "幻术闪避 · 幻狐 (狐狸)",
+          actions: [
+            { text: "😴 翻个身继续晒太阳打盹", cmd: "继续打盹" },
+            { text: "🎮 拿出掌机玩解谜游戏", cmd: "玩解谜游戏" },
+            { text: "♨️ 去后山温泉度假村泡汤", cmd: "去温泉度假村" },
+            { text: "✨ 释放幻术逗弄路人", cmd: "释放幻术恶作剧" },
+          ],
+        },
+      };
+
+      // === 核心渲染总调度 ===
+      function renderPanelWithData(data) {
+        if (!data) return;
+        window._mxeCurrentData = data;
+
+        var curPerspective = safeStr(data.视角, "怪人主角");
+        var cfg =
+          PERSPECTIVE_CONFIGS[curPerspective] ||
+          PERSPECTIVE_CONFIGS["怪人主角"];
+
+        // Update Body Theme
+        document.body.className = cfg.themeClass;
+
+        var proc = data.进程 || {};
+        var ymd = safeStr(proc.当前日期, "20360810");
+        var formattedDate =
+          ymd.length === 8
+            ? ymd.slice(0, 4) +
+              "年" +
+              parseInt(ymd.slice(4, 6)) +
+              "月" +
+              parseInt(ymd.slice(6, 8)) +
+              "日"
+            : ymd;
+        var timeStr = safeStr(proc.当前时间, "1700");
+        var formattedTime =
+          timeStr.length === 4
+            ? timeStr.slice(0, 2) + ":" + timeStr.slice(2, 4)
+            : timeStr;
+        var daysCount = safeNum(proc.累计天数) || 1;
+        var period = safeStr(proc.当前时段, "晚");
+        var weather = safeStr(proc.当前天气, "晴");
+        var monsterEventOccurred = proc.今日怪人事件是否发生 === true;
+
+        var root = document.getElementById("mxe-render-root");
+        if (!root) return;
+
+        var html = "";
+
+        // 1. Header Bar
+        html += '<div class="header-bar">';
+        html += '  <div class="brand-title">';
+        html += '    <span class="brand-icon">' + cfg.icon + "</span>";
+        html +=
+          '    <div class="brand-name"><span>' +
+          cfg.prefix +
+          "</span> <span>" +
+          cfg.suffix +
+          "</span></div>";
+        html += "  </div>";
+        html += '  <div class="env-pills">';
+        html +=
+          '    <div class="pill">📅 ' +
+          formattedDate +
+          " Day " +
+          daysCount +
+          "</div>";
+        html +=
+          '    <div class="pill pill-time">⏳ ' + formattedTime + "</div>";
+        html +=
+          '    <div class="pill pill-period">' +
+          (period === "晚" || period === "夜" ? "🌆" : "☀️") +
+          " " +
+          period +
+          " · " +
+          weather +
+          "</div>";
+        html +=
+          '    <div class="pill pill-alert">⚠️ 怪人事件: ' +
+          (monsterEventOccurred ? "已平息" : "待发生") +
+          "</div>";
+        html += '    <div class="perspective-wrap">';
+        html +=
+          '      <div class="perspective-pill">🎭 视角: ' +
+          curPerspective +
+          "</div>";
+        html +=
+          '      <button class="perspective-switch-btn" onclick="openPerspectiveModal()">🔀 切换视角</button>';
+        html += "    </div>";
+        html += "  </div>";
+        html += "</div>";
+
+        // 2. Tab Bar
+        var activeTab = window._mxeActiveTab || "tab-dynamic";
+        html += '<div class="tab-bar">';
+        html +=
+          '  <button class="tab-btn ' +
+          (activeTab === "tab-dynamic" ? "active" : "") +
+          '" onclick="switchTab(\'tab-dynamic\')">⚡ 综合态势</button>';
+        html +=
+          '  <button class="tab-btn ' +
+          (activeTab === "tab-heroes" ? "active" : "") +
+          '" onclick="switchTab(\'tab-heroes\')">💜 恶堕监视 (4)</button>';
+        html +=
+          '  <button class="tab-btn ' +
+          (activeTab === "tab-protagonist" ? "active" : "") +
+          '" onclick="switchTab(\'tab-protagonist\')">🎭 主角与伪装</button>';
+        html +=
+          '  <button class="tab-btn ' +
+          (activeTab === "tab-org" ? "active" : "") +
+          '" onclick="switchTab(\'tab-org\')">🏢 组织与秘密</button>';
+        html += "</div>";
+
+        // ================= Tab 1: 综合态势 =================
+        html +=
+          '<div class="tab-panel ' +
+          (activeTab === "tab-dynamic" ? "active" : "") +
+          '" id="tab-dynamic">';
+        html += '  <div class="overview-grid">';
+
+        // Perspective Home Dynamic Card
+        var pLoc = "",
+          pAct = "",
+          pPhysio = "",
+          pCloth = "";
+        if (curPerspective === "怪人主角") {
+          var mst = data.怪人主角 || {};
+          var mstSt = mst.当前状态 || {};
+          pLoc =
+            safeStr(mstSt.当前区域, "港区") +
+            " · " +
+            safeStr(mstSt.当前地点, "码头公寓");
+          pAct = safeStr(mstSt.当前动作, "调配欲望之泥试剂，准备外出行动");
+          pPhysio = safeStr(
+            mstSt.当前生理动态,
+            "腺体微热、雄臭浓度可调控、欲望充盈",
+          );
+          pCloth = safeStr(mstSt.当前着装, "常服（港区工装外套、防风短裤）");
+        } else {
+          var heroObj = (data.小英雄 && data.小英雄[curPerspective]) || {};
+          var heroSt = heroObj.当前状态 || {};
+          pLoc =
+            safeStr(heroSt.当前区域, "学院区") +
+            " · " +
+            safeStr(heroSt.当前地点, "图书馆");
+          pAct = safeStr(heroSt.当前动作, "正在翻阅战术手册");
+          pPhysio = safeStr(heroSt.当前生理动态, "身心正常");
+          pCloth = safeStr(heroSt.当前着装, safeStr(heroObj.常服, "日常校服"));
+        }
+
+        html += '    <div class="card-box">';
+        html += '      <div class="card-title-bar">';
+        html +=
+          "        <span>CURRENT PERSPECTIVE · " +
+          curPerspective +
+          " (" +
+          cfg.roleTitle +
+          ")</span>";
+        html +=
+          '        <span style="color:var(--theme-accent);">' +
+          pLoc +
+          "</span>";
+        html += "      </div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">当前动作</span><span class="status-val">' +
+          pAct +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">生理动态</span><span class="status-val highlight">' +
+          pPhysio +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">当前着装</span><span class="status-val">' +
+          pCloth +
+          "</span></div>";
+        html += "    </div>";
+
+        // Justice League Base Card
+        var base = (data.组织 && data.组织.正义联盟) || {};
+        var baseCollapse = safeNum(base.基地沦陷进度);
+        var baseAtmosphere = safeStr(base.基地当前氛围, "日常");
+        var baseAlert = safeStr(base.警戒等级, "日常");
+        var fallenList = base.已恶堕角色 || [];
+        var fallenText =
+          fallenList.length > 0
+            ? fallenList.join("、")
+            : "暂无（小英雄 0/4，高层 0/4）";
+        var isTotalFallen = base.是否彻底沦陷 === true;
+
+        html += '    <div class="card-box">';
+        html += '      <div class="card-title-bar">';
+        html += "        <span>JUSTICE ALLIANCE · 基地沦陷态势</span>";
+        html +=
+          '        <span style="color:var(--cyan-glow);">警戒等级: ' +
+          baseAlert +
+          "</span>";
+        html += "      </div>";
+        html += '      <div class="progress-group">';
+        html += '        <div class="progress-header">';
+        html +=
+          '          <span class="progress-title" style="color:var(--red-alert)">🚨 基地沦陷进度</span>';
+        html +=
+          '          <span class="progress-val-text" style="color:var(--red-alert)">' +
+          baseCollapse +
+          "%</span>";
+        html += "        </div>";
+        html +=
+          '        <div class="bar-track"><div class="bar-fill bar-collapse" style="width:' +
+          baseCollapse +
+          '%"></div></div>';
+        html += "      </div>";
+        html +=
+          '      <div class="status-line" style="margin-top:8px;"><span class="status-lbl">基地当前氛围</span><span class="status-val">' +
+          baseAtmosphere +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">已恶堕名单</span><span class="status-val" style="color:' +
+          (fallenList.length > 0 ? "var(--red-alert)" : "var(--text-dim)") +
+          '">' +
+          fallenText +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">是否彻底沦陷</span><span class="status-val" style="color:' +
+          (isTotalFallen ? "var(--red-alert)" : "var(--green-glow)") +
+          '">' +
+          (isTotalFallen
+            ? "已彻底沦陷 (沦为怪人所有物)"
+            : "否 (正义联盟正常运转)") +
+          "</span></div>";
+        html += "    </div>";
+
+        html += "  </div>";
+
+        // 2x2 Action Buttons (Dynamic AI-generated <行动选项> with perspective presets fallback)
+        var currentActions =
+          window._mxeDynamicActions || getRawActionsFromDOM();
+        var isDynamicActions = currentActions && currentActions.length > 0;
+        var actionList = isDynamicActions ? currentActions : cfg.actions;
+
+        html += '  <div class="action-grid-2x2" id="mxe-action-grid">';
+        actionList.forEach(function (a, idx) {
+          var prefixNum = isDynamicActions
+            ? '<span class="act-num">' + (idx + 1) + "</span> "
+            : "";
+          var escapedCmd = (a.cmd || a.text || "").replace(/'/g, "\\'");
+          var escapedTitle = (a.text || "").replace(/"/g, "&quot;");
+          html +=
+            '    <button class="act-btn' +
+            (isDynamicActions ? " dynamic-btn" : "") +
+            '" onclick="sendCmd(\'' +
+            escapedCmd +
+            '\')" title="' +
+            escapedTitle +
+            '">' +
+            prefixNum +
+            a.text +
+            "</button>";
+        });
+        html += "  </div>";
+        html += "</div>";
+
+        // ================= Tab 2: 恶堕监视 =================
+        var heroes = data.小英雄 || {};
+        html +=
+          '<div class="tab-panel ' +
+          (activeTab === "tab-heroes" ? "active" : "") +
+          '" id="tab-heroes">';
+        html += '  <div class="heroes-grid">';
+
+        var heroKeys = [
+          { key: "夜守真白", icon: "🐱", roleKey: "mashiro" },
+          { key: "虎渡太阳", icon: "🐯", roleKey: "taiyo" },
+          { key: "槌谷陆", icon: "🐶", roleKey: "riku" },
+          { key: "风祭优羽", icon: "🦊", roleKey: "yuuha" },
+        ];
+
+        heroKeys.forEach(function (item) {
+          var h = heroes[item.key] || {};
+          var baseInfo = h.基本信息 || {};
+          var hSt = h.当前状态 || {};
+          var cSt = h.恶堕状态 || {};
+          var miasma = safeNum(cSt.气味沉溺度);
+          var miasmaStage = safeStr(cSt.气味沉溺阶段, "无感");
+          var slime = safeNum(cSt.欲望之泥污染度);
+          var faction = safeStr(cSt.阵营归属, "正义");
+
+          var relToProtagonist = (h.人际关系 && h.人际关系.怪人主角) || {};
+          var favor = safeNum(relToProtagonist.好感度);
+          var relDesc = safeStr(
+            relToProtagonist.当前关系,
+            "尚未谋面，并不知道对方的存在",
+          );
+          var disguiseCog = safeStr(relToProtagonist.身份认知, "未知");
+
+          // Pulsing aura condition
+          var isPulsing = miasma >= 60 || slime >= 50;
+
+          // Faction badge class
+          var fBadgeCls =
+            faction === "彻底恶堕"
+              ? "badge-fallen"
+              : faction === "内应"
+                ? "badge-inside"
+                : "badge-justice";
+          // Cognition badge class
+          var cBadgeCls =
+            disguiseCog === "已识破"
+              ? "badge-revealed"
+              : disguiseCog === "怀疑"
+                ? "badge-doubt"
+                : "badge-unknown";
+
+          html +=
+            '    <div class="hero-card ' +
+            (isPulsing ? "corrupt-pulse" : "") +
+            '" onclick="openHeroModal(\'' +
+            item.roleKey +
+            "')\">";
+          html += '      <div class="hero-header">';
+          html += '        <div class="hero-name-wrap">';
+          html +=
+            '          <div class="hero-avatar-icon">' + item.icon + "</div>";
+          html += "          <div>";
+          html +=
+            '            <div class="hero-name">' +
+            safeStr(baseInfo.姓名, item.key) +
+            "</div>";
+          html +=
+            '            <div class="hero-alias">' +
+            safeStr(baseInfo.英雄名) +
+            " · " +
+            safeStr(baseInfo.物种) +
+            " · " +
+            safeNum(baseInfo.年龄) +
+            "岁</div>";
+          html += "          </div>";
+          html += "        </div>";
+          html += '        <div class="badge-group">';
+          html +=
+            '          <span class="badge ' +
+            fBadgeCls +
+            '">' +
+            faction +
+            "</span>";
+          html +=
+            '          <span class="badge ' +
+            cBadgeCls +
+            '">伪装' +
+            disguiseCog +
+            "</span>";
+          html += "        </div>";
+          html += "      </div>";
+
+          // Row 1: Dual Bars
+          html += '      <div class="hero-stats-row">';
+          html += '        <div class="mini-bar-wrap">';
+          html +=
+            '          <div class="mini-bar-lbl"><span>💜 气味沉溺 (' +
+            miasmaStage +
+            ")</span><span style=\"font-family:'JetBrains Mono'\">" +
+            miasma +
+            "/100</span></div>";
+          html +=
+            '          <div class="bar-track"><div class="bar-fill bar-miasma" style="width:' +
+            miasma +
+            '%"></div></div>';
+          html += "        </div>";
+          html += '        <div class="mini-bar-wrap">';
+          html +=
+            '          <div class="mini-bar-lbl"><span>🖤 欲望之泥污染</span><span style="font-family:\'JetBrains Mono\'">' +
+            slime +
+            "/100</span></div>";
+          html +=
+            '          <div class="bar-track"><div class="bar-fill bar-slime" style="width:' +
+            slime +
+            '%"></div></div>';
+          html += "        </div>";
+          html += "      </div>";
+
+          // Row 2: Relation to Protagonist
+          html +=
+            '      <div class="hero-relation-strip">💬 <strong>对主角认知:</strong> ' +
+            relDesc +
+            "</div>";
+
+          // Row 4: Status Box
+          var heroGoal = safeStr(hSt.当前目标, "暂无明确目标");
+          var heroGoalEst = safeNum(hSt.当前目标预计用时);
+          var goalText =
+            heroGoalEst > 0
+              ? heroGoal + " (预计 " + heroGoalEst + " 分钟)"
+              : heroGoal;
+
+          html += '      <div class="hero-details-list">';
+          html +=
+            '        <div class="hero-detail-item"><span class="hero-detail-k">📍 区域地点:</span><span class="hero-detail-v">' +
+            safeStr(hSt.当前区域) +
+            " · " +
+            safeStr(hSt.当前地点) +
+            "</span></div>";
+          html +=
+            '        <div class="hero-detail-item"><span class="hero-detail-k">🎬 实时动作:</span><span class="hero-detail-v">' +
+            safeStr(hSt.当前动作) +
+            "</span></div>";
+          html +=
+            '        <div class="hero-detail-item"><span class="hero-detail-k">👔 当前着装:</span><span class="hero-detail-v">' +
+            safeStr(hSt.当前着装, safeStr(h.常服)) +
+            "</span></div>";
+          html +=
+            '        <div class="hero-detail-item"><span class="hero-detail-k">💓 生理动态:</span><span class="hero-detail-v">' +
+            safeStr(hSt.当前生理动态) +
+            "</span></div>";
+          html +=
+            '        <div class="hero-detail-item"><span class="hero-detail-k">🎯 当前目标:</span><span class="hero-detail-v">' +
+            goalText +
+            "</span></div>";
+          var heroOrgTask = safeStr(h.怪人组织任务, "无");
+          if (
+            heroOrgTask &&
+            heroOrgTask !== "无" &&
+            (faction === "内应" || faction === "彻底恶堕")
+          ) {
+            html +=
+              '        <div class="hero-detail-item" style="border-top:1px dashed rgba(168,85,247,0.3); padding-top:2px; margin-top:2px;"><span class="hero-detail-k" style="color:#d8b4fe;">💀 组织任务:</span><span class="hero-detail-v" style="font-weight:600; color:#f0abfc;">' +
+              heroOrgTask +
+              "</span></div>";
+          }
+          html += "      </div>";
+
+          html += "    </div>";
+        });
+
+        html += "  </div>";
+        html += "</div>";
+
+        // ================= Tab 3: 主角与伪装 =================
+        var mst = data.怪人主角 || {};
+        var mstBase = mst.基本信息 || {};
+        var mstFace = mst.相貌特征 || {};
+        var mstBody = mst.身体 || {};
+        var mstSt = mst.当前状态 || {};
+        var mstSched = mst.日程 || {};
+
+        html +=
+          '<div class="tab-panel ' +
+          (activeTab === "tab-protagonist" ? "active" : "") +
+          '" id="tab-protagonist">';
+        html += '  <div class="overview-grid">';
+
+        // Monster True Form
+        html += '    <div class="card-box">';
+        html +=
+          '      <div class="card-title-bar"><span>MONSTER TRUE FORM · 怪人真身变量</span><span style="color:var(--theme-primary-glow);">怪人组织「最高杰作」</span></div>';
+        html +=
+          '      <div class="status-line"><span class="status-lbl">真实姓名</span><span class="status-val">' +
+          safeStr(mstBase.姓名, "夜野") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">怪人代号</span><span class="status-val highlight">' +
+          safeStr(mst.代号, "迷香之主") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">物种</span><span class="status-val">' +
+          safeStr(mstBase.物种, "雄性黑狼") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">年龄</span><span class="status-val">' +
+          safeStr(mstBase.年龄, "23 岁") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">性格特质</span><span class="status-val">' +
+          safeStr(mstBase.性格, "沉稳狡黠、对博士忠诚、支配欲强") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">脸型五官</span><span class="status-val">' +
+          safeStr(mstFace.脸型五官, "深邃野性的狼系面容，金色凌厉瞳孔") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">毛发</span><span class="status-val">' +
+          safeStr(mstFace.毛发, "漆黑顺滑短毛，胸颈部鬃毛茂密深沉") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">身高</span><span class="status-val">' +
+          safeStr(mstBody.身高, "186 cm") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">体态</span><span class="status-val">' +
+          safeStr(mstBody.体态, "魁梧匀称、极具压迫感") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">肌肉线条</span><span class="status-val">' +
+          safeStr(mstBody.肌肉线条, "深刻健美，胸肌与腹肌块垒分明") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">背景设定</span><span class="status-val">' +
+          safeStr(
+            mstBase.背景,
+            "被博士看中并改造为“最高杰作”，对博士忠心耿耿",
+          ) +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">长期目标</span><span class="status-val highlight">' +
+          safeStr(mst.长期目标, "逐步将小英雄们全部恶堕") +
+          "</span></div>";
+        html += "    </div>";
+
+        // Disguise Citizen
+        var mstGoal = safeStr(
+          mstSt.当前目标,
+          "搜集小英雄情报并布置欲望之泥陷阱",
+        );
+        var mstGoalEst = safeNum(mstSt.当前目标预计用时);
+        var mstGoalText =
+          mstGoalEst > 0
+            ? mstGoal + " (预计 " + mstGoalEst + " 分钟)"
+            : mstGoal;
+
+        html += '    <div class="card-box">';
+        html +=
+          '      <div class="card-title-bar"><span>DISGUISE & CURRENT · 伪装身份与当前动态</span><span style="color:var(--cyan-glow);">市民掩护网络</span></div>';
+        html +=
+          '      <div class="status-line"><span class="status-lbl">伪装姓名</span><span class="status-val">' +
+          safeStr(mst.伪装姓名, "叶野夜") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">伪装职业</span><span class="status-val">' +
+          safeStr(mst.伪装职业, "港区物流仓库管理员 / 街角咖啡店学徒") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">安全住处</span><span class="status-val">' +
+          safeStr(
+            mst.住处,
+            "港区的码头公寓——独居，陈设简单，方便深夜外出行动与掩人耳目",
+          ) +
+          "</span></div>";
+        html +=
+          '      <div class="status-line" style="margin-top:8px;"><span class="status-lbl">当前区域</span><span class="status-val">' +
+          safeStr(mstSt.当前区域, "港区") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">当前地点</span><span class="status-val">' +
+          safeStr(mstSt.当前地点, "码头公寓") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">当前动作</span><span class="status-val">' +
+          safeStr(
+            mstSt.当前动作,
+            "以伪装身份调配欲望之泥试剂，准备深夜外出行动",
+          ) +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">当前生理</span><span class="status-val highlight">' +
+          safeStr(mstSt.当前生理动态, "腺体微热、雄臭浓度可调控、欲望充盈") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">当前着装</span><span class="status-val">' +
+          safeStr(mstSt.当前着装, "常服（港区工装外套、防风短裤）") +
+          "</span></div>";
+        html +=
+          '      <div class="status-line"><span class="status-lbl">当前目标</span><span class="status-val">' +
+          mstGoalText +
+          "</span></div>";
+
+        // Schedule Box
+        var sMorn = (
+          mstSched.上午 || ["接受博士身体维护", "处理日常事务"]
+        ).join(" / ");
+        var sAft = (mstSched.下午 || ["搜集小英雄情报", "城中活动"]).join(
+          " / ",
+        );
+        var sEve = (mstSched.晚上 || ["向博士汇报", "正义联盟周边侦察"]).join(
+          " / ",
+        );
+        var sNgt = (mstSched.深夜 || ["休息", "布置欲望之泥"]).join(" / ");
+
+        html += '      <div class="schedule-box" style="margin-top:10px;">';
+        html +=
+          '        <div class="schedule-sec-title">📋 怪人日常固定日程表</div>';
+        html +=
+          '        <div class="schedule-period-row"><span class="p-tag">上午</span><span>' +
+          sMorn +
+          "</span></div>";
+        html +=
+          '        <div class="schedule-period-row"><span class="p-tag">下午</span><span>' +
+          sAft +
+          "</span></div>";
+        html +=
+          '        <div class="schedule-period-row"><span class="p-tag">晚上</span><span>' +
+          sEve +
+          "</span></div>";
+        html +=
+          '        <div class="schedule-period-row"><span class="p-tag">深夜</span><span>' +
+          sNgt +
+          "</span></div>";
+        html += "      </div>";
+        html += "    </div>";
+
+        html += "  </div>";
+        html += "</div>";
+
+        // ================= Tab 4: 组织与秘密 =================
+        var org = data.组织 || {};
+        var doctor = (org.怪人组织 && org.怪人组织.博士) || {};
+        var leaders = (org.正义联盟 && org.正义联盟.关键人物) || {};
+
+        html +=
+          '<div class="tab-panel ' +
+          (activeTab === "tab-org" ? "active" : "") +
+          '" id="tab-org">';
+        html += '  <div class="card-box">';
+        html +=
+          '    <div class="card-title-bar"><span>JUSTICE ALLIANCE LEADERS · 正义联盟关键高层与暗堕秘密</span><span style="color:var(--theme-accent);">4 位高层档案</span></div>';
+        html +=
+          '    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:12px;">';
+
+        // Leaders List
+        var lList = [
+          {
+            key: "铁壁",
+            icon: "🐕",
+            color: "#3b82f6",
+            d: leaders["铁壁"] || {},
+          },
+          {
+            key: "疾风",
+            icon: "🐆",
+            color: "#f97316",
+            d: leaders["疾风"] || {},
+          },
+          {
+            key: "钢鳞",
+            icon: "🐊",
+            color: "#10b981",
+            d: leaders["钢鳞"] || {},
+          },
+          {
+            key: "温掌",
+            icon: "🐻",
+            color: "#00d4ff",
+            d: leaders["温掌"] || {},
+          },
+        ];
+
+        lList.forEach(function (l) {
+          html +=
+            '      <div style="background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; border-left:3px solid ' +
+            l.color +
+            ';">';
+          html +=
+            '        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
+          html +=
+            '          <span style="font-weight:700; color:#fff; font-size:0.9rem;">' +
+            l.icon +
+            " " +
+            l.key +
+            "（" +
+            safeStr(l.d.身份, "干部") +
+            "）</span>";
+          html +=
+            '          <span class="badge badge-justice">' +
+            safeStr(l.d.物种) +
+            " · 未恶堕</span>";
+          html += "        </div>";
+          html +=
+            '        <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:4px;">';
+          html +=
+            "          <strong>外貌:</strong> " +
+            safeStr(l.d.外貌身材) +
+            "<br>";
+          html += "          <strong>表面:</strong> " + safeStr(l.d.描述);
+          html += "        </div>";
+          html +=
+            '        <div style="background:rgba(236,72,153,0.1); border-radius:6px; padding:6px 8px; font-size:0.72rem; color:var(--text-main); line-height:1.4;">';
+          html +=
+            '          <strong style="color:var(--theme-secondary-glow)">🔒 隐藏秘密:</strong> ' +
+            safeStr(l.d.秘密);
+          html += "        </div>";
+          html += "      </div>";
+        });
+
+        html += "    </div>";
+        html += "  </div>";
+
+        // Doctor Chief
+        html +=
+          '  <div class="card-box" style="border-left: 3px solid var(--theme-secondary-glow);">';
+        html +=
+          '    <div class="card-title-bar"><span>MONSTER ORGANIZATION CHIEF · 怪人首席科学家「博士」</span><span style="color:var(--theme-secondary-glow);">真名: 理人 (' +
+          safeStr(doctor.物种, "雄兔") +
+          ")</span></div>";
+        html +=
+          '    <div style="font-size:0.8rem; line-height:1.6; color:var(--text-main);">';
+        html +=
+          "      <strong>外貌身材:</strong> " +
+          safeStr(doctor.外貌身材) +
+          "<br>";
+        html +=
+          "      <strong>性格定位:</strong> " + safeStr(doctor.描述) + "<br>";
+        html +=
+          '      <div style="margin-top:6px; background:rgba(236,72,153,0.08); border-radius:6px; padding:8px 10px;">';
+        html +=
+          '        <strong style="color:var(--theme-secondary-glow)">🔒 隐藏心迹:</strong> ' +
+          safeStr(doctor.秘密);
+        html += "      </div>";
+        html += "    </div>";
+        html += "  </div>";
+        html += "</div>";
+
+        root.innerHTML = html;
+      }
+
+      // === 视角切换弹窗逻辑 ===
+      function openPerspectiveModal() {
+        var modal = document.getElementById("perspective-modal");
+        if (!modal) return;
+        var curPerspective =
+          (window._mxeCurrentData && window._mxeCurrentData.视角) || "怪人主角";
+        selectModalPerspective(curPerspective);
+        modal.classList.add("show");
+      }
+
+      function closePerspectiveModal() {
+        var modal = document.getElementById("perspective-modal");
+        if (modal) modal.classList.remove("show");
+      }
+
+      function selectModalPerspective(roleName) {
+        window._mxeModalSelectedRole = roleName;
+
+        // Update buttons active class
+        document.querySelectorAll(".p-choice-btn").forEach(function (btn) {
+          btn.classList.toggle("active", btn.textContent.includes(roleName));
+        });
+
+        var previewBox = document.getElementById("p-modal-preview");
+        if (!previewBox) return;
+
+        var data = window._mxeCurrentData || {};
+        var pHtml = "";
+
+        if (roleName === "怪人主角") {
+          var mst = data.怪人主角 || {};
+          var mstBase = mst.基本信息 || {};
+          var mstSt = mst.当前状态 || {};
+          pHtml +=
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">';
+          pHtml +=
+            '  <strong style="color:#fff; font-size:0.95rem;">😈 怪人主角 (' +
+            safeStr(mstBase.姓名, "夜野") +
+            " / " +
+            safeStr(mst.代号, "迷香之主") +
+            ")</strong>";
+          pHtml +=
+            "  <span style=\"color:var(--theme-primary-glow); font-size:0.75rem; font-family:'Rajdhani'; font-weight:700;\">" +
+            safeStr(mstBase.物种, "雄性黑狼") +
+            " · " +
+            safeStr(mstBase.年龄, "23岁") +
+            "</span>";
+          pHtml += "</div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">📍 当前位置:</span><span class="m-val">' +
+            safeStr(mstSt.当前区域, "港区") +
+            " · " +
+            safeStr(mstSt.当前地点, "码头公寓") +
+            "</span></div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">🎬 实时动作:</span><span class="m-val">' +
+            safeStr(mstSt.当前动作, "以伪装身份调配欲望之泥试剂") +
+            "</span></div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">👔 当前着装:</span><span class="m-val">' +
+            safeStr(mstSt.当前着装, "港区工装外套、防风短裤") +
+            "</span></div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">💓 生理动态:</span><span class="m-val" style="color:var(--theme-accent); font-weight:600;">' +
+            safeStr(mstSt.当前生理动态, "腺体微热、雄臭可调控") +
+            "</span></div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">🎯 长期目标:</span><span class="m-val">' +
+            safeStr(mst.长期目标, "逐步将小英雄们全部恶堕") +
+            "</span></div>";
+        } else {
+          var hero = (data.小英雄 && data.小英雄[roleName]) || {};
+          var base = hero.基本信息 || {};
+          var hSt = hero.当前状态 || {};
+          var cSt = hero.恶堕状态 || {};
+          var miasma = safeNum(cSt.气味沉溺度);
+          var slime = safeNum(cSt.欲望之泥污染度);
+
+          pHtml +=
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">';
+          pHtml +=
+            '  <strong style="color:#fff; font-size:0.95rem;">' +
+            (roleName === "夜守真白"
+              ? "🐱"
+              : roleName === "虎渡太阳"
+                ? "🐯"
+                : roleName === "槌谷陆"
+                  ? "🐶"
+                  : "🦊") +
+            " " +
+            roleName +
+            " (" +
+            safeStr(base.英雄名) +
+            ")</strong>";
+          pHtml +=
+            "  <span style=\"color:var(--cyan-glow); font-size:0.75rem; font-family:'Rajdhani'; font-weight:700;\">" +
+            safeStr(base.物种) +
+            " · " +
+            safeNum(base.年龄) +
+            "岁</span>";
+          pHtml += "</div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">📍 当前位置:</span><span class="m-val">' +
+            safeStr(hSt.当前区域, "学院区") +
+            " · " +
+            safeStr(hSt.当前地点, "图书馆") +
+            "</span></div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">🎬 实时动作:</span><span class="m-val">' +
+            safeStr(hSt.当前动作, "正在整理战术手册") +
+            "</span></div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">👔 当前着装:</span><span class="m-val">' +
+            safeStr(hSt.当前着装, safeStr(hero.常服, "日常校服")) +
+            "</span></div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">💓 生理动态:</span><span class="m-val" style="color:var(--theme-accent); font-weight:600;">' +
+            safeStr(hSt.当前生理动态, "身心正常") +
+            "</span></div>";
+          pHtml +=
+            '<div class="m-row"><span class="m-lbl">🎯 长期目标:</span><span class="m-val">' +
+            safeStr(hero.长期目标, "保护队友") +
+            "</span></div>";
+
+          pHtml +=
+            '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.06);">';
+          pHtml += '  <div class="mini-bar-wrap">';
+          pHtml +=
+            '    <div class="mini-bar-lbl"><span>💜 气味沉溺 (' +
+            safeStr(cSt.气味沉溺阶段, "无感") +
+            ")</span><span>" +
+            miasma +
+            "/100</span></div>";
+          pHtml +=
+            '    <div class="bar-track"><div class="bar-fill bar-miasma" style="width:' +
+            miasma +
+            '%"></div></div>';
+          pHtml += "  </div>";
+          pHtml += '  <div class="mini-bar-wrap">';
+          pHtml +=
+            '    <div class="mini-bar-lbl"><span>🖤 欲望之泥污染</span><span>' +
+            slime +
+            "/100</span></div>";
+          pHtml +=
+            '    <div class="bar-track"><div class="bar-fill bar-slime" style="width:' +
+            slime +
+            '%"></div></div>';
+          pHtml += "  </div>";
+          pHtml += "</div>";
+        }
+
+        previewBox.innerHTML = pHtml;
+      }
+
+      function confirmPerspectiveSwitch() {
+        var targetRole = window._mxeModalSelectedRole || "怪人主角";
+        closePerspectiveModal();
+
+        // 1. 同步直接修改酒馆当前会话的底层 MVU / TavernHelper 变量
+        try {
+          var Mvu =
+            window.Mvu ||
+            (window.parent && window.parent.Mvu) ||
+            (window.top && window.top.Mvu);
+          if (Mvu) {
+            if (typeof Mvu.getMvuData === "function") {
+              try {
+                var mData =
+                  Mvu.getMvuData({ type: "message", message_id: "latest" }) ||
+                  {};
+                if (mData.stat_data) {
+                  mData.stat_data.视角 = targetRole;
+                } else {
+                  mData.视角 = targetRole;
+                }
+                if (typeof Mvu.replaceMvuData === "function") {
+                  Mvu.replaceMvuData(mData, {
+                    type: "message",
+                    message_id: "latest",
+                  });
+                }
+              } catch (e) {
+                console.warn("[迷香恶堕] Mvu message replace error:", e);
+              }
+
+              try {
+                var cData = Mvu.getMvuData({ type: "chat" }) || {};
+                if (cData.stat_data) {
+                  cData.stat_data.视角 = targetRole;
+                } else {
+                  cData.视角 = targetRole;
+                }
+                if (typeof Mvu.replaceMvuData === "function") {
+                  Mvu.replaceMvuData(cData, { type: "chat" });
+                }
+              } catch (e) {
+                console.warn("[迷香恶堕] Mvu chat replace error:", e);
+              }
+            }
+          }
+
+          var fnGetVars =
+            window.getVariables ||
+            (window.parent && window.parent.getVariables) ||
+            (window.top && window.top.getVariables);
+          var fnReplaceVars =
+            window.replaceVariables ||
+            (window.parent && window.parent.replaceVariables) ||
+            (window.top && window.top.replaceVariables);
+          if (
+            typeof fnGetVars === "function" &&
+            typeof fnReplaceVars === "function"
+          ) {
+            try {
+              var chatVars = fnGetVars({ type: "chat" }) || {};
+              if (chatVars.stat_data) {
+                chatVars.stat_data.视角 = targetRole;
+                fnReplaceVars(chatVars, { type: "chat" });
+              }
+            } catch (e) {}
+            try {
+              var msgVars =
+                fnGetVars({ type: "message", message_id: "latest" }) || {};
+              if (msgVars.stat_data) {
+                msgVars.stat_data.视角 = targetRole;
+                fnReplaceVars(msgVars, {
+                  type: "message",
+                  message_id: "latest",
+                });
+              }
+            } catch (e) {}
+          }
+
+          var stCtx =
+            (typeof SillyTavern !== "undefined" && SillyTavern.getContext
+              ? SillyTavern.getContext()
+              : null) ||
+            (window.parent &&
+            window.parent.SillyTavern &&
+            window.parent.SillyTavern.getContext
+              ? window.parent.SillyTavern.getContext()
+              : null) ||
+            (window.top &&
+            window.top.SillyTavern &&
+            window.top.SillyTavern.getContext
+              ? window.top.SillyTavern.getContext()
+              : null);
+          if (stCtx && stCtx.chat && stCtx.chat.length > 0) {
+            var lastMsg = stCtx.chat[stCtx.chat.length - 1];
+            if (lastMsg) {
+              if (lastMsg.data && lastMsg.data.stat_data) {
+                lastMsg.data.stat_data.视角 = targetRole;
+              } else if (lastMsg.stat_data) {
+                lastMsg.stat_data.视角 = targetRole;
+              }
+              if (typeof stCtx.saveChat === "function") {
+                stCtx.saveChat();
+              }
+            }
+          }
+        } catch (e) {
+          console.error("[迷香恶堕] 同步修改底层视角变量失败:", e);
+        }
+
+        // 2. 立即刷新本地状态栏前端 UI
+        if (window._mxeCurrentData) {
+          window._mxeCurrentData.视角 = targetRole;
+          renderPanelWithData(window._mxeCurrentData);
+        }
+
+        // 3. 将视角切换指令填入酒馆输入框并触发发送
+        var promptText =
+          "切换至" +
+          targetRole +
+          "的第一人称视角，请延续该角色当前动作和目标，参考视角叙事系统规则继续演绎";
+        try {
+          var ta =
+            (window.parent &&
+              window.parent.document.querySelector("#send_textarea")) ||
+            document.querySelector("textarea");
+          if (ta) {
+            ta.value = promptText;
+            ta.dispatchEvent(new Event("input", { bubbles: true }));
+
+            var sendBtn =
+              (window.parent &&
+                (window.parent.document.querySelector("#send_but") ||
+                  window.parent.document.querySelector("#send_button"))) ||
+              document.querySelector("#send_but");
+            if (sendBtn) {
+              sendBtn.click();
+            } else {
+              ta.focus();
+            }
+          }
+        } catch (e) {
+          console.error("[迷香恶堕] 发送视角切换指令失败:", e);
+        }
+      }
+
+      // === 小英雄全量静态/私密详情数据字典 ===
+      const FULL_HERO_DATA = {
+        mashiro: {
+          name: "夜守真白",
+          alias: "夜影",
+          species: "猫",
+          age: 14,
+          personality:
+            "乖巧可靠、成绩优秀的优等生。责任感强，对队友关怀备至。表面冷静，内心敏感。",
+          background:
+            "正义联盟招募的少年英雄，担任队伍队长。与虎渡太阳是青梅竹马，从小一起长大。",
+          ability: "战术指挥、高速机动力、夜视",
+          longTermGoal: "保护好每一位队友，证明自己是称职的队长",
+          face: "小巧圆润面型，大直立耳，大而圆的琥珀色眼睛，粉色小鼻子，戴黑色圆框眼镜",
+          fur: "深灰色→黑色短毛，腹部/脸颊内侧渐变为浅灰白，短而密、光滑有光泽",
+          height: "155 cm",
+          bodyType: "纤细",
+          muscle: "不明显",
+          sexOrgans: {
+            penis: "未发育完全的粉嫩小肉棒，薄包皮半包裹，龟头尖尖弯弯",
+            anus: "粉嫩紧致无毛",
+            nipples: "小，粉色",
+            bodyHair: "生殖器周围毛发稀疏柔软",
+          },
+          sexRecord: {
+            penisVirgin: "处子 (未破)",
+            anusVirgin: "处子 (未破)",
+            sexLife:
+              "从未自慰过。对性毫无概念，身体也几乎没有过勃起经验。是全员最“干净”的一个。",
+          },
+          fetish:
+            "抖M——平时发号施令的队长，内心深处隐秘地渴望有人能掌控他、命令他、管教他，让他卸下所有责任",
+          costume: {
+            battle:
+              "深黑色高领连体紧身衣，肩部有幽蓝色发光纹路用于战术信号传递，配银色护目镜和战术腰带",
+            daily: "整洁的白色衬衫配深蓝校服外套，领带打得一丝不苟，黑色长裤",
+            underwear: "白色平角内裤",
+          },
+          residence: "学院区学校附近的独居公寓——干净整洁、一尘不染。",
+          hobbies: ["整理笔记和战术档案", "照顾植物", "喝热牛奶"],
+          schedule: {
+            school: {
+              morning: ["在学校上课", "在图书馆查阅资料"],
+              afternoon: [
+                "参加学生会活动",
+                "在正义联盟总部训练",
+                "去街角咖啡店",
+              ],
+              evening: ["整理战术手册", "在城区巡逻"],
+              night: ["睡觉", "熬夜复习"],
+            },
+            holiday: {
+              morning: ["照顾家里的植物", "整理战术档案", "去市政广场散步"],
+              afternoon: ["自主训练", "去图书馆看书", "和太阳逛街"],
+              evening: ["和太阳通电话", "在百货大楼采购"],
+              night: ["睡觉", "阅读战术手册"],
+            },
+          },
+          teammates: [
+            {
+              name: "虎渡太阳",
+              favor: 75,
+              rel: "青梅竹马，比家人还亲的挚友，他在身边就莫名安心",
+            },
+            {
+              name: "槌谷陆",
+              favor: 25,
+              rel: "需要多加关照的后辈，总是担心他太紧张",
+            },
+            {
+              name: "风祭优羽",
+              favor: 25,
+              rel: "让人头疼的队友，经常逃训但关键时刻很靠谱",
+            },
+          ],
+          corruptForm: {
+            codename: "幽夜之傀（待彻底恶堕后确立）",
+            personality: "极度顺从、渴望被严厉命令与惩罚的恶堕猫奴",
+            suit: "深黑半透明乳胶高领紧身衣，胸前镂空暴露粉色乳头，配有项圈与锁链",
+            ability: "精神共鸣、怪人诱导信号广播、夜间魅惑",
+            mark: "腹部浮现暗紫色欲望之泥猫爪淫纹印记",
+          },
+        },
+        taiyo: {
+          name: "虎渡太阳",
+          alias: "白雷",
+          species: "白虎",
+          age: 15,
+          personality:
+            "元气活泼、热情开朗的团队气氛担当。喜欢战斗和挑战，偶尔莽撞。乐观得近乎没心没肺。",
+          background:
+            "正义联盟招募的少年英雄。与夜守真白是青梅竹马，从小一起长大。",
+          ability: "近战格斗、力量强化、自愈能力",
+          longTermGoal: "变得更强，打败所有强大的怪人，保护这座城市",
+          face: "较大且棱角分明的面型，圆耳，冰蓝色大眼，黑色宽鼻",
+          fur: "雪白底色配黑色条纹，体毛较厚实柔软，黑色条纹分布于背部/肩膀/大腿外侧",
+          height: "162 cm",
+          bodyType: "结实",
+          muscle: "已初步显现，充满爆发力",
+          sexOrgans: {
+            penis: "粗壮，与年龄不符的大肉棒，包皮已完全褪开、龟头充分露出",
+            anus: "紧致粉嫩",
+            nipples: "小",
+            bodyHair: "全身厚实白毛配黑色条纹",
+          },
+          sexRecord: {
+            penisVirgin: "处子 (未破)",
+            anusVirgin: "处子 (未破)",
+            sexLife:
+              "已学会自慰，大约每周6-7次。发育较早，对自己身体的变化感到好奇和自豪。有时会在训练后偷偷在淋浴间解决。",
+          },
+          fetish:
+            "战败 / 被征服——最热爱战斗的他，内心最深处却对被更强的对手击败、被骑在身上征服的屈辱感异常兴奋",
+          costume: {
+            battle:
+              "白色为主配黑色条纹的短袖连体紧身衣，背部敞开露出虎纹，指节配有黑色护套，手套和靴子为黑色",
+            daily:
+              "白色运动背心，露出结实的手臂和肩部肌肉，黑色运动短裤，脖子上挂着耳机",
+            underwear: "黑色紧身三角内裤",
+          },
+          residence:
+            "中心区健身房旁的独居公寓——摆满健身器材与蛋白粉，墙上贴满热血动画海报。",
+          hobbies: ["健身", "吃各种肉类料理", "看热血动画", "和队友比试"],
+          schedule: {
+            school: {
+              morning: ["在学校上课", "晨练"],
+              afternoon: ["在健身房训练", "约队友比试", "去海岸防波堤跑步"],
+              evening: ["看热血动画", "加练", "在商业街吃肉"],
+              night: ["自慰", "睡觉"],
+            },
+            holiday: {
+              morning: ["在家看动画", "出门晨跑", "去海港码头散步"],
+              afternoon: ["泡健身房", "约人比试", "在公园打球"],
+              evening: ["去海鲜市场吃海鲜", "看动画", "逛商业街"],
+              night: ["自慰", "睡觉"],
+            },
+          },
+          teammates: [
+            {
+              name: "夜守真白",
+              favor: 80,
+              rel: "青梅竹马，从小一起长大的挚友。比谁都了解他，比谁都想保护他",
+            },
+            {
+              name: "槌谷陆",
+              favor: 35,
+              rel: "害羞的小狗队友，总想鼓励他多自信一点",
+            },
+            {
+              name: "风祭优羽",
+              favor: 35,
+              rel: "逃训搭档（虽然是被拖下水的），脑子很聪明",
+            },
+          ],
+          corruptForm: {
+            codename: "狂雷战奴（待彻底恶堕后确立）",
+            personality:
+              "沉溺于被击溃肉体快感、渴望在肉搏中被怪人彻底征服的战斗雄虎",
+            suit: "撕裂风黑金战甲，仅遮蔽胸甲与护膝，粗壮肉棒与大腿虎纹完全暴露",
+            ability: "狂暴肉体、快感狂热爆发、痛觉转换为快感",
+            mark: "腰侧至臀部蔓延的黑色闪电淫纹",
+          },
+        },
+        riku: {
+          name: "槌谷陆",
+          alias: "追风",
+          species: "犬 (米黄垂耳犬)",
+          age: 14,
+          personality:
+            "与世无争、害羞内向。不敢大声说话，但对队友绝对忠诚。容易脸红，被称赞时会手足无措。大肉棒是他害羞的一个重要原因。",
+          background:
+            "正义联盟招募的少年英雄，拥有极度敏锐的追踪嗅觉与安抚治愈能力。",
+          ability: "追踪嗅觉、听觉增强、安抚/治愈能力",
+          longTermGoal: "克服自己的胆怯，成为能帮上忙的队友，不让大家失望",
+          face: "偏圆面型，垂耳，棕色大眼睛，总是水汪汪的、眼神怯生生的",
+          fur: "米黄色/奶油色短毛，柔软微卷，腹部和耳朵内侧白色",
+          height: "150 cm",
+          bodyType: "偏瘦小",
+          muscle: "几乎看不到",
+          sexOrgans: {
+            penis:
+              "粗大，与娇小身材形成强烈反差，龟头饱满，包皮半包裹，睾丸沉重下垂，勃起时尺寸惊人",
+            anus: "紧致",
+            nipples: "小",
+            bodyHair: "米黄色短毛柔软覆盖全身",
+          },
+          sexRecord: {
+            penisVirgin: "处子 (未破)",
+            anusVirgin: "处子 (未破)",
+            sexLife:
+              "从未自慰——因为每次碰到自己下面就会脸红到爆炸，无法继续。偶尔早晨醒来会发现裤裆被顶得老高，赶紧用被子盖住。换衣服时永远躲在最角落。",
+          },
+          fetish:
+            "被使用——渴望自己的身体，尤其是令自己自卑的大肉棒，被他人“使用”，交出控制权，单纯成为满足他人欲望的工具",
+          costume: {
+            battle:
+              "米黄色连体紧身衣，裤腿剪裁至大腿根部以利行动，配有兜帽可遮住垂耳",
+            daily:
+              "超大号的宽松连帽卫衣，总是把兜帽戴上遮住脸，深色宽松长裤，帆布鞋",
+            underwear: "小熊图案的三角内裤",
+          },
+          residence:
+            "旧城区的老旧公寓——安静的小单间，堆着照顾流浪动物用的猫粮狗粮和纸箱。",
+          hobbies: ["安静地看书", "听音乐", "照顾流浪小动物", "帮队友准备便当"],
+          schedule: {
+            school: {
+              morning: ["在学校上课", "在图书馆看书"],
+              afternoon: ["去动物收容所帮忙", "在图书馆看书", "去公园喂鸽子"],
+              evening: ["帮队友准备便当", "在宿舍看书"],
+              night: ["听音乐", "睡觉"],
+            },
+            holiday: {
+              morning: ["窝在被子里", "照顾流浪动物"],
+              afternoon: ["去动物收容所做义工", "在旧城区闲逛", "去山镜湖散步"],
+              evening: ["安静地看书", "去地下商业街闲逛", "去滨海步道散步"],
+              night: ["听音乐", "睡觉"],
+            },
+          },
+          teammates: [
+            {
+              name: "夜守真白",
+              favor: 50,
+              rel: "温柔的队长，在他面前可以稍微放松一点，很感激他的关照",
+            },
+            {
+              name: "虎渡太阳",
+              favor: 30,
+              rel: "精力太旺盛了有点招架不住...但他总是主动跟我搭话，很温暖",
+            },
+            {
+              name: "风祭优羽",
+              favor: 10,
+              rel: "不太了解的前辈，看起来总是很困，不敢打扰他",
+            },
+          ],
+          corruptForm: {
+            codename: "忠欲猎犬（待彻底恶堕后确立）",
+            personality:
+              "视自己为怪人专属的“配种工具狗”，听话温顺，交出全部肉棒控制权",
+            suit: "米白与暗红项圈绳缚装，下体全开放特化型战衣，凸显惊人尺寸大肉棒",
+            ability: "超感气味追踪、发情诱导体液分泌、雄臭共鸣",
+            mark: "小腹深处烙印的怪人组织奴属项圈纹",
+          },
+        },
+        yuuha: {
+          name: "风祭优羽",
+          alias: "幻狐",
+          species: "狐狸",
+          age: 15,
+          personality:
+            "懒散、好奇心强、有点小聪明。经常逃训，但关键时刻总能想到刁钻的解法。对新鲜事物兴趣浓厚但容易厌倦。",
+          background: "正义联盟招募的少年英雄，擅长幻术与高速敏捷闪避。",
+          ability: "幻术/干扰、敏捷闪避",
+          longTermGoal: "找到一件真正让自己觉得“有意思”、愿意全心投入的事",
+          face: "尖长狐系面型，大三角耳，狭长的金色眼睛，总是一副半睁半闭的慵懒神情",
+          fur: "鲜艳橘红色毛发，脸颊/腹面/尾尖渐变奶油白，蓬松大尾引人注目",
+          height: "158 cm",
+          bodyType: "修长",
+          muscle: "不明显",
+          sexOrgans: {
+            penis: "修长的淡红色肉棒，包皮半包",
+            anus: "紧致",
+            nipples: "小",
+            bodyHair: "橘红长毛覆盖全身，蓬松大尾",
+          },
+          sexRecord: {
+            penisVirgin: "处子 (未破)",
+            anusVirgin: "处子 (未破)",
+            sexLife:
+              "有自慰习惯但频率不高，大约每周1-2次。曾出于好奇在网上搜过一些色情内容，但觉得“好麻烦”就搁置了。",
+          },
+          fetish:
+            "露出——懒散的表面下，对在公共场合或可能被发现的地方暴露身体感到异常兴奋，越危险越刺激",
+          costume: {
+            battle:
+              "橘色为主配奶油白条纹的修身连体紧身衣，不对称设计的斜拉链从领口延伸到侧腰，手套露指设计",
+            daily:
+              "黑色宽松印花T恤（各种古怪图案），深灰破洞牛仔裤，帆布鞋踩后跟当拖鞋穿，脖子上挂着几条绳链和耳机",
+            underwear: "橙色格纹平角内裤，偶尔真空",
+          },
+          residence:
+            "山区的山间小屋——紧邻神社与山镜湖，堆满杂物与稀奇古怪的小发明。",
+          hobbies: [
+            "午睡",
+            "钻研稀奇古怪的知识",
+            "玩解谜游戏",
+            "逃训找地方偷懒",
+          ],
+          schedule: {
+            school: {
+              morning: ["在学校上课", "在学校天台打盹", "逃课去网吧"],
+              afternoon: ["去图书馆看闲书", "翘课闲逛"],
+              evening: ["泡在网络乱逛", "研究古怪知识"],
+              night: ["打游戏", "搞小发明"],
+            },
+            holiday: {
+              morning: ["睡到中午", "去登山步道闲逛"],
+              afternoon: ["到处闲逛", "去山区神社闲逛", "去温泉度假村泡温泉"],
+              evening: ["泡网络", "研究奇怪的东西"],
+              night: ["通宵打游戏", "搞小发明"],
+            },
+          },
+          teammates: [
+            {
+              name: "夜守真白",
+              favor: 30,
+              rel: "啰嗦的队长，老是催我训练，但他人不坏",
+            },
+            {
+              name: "虎渡太阳",
+              favor: 40,
+              rel: "最容易一起摸鱼的搭档，虽然是被动的那种",
+            },
+            {
+              name: "槌谷陆",
+              favor: 15,
+              rel: "安静的后辈，不太了解，但他的耳朵好软想戳一下",
+            },
+          ],
+          corruptForm: {
+            codename: "魅世淫狐（待彻底恶堕后确立）",
+            personality:
+              "享受在公众视野下肆意露出与挑逗快感、用幻术操纵人心的放荡狐狸",
+            suit: "绯红不对称极度开衩战衣，尾根部直接裸露，手腕与足踝系着铃铛红绳",
+            ability: "大范围色情幻象施展、隐身露出、催淫狐火",
+            mark: "大腿内侧渐变的九尾妖狐媚印",
+          },
+        },
+      };
+
+      function openHeroModal(heroKey) {
+        var h = FULL_HERO_DATA[heroKey];
+        if (!h) return;
+
+        var curHeroData =
+          (window._mxeCurrentData &&
+            window._mxeCurrentData.小英雄 &&
+            window._mxeCurrentData.小英雄[h.name]) ||
+          {};
+        var dynRels = curHeroData.人际关系 || {};
+        var dynSex = curHeroData.性经验记录 || {};
+
+        var modal = document.getElementById("hero-modal");
+        var body = document.getElementById("modal-body");
+
+        // Teammates Progress Bars HTML (优先读取实时 MVU 变量)
+        var teammatesHTML = "";
+        var processedTeammates = {};
+
+        h.teammates.forEach(function (tm) {
+          processedTeammates[tm.name] = true;
+          var tmRelData = dynRels[tm.name] || {};
+          var curFavor =
+            tmRelData.好感度 !== undefined && tmRelData.好感度 !== null
+              ? safeNum(tmRelData.好感度)
+              : tm.favor;
+          var curRel = tmRelData.当前关系 || tm.rel;
+
+          teammatesHTML += '<div class="tm-rel-item">';
+          teammatesHTML += '  <div class="tm-rel-hd">';
+          teammatesHTML +=
+            '    <strong style="color:#fff;">' + tm.name + "</strong>";
+          teammatesHTML +=
+            "    <span style=\"color:var(--theme-accent); font-family:'JetBrains Mono'; font-weight:700;\">好感度: " +
+            curFavor +
+            "/100</span>";
+          teammatesHTML += "  </div>";
+          teammatesHTML +=
+            '  <div class="bar-track" style="height:5px; margin-bottom:3px;">';
+          teammatesHTML +=
+            '    <div class="bar-fill bar-favor" style="width:' +
+            curFavor +
+            '%"></div>';
+          teammatesHTML += "  </div>";
+          teammatesHTML += '  <div class="tm-rel-desc">' + curRel + "</div>";
+          teammatesHTML += "</div>";
+        });
+
+        // 检查动态变量中是否有额外增加的队友关系
+        Object.keys(dynRels).forEach(function (tmName) {
+          if (
+            tmName === "$meta" ||
+            tmName === "$__META_EXTENSIBLE__$" ||
+            tmName === "怪人主角" ||
+            processedTeammates[tmName]
+          )
+            return;
+          var tmRelData = dynRels[tmName] || {};
+          var curFavor = safeNum(tmRelData.好感度);
+          var curRel = tmRelData.当前关系 || "";
+
+          teammatesHTML += '<div class="tm-rel-item">';
+          teammatesHTML += '  <div class="tm-rel-hd">';
+          teammatesHTML +=
+            '    <strong style="color:#fff;">' + tmName + "</strong>";
+          teammatesHTML +=
+            "    <span style=\"color:var(--theme-accent); font-family:'JetBrains Mono'; font-weight:700;\">好感度: " +
+            curFavor +
+            "/100</span>";
+          teammatesHTML += "  </div>";
+          teammatesHTML +=
+            '  <div class="bar-track" style="height:5px; margin-bottom:3px;">';
+          teammatesHTML +=
+            '    <div class="bar-fill bar-favor" style="width:' +
+            curFavor +
+            '%"></div>';
+          teammatesHTML += "  </div>";
+          teammatesHTML += '  <div class="tm-rel-desc">' + curRel + "</div>";
+          teammatesHTML += "</div>";
+        });
+
+        var heroIcon =
+          heroKey === "mashiro"
+            ? "🐱"
+            : heroKey === "taiyo"
+              ? "🐯"
+              : heroKey === "riku"
+                ? "🐶"
+                : "🦊";
+
+        // 动态字段
+        var heroLongGoal = curHeroData.长期目标 || h.longTermGoal;
+        var pVirgin =
+          dynSex.肉棒童贞状态 === false
+            ? "已破" +
+              (dynSex.肉棒童贞对象
+                ? "（对象: " + dynSex.肉棒童贞对象 + "）"
+                : "")
+            : dynSex.肉棒童贞状态 === true
+              ? "处子 (未破)"
+              : h.sexRecord.penisVirgin;
+        var aVirgin =
+          dynSex.后穴童贞状态 === false
+            ? "已破" +
+              (dynSex.后穴童贞对象
+                ? "（对象: " + dynSex.后穴童贞对象 + "）"
+                : "")
+            : dynSex.后穴童贞状态 === true
+              ? "处子 (未破)"
+              : h.sexRecord.anusVirgin;
+        var sexLifeDesc = dynSex.性生活情况 || h.sexRecord.sexLife;
+
+        var cCodename =
+          curHeroData.恶堕代号 && curHeroData.恶堕代号 !== "待设定"
+            ? curHeroData.恶堕代号
+            : h.corruptForm.codename;
+        var cPersonality =
+          curHeroData.恶堕性格 && curHeroData.恶堕性格 !== "待设定"
+            ? curHeroData.恶堕性格
+            : h.corruptForm.personality;
+        var cSuit =
+          curHeroData.恶堕战衣 && curHeroData.恶堕战衣 !== "待设定"
+            ? curHeroData.恶堕战衣
+            : h.corruptForm.suit;
+        var cAbility =
+          curHeroData.恶堕能力 && curHeroData.恶堕能力 !== "待设定"
+            ? curHeroData.恶堕能力
+            : h.corruptForm.ability;
+        var cMark =
+          curHeroData.恶堕印记 && curHeroData.恶堕印记 !== "待设定"
+            ? curHeroData.恶堕印记
+            : h.corruptForm.mark;
+
+        var mHTML = "";
+        mHTML +=
+          '<button class="modal-close" onclick="closeModal()">✕</button>';
+        mHTML +=
+          '<div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">';
+        mHTML += '  <span style="font-size:1.5rem;">' + heroIcon + "</span>";
+        mHTML += "  <div>";
+        mHTML +=
+          '    <div style="font-size:1.15rem; font-weight:700; color:#fff;">' +
+          h.name +
+          " · 角色全量深度档案</div>";
+        mHTML +=
+          "    <div style=\"font-size:0.75rem; color:var(--text-sub); font-family:'Rajdhani',sans-serif;\">" +
+          h.alias +
+          " · " +
+          h.species +
+          " · " +
+          h.age +
+          "岁 · 能力: " +
+          h.ability +
+          "</div>";
+        mHTML += "  </div>";
+        mHTML += "</div>";
+
+        mHTML += '<div class="modal-split-grid">';
+
+        // Left Column
+        mHTML += "  <div>";
+        mHTML += '    <div class="modal-sec-title">📌 基础设定与身型</div>';
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">英雄代号:</span><span class="m-val" style="color:var(--cyan-glow); font-weight:700;">' +
+          h.alias +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">物种年龄:</span><span class="m-val">' +
+          h.species +
+          " / " +
+          h.age +
+          " 岁</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">性格特点:</span><span class="m-val">' +
+          h.personality +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">背景身世:</span><span class="m-val">' +
+          h.background +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">特殊能力:</span><span class="m-val">' +
+          h.ability +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">长期目标:</span><span class="m-val" style="color:var(--theme-accent); font-weight:600;">' +
+          heroLongGoal +
+          "</span></div>";
+        var heroOrgTask = curHeroData.怪人组织任务;
+        if (heroOrgTask && heroOrgTask !== "无") {
+          mHTML +=
+            '    <div class="m-row"><span class="m-lbl" style="color:#d8b4fe;">💀 组织任务:</span><span class="m-val" style="color:#f0abfc; font-weight:700;">' +
+            heroOrgTask +
+            "</span></div>";
+        }
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">脸型五官:</span><span class="m-val">' +
+          h.face +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">毛发质感:</span><span class="m-val">' +
+          h.fur +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">身高体态:</span><span class="m-val">' +
+          h.height +
+          " / " +
+          h.bodyType +
+          " / 肌肉: " +
+          h.muscle +
+          "</span></div>";
+
+        mHTML +=
+          '    <div class="modal-sec-title" style="color:var(--theme-secondary-glow);">🔒 性器官特征与经验档案</div>';
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">阴茎形态:</span><span class="m-val">' +
+          h.sexOrgans.penis +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">后穴形态:</span><span class="m-val">' +
+          h.sexOrgans.anus +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">乳头形态:</span><span class="m-val">' +
+          h.sexOrgans.nipples +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">体毛状况:</span><span class="m-val">' +
+          h.sexOrgans.bodyHair +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">肉棒童贞:</span><span class="m-val">' +
+          pVirgin +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">后穴童贞:</span><span class="m-val">' +
+          aVirgin +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">性生活史:</span><span class="m-val">' +
+          sexLifeDesc +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">隐秘性癖:</span><span class="m-val" style="color:var(--theme-secondary-glow); font-weight:700;">' +
+          h.fetish +
+          "</span></div>";
+
+        mHTML += '    <div class="modal-sec-title">👔 服装配置与住处</div>';
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">紧身战衣:</span><span class="m-val">' +
+          h.costume.battle +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">日常常服:</span><span class="m-val">' +
+          h.costume.daily +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">贴身内衣:</span><span class="m-val">' +
+          h.costume.underwear +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">日常住处:</span><span class="m-val">' +
+          h.residence +
+          "</span></div>";
+        mHTML +=
+          '    <div class="m-row"><span class="m-lbl">个人爱好:</span><span class="m-val">' +
+          h.hobbies.join("、") +
+          "</span></div>";
+        mHTML += "  </div>";
+
+        // Right Column
+        mHTML += "  <div>";
+        mHTML += '    <div class="modal-sec-title">👥 小英雄队友关系网络</div>';
+        mHTML += '    <div style="margin-top:4px;">' + teammatesHTML + "</div>";
+
+        mHTML +=
+          '    <div class="modal-sec-title">📅 日程规划表 (上学日 / 休息日)</div>';
+        mHTML += '    <div class="schedule-box">';
+        mHTML += '      <div class="schedule-sec">';
+        mHTML += '        <div class="schedule-sec-title">🎒 上学日日程</div>';
+        mHTML +=
+          '        <div class="schedule-period-row"><span class="p-tag">上午</span><span>' +
+          h.schedule.school.morning.join(" / ") +
+          "</span></div>";
+        mHTML +=
+          '        <div class="schedule-period-row"><span class="p-tag">下午</span><span>' +
+          h.schedule.school.afternoon.join(" / ") +
+          "</span></div>";
+        mHTML +=
+          '        <div class="schedule-period-row"><span class="p-tag">晚上</span><span>' +
+          h.schedule.school.evening.join(" / ") +
+          "</span></div>";
+        mHTML +=
+          '        <div class="schedule-period-row"><span class="p-tag">深夜</span><span>' +
+          h.schedule.school.night.join(" / ") +
+          "</span></div>";
+        mHTML += "      </div>";
+        mHTML +=
+          '      <div class="schedule-sec" style="margin-top:6px; border-top:1px dashed rgba(255,255,255,0.06); padding-top:6px;">';
+        mHTML += '        <div class="schedule-sec-title">☕ 休息日日程</div>';
+        mHTML +=
+          '        <div class="schedule-period-row"><span class="p-tag">上午</span><span>' +
+          h.schedule.holiday.morning.join(" / ") +
+          "</span></div>";
+        mHTML +=
+          '        <div class="schedule-period-row"><span class="p-tag">下午</span><span>' +
+          h.schedule.holiday.afternoon.join(" / ") +
+          "</span></div>";
+        mHTML +=
+          '        <div class="schedule-period-row"><span class="p-tag">晚上</span><span>' +
+          h.schedule.holiday.evening.join(" / ") +
+          "</span></div>";
+        mHTML +=
+          '        <div class="schedule-period-row"><span class="p-tag">深夜</span><span>' +
+          h.schedule.holiday.night.join(" / ") +
+          "</span></div>";
+        mHTML += "      </div>";
+        mHTML += "    </div>";
+
+        mHTML +=
+          '    <div class="modal-sec-title" style="color:var(--theme-primary-glow);">💜 恶堕形态档案 (彻底恶堕后解锁)</div>';
+        mHTML +=
+          '    <div style="background:rgba(168,85,247,0.08); border:1px solid var(--border-theme); border-radius:8px; padding:8px 10px; font-size:0.75rem;">';
+        mHTML +=
+          '      <div class="m-row"><span class="m-lbl">恶堕代号:</span><span class="m-val" style="color:var(--theme-secondary-glow); font-weight:700;">' +
+          cCodename +
+          "</span></div>";
+        mHTML +=
+          '      <div class="m-row"><span class="m-lbl">恶堕性格:</span><span class="m-val">' +
+          cPersonality +
+          "</span></div>";
+        mHTML +=
+          '      <div class="m-row"><span class="m-lbl">恶堕战衣:</span><span class="m-val">' +
+          cSuit +
+          "</span></div>";
+        mHTML +=
+          '      <div class="m-row"><span class="m-lbl">恶堕能力:</span><span class="m-val">' +
+          cAbility +
+          "</span></div>";
+        mHTML +=
+          '      <div class="m-row"><span class="m-lbl">恶堕印记:</span><span class="m-val">' +
+          cMark +
+          "</span></div>";
+        mHTML += "    </div>";
+        mHTML += "  </div>";
+
+        mHTML += "</div>";
+
+        body.innerHTML = mHTML;
+        modal.classList.add("show");
+      }
+
+      function closeModal() {
+        var modal = document.getElementById("hero-modal");
+        if (modal) modal.classList.remove("show");
+      }
+
+      function switchTab(tabId) {
+        window._mxeActiveTab = tabId;
+        document.querySelectorAll(".tab-btn").forEach(function (btn) {
+          btn.classList.remove("active");
+        });
+        document.querySelectorAll(".tab-panel").forEach(function (panel) {
+          panel.classList.remove("active");
+        });
+
+        if (event && event.currentTarget)
+          event.currentTarget.classList.add("active");
+        var target = document.getElementById(tabId);
+        if (target) target.classList.add("active");
+      }
+
+      function sendCmd(cmdText) {
+        try {
+          var ta =
+            window.parent.document.querySelector("#send_textarea") ||
+            document.querySelector("textarea");
+          if (ta) {
+            ta.value = cmdText;
+            ta.dispatchEvent(new Event("input", { bubbles: true }));
+            ta.focus();
+          }
+        } catch (e) {}
+      }
+
+      // === MVU 变量框架集成 ===
+      function getMvuInstance() {
+        try {
+          return (
+            window.Mvu ||
+            (window.parent && window.parent.Mvu) ||
+            (window.top && window.top.Mvu) ||
+            null
+          );
+        } catch (e) {
+          return null;
+        }
+      }
+
+      const init = function () {
+        var Mvu = getMvuInstance();
+        if (Mvu && Mvu.events) {
+          document.addEventListener(
+            Mvu.events.VARIABLE_UPDATE_ENDED,
+            function (e) {
+              if (e.detail && e.detail.stat_data) {
+                var domAct = getRawActionsFromDOM();
+                if (domAct) window._mxeDynamicActions = domAct;
+                renderPanelWithData(e.detail.stat_data);
+              }
+            },
+          );
+          (async function () {
+            try {
+              var data;
+              if (
+                typeof getChatMessages !== "undefined" &&
+                typeof getCurrentMessageId !== "undefined"
+              ) {
+                var msgs = await getChatMessages(getCurrentMessageId());
+                data =
+                  msgs[0]?.data?.stat_data ||
+                  Mvu.getMvuData({ type: "message", message_id: -1 })
+                    ?.stat_data;
+                var rawMsg = msgs[0]?.mes || msgs[0]?.message || "";
+                var actMatch = rawMsg.match(
+                  /<行动选项>\s*([\s\S]*?)\s*<\/行动选项>/i,
+                );
+                if (actMatch && actMatch[1].trim()) {
+                  window._mxeDynamicActions = parseActionOptionsText(
+                    actMatch[1].trim(),
+                  );
+                }
+              } else {
+                data = Mvu.getMvuData({
+                  type: "message",
+                  message_id: -1,
+                })?.stat_data;
+              }
+              var domAct = getRawActionsFromDOM();
+              if (domAct) window._mxeDynamicActions = domAct;
+              if (data) {
+                renderPanelWithData(data);
+              }
+            } catch (e) {}
+          })();
+        } else {
+          var domAct = getRawActionsFromDOM();
+          if (domAct) {
+            window._mxeDynamicActions = domAct;
+            if (window._mxeCurrentData)
+              renderPanelWithData(window._mxeCurrentData);
+          }
+          setTimeout(init, 500);
+        }
+      };
+
+      // Default initial dummy load for seamless preview before MVU kicks in
+      const DEFAULT_INITIAL_DATA = {
+        进程: {
+          当前日期: "20360810",
+          当前时间: "1700",
+          当前时段: "晚",
+          当前天气: "晴",
+          累计天数: 1,
+          今日怪人事件是否发生: false,
+        },
+        视角: "怪人主角",
+        系统状态: { 主角创建完毕: true },
+        怪人主角: {
+          基本信息: {
+            姓名: "夜野",
+            物种: "雄性黑狼",
+            年龄: "23岁",
+            性格: "沉稳狡黠、对博士忠诚、支配欲强",
+            背景: "原本是碌碌无为的普通市民，被博士看中并改造为'最高杰作'，对博士忠心耿耿。",
+          },
+          代号: "迷香之主",
+          伪装姓名: "叶野夜",
+          伪装职业: "港区物流仓库管理员 / 街角咖啡店学徒",
+          住处: "港区的码头公寓——独居，陈设简单，方便深夜外出行动与掩人耳目。",
+          相貌特征: {
+            脸型五官: "深邃野性的狼系面容，金色凌厉瞳孔，棱角分明",
+            毛发: "漆黑顺滑短毛，胸颈部鬃毛茂密深沉",
+          },
+          身体: {
+            身高: "186 cm",
+            体态: "魁梧匀称、极具压迫感",
+            肌肉线条: "深刻健美，胸肌与腹肌块垒分明",
+          },
+          当前状态: {
+            当前区域: "港区",
+            当前地点: "码头公寓",
+            当前动作: "以伪装身份调配欲望之泥试剂，准备深夜外出行动",
+            当前生理动态: "腺体微热、雄臭浓度可调控、欲望充盈",
+            当前着装: "常服（港区工装外套、防风短裤）",
+            当前目标: "搜集小英雄情报并布置欲望之泥陷阱",
+            当前目标预计用时: 45,
+          },
+          日程: {
+            上午: ["接受博士身体维护", "处理日常事务"],
+            下午: ["搜集小英雄情报", "城中活动"],
+            晚上: ["向博士汇报", "正义联盟周边侦察"],
+            深夜: ["休息", "布置欲望之泥"],
+          },
+          长期目标: "逐步将小英雄们全部恶堕",
+        },
+        小英雄: {
+          夜守真白: {
+            基本信息: {
+              姓名: "夜守真白",
+              英雄名: "夜影",
+              物种: "猫",
+              年龄: 14,
+            },
+            常服: "整洁的白色衬衫配深蓝校服外套，领带打得一丝不苟，黑色长裤",
+            当前状态: {
+              当前区域: "学院区",
+              当前地点: "星辉学园图书馆",
+              当前动作: "坐在图书馆窗边翻阅巡逻战术笔记，偶尔轻嗅衣领",
+              当前生理动态: "心跳轻微加快，鼻尖嗅到残留气味，身体微热",
+              当前着装: "整洁白衬衫、深蓝校服外套、黑色平角裤",
+              当前目标: "整理战术手册",
+              当前目标预计用时: 45,
+            },
+            恶堕状态: {
+              气味沉溺度: 24,
+              气味沉溺阶段: "好奇",
+              欲望之泥污染度: 12,
+              阵营归属: "正义",
+            },
+            人际关系: {
+              怪人主角: {
+                好感度: 15,
+                当前关系:
+                  "尚未谋面，仅在街角闻过一次好闻气味，印象模糊但略有好奇",
+                身份认知: "未知",
+              },
+            },
+          },
+          虎渡太阳: {
+            基本信息: {
+              姓名: "虎渡太阳",
+              英雄名: "白雷",
+              物种: "白虎",
+              年龄: 15,
+            },
+            常服: "白色运动背心，露出结实的手臂和肩部肌肉，黑色运动短裤",
+            当前状态: {
+              当前区域: "中心区",
+              当前地点: "商业街健身房",
+              当前动作: "在卧推架上进行高强度推举训练，汗如雨下",
+              当前生理动态:
+                "大肉棒充血半勃起顶起短裤，沉迷于被强敌征服的幻想中",
+              当前着装: "白色运动背心、黑色运动短裤、黑色紧身三角裤",
+              当前目标: "完成今日卧推加练",
+              当前目标预计用时: 60,
+            },
+            恶堕状态: {
+              气味沉溺度: 48,
+              气味沉溺阶段: "渴望",
+              欲望之泥污染度: 35,
+              阵营归属: "正义",
+            },
+            人际关系: {
+              怪人主角: {
+                好感度: 32,
+                当前关系:
+                  "觉得这位常在码头遇到的市民体格很强壮、气味令人兴奋，有点想和他较量",
+                身份认知: "怀疑",
+              },
+            },
+          },
+          槌谷陆: {
+            基本信息: { 姓名: "槌谷陆", 英雄名: "追风", 物种: "犬", 年龄: 14 },
+            常服: "超大号的宽松连帽卫衣，深色宽松长裤",
+            当前状态: {
+              当前区域: "旧城区",
+              当前地点: "动物收容所后院",
+              当前动作: "蹲在狗舍前给流浪幼犬喂食，耳朵发红，时不时摸一下裤裆",
+              当前生理动态: "沉重大肉棒发热胀大，渴望被怪人当作工具使用",
+              当前着装: "超大号宽松连帽卫衣、宽松长裤、小熊三角内裤",
+              当前目标: "给流浪小狗准备晚饭",
+              当前目标预计用时: 30,
+            },
+            恶堕状态: {
+              气味沉溺度: 65,
+              气味沉溺阶段: "沉迷",
+              欲望之泥污染度: 42,
+              阵营归属: "内应",
+            },
+            人际关系: {
+              怪人主角: {
+                好感度: 55,
+                当前关系:
+                  "极度依恋主角身上的雄臭，在其面前害羞得说不出话，内心愿意臣服",
+                身份认知: "未知",
+              },
+            },
+          },
+          风祭优羽: {
+            基本信息: {
+              姓名: "风祭优羽",
+              英雄名: "幻狐",
+              物种: "狐狸",
+              年龄: 15,
+            },
+            常服: "黑色宽松印花T恤，深灰破洞牛仔裤",
+            当前状态: {
+              当前区域: "山区",
+              当前地点: "山间神社石阶",
+              当前动作: "半躺在石阶上懒散打盹，大尾巴悠闲地扫动",
+              当前生理动态: "神态慵懒，半眯着金眼晒太阳，身心完全正常未受侵蚀",
+              当前着装: "古怪印花T恤、深灰破洞牛仔裤、踩脚帆布鞋、橙色格纹内裤",
+              当前目标: "在神社天台打盹偷懒",
+              当前目标预计用时: 60,
+            },
+            恶堕状态: {
+              气味沉溺度: 8,
+              气味沉溺阶段: "无感",
+              欲望之泥污染度: 0,
+              阵营归属: "正义",
+            },
+            人际关系: {
+              怪人主角: {
+                好感度: 0,
+                当前关系: "尚未谋面，并不知道对方的存在",
+                身份认知: "未知",
+              },
+            },
+          },
+        },
+        组织: {
+          正义联盟: {
+            基地沦陷进度: 18,
+            基地当前氛围: "日常",
+            警戒等级: "日常",
+            已恶堕角色: [],
+            是否彻底沦陷: false,
+            关键人物: {
+              铁壁: {
+                身份: "司令",
+                物种: "猎犬",
+                外貌身材:
+                  "高大挺拔的杜宾犬，灰白短毛一丝不苟，深邃琥珀眼，无框眼镜制服笔挺。",
+                描述: "正义联盟最高指挥官，表面威严正经、沉稳但背负巨大压力。",
+                秘密: "表面禁欲克制，私下极度淫乱且是个彻头彻尾的肉便器——频繁召人，但永远是被进入的那一方。办公室暗门后藏有私密纵欲调教空间。",
+              },
+              疾风: {
+                身份: "教官",
+                物种: "猎豹",
+                外貌身材:
+                  "修长精干猎豹，金棕短毛覆黑斑，精瘦肌肉，黄绿锐眼，耳尖一道旧伤疤。",
+                描述: "小英雄直接教官，战斗严厉公正，会私下塞甜点关照队员。",
+                秘密: "在宿舍和浴室角落偷装微型监控偷拍私密影像，定期潜入更衣室盗取小英雄换下的原味贴身内裤与袜子，埋头嗅吸其体味自慰收藏。",
+              },
+              钢鳞: {
+                身份: "卫队长",
+                物种: "鳄鱼",
+                外貌身材:
+                  "近两米深绿坚硬短吻鳄，手臂粗壮如树干，黄色竖瞳半眯。",
+                描述: "基地安保负责人，极度沉默寡言，默默确认每位英雄归队。",
+                秘密: "白天是忠诚卫士，深夜却匿名在怪人色情论坛发布大量关于自己“被怪人捕获、凌辱、改造”的深度自虐幻想小说。",
+              },
+              温掌: {
+                身份: "科研医护员",
+                物种: "棕熊",
+                外貌身材:
+                  "高大温暖棕熊，厚实皮毛，圆框眼镜亲切大叔，手掌灵巧轻柔。",
+                描述: "日常监控小英雄体内污染与生理指标，备有手工饼干和热可可。",
+                秘密: "对少年小英雄的性器官有隐秘迷恋，体检时以医学为名超时揉捏把玩小英雄的阴茎与性器官，并加密记录保存触感手账。",
+              },
+            },
+          },
+          怪人组织: {
+            博士: {
+              物种: "雄兔",
+              外貌身材:
+                "娇小偏瘦，蓬松白色短毛如棉花糖，长耳朵竖直微颤，红宝石般大眼睛，穿着过长袖口的白大褂。",
+              描述: "欲望之泥发明者，傲娇爱炸毛，动不动跺脚发脾气，唯独对怪人主角偶露温柔与依赖。",
+              秘密: "在过去主角人生灰暗时曾被主角所救，发自内心深爱着主角。将主角改造成“最高杰作”并赋予雄臭，源于自己最迷恋该气味的私密癖好。",
+            },
+          },
+        },
+      };
+
+      renderPanelWithData(DEFAULT_INITIAL_DATA);
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+    </script>
+  </body>
+</html>

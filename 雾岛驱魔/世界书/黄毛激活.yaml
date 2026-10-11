@@ -1,0 +1,5 @@
+<% { const s = getvar('stat_data') || {}; const ntrMode = _.get(s, 'ntr模式[0]', false) === true; %>
+<% if (ntrMode) { %>
+【黄毛】
+<% } %>
+<% } %>

@@ -1,0 +1,40 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  
+  if (events['日期切换事件']) {
+      const days = parseInt(_.get(stat, '进程.暑假天数', 1));
+      const weather = _.get(stat, '进程.当日天气', '晴天');
+      const temp = parseInt(_.get(stat, '进程.当日气温', 32));
+      
+      let phaseTransitionGuide = "";
+      if (days === 11) {
+          phaseTransitionGuide = "【阶段转变：步入中期】暑假的空气变得更加燥热。请在清晨的描写中暗示小镇氛围的升温，角色间的生疏感已彻底褪去，一种渴望打破边界的暧昧冲动正在悄然酝酿。";
+      } else if (days === 21) {
+          phaseTransitionGuide = "【阶段转变：离别倒计时】暑假步入尾声。请在描写中渲染出一种黏腻、依依不舍的氛围，提示离别的日子越来越近，大家内心的情感与情欲即将毫无保留地爆发。";
+      }
+_%>
+# 事件：新的一天 (暑假第 <%= days %> 天)
+event_initiator:
+  event_name: "日期切换事件"
+  current_day: <%= days %>
+  weather_forecast: "今日天气：<%= weather %> | 预计最高气温：<%= temp %>℃"
+  
+  narrative_guidance:
+    - "新的一天开始了。请描绘主角醒来的慵懒状态。"
+    - "请通过电视的晨间新闻、老式收音机广播、或是楼下家人的闲聊等自然的方式，在剧情中播报及展示今天的【天气：<%= weather %>】与【气温：<%= temp %>℃】。"
+<%_ if (phaseTransitionGuide) { _%>
+    - "<%= phaseTransitionGuide %>"
+<%_ } _%>
+    
+  mandatory_data_sync:
+    instruction: "若该事件已经完成，在 <UpdateVariable> 的 <JSONPatch> 块中必须输出以下指令："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/日期切换事件" }
+      ]
+<%_ 
+  } 
+}
+_%>

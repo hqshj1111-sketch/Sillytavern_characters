@@ -1,0 +1,197 @@
+<%# [系统] 赛前准备处理器 — 三阶段 %>
+<%_ {
+const stat = getvar('stat_data') || {};
+const j = (v) => JSON.stringify(v);
+const phase = _.get(stat, '进程.阶段', '');
+const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+const rank = _.get(stat, '主角.擂台数据.擂台段位', '公猪');
+const mcScore = _.get(stat, '主角.擂台数据.擂台积分', 0);
+const mcFame = _.get(stat, '主角.擂台数据.人气', 0);
+const canRefuse = rank === '猛虎' || rank === '雄狮';
+
+const curY = parseInt(_.get(stat, '进程.当前年份', 2087));
+const curM = parseInt(_.get(stat, '进程.当前月份', 3));
+const curD = parseInt(_.get(stat, '进程.当前日份', 15));
+const curDate = `${curY}年${curM}月${curD}日`;
+
+const fightDate = _.get(stat, '擂台状态.性斗日期', '');
+var matchY = 0, matchM = 0, matchD = 0;
+if (fightDate) {
+  var parsed = fightDate.match(/(\d+)年(\d+)月(\d+)日/);
+  if (parsed) { matchY = parseInt(parsed[1]); matchM = parseInt(parsed[2]); matchD = parseInt(parsed[3]); }
+}
+const turnCount = parseInt(_.get(stat, '系统状态.幕间回合计数', 0));
+
+const T = ['公猪','公狗','野猫','鬣狗','猎豹','猛虎','雄狮'];
+const RACES = ['人类','狼兽人','虎兽人','龙兽人','熊兽人','鲨鱼兽人','狐兽人','马兽人','狗兽人','猫兽人','雄性魅魔','人形史莱姆','人形触手怪','胶狼兽人','胶龙兽人','胶鲨兽人'];
+const BUILDS = ['精瘦','匀称','健壮','肥胖'];
+const PENIS_TABLE = { '人类':[12,22],'狼兽人':[16,28],'虎兽人':[18,30],'龙兽人':[15,35],'熊兽人':[20,32],'鲨鱼兽人':[14,26],'狐兽人':[12,24],'马兽人':[25,50],'狗兽人':[15,28],'猫兽人':[10,20],'雄性魅魔':[14,26],'人形史莱姆':[10,30],'人形触手怪':[8,25],'胶狼兽人':[16,28],'胶龙兽人':[15,35],'胶鲨兽人':[14,26] };
+const SKILL_ENDUR_TOTAL = { '公猪':[80,120],'公狗':[110,160],'野猫':[160,220],'鬣狗':[210,280],'猎豹':[280,360],'猛虎':[350,440],'雄狮':[440,600] };
+const PHYS_TOTAL = { '公猪':[280,360],'公狗':[340,440],'野猫':[400,520],'鬣狗':[460,600],'猎豹':[530,690],'猛虎':[600,780],'雄狮':[700,950] };
+
+function rand(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr) { return arr[rand(0,arr.length-1)]; }
+function randomTier(oppTier) {
+  var idx = T.indexOf(oppTier);
+  if (idx < 0) idx = 3;
+  var delta = rand(-1,1);
+  var t = Math.max(0, Math.min(6, idx+delta));
+  return T[t];
+}
+function randomRace() { return Math.random() < 0.5 ? '人类' : pick(RACES); }
+function randomAge() { var r = Math.random(); if (r < 0.6) return rand(16,26); if (r < 0.9) return rand(27,40); return rand(41,50); }
+function buildFighter(ftier) {
+  var sr = SKILL_ENDUR_TOTAL[ftier]; var totalSkill = rand(sr[0], sr[1]);
+  var skill = Math.max(20, Math.floor(totalSkill * (0.3 + Math.random()*0.4)));
+  var endur = totalSkill - skill;
+  var pr = PHYS_TOTAL[ftier]; var totalPhys = rand(pr[0], pr[1]);
+  var physA = Math.max(50, Math.floor(totalPhys * (0.2+Math.random()*0.3)));
+  var physB = Math.max(50, Math.floor((totalPhys-physA) * (0.3+Math.random()*0.4)));
+  var physC = totalPhys - physA - physB; if (physC < 50) { var over = 50-physC; physC=50; physA-=Math.floor(over/2); physB-=Math.ceil(over/2); physA=Math.max(50,physA); physB=Math.max(50,physB); }
+  var rc = randomRace(); var pz = PENIS_TABLE[rc] || [12,22];
+  return { 擂台积分: rand(T.indexOf(ftier)*500, (T.indexOf(ftier)+1)*500-1), 擂台段位: ftier, 年龄: randomAge(), 种族: rc, 身材: pick(BUILDS), 性技: skill, 忍耐度: endur, 体力上限: physA, 精力上限: physB, 快感阈值: physC, 阴茎尺寸: rand(pz[0], pz[1]), 身体改造有无: Math.random() < 0.5, 人气: (ftier === '猛虎' || ftier === '雄狮') ? rand(180, 500) : rand(0,200) };
+}
+
+function daysUntil(y,m,d) {
+  var cur = curY*365 + curM*30 + curD;
+  var tgt = y*365 + m*30 + d;
+  return Math.max(0, tgt - cur);
+}
+function addWeek(y,m,d) {
+  var nd = d+7; var nm=m, ny=y;
+  if (nd > 28) { nd-=28; nm++; if (nm>12) { nm=1; ny++; } }
+  return { y:ny, m:nm, d:nd };
+}
+
+const roster = _.get(stat, '记录.性斗士名录', {});
+const rosterNames = Object.keys(roster).filter(function(k){ return k!=='$meta'&&k!=='$__META_EXTENSIBLE__$'; });
+
+_%>
+<%_ if (phase === '幕间日常' && turnCount >= 3 && !fightDate) {
+  // ===== 阶段1: 自动匹配 =====
+  var oppName = '', oppRank = '', oppScore = 0, oppSkill = 0, oppEndur = 0, oppSta = 0, oppEner = 0, oppThr = 0, newFighter = null;
+  var oppFame = 0;
+
+  var nearbyNames = rosterNames.filter(function(n){
+    var t = T.indexOf(_.get(roster, n+'.擂台段位','公猪'));
+    return Math.abs(t - T.indexOf(rank)) <= 1;
+  });
+  if (nearbyNames.length > 0 && Math.random() < 0.5) {
+    // 用现有对手 — oppName 为擂台代号
+    var p = pick(nearbyNames);
+    oppName = _.get(roster, p+'.擂台代号', p);
+    oppRank = _.get(roster, p+'.擂台段位','公猪');
+    oppScore = _.get(roster, p+'.擂台积分', mcScore);
+    oppSkill = _.get(roster, p+'.性技', 50);
+    oppEndur = _.get(roster, p+'.忍耐度', 50);
+    oppSta = _.get(roster, p+'.体力上限', 100);
+    oppEner = _.get(roster, p+'.精力上限', 100);
+    oppThr = _.get(roster, p+'.快感阈值', 100);
+    oppFame = _.get(roster, p+'.人气', 0);
+    isNewOpponent = false;
+  } else {
+    // 新设计对手 — AI将设计姓名/代号后录入名录
+    newFighter = buildFighter(randomTier(rank));
+    oppRank = newFighter.擂台段位;
+    oppScore = newFighter.擂台积分;
+    oppSkill = newFighter.性技;
+    oppEndur = newFighter.忍耐度;
+    oppSta = newFighter.体力上限;
+    oppEner = newFighter.精力上限;
+    oppThr = newFighter.快感阈值;
+    oppFame = newFighter.人气;
+    isNewOpponent = true;
+  }
+
+  // 赔率
+  var mcOdds = (rank === oppRank ? '1.8-2.2' : (T.indexOf(rank) < T.indexOf(oppRank) ? '2.5-3.5' : '1.2-1.6'));
+  var oppOdds = (rank === oppRank ? '1.8-2.2' : (T.indexOf(rank) < T.indexOf(oppRank) ? '1.2-1.6' : '2.5-3.5'));
+
+  var nextWeek = addWeek(curY, curM, curD);
+_%>
+# 系统指令: 赛前匹配
+
+system_handler:
+  phase: "幕间日常 → 自动匹配"
+<% if (isNewOpponent) { %>
+  对手: "新增性斗士，AI将设计其完整档案并录入名录。随机生成的数值如下。段位：<%= oppRank %>，种族：<%= newFighter.种族 %>，性技：<%= oppSkill %>，忍耐度：<%= oppEndur %>。"
+<% } else { %>
+  对手: "<%= oppName %>（<%= oppRank %>，<%= oppScore %>分）"
+<% } %>
+  can_refuse: "<%= canRefuse ? '是（'+rank+'段位特权）' : '否' %>"
+
+{% if (canRefuse) { %}
+  refuse_option: "若玩家选择拒绝，不设置擂台变量。"
+{% } %}
+  accept_result: "匹配确认后，性斗日期定在一周后（<%= nextWeek.y %>年<%= nextWeek.m %>月<%= nextWeek.d %>日），AI根据双方人气和段位差设计赔率——主角赔率<%= mcOdds %>、对手赔率<%= oppOdds %>。"
+
+  narrative_guidance:
+    - "描写<%= alias %>在终端前看到匹配通知的场景。对手的基本信息——代号和段位先跳出屏幕，剩下的数据逐行滚入。简洁有力，不延展过多。"
+{% if (canRefuse) { %}
+    - "提示主角有权拒绝匹配，等待主角的决定。"
+{% } %}
+
+  mandatory_data_sync:
+{% if (canRefuse) { %}
+    refuse_patch: |
+      {"op":"replace","path":"/系统状态/幕间回合计数","value":0}
+{% } %}
+{% if (!canRefuse) { %}
+    accept_patch: |
+<% if (isNewOpponent) { %>
+      //禁止填入未知或未公开，必须给每个字段明确赋值
+      {"op":"insert","path":"/记录/性斗士名录/[AI设计的性斗士本名]","value":{ "姓名":"[AI设计]", "擂台代号":"[AI设计]", "擂台积分":<%= oppScore %>, "擂台段位":"<%= oppRank %>", "年龄":<%= newFighter.年龄 %>, "种族":"<%= newFighter.种族 %>", "身份":"[AI设计]", "性格":"[AI设计]", "外貌":"[AI设计]", "身材":"[AI设计——基于<%= newFighter.身材 %>体型]", "性斗风格":"[AI设计——基于性技<%= oppSkill %>+忍耐度<%= oppEndur %>]", "性行为偏好":"[AI设计]", "性技":<%= oppSkill %>, "忍耐度":<%= oppEndur %>, "体力上限":<%= oppSta %>, "精力上限":<%= oppEner %>, "快感阈值":<%= oppThr %>, "阴茎描述":"[AI设计——尺寸<%= newFighter.阴茎尺寸 %>cm]", "后穴描述":"[AI设计]", "身体改造":"<% if(newFighter.身体改造有无) { %>[AI设计——有改造]<% } else { %>无改造<% } %>", "历史战绩":{ "胜":[AI设计], "负":[AI设计], "平":[AI设计] }, "与主角对战记录":{ "胜":0, "负":0, "平":0 }, "人气":<%= oppFame %>, "好感度":0, "与主角关系":"初识" }},
+      {"op":"replace","path":"/擂台状态/对手名字","value":"[上一步insert时AI设计的擂台代号]"},
+<% } else { %>
+      {"op":"replace","path":"/擂台状态/对手名字","value":"<%= oppName %>"},
+<% } %>
+      {"op":"replace","path":"/擂台状态/对手积分","value":<%= oppScore %>},
+      {"op":"replace","path":"/擂台状态/对手段位","value":"<%= oppRank %>"},
+      {"op":"replace","path":"/擂台状态/对手性技","value":<%= oppSkill %>},
+      {"op":"replace","path":"/擂台状态/对手忍耐度","value":<%= oppEndur %>},
+      {"op":"replace","path":"/擂台状态/对手当前体力","value":<%= oppSta %>},
+      {"op":"replace","path":"/擂台状态/对手当前精力","value":<%= oppEner %>},
+      {"op":"replace","path":"/擂台状态/对手当前快感值","value":0},
+      {"op":"replace","path":"/擂台状态/对手当前人气","value":<%= oppFame %>},
+      {"op":"replace","path":"/擂台状态/主角赔率","value":[AI根据双方人气和段位差在<%= mcOdds %>范围内取具体值]},
+      {"op":"replace","path":"/擂台状态/对手赔率","value":[AI根据双方人气和段位差在<%= oppOdds %>范围内取具体值]},
+      {"op":"replace","path":"/擂台状态/性斗日期","value":"<%= nextWeek.y %>年<%= nextWeek.m %>月<%= nextWeek.d %>日"},
+      {"op":"replace","path":"/进程/阶段","value":"赛前准备"}
+{% } %}
+{% if (canRefuse) { %}
+    instruction: "若玩家接受匹配，执行上述accept_patch；若拒绝，执行refuse_patch并重置幕间回合计数。"
+{% } %}
+
+<%_ } else if (phase === '赛前准备' && fightDate) {
+  var daysLeft = daysUntil(matchY, matchM, matchD);
+  if (daysLeft > 0) {
+    // ===== 阶段2: 等待比赛日 =====
+_%>
+# 系统指令: 赛前准备 — 距比赛还有<%= daysLeft %>天
+
+narrative_guidance:
+  - "叙事重点：距离比赛还有<%= daysLeft %>天。描写<%= alias %>在日常中穿插赛前准备的片段——训练场上的针对性强化、对对手情报的回忆与揣测、或者身体的最后调适。保持日常节奏，带有淡淡的备战底色。"
+  - "除非玩家主动提出，否则禁止跳过天数直接抵达性斗日期。每日推进，让倒计时每减少一天都在叙事中有所体现。"
+  - "若玩家主动提出跳到性斗日期，则本轮叙事只进行到性斗前一天入睡时刻，并将日期变量修改为对应的性斗日期，让AI在下轮自动进行性斗日的描述。"
+
+<%_ } else {
+    // ===== 阶段3: 比赛日当天 =====
+_%>
+# 系统指令: 赛前准备 — 比赛日
+
+narrative_guidance:
+  - "今天是性斗日。描写<%= alias %>从住处出发前往熔渣区的过程——携带装备或轻装出发、路上最后看一眼终端上的对手信息、到达擂台建筑的入口。"
+  - "描绘到达擂台的场景——熔渣区废弃工厂外围聚满了赌徒和观众、擂台入口处的工作人员核对着选手信息、走廊两侧的其他性斗士投来打量或致意的目光。"
+  - "描写进入更衣室后的准备——更换性斗服装的最后决策、对着镜中自己身体的短暂审视、或者与教练/工作人员简短的最后交流。"
+  - "禁止描写双方正式出场或进入擂台。叙事在更衣室结束——当门外的广播响起主角的擂台代号时，叙事收束。"
+  - "完成叙事后将阶段切换至性斗入场。"
+
+  mandatory_data_sync:
+    instruction: "完成赛前准备叙事，切换至性斗入场。"
+    patch_code: |
+      [
+        {"op":"replace","path":"/进程/阶段","value":"性斗入场"}
+      ]
+<%_ } _%>
+
+<%_ } } _%>

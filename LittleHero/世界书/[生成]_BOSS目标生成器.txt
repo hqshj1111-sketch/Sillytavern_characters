@@ -21,9 +21,9 @@ if (
   currentHEventName === '无' &&
   turnCount >= BOSS_COOLDOWN
 ) {
-  // ==========================================
-  // 1. 核心数据推演区 (Data Processing)
-  // ==========================================
+
+  // 1. 核心数据推演区
+
   const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
   const defeatedCount = parseInt(_.get(stat, '记录.已击败Boss计数', 0), 10);
   const finalBossStrength = 45 + (defeatedCount * 6) + _.random(-5, 10);
@@ -39,14 +39,11 @@ if (
   // --- 获取GM面板锁定的战斗类型并由脚本完成随机决断 ---
   const targetPreyRaw = _.get(stat, '世界.当前关卡.战斗类型', '随机');
 
-  // 如果是随机，则由脚本掷骰子决定最终结果，避免让大模型做选择
   const rand = Math.random();
   const actualPrey = (targetPreyRaw === '随机' || targetPreyRaw === '无')
     ? (rand < 0.70 ? '魔物' : (rand < 0.90 ? '小英雄' : '人类'))
     : targetPreyRaw;
 
-
-  // 生成坚决且唯一的指令
   let preyTaskInstruction = "";
   if (actualPrey === '魔物') {
       preyTaskInstruction = personality === '英雄' ? "本次遭遇的敌人类型已锁定。" : "本次的猎物是【魔物】。";
@@ -56,7 +53,7 @@ if (
       preyTaskInstruction = personality === '英雄' ? "本次的敌人是【怪人组织的怪人】。" : "本次猎物是【人类】。";
   }
 
-  // --- 威胁等级判定 (使用配置字典替代繁琐的 if-else) ---
+  // --- 威胁等级判定 ---
   const threatRoll = Math.random();
   const threatLevel = threatRoll < 0.3 ? 1 : (threatRoll < 0.9 ? 2 : 3);
 
@@ -90,6 +87,28 @@ if (
   const enemyCategory = actualPrey === '魔物' ? '魔物' : '人形';
   const { title: threatTitle, guide: threatGuidance } = THREAT_DICT[personality][enemyCategory][threatLevel];
 
+  // --- 小英雄名录：抽取已知敌对英雄 ---
+  let knownHero = null;
+  let fightHistory = "";
+  if (actualPrey === '小英雄') {
+      const roster = _.get(stat, '世界.小英雄名录', {});
+      const hostileAlignment = personality === '英雄' ? '反派' : '英雄';
+      const hostileHeroes = Object.entries(roster).filter(([k, v]) => {
+          if (k === '$meta' || k === '$__META_EXTENSIBLE__$') return false;
+          return v.人格阵营 === hostileAlignment;
+      });
+      if (hostileHeroes.length >= 3 && Math.random() < 0.5) {
+          const [realName, heroData] = _.sample(hostileHeroes);
+          knownHero = { realName, ...heroData };
+          const wins = knownHero.战胜主角次数 || 0;
+          const losses = knownHero.败于主角次数 || 0;
+          if (wins > 0 && losses === 0) fightHistory = "曾击败过主角，至今未尝一败，两者之间的胜负关系形成了绝对的压制。";
+          else if (wins === 0 && losses > 0) fightHistory = "曾被主角击败，此次是复仇之战，眼神中带着不服输的执念。";
+          else if (wins > 0 && losses > 0) fightHistory = "与主角互有胜负，双方知根知底，每一次对决都像是在继续一场未完的棋局。";
+          else fightHistory = "与主角从未交手，彼此之间只有传闻中的印象，这是第一次真正的碰撞。";
+      }
+  }
+
   // --- 风味数据库 (分三类)
   const monsterThemes = {
             "胶兽": "源自Changed设定的胶质兽人。用活体胶液强行包裹同化主角，描绘被吞噬的快感。",
@@ -103,7 +122,8 @@ if (
             "丸吞": "敌人将主角全身吞入口中。重点在于吞入过程的挣扎，以及湿热、缺氧、黑暗的肉壁紧密包裹爱抚，溶解衣物。",
             "苗床化": "将主角捕获固定并作为生育苗床使用。重点描绘主角的能量核心被填满，沦为专门为了容纳和孵化而存在的'温床'的绝望感。",
             "产卵": "将卵强行产入主角的后穴或能量核心内。重点描绘腹部被撑开、填满的物理膨胀感，以及被当作苗床使用的背德感。描写腹部的膨胀、肠道的扩张，以及最终排出异物的瞬间带来的解脱与羞耻。",
-            "胶兽化": "源自Changed的同化(Transfur)。活体胶液无死角地包裹并重塑主角躯体为新的胶兽。重点描绘所转变成的胶兽形态，以及意识被胶兽本能同化、融为一体的强制快感。"
+            "胶兽化": "源自Changed的同化(Transfur)。活体胶液无死角地包裹并重塑主角躯体为新的胶兽。重点描绘所转变成的胶兽形态，以及意识被胶兽本能同化、融为一体的强制快感。",
+            "妖兽/妖狐": "具备高度智慧的魅惑型魔物，能幻化成主角信赖之人的形态接近。用欺骗与挑逗瓦解防线，而非蛮力。"
   };
 
   const humanThemes = {
@@ -124,6 +144,7 @@ if (
             "胁迫侍奉": "敌人以某种把柄或力量差距强迫主角主动进行性侍奉。",
             "身体交换": "与同伴或敌人互换身体，体验陌生身体的尴尬与刺激，被迫在这种陌生的情况下进行战斗。",
             "诚实结界": "结界内的角色被强制说真话。无法掩饰快感，被迫坦白淫荡欲望，身体诚实地迎合。",
+            "言辞秽转": "主角试图说出正常话语时，声音被扭曲为下流露骨的淫语。战术交流、反抗宣言、求救呼喊——出口全变成了淫荡的自白与呻吟——无法用言语进行任何有效沟通。",
             "情趣玩具": "Boss使用远程遥控或召唤出的道具（震动环、前列腺按摩器）羞辱主角。重点描绘主角不得不'一边战斗一边忍受后穴震动'的窘迫，以及开关掌握在敌人手中的无力感。"
   };
 
@@ -143,11 +164,11 @@ if (
             "巨根化": "强制让阴茎变得巨大而敏感。重点描绘沉重的性器对战斗造成的物理阻碍（如跑步时拍打大腿），以及因过度敏感而产生的持续性干扰。",
             "精浴": "用大量体液覆盖主角全身。重点描绘粘液带来的湿滑、腥臭和视觉上的污浊感，以及彻底被其他雄性气息包围的堕落感。",
             "窒息": "通过勒颈、闷盖等方式剥夺氧气。重点描绘缺氧带来的意识模糊、肢体抽搐，以及在濒死边缘产生的异常脑内快感。",
-            "疼痛": "将痛觉转化为快感。重点不是单纯伤害，而是疼痛瞬间转为酥麻高潮的"痛觉改写"，对主角进行M属性调教。",
+            "疼痛": "将痛觉转化为快感。重点不是单纯伤害，而是疼痛瞬间转为酥麻高潮的'痛觉改写'，对主角进行M属性调教。",
             "高潮寸止": "反复将主角带至高潮边缘后强制停止。重点描绘那种'求而不得'的极致焦躁，以及主角为了获得解脱而不得不哀求敌人的失态。",
             "群交": "利用多人同时进攻造成的感官过载。重点描绘全身上下没有一处是自由的压迫感，以及被彻底填满、淹没在肉体海洋中的混乱。",
-            "分身": "敌人会分身或是变为主角的样子。主角面对"一人多体"的数量压制，体验轮奸的感觉。",
-            "肛交": "重点开发直肠与前列腺，强调肛门紧涩羞耻感、被异物撑开的扩张痛感，以及前列腺高潮（直接攻击雄性弱点）。逐步让主角承认"后面更舒服"的堕落。",
+            "分身": "敌人会分身或是变为主角的样子。主角面对'一人多体'的数量压制，体验轮奸的感觉。",
+            "肛交": "重点开发直肠与前列腺，强调肛门紧涩羞耻感、被异物撑开的扩张痛感，以及前列腺高潮（直接攻击雄性弱点）。逐步让主角承认'后面更舒服'的堕落。",
             "石化": "利用石化诅咒逐渐剥夺主角的生物机能，将其变为永恒的玩物。重点描绘肢体末端逐渐变沉、变硬、失去知觉的恐怖过程，以及最终在'意识清醒却无法动弹'的石像状态下，作为一尊精美的色情雕塑被随意摆弄的绝望感。",
             "蔷薇": "利用雄性之间的对抗转化出的性张力。重点描绘男性特有的硬朗触感、力量碰撞带来的迷乱，以及'被同性征服'所产生的异样背德与沉溺。",
             "共感链接": "敌人建立强制性的感官共享。对象可以是与器官绑定的道具（器官共感），也可以是受难的分身。重点描绘'明明本体没有被触碰，身体却在剧烈高潮'的感官错位。",
@@ -171,7 +192,7 @@ if (
 
   // --- 构建副主题算法提示词 ---
   let selectionLogicBlock = "";
-  let fallbackSubTheme = "'[你选择的副主题]'";
+  let fallbackSubTheme = "\"[你选择的副主题]\"";
 
   if (subThemeLocked) {
       fallbackSubTheme = `"${subThemeLocked}"`;
@@ -207,7 +228,7 @@ ${poolList}
 
 if (personality === '英雄') {
 %>
-# 指令：新BOSS生成
+# 指令：新BOSS战引入
 # 幕间生活结束，你需要创作构建新的BOSS。请基于下面的指导构建下一场战斗，并引入适当的预兆。
 
 generation_protocol:
@@ -234,14 +255,32 @@ generation_protocol:
           - 精神/能力(如'催眠'、'时间停止')：作为他被赋予的超能力。
           - 魔物(如'触手'、'史莱姆')：可以是他饲养的、释放的、或通过组织科技召唤的战斗兵器。
 <%_ } else { _%>
-    design_magical_girl:
+<%_ if (knownHero) { _%>
+    design_existing_hero:
       theme_inspiration: "【<%= mainTheme %>】"
       theme_flavor: "<%= flavorText %>"
-      instruction: "设计一位敌对的【堕落小英雄】及其【核心能力】。你可以参考主题【<%= mainTheme %>】巧妙地设计他的战斗风格！"
+      instruction: "本次的敌人是一位已知的敌对堕落小英雄。请直接使用以下设定，不再重新设计。"
+      known_hero_data:
+        真实姓名: "<%= knownHero.realName %>"
+        堕落英雄名: "<%= knownHero.堕落英雄名 || '未知' %>"
+        反派核心能力: "<%= knownHero.反派核心能力 || '未知' %>"
+        反派代表色: "<%= knownHero.反派代表色 || '未知' %>"
+        外貌身材: "<%= knownHero.外貌身材 || '未知' %>"
+        与主角关系: "<%= knownHero.与主角关系 || '未知' %>"
+      fight_history: "<%= fightHistory %>"
+      design_guidelines: |
+        - 环境/道具(如'直播'、'公开调教')：设定为他的喜好、玩法等。
+        - 能力名应简短直观，具有想象空间，避免直接使用粗俗词汇。
+<%_ } else { _%>
+    design_hero_enemy:
+      theme_inspiration: "【<%= mainTheme %>】"
+      theme_flavor: "<%= flavorText %>"
+      instruction: "设计一位敌对的【堕落小英雄】及其【核心能力】。你可以参考主题【<%= mainTheme %>】巧妙地设计他的战斗风格！同时，请将新角色的基本信息插入到 /世界/小英雄名录 中。"
       design_guidelines: |
         - 环境/道具(如'直播'、'公开调教')：设定为他的喜好、玩法等。
         - 精神/能力(如'催眠'、'时间停止')：直接作为他的核心能力。
         - 能力名应简短直观，具有想象空间，避免直接使用粗俗词汇。
+<%_ } _%>
 <%_ } _%>
 
   step_2_design_stage:
@@ -252,13 +291,14 @@ generation_protocol:
       - type: "私密结界: 隔绝外界。适合行事隐秘的敌人。"
 
   step_3_narrative_trigger:
-    instruction: "导入敌人的存在：主角通过新闻播报、信息搜集、通讯设备的情报、或是远处的异象，确认新威胁的出现或异常事件的发生。"
-    constraints: "【严禁直接接敌】！本次回复仅用于烘托悬疑感、危机感，为接下来的调查铺垫，引入接下来的调查阶段。保持单元剧节奏，避免宏大叙事。严格避免腐烂、恶臭、肮脏等生理性倒胃口内容。"
-    narrative_focus: |
-      通过骚动/环境变化（出现在附近），传言或新闻/网络（得知信息）等手段，侧面暗示本次主题的特质。
+    constraints: "本次回复的任务是【战前预兆与遭遇】，必须严格契合上述【<%= threatTitle %>】的氛围基调，禁止过度渲染不符合该等级的危机感或搞笑感。【严禁直接接敌】！本次回复仅用于烘托悬疑感、危机感，为接下来的调查铺垫。保持单元剧节奏，避免宏大叙事。严格避免腐烂、恶臭、肮脏等生理性倒胃口内容。"
+    action_directives:
+      - "通过符合本关卡主题的媒介暗示新敌人的存在。"
+      - "将叙事场景自然地引导至主角开始调查、准备与敌人周旋、对峙的场景。"
+    anti_rush_protocol: "【严禁】在本回合直接爆发正面战斗或造成实质侵犯！"
 
   step_4_data_synchronization:
-    instruction: "必须在 <JSONPatch> 数组内输出以下精确指令（注意括号闭合）："
+    instruction: "必须在 <JSONPatch> 数组内输出以下精确指令，触发本次设计的BOSS战："
     mandatory_patch_template: |[
         { "op": "replace", "path": "/进程/阶段", "value": "战斗准备" },
         <%_ if (actualPrey === '魔物') { _%>
@@ -266,22 +306,25 @@ generation_protocol:
         <%_ } else if (actualPrey === '人类') { _%>
         { "op": "replace", "path": "/世界/当前关卡/名称", "value": "[敌人的名字/BOSS战的名称]" },
         <%_ } else { _%>
-        { "op": "replace", "path": "/世界/当前关卡/名称", "value": "[堕落小英雄名]" },
+        { "op": "replace", "path": "/世界/当前关卡/名称", "value": "<%= knownHero ? knownHero.堕落英雄名 || knownHero.realName : '[堕落小英雄名]' %>" },
         <%_ } _%>
         { "op": "replace", "path": "/世界/当前关卡/Boss基础强度", "value": <%= finalBossStrength %> },
         { "op": "replace", "path": "/世界/威胁等级", "value": <%= threatLevel %> },
         { "op": "replace", "path": "/世界/当前关卡/战斗类型", "value": "<%= actualPrey %>" },
         <%_ if (actualPrey === '魔物' || actualPrey === '人类') { _%>
         { "op": "replace", "path": "/世界/当前关卡/核心主题", "value":["<%= mainTheme %>", <%- fallbackSubTheme %>] }
+        <%_ } else if (knownHero) { _%>
+        { "op": "replace", "path": "/世界/当前关卡/核心主题", "value": ["<%= knownHero.反派核心能力 || '未知能力' %>"] }
         <%_ } else { _%>
-        { "op": "replace", "path": "/世界/当前关卡/核心主题", "value": ["[能力1]", "[能力2]"] }
+        { "op": "replace", "path": "/世界/当前关卡/核心主题", "value": ["[能力1]", "[能力2]"] },
+        { "op": "insert", "path": "/世界/小英雄名录/[真实姓名]", "value": { "表面身份": "[AI设计的表面身份]", "人格阵营": "反派", "堕落英雄名": "[AI设计的堕落英雄名]", "反派核心能力": "[AI设计的反派核心能力]", "反派代表色": "[AI设计的反派代表色]", "反派性格特质": "[AI设计的反派性格特质]", "外貌身材": "[AI设计的外貌身材]", "与主角关系": "[AI设定的关系]" } }
         <%_ } _%>
       ]
 ---
 <%_
-  } else { // 堕落路线
+  } else { // 反派路线
 %>
-# 指令：新BOSS生成
+# 指令：新BOSS战引入
 # 幕间生活结束，你需要创作构建新的BOSS。请基于下面的指导构建下一场战斗，并引入适当的预兆。
 
 fallen_script_generation:
@@ -292,7 +335,7 @@ fallen_script_generation:
     ai_task: "<%= preyTaskInstruction %>"
     constraints: "保持故事线平顺，避免引入宏大的幕后势力、神秘组织等。严格避免引入腐烂、恶臭等生理性倒胃口的内容。"
 
-step_2_design_scenario:
+  step_2_design_scenario:
     instruction: "请根据锁定的猎物类型，完成对应的设计。"
 <%_ if (actualPrey === '魔物') { _%>
     design_monster:
@@ -304,19 +347,37 @@ step_2_design_scenario:
       mandatory_core_theme: "<%= mainTheme %>"
       theme_definition: "【核心手段】: <%= flavorText %>"
 <%- selectionLogicBlock %>
-      instruction: "设计一位不自量力觊觎着堕落小英雄的人类，主题【<%= mainTheme %>】将会是他（们）试图使用的手段。"
+      instruction: "设计一位觊觎着堕落小英雄的人类，主题【<%= mainTheme %>】将会是他（们）试图使用的手段。"
       design_guidelines: |
-        - 人类敌人：人类没有强大的魔法，他必定是利用某种身份、把柄或特异物品来制服小英雄。
+        - 人类敌人：人类没有强大的能力，他必定是利用某种身份、把柄或特异物品来制服小英雄。
           - 环境/道具(如'直播'、'公开调教')：设定为本次事件的场景、特殊情况等。
           - 魔物(如'触手'、'史莱姆')或是能力(如'催眠'、'时间停止')：可以成为他的超能力、饲养的魔物、或是胁迫的手段。
         - 既然主角是堕落小英雄，面对人类的特异道具（如催眠APP）或威胁，他完全可以假装被控制或半推半就，享受把弄猎物的快感。
 <%_ } else { _%>
-    design_magical_girl:
-      instruction: "设计一位敌对的正义小英雄及其【核心能力】。"
+<%_ if (knownHero) { _%>
+    design_existing_hero:
+      theme_inspiration: "【<%= mainTheme %>】"
+      theme_flavor: "<%= flavorText %>"
+      instruction: "本次的猎物是一位已知的英雄。请直接使用以下设定，不再重新设计。"
+      known_hero_data:
+        真实姓名: "<%= knownHero.realName %>"
+        英雄名: "<%= knownHero.英雄名 || '未知' %>"
+        英雄核心能力: "<%= knownHero.英雄核心能力 || '未知' %>"
+        英雄代表色: "<%= knownHero.英雄代表色 || '未知' %>"
+        外貌身材: "<%= knownHero.外貌身材 || '未知' %>"
+        与主角关系: "<%= knownHero.与主角关系 || '未知' %>"
+      fight_history: "<%= fightHistory %>"
+      design_guidelines: |
+        - 能力应简短、直观，便于转化为战斗行动。
+        - 能力应具有被利用于色情的想象空间 (如: '操控植物')。
+<%_ } else { _%>
+    design_hero_enemy:
+      instruction: "设计一位敌对的正义小英雄及其【核心能力】。同时，请将新角色的基本信息插入到 /世界/小英雄名录 中。"
       design_guidelines: |
         - 能力应简短、直观，便于转化为战斗行动。
         - 能力应具有被利用于色情的想象空间 (如: '操控植物')。
         - 避免使用直接的色情词汇作为能力名 (如: '拘束' 是玩法，不是能力)。
+<%_ } _%>
 <%_ } _%>
 
   step_3_design_stage:
@@ -327,11 +388,13 @@ step_2_design_scenario:
       - type: "私密结界: 隔绝外界。适合行事隐秘的敌人。"
 
   step_4_narrative_trigger:
-    instruction: "导入敌人：主角通过新闻播报、信息搜集、或是远处的异象，从远距离锁定了猎物或察觉了有趣的动静。"
-    constraints: "【严禁直接接敌】！本次回复仅用于烘托悬疑感或是目标的诱人之处，为接下来的调查铺垫，引入接下来的调查阶段。保持单元剧节奏，避免宏大叙事。严格避免腐烂、恶臭、肮脏等生理性倒胃口内容。"
+    constraints: "本次回复烘托悬疑、危机感，为接下来的调查或周旋进行铺垫。"
+    action_directives:
+      - "通过符合本关卡主题的媒介（如异常的能量波动、一则传闻、或通讯设备的情报），暗示新敌人的存在。"
+      - "将叙事场景自然地引导至主角开始调查、准备与敌人周旋、对峙的场景。不能让主角轻易离开。"
 
   step_5_data_synchronization:
-    instruction: "在完成上述发现目标的叙事后，你【必须】输出以下对应的 JSON Patch 块（注意中括号闭合）："
+    instruction: "你【必须】输出以下对应的 JSON Patch 块，触发本次设计的BOSS战："
     mandatory_patch_template: |[
         { "op": "replace", "path": "/进程/阶段", "value": "战斗准备" },
         <%_ if (actualPrey === '魔物') { _%>
@@ -339,15 +402,18 @@ step_2_design_scenario:
         <%_ } else if (actualPrey === '人类') { _%>
         { "op": "replace", "path": "/世界/当前关卡/名称", "value": "[人类BOSS名]" },
         <%_ } else { _%>
-        { "op": "replace", "path": "/世界/当前关卡/名称", "value": "[小英雄名]" },
+        { "op": "replace", "path": "/世界/当前关卡/名称", "value": "<%= knownHero ? knownHero.英雄名 || knownHero.realName : '[小英雄名]' %>" },
         <%_ } _%>
         { "op": "replace", "path": "/世界/当前关卡/Boss基础强度", "value": <%= finalBossStrength %> },
         { "op": "replace", "path": "/世界/威胁等级", "value": <%= threatLevel %> },
         { "op": "replace", "path": "/世界/当前关卡/战斗类型", "value": "<%= actualPrey %>" },
         <%_ if (actualPrey === '魔物' || actualPrey === '人类') { _%>
         { "op": "replace", "path": "/世界/当前关卡/核心主题", "value":["<%= mainTheme %>", <%- fallbackSubTheme %>] }
+        <%_ } else if (knownHero) { _%>
+        { "op": "replace", "path": "/世界/当前关卡/核心主题", "value": ["<%= knownHero.英雄核心能力 || '未知能力' %>"] }
         <%_ } else { _%>
-        { "op": "replace", "path": "/世界/当前关卡/核心主题", "value": ["[能力1]", "[能力2]"] }
+        { "op": "replace", "path": "/世界/当前关卡/核心主题", "value": ["[能力1]", "[能力2]"] },
+        { "op": "insert", "path": "/世界/小英雄名录/[真实姓名]", "value": { "表面身份": "[AI设计的表面身份]", "人格阵营": "英雄", "英雄名": "[AI设计的英雄名]", "英雄核心能力": "[AI设计的英雄核心能力]", "英雄代表色": "[AI设计的英雄代表色]", "英雄性格特质": "[AI设计的英雄性格特质]", "外貌身材": "[AI设计的外貌身材]", "与主角关系": "[AI设定的关系]" } }
         <%_ } _%>
       ]
 ---

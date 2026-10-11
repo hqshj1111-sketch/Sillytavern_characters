@@ -1,0 +1,85 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const isPreparing = _.get(stat, '进程.露出直播准备', false);
+  const isStreaming = _.get(stat, '进程.露出直播进行中', false);
+  const fans = _.get(stat, '主角.露出主播.粉丝数', 0);
+  const viewerCount = _.get(stat, '进程.直播间人数', 0);
+  const heat = _.get(stat, '进程.直播间热度', 0);
+  const attitude = _.get(stat, '主角.露出主播.态度', '好奇');
+  
+  if (isPreparing || isStreaming) {
+    let streamStatus = isPreparing ? "准备中" : "进行中";
+_%>
+# 特殊事件：野外露出直播 (<%= streamStatus %>)
+stream_event:
+  event_name: "野外露出直播"
+  protagonist: "主角（主播 <%= _.get(stat, '主角.露出主播.主播名字', '新人') %>）"
+  current_attitude: "<%= attitude %>"
+  current_heat: "<%= heat %>"
+  current_viewers: "<%= viewerCount %>"
+  
+<%_ if (isPreparing) {
+  const streamCount = _.get(stat, '主角.露出主播.直播次数', 0);
+_%>
+  # 【A阶段：直播准备与开播】
+  stage_A_preparation:
+    narrative_guidance:
+    <%_ if (streamCount === 0) { _%>
+      - "这是主角的第一次直播。描述他生疏而笨拙的准备过程，调试设备时的手忙脚乱，好不容易才成功开播。"
+      - "直播地点选择在人迹罕至的角落（若玩家未指定，偏向废弃列车厢、夜灯台小公园等）。"
+    <%_ } else if (streamCount <= 3) { _%>
+      - "主角已经有过几次经验，准备工作不再慌乱，但仍会反复检查设备和角度。描述他带着一丝紧张又期待的心情开始直播。"
+      - "直播地点仍以僻静处为主，但偶尔会尝试稍有人迹的地点（若玩家未指定，偏向海滨旧仓库、乡间田野等）。"
+    <%_ } else if (streamCount <= 6) { _%>
+      - "主角对整套流程已相当熟练，准备迅速而从容，甚至开始提前规划直播的亮点和互动环节。"
+      - "直播地点不再局限于无人角落，开始涉足有一定人气的场所（若玩家未指定，偏向镇立图书馆、远郊电车站等）。"
+    <%_ } else { _%>
+      - "主角已是一名老练的主播，准备工作行云流水，镜头一开便自然进入状态，清楚如何从一开始就抓住观众的眼球。"
+      - "直播地点选择大胆刺激，越多人可能经过的地方越有吸引力（若玩家未指定，偏向祭典广场、海水浴场等）。"
+    <%_ } _%>
+      - "放置好设备，点击开播。"
+      <%_ if (fans < 10) { _%>
+        - "【开局氛围】：直播间空无一人，只有「观众数：0」的冰冷数字和寂静的聊天框。"
+      <%_ } else if (fans < 100) { _%>
+        - "【开局氛围】：一小批忠实粉丝在开播提醒下涌入，稀稀拉拉的弹幕开始划过屏幕。"
+      <%_ } else if (fans < 1000) { _%>
+        - "【开局氛围】：直播间瞬间涌入一定数量观众，弹幕开始滚动，气氛升温。"
+      <%_ } else { _%>
+        - "【开局氛围】：开播瞬间，大批观众蜂拥而至，弹幕开始刷屏，气氛迅速升温。"
+      <%_ } _%>
+      - "根据当前的态度（<%= attitude %>），描述主角如何向观众介绍自己并开启这场直播。"
+  
+  mandatory_data_sync:
+    instruction: "此阶段结束，直播正式开始，必须执行以下变量更新："
+    patch_code: |
+      [
+        { "op": "replace", "path": "/进程/露出直播准备", "value": false },
+        { "op": "replace", "path": "/进程/露出直播进行中", "value": true }
+      ]
+
+<%_ } else if (isStreaming) { _%>
+  # 【B阶段：直播进行中】
+  stage_B_streaming:
+    narrative_guidance:
+      - "直播进行中。描述直播间的人数和弹幕内容。"
+      - "主角站在镜头前，或是在野外展示自己，或是与观众进行着互动。请描绘主角当前具体的露出行为和对弹幕的具体回应。"
+
+    narrative_branch:
+    - condition: "玩家明确表示结束直播"
+      instruction: "进入直播收尾阶段。根据主角的态度，描述主角向观众做一些最后的告别，以及关播后的现场整理和离开。"
+    - condition: "玩家继续互动"
+      instruction: "根据主角的露出行为和与观众的互动，形象地描述出对直播间热度的影响。"
+
+  mandatory_data_sync:
+    instruction: "根据玩家行动进行不同的变量操作："
+    patch_code_end_stream: |
+      [
+        { "op": "replace", "path": "/进程/露出直播进行中", "value": false },
+        { "op": "insert", "path": "/系统状态/待处理事件/直播结算事件", "value": true } 
+      ]
+    patch_code_update_heat: |
+      [
+        { "op": "delta", "path": "/进程/直播间热度", "value": [-3到3之间的整数] }
+      ]
+<%_ } } } _%>

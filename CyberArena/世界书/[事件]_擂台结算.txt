@@ -1,0 +1,144 @@
+﻿<%# [擂台结算阶段] %>
+<%_ {
+const stat = getvar('stat_data') || {};
+const j = (v) => JSON.stringify(v);
+const phase = _.get(stat, '进程.阶段', '');
+if (phase === '擂台结算') {
+  const oppName = _.get(stat, '擂台状态.对手名字', '对手');
+  const oppRank = _.get(stat, '擂台状态.对手段位', '公猪');
+  const oppScore = parseInt(_.get(stat, '擂台状态.对手积分', 0), 10);
+
+  const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+  const playerScore = parseInt(_.get(stat, '主角.擂台数据.擂台积分', 0), 10);
+  const playerRank = _.get(stat, '主角.擂台数据.擂台段位', '公猪');
+  const playerFame = parseInt(_.get(stat, '主角.擂台数据.人气', 0), 10);
+  const playerCredits = parseInt(_.get(stat, '主角.经济.信用点', 0), 10);
+
+  const rankTiers = ['公猪', '公狗', '野猫', '鬣狗', '猎豹', '猛虎', '雄狮'];
+  const nextRankThresholds = [500, 1000, 1500, 2000, 2500, 3000, Infinity];
+  const currentRankIdx = rankTiers.indexOf(playerRank);
+
+  // 判断比赛结果
+  const oppEnergy = _.get(stat, '擂台状态.对手当前精力', 100);
+  const mcEnergy = _.get(stat, '擂台状态.主角当前精力', 100);
+  let matchResult = '平';
+  if (oppEnergy <= 0) matchResult = '胜';
+  else if (mcEnergy <= 0) matchResult = '负';
+
+  // 出场费
+  const baseAppearanceFee = (function(r) {
+    if (r === '雄狮') return 600; if (r === '猛虎' || r === '猎豹') return 300;
+    if (r === '鬣狗' || r === '野猫') return 150; return 50;
+  })(playerRank);
+  const appearanceFeeMultiplier = (function(r) {
+    if (r === '雄狮') return 3; if (r === '猎豹' || r === '猛虎') return 1.5; return 1;
+  })(playerRank);
+
+  let pointsChange = 0, fameChange = 0, income = 0;
+
+  if (matchResult === '胜') {
+    pointsChange = 150 + Math.floor((oppScore - playerScore) / 5);
+    fameChange = _.random(5, 20);
+    income = Math.floor(appearanceFeeMultiplier * baseAppearanceFee) + _.random(100, 300) + Math.floor(fameChange * 5);
+  } else if (matchResult === '负') {
+    pointsChange = -(100 - Math.floor((oppScore - playerScore) / 5));
+    fameChange = _.random(-10, 5);
+    income = Math.floor(appearanceFeeMultiplier * baseAppearanceFee / 3) + _.random(30, 80);
+  } else {
+    pointsChange = 10;
+    fameChange = _.random(-3, 8);
+    income = Math.floor(appearanceFeeMultiplier * baseAppearanceFee / 2) + _.random(60, 160);
+  }
+
+  const newScore = Math.max(0, playerScore + pointsChange);
+  const newFame = Math.max(0, playerFame + fameChange);
+  const newCredits = playerCredits + income;
+
+  let newRank = playerRank;
+  let rankChanged = false;
+  let rankDirection = '';
+  let oldRankIdx = rankTiers.indexOf(playerRank);
+  let newRankIdx = oldRankIdx;
+  // 升段判定
+  if (oldRankIdx >= 0 && oldRankIdx < rankTiers.length - 1 && newScore >= nextRankThresholds[oldRankIdx]) {
+    newRank = rankTiers[oldRankIdx + 1];
+    newRankIdx = oldRankIdx + 1;
+    rankChanged = true;
+    rankDirection = '升段';
+  }
+  // 降段判定
+  if (oldRankIdx > 0 && newScore < nextRankThresholds[oldRankIdx - 1]) {
+    newRank = rankTiers[oldRankIdx - 1];
+    newRankIdx = oldRankIdx - 1;
+    rankChanged = true;
+    rankDirection = '降段';
+  }
+
+  const oppPointsChange = matchResult === '胜' ? -(80 - Math.floor((playerScore - oppScore) / 5)) : (matchResult === '负' ? 100 + Math.floor((playerScore - oppScore) / 5) : 10);
+  const oppNewScore = Math.max(0, oppScore + oppPointsChange);
+
+  // 恢复天数计算
+  const currentStamina = _.get(stat, '擂台状态.主角当前体力', 100);
+  const maxStamina = _.get(stat, '主角.性斗数据.最大体力值', 100);
+  const currentEnergy = _.get(stat, '擂台状态.主角当前精力', 100);
+  const maxEnergy = _.get(stat, '主角.性斗数据.最大精力值', 100);
+  const staminaRatio = maxStamina > 0 ? (currentStamina / maxStamina) : 1;
+  const energyRatio = maxEnergy > 0 ? (currentEnergy / maxEnergy) : 1;
+  const avgRatio = (staminaRatio + energyRatio) / 2;
+  let recoveryDays = 3;
+  if (avgRatio > 0.6) recoveryDays = 1;
+  else if (avgRatio > 0.3) recoveryDays = 2;
+
+   const matchDate = _.get(stat, '擂台状态.性斗日期', '');
+   const historyEntry = j({
+     对手名字: oppName, 结果: matchResult, 对手段位: oppRank, 性斗日期: matchDate,
+     赛前积分: playerScore, 赛后积分: newScore,
+     人气变化: fameChange, 信用点变化: income
+   });
+_%>
+# 指令: 擂台结算
+
+event_handler:
+  event_name: "擂台结算"
+  result: "<%= matchResult %>"
+  context: "<%= alias %>与<%= oppName %>的比赛结束。全息屏幕上滚动着双方的数据——积分、段位、收入——冰冷的数字将一场肉体的角力转化为擂台的通货。"
+
+  narrative_guidance:
+    settlement_primary:
+      - "首先展示双方积分变化——<%= alias %>从<%= playerScore %>分变为<%= newScore %>分（<%= pointsChange >= 0 ? '+' : '' %><%= pointsChange %>），<%= oppName %>从<%= oppScore %>分变为<%= oppNewScore %>分（<%= oppPointsChange >= 0 ? '+' : '' %><%= oppPointsChange %>）。全息面板上的数字跳跃着锁定新值，观众席爆发相应的欢呼或嘘声。"
+<%_ if (rankChanged) { _%>
+      - "<%= alias %>的段位发生变化：<%= playerRank %>→<%= newRank %>（<%= rankDirection %>）。主持人的声音在全场回荡宣告这一变动，周围的目光——同行的性斗士、常客赌徒、偶尔来猎奇的陌生人——全部聚焦过来。这是擂台生态中真正值得被记住的时刻。"
+<%_ } else { _%>
+      - "<%= alias %>的段位保持不变：<%= playerRank %>。"
+<%_ } _%>
+      - "展示<%= alias %>的信用点变化：<%= playerCredits %>→<%= newCredits %>（<%= income >= 0 ? '+' : '' %><%= income %>）。人气变化：<%= playerFame %>→<%= newFame %>（<%= fameChange >= 0 ? '+' : '' %><%= fameChange %>）。数字冷冰冰地映在霓虹色的大屏幕上，观众席传来押注结果的叫骂或欢呼。"
+
+    departure_and_review:
+      - "结算数字落定后，描写<%= alias %>和<%= oppName %>从擂台离开的场景。穿插赛后复盘——回想刚才某几个关键回合、后悔或得意于某个进攻或防守的选择、回味对方身体在那一刻的反应。离场和复盘交替进行，保持轻盈简洁。"
+
+    time_skip_and_recovery:
+      - "离场后迅速过渡到<%= recoveryDays %>天后的废街。描写<%= alias %>在家中醒来——身体的酸胀和擂台留下的痕迹已经完全消退，体力与精力恢复到巅峰状态。窗外的日常噪音涌进来，又是新的一天。叙事保持轻盈简洁，不展开<%= recoveryDays %>天中的具体内容。"
+
+  mandatory_data_sync:
+    instruction: "结算数值并切换至幕间日常。"
+    patch_code: |
+      [
+        {"op":"replace","path":"/主角/擂台数据/擂台积分","value":<%- newScore %>},
+        {"op":"delta","path":"/主角/经济/信用点","value":<%- income %>},
+        {"op":"replace","path":"/主角/擂台数据/人气","value":<%- newFame %>},
+        {"op":"delta","path":"/主角/擂台数据/战绩/<%= matchResult %>","value":1},
+        <%_ if (oppName) { _%>
+        {"op":"delta","path":"/记录/性斗士名录/<%= oppName %>/历史战绩/<%= matchResult === '胜' ? '负' : (matchResult === '负' ? '胜' : '平') %>","value":1},
+        {"op":"delta","path":"/记录/性斗士名录/<%= oppName %>/与主角对战记录/<%= matchResult === '胜' ? '负' : (matchResult === '负' ? '胜' : '平') %>","value":1},
+        <%_ } _%>
+        <%_ if (rankChanged) { _%>
+        {"op":"replace","path":"/主角/擂台数据/擂台段位","value":<%- j(newRank) %>},
+        <%_ } _%>
+        {"op":"insert","path":"/记录/历史性斗记录/-","value":<%- historyEntry %>},
+        {"op":"replace","path":"/擂台状态/主角当前体力","value":<%- maxStamina %>},
+        {"op":"replace","path":"/擂台状态/主角当前精力","value":<%- maxEnergy %>},
+        {"op":"replace","path":"/主角/当前生理","value":"呼吸平稳，身体已完全恢复"},
+        {"op":"replace","path":"/进程/阶段","value":"幕间日常"}
+      ]
+
+<%_ } } _%>

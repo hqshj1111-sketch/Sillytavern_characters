@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://testingcf.jsdelivr.net/gh/StageDog/tavern_sync/dist/schema/regex.zh.json
+名称: '[美化]_变量同步-暗哑黑盒'
+描述: '将LLM输出的<UpdateVariable>代码块折叠或隐藏，保证故事正文沉浸体验'
+启用: true
+查找正则: '<UpdateVariable>[\s\S]*?</UpdateVariable>'
+替换正则: ''
+作用位置:
+  - 角色消息

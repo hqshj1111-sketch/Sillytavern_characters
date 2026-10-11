@@ -1,0 +1,17 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['高潮事件']) {
+_%>
+event_handler:
+  event_name: "高潮时刻"
+  context: "主角的身体积累了大量的快感，即将迎来高潮。后台脚本已自动结算了相关的数值变化，你的任务是描绘这一瞬间。"
+  narrative_directives:
+    - "聚焦于感官细节，以激烈的方式描绘主角因快感爆发而产生的高潮（身体痉挛、表情失神、声音反应等）。"
+    - "高潮的强度和表现方式，应与主角当前的人格状态和性格设定保持高度一致。"
+  system_tasks:
+    instruction: "为防止事件重复触发，请在 <JSONPatch> 数组的最开始添加以下清理指令："
+    mandatory_patch: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/高潮事件" }
+      ]
+<%_ }} _%>

@@ -1,0 +1,44 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['H事件落幕']) {
+    const eventName = _.get(getvar('stat_data'), '世界.幕间H事件.名称', '色情危机');
+    const personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '善良');
+    const isCaptured = _.get(getvar('stat_data'), '系统状态.被俘状态') === true;
+_%>
+event_handler:
+  event_name: "H事件落幕：<%= eventName %>"
+<%_ if (isCaptured) { _%>
+  context: "<%= personality === '善良' ? '主角终于抓住机会，拖着身躯挣脱了锁链与巢穴，成功从绝境中逃脱了出来！' : '主角已经满足了身体的焦躁，或是找到了脱离的机会，动身离开敌人的巢穴/囚笼。' %>"
+  narrative_directives:
+  <%_ if (personality === '善良') { _%>
+    - "重点描绘主角逃出生天时的狼狈、屈辱以及劫后余生的喘息。由于她逃出了巢穴，敌人的威胁宣告彻底结束。"
+  <%_ } else { _%>
+    - "描绘主角在极度满足、潮红未退的状态下‘告别’。她毫无屈辱与恐慌，反而带着慵懒、满足的微笑，像是一次玩腻了之后的自愿离场。"
+  <%_ } _%>
+  system_tasks:
+    instruction: "必须输出以下 JSONPatch 指令。通过切换到【战后处理】，系统将彻底结算击败原BOSS的数据，并解除被俘状态："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/系统状态/幕间事件完成", "value": true },
+        { "op": "replace", "path": "/进程/阶段", "value": "战后处理" },
+        { "op": "replace", "path": "/系统状态/被俘状态","value": false },
+        { "op": "remove", "path": "/系统状态/待处理事件/H事件落幕" }
+      ]
+<%_ } else { _%>
+  context: "由于主角成功挣脱，或是因为高潮而放弃，本次幕间H事件终于落下了帷幕。"
+  narrative_directives:
+    - "请描写这场色情事件的结束与余韵。例如道具停止震动、触手退开，或是主角艰难逃脱等。"
+  <%_ if (personality === '善良') { _%>
+    - "重点描写主角在事件结束后的衣衫不整、气喘吁吁，以及她对刚才经历的羞耻回味或劫后余生的庆幸。"
+  <%_ } else { _%>
+    - "重点描写主角在事件结束后身体酥软、回味无穷的慵懒姿态。"
+  <%_ } _%>
+  system_tasks:
+    instruction: "必须输出以下 JSONPatch 指令，彻底清理事件残留变量并恢复日常节奏："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/系统状态/幕间事件完成", "value": true },
+        { "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": 25 },
+        { "op": "remove", "path": "/系统状态/待处理事件/H事件落幕" }
+      ]
+<%_ } } } _%>

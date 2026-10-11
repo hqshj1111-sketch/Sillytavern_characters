@@ -2,32 +2,181 @@
 const stat = getvar('stat_data');
 const events = _.get(stat, '系统状态.待处理事件', {});
 if (events['线索整理事件']) {
-    const worldNotes = _.get(stat, '世界.世界观备注', {});
-    const noteEntries = Object.entries(worldNotes).filter(([k]) => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
-%>
-# 事件处理: 线索整理
-本事件为后台维护任务，不需要在正文中体现。请在维持当前剧情推进的同时，于 <JSONPatch> 块中完成以下维护工作。
 
-当前的世界观备注条目 (<%= noteEntries.length %> 条):
-<%_ for (const [k, v] of noteEntries) { _%>
-  - [<%= k %>]: <%= String(v).substring(0, 80) %><%= String(v).length > 80 ? '...' : '' %>
+    // ═══ 备注分类 ═══
+    const worldNotes = _.get(stat, '世界.世界观备注', {}) || {};
+    const noteEntries = Object.entries(worldNotes)
+        .filter(([k]) => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+
+    const classifyNote = (key) => {
+        if (/^觉醒记录_/i.test(key)) return 'protected';
+        if (/^(人际关系_|NPC_|同伴_|朋友_|亲人_|人物_|角色_)/i.test(key)) return 'relationship';
+        // ← 扩充：增加 线索_/情报_/调查_
+        if (/^(弱点_|魔物常识_|敌人情报_|威胁_|机制_|规则_|线索_|情报_|调查_)/i.test(key)) return 'intel';
+        if (/^(事件_|临时_|偶遇_|遭遇_|插曲_)/i.test(key)) return 'temp';
+        return 'general';
+    };
+
+    const noteBuckets = { protected: [], relationship: [], intel: [], temp: [], general: [] };
+    noteEntries.forEach(([k]) => noteBuckets[classifyNote(k)].push(k));
+
+    // ═══ 道具分类 ═══
+    const inventory = _.get(stat, '主角.道具栏', {}) || {};
+    const itemEntries = Object.entries(inventory)
+        .filter(([k]) => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+
+    const isDepleted = (value) => {
+        if (typeof value === 'number') return value <= 0;
+        if (typeof value === 'boolean') return value === false;
+        const v = String(value).toLowerCase().trim();
+        return v === '' || ['0', '无', '已用完', '已使用', '已消耗',
+                            '破损', '失效', '已丢弃', 'false', 'null', 'empty'].includes(v);
+    };
+
+    // ← 新增：装饰性关键词
+    const DECORATIVE_KEYWORDS = /(常服|护手霜|零食|纪念品|礼品|装饰|摆设|传单|海报|杂志|报纸|饮料|糖果|手帕|纸巾)/;
+
+    const classifyItem = (key, value) => {
+        if (isDepleted(value)) return 'depleted';
+        if (DECORATIVE_KEYWORDS.test(key)) return 'decorative';
+        // ← 扩充：增加 情报_/数据_/档案_ 前缀 + 核心/模块/参数/存储体 等关键词
+        if (/^(关键|任务|线索|剧情|情报|数据|档案|记录)_/i.test(key)
+            || /(钥匙|碎片|信物|令牌|凭证|秘钥|遗物|刻印石|残页|核心|模块|参数|存储体|芯片|数据盘|样本|接口|调频|坐标)/.test(key)) {
+            return 'key';
+        }
+        if (/^(武器|装备|防具|武装|变身|饰品|戒指|项链|护符|魔杖)_/i.test(key)
+            || /(魔杖|长剑|护盾|圣衣|法器|怀表|战衣|战靴)/.test(key)) {
+            return 'equipment';
+        }
+        if (typeof value === 'number' || /^\d+$/.test(String(value).trim())) return 'consumable';
+        return 'misc';
+    };
+
+    const itemBuckets = { depleted: [], decorative: [], key: [], equipment: [], consumable: [], misc: [] };
+    itemEntries.forEach(([k, v]) => itemBuckets[classifyItem(k, v)].push(k));
+
+    // ═══ 清理强度 ═══
+    const totalLoad = noteEntries.length + itemEntries.length;
+    let intensityLabel, intensityDirective;
+    if (totalLoad < 10) {
+        intensityLabel = '轻度整理';
+        intensityDirective = '数据量较少。仅合并明显重复项，不做激进删除。';
+    } else if (totalLoad < 20) {
+        intensityLabel = '标准整理';
+        intensityDirective = '数据量适中。合并同类项，清理失效条目。';
+    } else {
+        intensityLabel = '重度整理';
+        intensityDirective = '数据量偏多。激进合并，删除所有非核心条目。';
+    }
+
+    // ═══ 渲染工具（空分类剪枝） ═══
+    const renderKeys = (arr) => arr.length === 0 ? null : `["${arr.join('", "')}"]`;
+
+    const renderBlock = (label, arr, indent = '    ') => {
+        const keys = renderKeys(arr);
+        if (!keys) return '';
+        return `${indent}${label}: ${keys}\n`;
+    };
+
+    const autoCleanupNotes = [...noteBuckets.temp];
+    const autoCleanupItems = [...itemBuckets.depleted, ...itemBuckets.decorative];
+    const hasAutoCleanup = autoCleanupNotes.length > 0 || autoCleanupItems.length > 0;
+    const hasProtected = noteBuckets.protected.length > 0
+                      || itemBuckets.key.length > 0
+                      || itemBuckets.equipment.length > 0;
+
+    // ═══ 动态 final_check ═══
+    const checks = [];
+    if (hasAutoCleanup) checks.push('auto_cleanup_list 是否已全部清除？');
+    if (hasProtected)   checks.push('protected_list 是否完好无损？');
+    if (noteBuckets.relationship.length > 0) checks.push('关系类是否已合并为每对象一条？');
+    checks.push('事件本身是否已 remove？');
+    const checkLines = checks.map(c => `      - "${c}"`).join('\n');
+_%>
+# 指令: 数据维护与档案整理
+# 本事件为纯后台静默任务。【严禁】在正文中体现任何数据维护行为、条目名或指令字眼。
+
+data_hygiene_protocol:
+  inventory:
+    notes_total: <%= noteEntries.length %>
+    items_total: <%= itemEntries.length %>
+    combined_load: <%= totalLoad %>
+    cleanup_intensity: "<%= intensityLabel %>"
+    intensity_rationale: "<%= intensityDirective %>"
+<%_ if (hasAutoCleanup) { _%>
+
+  auto_cleanup_list:
+    instruction: "以下条目已命中明确的清理判据，【必须】直接 remove。"
+<%- renderBlock('temp_notes', autoCleanupNotes, '    ') -%>
+<%- renderBlock('depleted_items', itemBuckets.depleted, '    ') -%>
+<%- renderBlock('decorative_items', itemBuckets.decorative, '    ') -%>
+<%_ } _%>
+<%_ if (hasProtected) { _%>
+
+  protected_list:
+    instruction: "以下条目【严禁】删除、合并或修改内容。"
+<%- renderBlock('awakening_records', noteBuckets.protected, '    ') -%>
+<%- renderBlock('key_items', itemBuckets.key, '    ') -%>
+<%- renderBlock('equipment_items', itemBuckets.equipment, '    ') -%>
 <%_ } _%>
 
-维护方向:
-  合并同类项: "将多条关于同一个人物、地点或设定的零散记录，整合为一条精简的完整描述。合并时以最新信息覆盖旧信息。"
-  清理过期情报: "删除已死亡的初级魔物弱点、已被解决的临时事件记录、或已离开当前剧情线的场景信息。"
-  保留核心资产: "务必保留的内容包括：重要NPC的好感/状态/关系、主角身上未消退的持续状态或诅咒、常设的世界观规则。"
-  提炼描述: "最终保留的条目应尽量洗练、客观。任何未被指定操作的条目将被自动安全保留。"
+  judgment_required_index:
+    instruction: "以下条目需要你根据具体内容决定「保留 / 合并 / 删除」。"
+    notes:
+<%- renderBlock('relationship', noteBuckets.relationship, '      ') || '      relationship: []\n' -%>
+<%- renderBlock('intel', noteBuckets.intel, '      ') || '      intel: []\n' -%>
+<%- renderBlock('general', noteBuckets.general, '      ') || '      general: []\n' -%>
+    items:
+<%- renderBlock('consumable', itemBuckets.consumable, '      ') || '      consumable: []\n' -%>
+<%- renderBlock('misc', itemBuckets.misc, '      ') || '      misc: []\n' -%>
 
-操作示例:
-  合并示例:
-    - { "op": "replace", "path": "/世界/世界观备注/小圆", "value": "同班同学，在那次战斗后似乎对主角的秘密有所察觉。最近开始主动找主角一起吃午饭。" }
-    - { "op": "remove", "path": "/世界/世界观备注/小圆_午餐对话" }
-  清理示例:
-    - { "op": "remove", "path": "/世界/世界观备注/情报_废弃工厂陷阱" }
-  新增整合条目示例:
-    - { "op": "insert", "path": "/世界/世界观备注/魔物通用弱点", "value": "大部分低级触手魔物都惧怕强光与火焰。" }
+  content_source:
+    note: "本协议只提供 key 索引。所有条目完整内容请查阅后文的 <status_current_variables> 快照。"
+    notes_location: "快照中的 world_lore_notes 字段"
+    items_location: "快照中的 主角.道具栏 节点"
 
-事件清理:
-  - { "op": "remove", "path": "/系统状态/待处理事件/线索整理事件" }
+  strategies:
+    notes:
+      relationship:
+        rule: "每个关系对象只保留 1 条。整合为「对方是谁 + 当前关系 + 最近关键互动」三要素，单条 60 字内。"
+      intel:
+        rule: "长期机制、种族特性、可复用弱点、未解线索 → 保留。已击败敌人的专属弱点、已结束事件的特殊规则 → 删除。"
+      general:
+        rule: "保留世界观基础设定与主角长期状态。删除模糊的、已被新条目覆盖的片段。"
+    items:
+      consumable:
+        rule: "数量 ≥ 1 → 保留。数量 ≤ 0 → 已自动归入 auto_cleanup_list。"
+      misc:
+        rule: "保留有持续用途或剧情价值的物品。删除已失去意义的装饰性、情境性物品。"
+
+  red_lines:
+    - "严禁删除 protected_list 中的任何条目。"
+    - "严禁在道具栏中新增物品：除非剧情中明确获得。"
+    - "严禁把已消耗的物品改回可用状态。"
+    - "严禁改动「永久性身体改造」相关条目。"
+    - "若某条目价值存疑，倾向于【保留】而非删除。"
+
+  analysis_requirement:
+    instruction: "在 <Analysis> 中必须先列出整理计划。"
+    template: |
+      【档案整理计划】
+      · 自动清理：{ 直接列出的 key }
+      · 合并：{ 合并源 } → { 目标条目 }
+      · 删除：{ 条目名 }（原因）
+      · 保留：{ 条目名 }（原因）
+      · 觉醒记录：共 N 条，全部保留。
+
+  system_tasks:
+    instruction: "在 <JSONPatch> 中执行。最后必须移除本事件。"
+    mandatory_patch: |
+      [
+        // 备注与道具的清理操作
+        { "op": "insert", "path": "/世界/世界观备注/备注名", "value": "内容……" }
+        { "op": "remove", "path": "/系统状态/待处理事件/线索整理事件" }
+      ]
+
+  final_check:
+    checklist:
+<%- checkLines %>
+    instruction: "逐项确认后，再输出 JSONPatch。"
 <%_ }} _%>

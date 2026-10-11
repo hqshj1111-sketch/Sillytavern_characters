@@ -1,0 +1,24 @@
+﻿<%_{
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+if (events['主角能力成长']) {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+    const threatLevel = events['主角能力成长'];
+_%>
+event_handler:
+  event_name: "战后能力成长"
+  context: "<%= threatLevel >= 3 ? '主角战胜了一个极为强大的敌人，力量迎来了切实的提升。' : '战斗结束，主角在胜利中得到了些许成长。' %>"
+  narrative_directives:
+  <%_ if (threatLevel >= 3) { _%>
+    - "<%= personality === '英雄' ? '宝贵的战斗经验让他感觉到自己变强了许多。描绘他反思险胜、领悟技巧。' : '满足感涌现的同时，身体里的力量变强许多。这场极限战斗带来了无与伦比的快感。' %>"
+  <%_ } else { _%>
+    - "<%= personality === '英雄' ? '吸取了经验教训，变得略强了一些。' : '满足了身心的渴望，对能量与能力更加得心应手。' %>"
+  <%_ } _%>
+    - "将力量的提升具象化为剧情（思考、能量充盈等），严禁生硬地报出数值。"
+  system_tasks:
+    instruction: "注意！能力成长的数值已由后台结算完毕，禁止你修改'基础强度'。请输出以下指令移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/主角能力成长" }
+      ]
+<%_ } } _%>

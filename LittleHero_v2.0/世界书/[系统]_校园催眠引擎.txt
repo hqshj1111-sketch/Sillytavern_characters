@@ -1,0 +1,240 @@
+<%_
+{
+// --- [系统] 校园催眠逻辑引擎 ---
+
+const stat = getvar('stat_data') || {};
+const isCharCreated = String(_.get(stat, '系统状态.主角创建完毕')) === 'true';
+const isIntermission = _.get(stat, '进程.阶段') === '幕间休息';
+const isAtSchool = String(_.get(stat, '世界.校园催眠.主角在校')) === 'true';
+const isBarrierBroken = _.get(stat, '世界.校园催眠.结界已破除', false) === true;
+const isEnabled = _.get(stat, '世界.校园催眠.启用', true) !== false;
+const isCampusHypnosis = isCharCreated && isIntermission && isAtSchool && !isBarrierBroken && isEnabled;
+const isDismissalTurn = _.get(stat, '世界.校园催眠.今日在校回合', 0) >= 10;
+
+if (isCampusHypnosis) {
+    const instructorName = _.get(stat, '世界.校园催眠.怪人代号', '教官01号');
+    const hypnoProgress = Math.round(Number(_.get(stat, '世界.校园催眠.催眠进度', 0)));
+    const isFullyHypnotized = _.get(stat, '世界.校园催眠.完全催眠阶段', false) === true || hypnoProgress >= 100;
+    const suspLevel = isFullyHypnotized ? 0 : Math.round(Number(_.get(stat, '世界.校园催眠.疑心度', 0)));
+
+    const strength = Number(_.get(stat, '主角.核心状态.基础强度', 50));
+    const corruption = Number(_.get(stat, '主角.快感状态.侵蚀度', 0));
+    const pleasure = Number(_.get(stat, '主角.快感状态.快感值', 0));
+
+    // 默认战术纠偏
+    const defaultTactic = isFullyHypnotized ? '受训' : '怀疑';
+    const tactic = _.get(stat, '主角.战斗临时.战斗方式', defaultTactic);
+
+    // --- 1. 催眠进度分级差分叙事 ---
+    let hypnoStageTitle = "";
+    let hypnoCognitiveGuidance = "";
+    let hypnoSensationGuidance = "";
+
+    if (isFullyHypnotized || hypnoProgress >= 100) {
+        hypnoStageTitle = "【完全催眠期 · 欲望解放与极乐沉沦】";
+        hypnoCognitiveGuidance = "主角的旧道德与羞耻心已彻底崩塌改写，发自内心地认同『打破凡俗伪善道德、追求极致欲望与肉体侍奉是生命的最高真理』。他自豪且狂热地以数字代号（如『战斗员07号』）自居，熟练地用露骨下流的骚话与同伴、导师谈论发情状态与侍奉心得，将漆黑全包紧身服、播放着靡靡催眠耳语的紫色代号目镜与当堂欲望释放视为至高荣耀，全身心沉溺在这片统一且极致自由放纵的乐园中。";
+        hypnoSensationGuidance = "漆黑全包紧身衣如同融为一体的第二层敏感皮肤，紫色目镜中不间断回荡的轻柔催眠音频与微电流不断挑逗着神经末梢，带来持续微醺般的发情快感与沉沦归属。肉体对任何抚弄、开发与灌注产生无底线的渴求与迎合本能。";
+    } else if (hypnoProgress >= 60) {
+        hypnoStageTitle = "【深度沉沦期 · 羞耻瓦解】";
+        hypnoCognitiveGuidance = "放纵与侍奉的本能已占据主导，曾经的世俗姓名与英雄身份变得模糊遥远。主角已彻底习惯以数字代号称呼同学与导师，言语间自然流露出大胆挑逗的下流用词，在全校开放包容的纵欲氛围下，坦然且享受地参与课桌间的肉体实操与亲密互动，仅在极少数瞬间泛起微弱迟疑，但转瞬便被耳畔甜腻的催眠音频与涌上的快感彻底淹没。";
+        hypnoSensationGuidance = "身体已经彻底适应了紧身衣的无缝紧裹与敏感带挑逗，目镜中轻柔的洗脑低语让戒备完全卸下，神经系统开始本能地期待导师与同伴的触碰、开发与交融，课堂上产生的一切黏腻快感被理所当然地接纳并享受。";
+    } else if (hypnoProgress >= 30) {
+        hypnoStageTitle = "【认知动摇期 · 沉溺拉扯】";
+        hypnoCognitiveGuidance = "精神迷雾加浓，耳旁目镜持续播放的靡靡催眠音频在脑海中回荡，主角频繁陷入出神与恍惚（“也许……在教室里抹去名字以代号相称、毫无防备地用下流骚话交流并享受快感，才是真正自由的青春？”）。周围全班同学以代号相称、毫不避讳地用露骨言语互相调戏享乐、随时随地亲密交融的开放管理氛围带来强烈的常识颠覆，思考与理智极易被情欲浪潮带偏。";
+        hypnoSensationGuidance = "紧身战斗服在课桌间的摩擦带来真实而强烈的生理快感，耳边催眠音频的低语配合敏感带遭受挑逗时泛起的燥热，让主角在残存的羞耻心与肉体沉沦之间产生剧烈的动摇与混乱。";
+    } else {
+        hypnoStageTitle = "【清醒抵触期 · 破绽百出】";
+        hypnoCognitiveGuidance = "结界催眠尚浅，主角头脑依然清晰，能敏锐察觉到眼前景象的荒谬与巨大违和（为什么全班同学与老师都穿漆黑紧身衣与紫色目镜？为什么耳边目镜一直在轻声细语播放催眠耳语？为什么大家彼此以数字代号相称？为什么所有人说话都如此露骨下流毫无羞耻？为什么全校放任大胆交欢却被当成正常上课？）。小英雄的警惕心与道德底线极强，时刻企图寻找破绽与脱困线索。";
+        hypnoSensationGuidance = "全包紧身衣贴在皮肤上带来异样的紧绷与束缚感，紫色目镜微弱的电流刺激与耳边持续回荡的靡靡催眠音频让主角感到眩晕与抵触。";
+    }
+
+    // --- 2. 动态课程场景菜单 ---
+    const allCourses = [
+        { name: "《同侪亲密互助课》", desc: "前后桌两两配对，在课桌间互相涂抹精油、探索并抚弄全身敏感带，打破人际防备与羞耻心，强化全班肉体共鸣与发情本能。" },
+        { name: "《紧身服敏感开发课》", desc: "教官手持调弄器具与教鞭走下讲台，逐一检查学生紧身衣下的敏感部位，测试并挑逗肉体在摩擦与微电流刺激下的发情反应。" },
+        { name: "《羞耻消除与教义课》", desc: "全班学习怪人组织『打破伪善道德、拥抱欲望本能』的至高教义，宣誓将身心与快感彻底奉献给组织，洗刷旧常识。" },
+        { name: "《深度口唇侍奉课》", desc: "学生在课桌前练习温存含弄与深喉技巧，学习如何用柔软唇舌取悦怪人士官与同伴，享受吞吐白浊的温热滋养。" },
+        { name: "《体腔开拓示范课》", desc: "教官点名优秀学生上台，在全班注视下对其后穴或能量核心进行深度开发与扩张，展示肉体包容力与沉溺快感时的媚态。" },
+        { name: "《课桌连携交融课》", desc: "同桌与前后桌在课桌椅间紧密相贴、互相抚弄摩擦与探索，将白日教室变为毫无隔阂与羞耻的欲望温床。" },
+        { name: "《公开绝顶展示课》", desc: "被点名的学生需在全班注视下保持坦荡受训姿态，忍受教官与教具施加的连环高潮刺激，在赞赏目光中当众绝顶娇喘。" },
+        { name: "《白浊奉纳受种课》", desc: "优秀学生跪伏在讲台前，主动敞开体腔奉献肉体通道，接纳教官滚烫的组织浓精灌注，作为对优异表现与纯粹忠诚的极乐嘉奖。" }
+    ];
+    const pickedCourses = _.sampleSize(allCourses, 2);
+
+    // --- 3. 1d20 掷骰与意图对抗计算 ---
+    const pRoll = _.random(1, 20);
+    const pBonus = Math.floor(strength / 10);
+    const pTotal = pRoll + pBonus;
+    const hypnoDC = 12 + Math.floor(hypnoProgress / 20);
+
+    let resolutionLabel = "";
+    let resolutionGuidance = "";
+    let deltaSusp = 0;
+    let setSusp = null;
+    let deltaHypno = 0;
+    let deltaPleasure = 0;
+    let deltaHp = 0;
+    let deltaDarkXp = 0;
+    let combatLog = "";
+
+    if (!isFullyHypnotized) {
+        if (tactic === '怀疑') {
+            if (pRoll === 20 || pTotal >= hypnoDC + 4) {
+                resolutionLabel = "【极大成功】敏锐识破";
+                resolutionGuidance = "主角精神高度集中，敏锐捕捉到课堂荒谬常识或导师言行中的重大逻辑破绽，疑心度大幅飙升，理智防线进一步巩固。";
+                deltaSusp = 30;
+                deltaHypno = -5;
+                combatLog = `敏锐识破|D20(${pRoll})+${pBonus}=${pTotal} vs DC:${hypnoDC}|疑心+30%`;
+            } else if (pTotal >= hypnoDC) {
+                resolutionLabel = "【成功】察觉异样";
+                resolutionGuidance = "主角敏锐注意到同伴毫无羞耻的放浪言行与耳边催眠音频的蛊惑，心生警惕，努力克制催眠情欲以保持清醒。";
+                deltaSusp = 15;
+                combatLog = `察觉异样|D20(${pRoll})+${pBonus}=${pTotal} vs DC:${hypnoDC}|疑心+15%`;
+            } else {
+                resolutionLabel = "【失败】心神动摇";
+                resolutionGuidance = "寻找破绽受阻，注意力反被耳畔靡靡催眠耳语与同伴放纵享乐的淫靡氛围所吸引，疑心受抑，催眠与快感略有加深。";
+                deltaSusp = -5;
+                deltaHypno = 5;
+                deltaPleasure = 15;
+                combatLog = `心神动摇|D20(${pRoll})+${pBonus}=${pTotal} vs DC:${hypnoDC}|催眠+5%`;
+            }
+        } else if (tactic === '忍耐') {
+            if (pTotal >= 11) {
+                resolutionLabel = "【成功】克制忍耐";
+                resolutionGuidance = "主角紧咬牙关抵御周遭放纵氛围、催眠耳语与紧身衣摩擦挑逗，克制生理发情反应，坚守理智底线。";
+                deltaPleasure = 10;
+                combatLog = `克制忍耐|D20(${pRoll})+${pBonus}=${pTotal} vs DC:11|快感+10`;
+            } else {
+                resolutionLabel = "【失败】敏感失守";
+                resolutionGuidance = "敏感部位遭受强刺激与挑弄，未能克制呻吟与溢出的快感，身体在被动发情中进一步适应放纵节奏。";
+                deltaHypno = 5;
+                deltaPleasure = 30;
+                combatLog = `敏感失守|D20(${pRoll})+${pBonus}=${pTotal} vs DC:11|催眠+5%|快感+30`;
+            }
+        } else if (tactic === '顺从') {
+            resolutionLabel = "【推进】放纵配合";
+            resolutionGuidance = "主角主动配合导师与同伴的亲密互动，放下羞耻与抵抗，疑心平息归零，催眠进度与身体快感显著增长。";
+            setSusp = 0;
+            deltaHypno = 15;
+            deltaPleasure = 45;
+            combatLog = `放纵配合|无骰点|疑心归零|催眠+15%|快感+45`;
+        } else if (tactic === '试探') {
+            if (pTotal >= 12) {
+                resolutionLabel = "【成功】隐秘试探";
+                resolutionGuidance = "主角在亲密互动中暗中言语试探同伴，捕捉到微弱的清醒意识残留或结界破绽线索。";
+                deltaSusp = 10;
+                deltaPleasure = 5;
+                combatLog = `隐秘试探|D20(${pRoll})+${pBonus}=${pTotal} vs DC:12|疑心+10%`;
+            } else {
+                resolutionLabel = "【失败】试探受阻";
+                resolutionGuidance = "试探举动露出破绽，反被热情沉溺的同伴拉入更深层次的亲密抚弄中，在导师充满宠溺的当堂调弄开发下陷入过度发情。";
+                deltaHypno = 5;
+                deltaPleasure = 25;
+                deltaHp = -5;
+                combatLog = `试探受阻|D20(${pRoll})+${pBonus}=${pTotal} vs DC:12|催眠+5%|发情脱力-5HP`;
+            }
+        }
+    } else {
+        if (tactic === '受训') {
+            resolutionLabel = "【沉溺实操】";
+            resolutionGuidance = "主角以极度放纵的战斗员身份全力投入欲望实操，主动展示敏感身躯与侍奉技巧，展现极高的沉沦与愉悦。";
+            deltaPleasure = 20;
+            deltaDarkXp = 5;
+            combatLog = `沉溺实操|本能狂欢|快感+20|印记+5XP`;
+        } else if (tactic === '助教') {
+            resolutionLabel = "【协助教学】";
+            resolutionGuidance = "主角走上讲台协助导师，当众示范体腔深度开拓与绝顶媚态，带领全班打破最后的羞耻界限。";
+            deltaPleasure = 30;
+            deltaDarkXp = 10;
+            combatLog = `协助教学|讲台示范|快感+30|印记+10XP`;
+        } else if (tactic === '侍奉') {
+            resolutionLabel = "【奉纳侍奉】";
+            resolutionGuidance = "主角顺从跪伏在导师身前，主动敞开体腔提供亲密侍奉并接纳体液灌注，表达身心完全归属的至高极乐。";
+            deltaPleasure = 50;
+            deltaDarkXp = 15;
+            combatLog = `奉纳侍奉|跪伏献身|快感+50|印记+15XP`;
+        } else if (tactic === '同化') {
+            resolutionLabel = "【传播认同】";
+            resolutionGuidance = "主角在课桌间主动抚弄挑逗同伴，向全员传播放下羞耻、追求快感的极乐常识，加固全员集体催眠沉沦。";
+            deltaPleasure = 25;
+            deltaDarkXp = 10;
+            combatLog = `传播认同|加固沉沦|快感+25|印记+10XP`;
+        }
+    }
+
+    // 构建 patchList
+    let patchList = [];
+    if (setSusp !== null) patchList.push(`{ "op": "replace", "path": "/世界/校园催眠/疑心度", "value": ${setSusp} }`);
+    else if (deltaSusp !== 0) patchList.push(`{ "op": "delta", "path": "/世界/校园催眠/疑心度", "value": ${deltaSusp} }`);
+    if (deltaHypno !== 0) patchList.push(`{ "op": "delta", "path": "/世界/校园催眠/催眠进度", "value": ${deltaHypno} }`);
+    if (deltaPleasure !== 0) patchList.push(`{ "op": "delta", "path": "/主角/快感状态/快感值", "value": ${deltaPleasure} }`);
+    if (deltaHp !== 0) patchList.push(`{ "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": ${deltaHp} }`);
+    if (deltaDarkXp > 0) patchList.push(`{ "op": "delta", "path": "/主角/黑暗印记/经验", "value": ${deltaDarkXp} }`);
+    if (combatLog) patchList.push(`{ "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": "${combatLog}" }`);
+_%>
+campus_hypnosis_engine:
+  environment_status:
+    scene: "私立高中学园 · 全域精神支配催眠结界覆盖中"
+    ruling_entity: "<%= instructorName %> (高阶怪人，身材肌肉高大魁梧，为人豪爽随和且极度开放。胯下常态高昂勃起的巨大肉棒在漆黑胶衣下轮廓毕露，是全校师生极度崇拜垂涎的极乐教官)"
+    attire_standard: "全员统一着装：【漆黑全包紧身战斗服】(面部贴合仅露口眼，曲线毕露) + 【紫色代号目镜】(镜面显示专属数字编号，内置微型音频单元24小时不间断轻柔播放靡靡之音的催眠音频与洗脑耳语，泛着冷冽紫色幽光并释放微电流挑逗神经)"
+    naming_convention: "全员数字代号制：校内所有人抹去世俗姓名与英雄身份，一律以数字代号相称（如『战斗员07号』、『23号』、『<%= instructorName %>』）"
+    speech_culture: "下流放浪交流文化：师生与同侪间交流完全打破旧社会羞耻，说话大胆露骨、骚话连篇，公开讨论敏感带反应与侍奉心得"
+    management_regime: "统一但自由开放的管理：实行『统一外表规范，内里极致放纵』模式，全校不设压抑禁令，鼓励随时随地大胆释放欲望、探索彼此身体与亲密互动"
+    current_phase: "<%= hypnoStageTitle %>"
+    hypnosis_progress: "<%= hypnoProgress %>%"
+    suspicion_level: "<%= suspLevel %>%"
+
+  current_turn_action:
+    tactic: "<%= tactic %>"
+    resolution: "<%= resolutionLabel %>"
+    guidance: "<%= resolutionGuidance %>"
+
+  narrative_guidance:
+<%_ if (isDismissalTurn) { _%>
+    - "【放学铃声响起】：今日在校催眠实操已满10回合，清脆悠扬的放学铃声准时响起！请在完成本回合收尾互动的同时，自然引导向课程结束、更衣换回普通校服以及放学离校过渡！"
+<%_ } _%>
+    - "核心宗旨：课程围绕『追求极致愉悦、学习性爱侍奉、沉溺欲望解放』进行，绝非惩戒式军事训练。"
+    - "耳畔靡音：紫色目镜中时刻回荡着轻柔靡靡的催眠耳语（如『放下羞耻吧』、『拥抱快感吧』、『成为优秀的战斗员吧』），与肢体抚弄交织，持续侵蚀理性。"
+    - "结界绝对封锁：当【疑心度】未达100%时，催眠结界处于绝对精神压制与隐秘状态，【严禁】主角以任何形式擅自摧毁、打破或提前中断结界！"
+
+  cognitive_and_sensory_rules:
+    cognitive_tier: "<%= hypnoCognitiveGuidance %>"
+    sensory_tier: "<%= hypnoSensationGuidance %>"
+
+  writing_principles:
+    - "【掌控者极乐教官特写】：<%= instructorName %>作为高阶怪人干部，身材健壮高大、肌肉虬结，为人豪爽风趣且纵欲开放。其胯下常态勃起的雄伟巨根与充沛雄性荷尔蒙，令全班师生心醉神迷、争相索求侍奉与精水赏赐，在课内外备受崇拜与垂涎。"
+    - "【严禁严酷体罚，以快感与爱意包容引导】：怪人组织的本质是『享乐主义与欲望沉沦』，绝非军国主义惩罚式军训！严禁出现严厉训斥、体能体罚、立正罚站、冷硬惩戒或『不完成动作就要惩罚』等冰冷内容。在怪人学园的常识中：学生若表现生涩、害羞或迟疑，导师和同伴绝不会生气或体罚，而是觉得这副纯情模样无比可爱，会微笑着给予更深层次的贴身抚弄、体腔开发与快感灌顶——用极致的快感与高潮溺爱代替惩罚，直接将其融化为发情状态。"
+    - "【目镜催眠音频环绕】：描写时注重视觉、触觉与听觉的多重感官刺激。紫色目镜不仅具备微电流刺激，耳旁更持续低语着温软甜腻的洗脑催眠音频，配合眼前晃动的漆黑紧身衣躯体与下流骚话，全方位将主角的理智拖入欲望泥沼。"
+    - "【数字代号相称】：校内所有人（学生、同桌、导师）严禁使用普通世俗姓名或英雄名，必须一律使用数字代号互相称呼（如『战斗员07号』、『33号同学』、『<%= instructorName %>』），去个体化的同时强化对组织的集体归属与依赖。"
+    - "【言语放浪与下流骚话】：师生与同侪之间的交流完全摒弃旧社会客套与羞耻，说话极度露骨大胆。随口点评彼此紧身衣包裹下的身体部位、直接讨论发情反应与侍奉心得，并将这种充满挑逗与荤话的表达视为阳光、健康、互助的日常交流。"
+    - "【统一而放纵的开放管理】：学园管理绝非压抑军训，而是『统一规范下的极致欲望自由』。在统一的紧身胶衣下，全校鼓励大胆探索、随时随地与同伴进行亲密抚弄与肉体交融。讲台、课桌、走廊皆为释放本能的温床，全班洋溢着充满荷尔蒙狂欢与无道德束缚的沉沦氛围。"
+    - "【荒诞纵欲反差】：将『严肃正经的课堂教学外壳』与『完全放开的肉体欲望实操』深度融合。阳光洒进的教室里，所有人神态自然、认真严谨地进行着极度亲密放纵的互动，视其为神圣、高尚而健康的日常必修课。"
+    - "【镜头与感官特写】：多描写漆黑胶衣在课桌上的黏腻摩擦声、肌肤泛起的潮红与汗水、目镜催眠音频与微电流带来的迷离酥麻、以及教室里此起彼伏的低吟娇喘与水声。"
+    - "【心理沉沦过程】：在常规阶段着重体现主角旧道德羞耻心与肉体强烈快感的博弈拉扯；在完全催眠阶段体现彻底抛下英雄与世俗包袱后、全身心投入欲望狂欢的自豪与极乐。"
+
+  boundary_and_exit_rules:
+    - "【结界绝对压制与疑心度锁定】：当【疑心度】未达到 100% 时，学园催眠结界处于绝对隐蔽与精神压制状态，【严禁】主角以任何形式（如物理攻击结界壁、擅自开启武装轰击、强行唤醒全校、破坏核心装置等）摧毁或中断催眠结界。小英雄若想破除结界，必须通过多回合的怀疑、试探与线索收集将【疑心度】积累至 100%，才能识破结界真相并正式触发决战！"
+    - "【日常离校余韵与认知脱离】：学园催眠结界仅覆盖校门范围以内。若本回合剧情涉及放学、离开学校、下课走出校门、逃出学园或脱离结界范围："
+    - "  1. 校内更衣还原：在放学离开学校前，需在校内（如更衣室或教室）自然换下漆黑全包紧身战斗服与紫色目镜，穿回普通男高校服、收拾好日常书包后准备离校。"
+    - "  2. 瞬间清醒与记忆模糊：跨出校门的刹那，笼罩脑海的紫色迷雾与耳边催眠音频如梦初醒般骤然消散；校内全员穿戴胶衣放浪侍奉、下流课堂的荒诞经历，瞬间变得如同昨夜一场荒唐朦胧的怪梦般迅速褪色模糊，所有疑点被潜意识自然合理化遗忘。"
+    - "  3. 认知与称谓还原：同学称谓自然恢复为正常的姓名，认知完全恢复为『今天度过了普普通通的校园一日』，虽身心可能残留微弱倦意或情欲余温，但可自然展开校外日常生活、社团打工或英雄巡逻。"
+
+  system_patch_requirements:
+    instruction: "请在本次输出的 JSONPatch 数组中包含以下预计算好的数值变更（若本回合离开校园，请额外追加主角在校为false的指令）："
+    mandatory_patch: |
+      [
+        <%- patchList.join(',\n        ') %>
+      ]
+<%_
+} else if (isCharCreated && isEnabled && !isBarrierBroken && !isAtSchool) {
+_%>
+campus_hypnosis_background_status:
+  status: "私立高中学园正处于高阶怪人设立的全域精神支配催眠结界笼罩中（隐秘运作中）"
+  external_quarantine_rules:
+    - "【校外信息绝对屏蔽】：校园催眠结界具有极高阶的隐秘力场与常识伪装。在主角身处校外的任何时候，【严禁】主角通过任何校外渠道（如论坛传闻、市民报警、能量雷达探测、他人告知或主动调查等）得知或接近校园存在催眠结界的真相。"
+    - "【记忆模糊】：【严禁】主角因任何契机回想起白天校园里被催眠成战斗员进行淫乱侍奉学习的经历，他只会回忆起模糊的正常的学校学习记忆。"
+    - "【表世界正常认知】：在校外所有人的认知中，该学园只是一所普通高中。主角只有在早晨上学亲自跨入校门踏入结界内部后，才会触发认知同化并接触校内的催眠常识。"
+<%_
+}
+}
+_%>

@@ -1,0 +1,32 @@
+﻿<%_
+{
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+const gamePhase = _.get(stat, '进程.阶段');
+// 判定当前是否属于日常阶段
+const isDaily = gamePhase === '幕间休息';
+
+if (events['能量告急'] && isDaily ) {
+_%>
+# 高优先级事件: 能量告急
+event_handler:
+  event_name: "补魔事件"
+  description: "主角体内的能量已经彻底见底，陷入虚弱状态。根据世界法则，必须立刻通过【补魔】（摄取精液）来高效恢复能量，你的任务是描述该事件的开端。"
+  
+  ai_tasks:
+    - task: "1. 描绘能量枯竭的生理反应"
+      instruction: "重点描写能量告急带来的四肢酸软、能量核心的空虚感，以及身体本能对能量（精液）产生的强烈渴求与难耐的燥热。"
+    - task: "2. 顺滑引入补魔情境"
+      instruction: "结合主角当前身处的环境与身边的人物（如同伴甚至对手），以此危机为契机，自然地展开以【补魔】为主题的幕间H事件的开端。"
+    - task: "3. 状态同步与事件清理 (必须)"
+      instruction: "在 <UpdateVariable> 块中，【必须】输出以下指令来移除本事件，并正式开启幕间H事件机制："
+      patch_code: |
+        [
+          { "op": "replace", "path": "/世界/幕间H事件/名称", "value": "EVENT：紧急补魔" },
+          { "op": "insert", "path": "/世界/幕间H事件/核心主题/-", "value": ["精液成瘾"] },
+          { "op": "remove", "path": "/系统状态/待处理事件/能量告急" }
+        ]
+<%_ 
+} 
+}
+_%>

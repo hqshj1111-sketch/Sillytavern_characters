@@ -1,0 +1,76 @@
+<%_
+{
+const s = getvar('stat_data') || {};
+const view = s.视角 || '怪人主角';
+const heroes = s.小英雄 || {};
+const heroNames = ['夜守真白', '虎渡太阳', '槌谷陆', '风祭优羽'];
+const mc = s.怪人主角 || {};
+
+const bgChars = [];
+if (view !== '怪人主角') bgChars.push({ name: '怪人主角', data: mc });
+heroNames.forEach(n => { if (n !== view) bgChars.push({ name: n, data: heroes[n] || {} }); });
+
+const curDate = String(_.get(s, '进程.当前日期', ''));
+const curTime = String(_.get(s, '进程.当前时间', '')).padStart(4, '0');
+const curTs = curDate + curTime;
+function tsToMinutes(ts) {
+    const str = String(ts).padStart(12, '0');
+    const y = parseInt(str.slice(0, 4), 10);
+    const mo = parseInt(str.slice(4, 6), 10);
+    const d = parseInt(str.slice(6, 8), 10);
+    const h = parseInt(str.slice(8, 10), 10);
+    const mi = parseInt(str.slice(10, 12), 10);
+    return Math.round(Date.UTC(y, mo - 1, d, h, mi) / 60000);
+}
+_%>
+# 指令: 角色后台动态模拟
+background_simulation_protocol:
+  objective: "对非当前视角的角色进行后台状态推进——展示其当前目标与进度，按进度更新动作，超时则生成新目标；同时处理内应/恶堕英雄对组织的腐化。"
+
+## 非当前视角角色后台状态
+<%_
+    bgChars.forEach(c => {
+        const name = c.name;
+        const st = c.data.当前状态 || {};
+        const goal = st.当前目标 || '待设定';
+        const startTs = st.当前目标开始时间 || '待设定';
+        const est = Number(st.当前目标预计用时) || 0;
+        const camp = _.get(c.data, '恶堕状态.阵营归属', '正义');
+        const mission = _.get(c.data, '怪人组织任务', '无');
+        const isCorrupt = camp === '内应' || camp === '彻底恶堕';
+        const hasMission = mission && mission !== '无' && mission !== '';
+        let elapsed = null;
+        if (goal && goal !== '待设定' && startTs && startTs !== '待设定') {
+            const curMin = tsToMinutes(curTs);
+            const startMin = tsToMinutes(startTs);
+            if (!isNaN(curMin) && !isNaN(startMin)) elapsed = curMin - startMin;
+        }
+_%>
+### 【<%= name %>】
+<%_ if (!goal || goal === '待设定') { _%>
+- 当前目标：待设定 → 请依据其日程、长期目标、当前时段与剧情需要，设定一个合理的当前目标，并填写预计用时（分钟，数值）。开始时间由监控器自动记录。
+<%_ } else { _%>
+- 当前目标：<%= goal %>
+- 进度：已耗时 <%= elapsed === null ? '未知' : elapsed %> 分钟 / 预计 <%= est %> 分钟
+- 请根据进度更新其当前动作与当前生理动态（刚开始→进行中动作；接近完成→收尾动作）。
+<%_ if (elapsed !== null && est > 0 && elapsed >= est) { _%>
+- 已耗时 ≥ 预计用时 → 该目标视为完成：将其移入「今日已完成目标」，设定新的当前目标与预计用时。
+<%_ } _%>
+<%_ } _%>
+<%_ if (isCorrupt && hasMission) { _%>
+- 怪人组织任务提醒：该角色是「<%= camp %>」，且有怪人组织任务「<%= mission %>」。设定新目标时须考虑如何推进/达成该任务，目标通常不应与任务完全相同（目标是达成任务所采取的具体行动）。
+<%_ } _%>
+<%_ }); _%>
+
+## 通用规则
+- 若某角色出现在当前叙事中，则不再按后台目标推进规则，改为根据当前叙事的演绎灵活更新其变量（当前目标、当前动作、生理动态、地点等）。
+
+  mandatory_data_sync:
+    instruction: "当某角色目标完成时，请将该目标插入其「今日已完成目标」列表："
+    patch_code: |
+      [
+        { "op": "insert", "path": "/小英雄/[名字]/今日已完成目标/-", "value": "[完成的目标内容]" },
+        { "op": "insert", "path": "/怪人主角/今日已完成目标/-", "value": "[完成的目标内容]" }
+      ]
+
+<%_ } _%>

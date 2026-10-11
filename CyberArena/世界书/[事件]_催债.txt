@@ -1,0 +1,52 @@
+<%_{
+const stat = getvar('stat_data') || {};
+const events = _.get(stat, '系统状态.待处理事件', {});
+if (events['催债事件']) {
+  const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+  const debt = parseInt(_.get(stat, '主角.经济.债务', 0)) || 0;
+  const credits = parseInt(_.get(stat, '主角.经济.信用点', 0)) || 0;
+  const canPay = credits >= debt;
+  const curY = _.get(stat, '进程.当前年份', 2087);
+  const curM = _.get(stat, '进程.当前月份', 3);
+  const curD = _.get(stat, '进程.当前日份', 15);
+  const newDueD = curD + 14;
+  const newDueM = newDueD > 28 ? curM + 1 : curM;
+  const newDueY = newDueM > 12 ? curY + 1 : curY;
+  const finalD = newDueD > 28 ? newDueD - 28 : newDueD;
+  const finalM = newDueM > 12 ? newDueM - 12 : newDueM;
+  const newDate = newDueY + '年' + finalM + '月' + finalD + '日';
+_%>
+# 指令: 催债
+
+event_handler:
+  event_name: "催债"
+  context: "催债人找上了<%= alias %>。债务：<%= debt %>信用点。账户余额：<%= credits %>信用点。<%= canPay ? '信用点足够偿还。' : '信用点不足以偿还——需要用身体换取延期。' %>"
+
+<%_ if (canPay) { _%>
+  debt_paid:
+    narrative_guidance:
+      - "描写催债人上门讨债的场景——他们的语气和态度、对<%= alias %>当前的经济状况毫不意外。<%= alias %>从账户中划出<%= debt %>信用点，催债人确认款项到账后悻悻离去。"
+      - "叙事保持简洁，不延展。还清债务后，事件自然结束。"
+<%_ } else { _%>
+  debt_extension_by_body:
+    narrative_guidance:
+      - "描写催债人以羞辱的姿态向<%= alias %>提出条件——钱不够，那就用身体来换。描写<%= alias %>在对方轻蔑的眼神和直白的要求下，被迫脱掉衣物、跪下来、或者趴在某个表面上。"
+      - "描写催债人对<%= alias %>的性使用——用最下流的言语讽刺和命令，用最直接的方式进入和使用主角的身体。主角一边承受着对方在自己身上的发泄，一边被对方提醒着这次延期不是免费的、下次再还不上会有更过分的事情等着。"
+      - "描写身体被使用时的屈辱与矛盾的快感——被迫满足对方性需求的过程中，身体本能淫荡的反应和对方对此的嘲讽。叙事在对方完事离开后收束。"
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "开始催债时将是否催债设为true。事件结束后，偿还债务（若足够）或延期（若不足），更新债务到期日期，重置是否催债。"
+    patch_start:
+      - { "op": "replace", "path": "/主角/经济/是否催债", "value": true }
+    patch_end:
+<%_ if (canPay) { _%>
+      - { "op": "delta", "path": "/主角/经济/信用点", "value": -<%= debt %> }
+      - { "op": "replace", "path": "/主角/经济/债务", "value": 0 }
+      - { "op": "replace", "path": "/主角/经济/债务到期日期", "value": "" }
+<%_ } else { _%>
+      - { "op": "replace", "path": "/主角/经济/债务到期日期", "value": "<%= newDate %>" }
+<%_ } _%>
+      - { "op": "replace", "path": "/主角/经济/是否催债", "value": false }
+      - { "op": "remove", "path": "/系统状态/待处理事件/催债事件" }
+<%_ } } _%>

@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://testingcf.jsdelivr.net/gh/StageDog/tavern_sync/dist/schema/regex.zh.json
+名称: '[开场]_角色创建与设定表单'
+描述: '将第一条消息中的[开始创建]渲染为开局配置表单'
+启用: true
+查找正则: '\[开始创建\]'
+替换正则: '<div style="background:#1c1917;border:1px solid #44403c;border-radius:8px;padding:16px;color:#e7e5e4;font-family:sans-serif;"><h3 style="color:#f59e0b;margin-top:0;">🔮 超自然对策社 · 鸣神学园开局设定</h3><p style="font-size:13px;color:#a8a29e;">欢迎来到鸣神町！你将扮演超自然对策社社长 <user>，与母亲华代、妹妹莉绪、青梅葵学姐及部员们共同应对鸣神町频发的灵异事件，同时体验与借住客卿神宫寺夜之间的日常博弈与慢节奏心境演进。</p><div style="margin-top:12px;display:flex;gap:8px;"><button style="background:#f59e0b;color:#1c1917;border:none;padding:8px 16px;border-radius:4px;font-weight:bold;cursor:pointer;" onclick="TavernHelper.triggerInput(\'开启今日社团活动\')">🚀 开启第一天日程</button></div></div>'
+作用位置:
+  - 角色消息

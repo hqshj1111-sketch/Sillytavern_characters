@@ -1,0 +1,33 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  if (events['露出主播邀请事件']) {
+_%>
+# 事件：露出主播邀请
+event_initiator:
+  event_name: "露出主播邀请"
+  source: "月下雪乃"
+  narrative_guidance:
+    - "雪乃注意到了主角作为露出主播的潜力和主角内心潜藏的欲望，邀请主角注册自己的账号，也来当一位露出主播，体验露出的快乐。"
+    - "【分支选项】请在叙事最后，为玩家提供一个明确的同意或拒绝的行动选项。严禁AI替玩家做出决定。"
+
+  narrative_branch:
+    - condition: "玩家选择接受"
+      instruction: "在雪乃的指导下，主角成功创建了自己账号，雪乃给出一些初步的建议，让主角自由发展，她不会过多干涉。"
+    - condition: "玩家选择拒绝"
+      instruction: "雪乃觉得遗憾但也不再纠缠，事件告一段落。"
+
+  mandatory_data_sync:
+    instruction: "事件告一段落后，根据玩家的回应输出不同的变量补丁，并移除事件标记："
+    patch_code_accept: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/露出主播邀请事件" },
+        { "op": "replace", "path": "/主角/露出主播/注册", "value": true },
+        { "op": "replace", "path": "/主角/露出主播/主播名字", "value": "[由玩家或AI决定的名字]" }
+      ]
+    patch_code_refuse: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/露出主播邀请事件" }
+      ]
+<%_ } } _%>

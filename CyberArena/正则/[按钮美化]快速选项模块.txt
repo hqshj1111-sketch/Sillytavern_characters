@@ -1,0 +1,145 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberArena · 行动选项</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;600;700&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --font-family: 'Noto Sans SC', sans-serif;
+  --color-aggressive: #ff2d95;
+  --color-tactical: #00d4ff;
+  --color-social: #b347ea;
+  --color-economic: #ffe080;
+  --text-main: #d8d8f0;
+  --text-dim: #8888aa;
+}
+
+body{margin:0;padding:0;background:transparent}
+
+.options-container{
+  font-family:var(--font-family);
+  padding:10px 5px;max-width:95%;margin:0 auto;
+  display:flex;flex-wrap:wrap;gap:10px;
+  justify-content:center;
+}
+
+.option-btn{
+  flex:1 1 calc(50% - 10px);
+  min-width:200px;
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  color:var(--text-main);
+  font-size:14px;cursor:pointer;
+  position:relative;overflow:hidden;
+  transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1);
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  text-align:left;
+}
+
+.option-btn:hover{
+  transform:translateY(-2px);
+  background:rgba(60,60,65,0.3);
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  border-color:var(--accent-color);
+}
+
+.option-btn:active{
+  transform:translateY(0);
+  background:rgba(30,30,35,0.5);
+}
+
+.icon-box{
+  display:flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,0.05);
+  color:var(--accent-color);
+  flex-shrink:0;
+  transition:all 0.3s ease;
+}
+
+.option-btn:hover .icon-box{
+  background:var(--accent-color);
+  color:#222;
+}
+
+.option-text{line-height:1.4;flex:1;opacity:0.9}
+
+/* 风格分类 */
+.style-aggressive{--accent-color:var(--color-aggressive)}
+.style-tactical{--accent-color:var(--color-tactical)}
+.style-social{--accent-color:var(--color-social)}
+.style-economic{--accent-color:var(--color-economic)}
+
+@media(max-width:500px){
+  .options-container{flex-direction:column}
+  .option-btn{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="options-container" id="options-container" style="display:none;">$1</div>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var rawContainer = document.getElementById('options-container');
+  if(!rawContainer) return;
+  var rawText = rawContainer.textContent.trim();
+  rawContainer.innerHTML = '';
+  rawContainer.style.display = 'flex';
+
+  if(!rawText) return;
+
+  // 风格分类：匹配 CyberArena 的行动类型
+  var optionStyles = [
+    {type:'Aggressive',className:'style-aggressive',icon:'\u2694'}, // 战斗/擂台
+    {type:'Tactical',  className:'style-tactical',  icon:'\u2699'}, // 训练/战略
+    {type:'Social',    className:'style-social',    icon:'\u2728'}, // 社交/探索
+    {type:'Economic',  className:'style-economic',  icon:'\u25C6'}  // 经济/交易
+  ];
+
+  var options = rawText.split(/\r?\n/).map(function(s){return s.trim();}).filter(function(s){return s.length>0;});
+
+  options.forEach(function(text,index){
+    var config = optionStyles[index % optionStyles.length];
+
+    var button = document.createElement('button');
+    button.className = 'option-btn '+config.className;
+
+    var iconBox = document.createElement('div');
+    iconBox.className = 'icon-box';
+    iconBox.textContent = config.icon;
+
+    var textSpan = document.createElement('span');
+    textSpan.className = 'option-text';
+    textSpan.textContent = text;
+
+    button.appendChild(iconBox);
+    button.appendChild(textSpan);
+
+    button.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      try{
+        var inputArea = window.parent.document.querySelector('#send_textarea');
+        if(inputArea){
+          inputArea.value = text;
+          inputArea.dispatchEvent(new Event('input',{bubbles:true}));
+          inputArea.focus();
+        }
+      }catch(err){console.error(err);}
+    });
+
+    rawContainer.appendChild(button);
+  });
+});
+</script>
+</body>
+</html>
+```

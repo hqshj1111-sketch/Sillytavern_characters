@@ -1,0 +1,53 @@
+<%_{
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+const pregState = _.get(stat, '主角.生理状态.子宫状态.受孕状态', '未受孕');
+
+if (events['净化受孕事件'] && pregState !== '未受孕') {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+    const isFallen = personality === '堕落';
+    const babySource = _.get(stat, '主角.生理状态.子宫状态.孕育信息.孕育源', '未知魔物');
+_%>
+# 消除怀孕状态 (<%= isFallen ? '反刍与吞噬' : '涤荡与净化' %>)
+event_handler:
+  event_name: "<%= isFallen ? '胚胎处理' : '净化子宫' %>"
+  context: "主角调动了体内积蓄至极限的终极力量，将其完全转向自身腹腔深处的子宫。"
+<%_ if (isFallen) { _%>
+  fallen_reabsorption:
+    source: "<%= babySource %>"
+    narrative_focus: |
+      主角调动满溢的【污秽魔力】对子宫内的胚胎进行反向吞噬。
+      异种生命的精华被魔力瞬间溶解，化作温热滚烫的生体能量被完全吸收。
+      描绘内脏深处涌现的强烈酥麻与绝顶高潮。
+  system_tasks:
+    instruction: "输出以下 JSONPatch 消耗污秽魔力、重置受孕状态，并带来快感冲击："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/主角/核心状态/污秽魔力", "value": 0 },
+        { "op": "replace", "path": "/主角/生理状态/子宫状态/受孕状态", "value": "未受孕" },
+        { "op": "replace", "path": "/主角/生理状态/子宫状态/孕育信息/孕育源", "value": "无" },
+        { "op": "replace", "path": "/主角/生理状态/子宫状态/孕育信息/妊娠计数器", "value": 0 },
+        { "op": "delta", "path": "/主角/快感状态/快感值", "value": 80 },
+        { "op": "remove", "path": "/系统状态/待处理事件/净化受孕事件" }
+      ]
+<%_ } else { _%>
+  holy_purification:
+    source: "<%= babySource %>"
+    narrative_focus: |
+      描绘主角主动掌控并引导纯洁耀眼的净化之光灌入腹部。
+      如同暖流彻底洗刷子宫内壁，将【<%= babySource %>】留下的污秽与胚胎彻底消融、净化蒸发。
+      重点描绘主角凭借自身坚韧的意志夺回身心纯洁的释怀、以及如释重负的解脱感。
+  system_tasks:
+    instruction: "输出以下 JSONPatch 消耗净化之力、重置受孕状态，并恢复身心纯洁："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/主角/核心状态/净化之力", "value": 0 },
+        { "op": "replace", "path": "/主角/生理状态/子宫状态/受孕状态", "value": "未受孕" },
+        { "op": "replace", "path": "/主角/生理状态/子宫状态/孕育信息/孕育源", "value": "无" },
+        { "op": "replace", "path": "/主角/生理状态/子宫状态/孕育信息/妊娠计数器", "value": 0 },
+        { "op": "delta", "path": "/主角/快感状态/污染度", "value": -10 },
+        { "op": "remove", "path": "/系统状态/待处理事件/净化受孕事件" }
+      ]
+<%_ } _%>
+<%_ } _%>
+<%_ } _%>

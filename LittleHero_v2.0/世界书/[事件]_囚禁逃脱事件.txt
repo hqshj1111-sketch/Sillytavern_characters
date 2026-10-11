@@ -1,0 +1,40 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+const stat = getvar('stat_data');
+if (events['囚禁逃脱事件'] || events['囚禁逃脱机会']) {
+    const escProgress = _.get(stat, '主角.囚禁状态.逃脱进度', 0);
+    const brainProgress = _.get(stat, '主角.囚禁状态.洗脑进度', 0);
+    const prisonDay = _.get(stat, '主角.囚禁状态.监禁天数', 1);
+    const enemyType = _.get(stat, '世界.当前关卡.战斗类型', '魔物');
+    const bossName = _.get(stat, '世界.当前关卡.名称', '未知怪人');
+%>
+---
+# 事件: 越狱总突围与逃出生天
+event_handler:
+  event_name: "逃出生天"
+  context: "经过<%= prisonDay %>天的隐忍筹备与破绽寻找，【逃脱进度】已达 100%！一个千载难逢的总突围时机正式出现——看守防备降至最低，出现逃脱缺口。"
+  enemy_info:
+    name: "<%= bossName %>"
+    type: "<%= enemyType %>"
+
+  narrative_directives:
+    - "玩家可以选择抓住这次机会一举杀出基地逃生，或因洗脑侵蚀选择留在基地继续潜伏。"
+    - "【必定成功】如果玩家选择逃脱，描绘强而有力的逃出生天过程。逃脱行动必定成功。"
+<%_ if (enemyType === '小英雄') { _%>
+    - "【摆脱宿敌纠缠】趁<%= bossName %>防备出现空隙或被外部事务牵制，主角抓住时机发起突围，摆脱追捕并冲破囚禁区域的防线！"
+<%_ } else if (enemyType === '人类') { _%>
+    - "【突破安保封锁】科技基地的安保与监控系统出现漏洞或混乱，主角避开警卫巡逻与警报封锁，冲破关卡逃离基地！"
+<%_ } else { _%>
+    - "【逃离生化巢穴】生化巢穴的拘束与魔物警戒出现空隙，主角摆脱触手与异种生物的纠缠，寻找出口冲出幽暗巢穴！"
+<%_ } _%>
+    - "描绘他重获自由、呼吸到外界清新空气时的劫后余生感，以及身上残留的囚禁痕迹与坚定意志。"
+
+  system_tasks:
+    instruction: "请在 JSONPatch 中输出以下指令。如果玩家选择逃脱，将阶段切换到【战后处理】以结算被俘经历与社会风评；无论选择与否均移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/进程/阶段", "value": "战后处理" },
+        { "op": "remove", "path": "/系统状态/待处理事件/囚禁逃脱事件" },
+        { "op": "remove", "path": "/系统状态/待处理事件/囚禁逃脱机会" }
+      ]
+<%_ }} _%>

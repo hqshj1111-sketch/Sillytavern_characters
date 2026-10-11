@@ -1,0 +1,175 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行动指令面板</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-family: 'Noto Serif SC', serif;
+            --color-rose: #eebebf;
+            --color-sky: #a8d8ea;
+            --color-iris: #ccb7e5;
+            --color-sand: #f2d0a9;
+            --text-main: #e0e0e0;
+            --text-dim: #b6b6c2;
+        }
+
+        body { margin: 0; padding: 0; background: transparent; }
+
+        .panel-wrapper {
+            font-family: var(--font-family);
+            padding: 10px 5px;
+            max-width: 95%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* ═══ AI 建议选项区 ═══ */
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .option-btn {
+            flex: 1 1 calc(50% - 10px);
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(40, 40, 45, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+
+        .option-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(60, 60, 65, 0.6);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: var(--accent-color);
+        }
+        .option-btn:active {
+            transform: translateY(0);
+            background: rgba(30, 30, 35, 0.7);
+        }
+
+        .icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent-color);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .option-btn:hover .icon-box {
+            background: var(--accent-color);
+            color: #222;
+        }
+
+        .option-text {
+            line-height: 1.4;
+            flex: 1;
+            opacity: 0.9;
+        }
+
+        .style-radical { --accent-color: var(--color-rose); }
+        .style-calm    { --accent-color: var(--color-sky); }
+        .style-magic   { --accent-color: var(--color-iris); }
+        .style-desire  { --accent-color: var(--color-sand); }
+
+        @media (max-width: 500px) {
+            .options-container { flex-direction: column; }
+            .option-btn { width: 100%; flex: 1 1 auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="panel-wrapper">
+        <div class="options-container" id="options-container" style="display:none;">$1</div>
+    </div>
+
+    <script>
+        // ── 渲染 AI 建议选项 ──
+        const OPTION_STYLES = [
+            { className: 'style-radical', icon: 'fa-solid fa-feather-pointed' },
+            { className: 'style-calm',    icon: 'fa-regular fa-snowflake' },
+            { className: 'style-magic',   icon: 'fa-solid fa-wand-magic-sparkles' },
+            { className: 'style-desire',  icon: 'fa-regular fa-heart' }
+        ];
+
+        const handleSend = (text) => {
+            try {
+                const inputArea = window.parent.document.querySelector('#send_textarea');
+                if (inputArea) {
+                    inputArea.value = (inputArea.value.trim() ? inputArea.value + '\n' : '') + text;
+                    inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        const renderOptions = () => {
+            const rawContainer = document.getElementById('options-container');
+            if (!rawContainer) return;
+            const rawText = rawContainer.textContent;
+            rawContainer.innerHTML = '';
+
+            const options = (rawText || '').split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+            if (options.length === 0) return;
+
+            rawContainer.style.display = 'flex';
+
+            options.forEach((text, index) => {
+                const config = OPTION_STYLES[index % OPTION_STYLES.length];
+
+                const button = document.createElement('button');
+                button.className = 'option-btn ' + config.className;
+
+                const iconBox = document.createElement('div');
+                iconBox.className = 'icon-box';
+                const icon = document.createElement('i');
+                icon.className = config.icon;
+                iconBox.appendChild(icon);
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'option-text';
+                textSpan.textContent = text;
+
+                button.appendChild(iconBox);
+                button.appendChild(textSpan);
+                button.onclick = () => handleSend(text);
+                rawContainer.appendChild(button);
+            });
+        };
+
+        // ── 启动 ──
+        document.addEventListener('DOMContentLoaded', () => {
+            renderOptions();
+        });
+    </script>
+</body>
+</html>
+```

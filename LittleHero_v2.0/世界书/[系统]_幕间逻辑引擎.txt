@@ -1,0 +1,179 @@
+<%_{
+// --- [系统] 幕间生活引擎 (精简版) ---
+
+const stat = getvar('stat_data') || {};
+const currentEventName = _.get(stat, '世界.幕间H事件.名称', '无');
+const isCharCreated = String(_.get(stat, '系统状态.主角创建完毕')) === 'true';
+const isIntermission = _.get(stat, '进程.阶段') === '幕间休息';
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const hasForcedEvent = !!pendingEvents['洗脑事件'] || !!pendingEvents['奇迹救援事件'];
+const rawEventCompleted = _.get(stat, '系统状态.幕间事件完成', true);
+const eventCompleted = String(rawEventCompleted) === 'true';
+const isCampusHypnosis = String(_.get(stat, '世界.校园催眠.主角在校')) === 'true' && !_.get(stat, '世界.校园催眠.结界已破除', false);
+const isAtSchool = String(_.get(stat, '世界.校园催眠.主角在校')) === 'true';
+const instructorName = _.get(stat, '世界.校园催眠.怪人代号', '教官01号');
+
+// 仅在真正的日常空白期（无H事件、无强制事件、无校园催眠）激活
+if (isCharCreated && isIntermission && !hasForcedEvent && currentEventName === '无' && !isCampusHypnosis) {
+
+  // --- 1. 基础数据 ---
+  const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+  const isFallen = (personality === '反派' || personality === '堕落' || personality === '恶堕');
+  const turnCount = parseInt(_.get(stat, '系统状态.幕间回合计数', 0), 10);
+
+  // --- 2. 角色锚点 ---
+  const identity = _.get(stat, '主角.个人信息.身份&职业', '高中生 / 见习小英雄');
+  const master = _.get(stat, '主角.核心状态.主人', '无');
+
+  // --- 3. 关系网与小英雄名录 ---
+  const notes = _.get(stat, '世界.世界观备注', {});
+  const relations = Object.entries(notes)
+    .filter(([k]) =>
+      k !== '$meta' && k !== '$__META_EXTENSIBLE__$' &&
+      /^(人际关系|NPC|同伴|朋友|亲人|搭档)/i.test(k)
+    )
+    .map(([k]) => k.replace(/^(人际关系_|NPC_|同伴_|朋友_|亲人_|搭档_)/, ''))
+    .slice(0, 5);
+  const hasRelations = relations.length > 0;
+
+  const roster = _.get(stat, '世界.小英雄名录', {});
+  const knownHeroes = Object.keys(roster).filter(k => k !== '$__META_EXTENSIBLE__$').slice(0, 3);
+  const hasKnownHeroes = knownHeroes.length > 0;
+
+  // --- 4. 日期与季节 ---
+  const rawDate = parseInt(_.get(stat, '世界.日期', 20400305), 10);
+  const dateStr = String(rawDate);
+  const monthDayPart = dateStr.length >= 4 ? parseInt(dateStr.slice(-4), 10) : rawDate;
+  const dMonth = Math.floor(monthDayPart / 100) || 3;
+  const dDay = (monthDayPart % 100) || 5;
+  const SEASONS = {
+    1: '隆冬', 2: '寒冬', 3: '早春', 4: '春暖',
+    5: '暮春', 6: '初夏', 7: '盛夏', 8: '盛夏',
+    9: '初秋', 10: '深秋', 11: '初冬', 12: '深冬'
+  };
+  const season = SEASONS[dMonth] || '春暖';
+
+  // --- 5. 节奏分级 (4 段) ---
+  let paceTitle, paceGuidance, timePacing;
+  if (turnCount === 0) {
+    paceTitle = '【修整与余韵】';
+    paceGuidance = '主角刚刚经历了一场剧烈的事件。请侧重描写清理体液与污痕、平复喘息、检查能量核心与紧身战衣、或洗浴休息的过渡场景，让紧绷的肉体与精神缓慢松弛下来。';
+    timePacing = '时间跨度：事件结束后的数小时内。';
+  } else if (turnCount <= 2) {
+    paceTitle = '【日常展开期】';
+    paceGuidance = '生活重回正轨。侧重展现主角作为普通男高/少年的一面：他的作息、校园生活、体育社团更衣室、兼职打工、以及与同学朋友的自然互动。';
+    timePacing = '时间跨度：半天到一天。';
+  } else if (turnCount < 6) {
+    paceTitle = '【平稳的日常】';
+    paceGuidance = '日常已平稳运行。这是深化人设、展现双重身份拉扯、拓展英雄圈子或暗堕滋生的黄金窗口。允许一次外出巡逻、刷论坛发帖、或一段独处思考。避免任何突发冲突。';
+    timePacing = '时间跨度：一天到数天。';
+  } else {
+    paceTitle = '【暗流涌动的日常】';
+    paceGuidance = '平静之下开始积累张力。在维持生活场景的同时，可以安排一些模糊的预兆、论坛上的异常怪人目击情报、或体内能量核心/黑暗印记的隐秘搏动，为即将到来的危机埋线。';
+    timePacing = '时间跨度：临近下一场冲突前的几天。';
+  }
+
+  // --- 6. 场景菜单 ---
+  const sceneMenu = [];
+  sceneMenu.push(`处理表世界身份的日常（${identity}：上学听课、社团更衣室、兼职打工等）`);
+  sceneMenu.push('独处时光——体能锻炼、保养紧身战衣、调理能量核心或回忆过往');
+  if (!isAtSchool && !_.get(stat, '世界.校园催眠.结界已破除', false) && _.get(stat, '世界.校园催眠.启用', true)) {
+    sceneMenu.push(`遭遇雄性荷尔蒙满溢的体育老师【${instructorName}】（更衣室/器材室/校外或车内独处）：老师借特殊关照与指导借口主动贴身出击，展开极具侵略性的动手动脚与肉体索求`);
+  }
+  sceneMenu.push('打开手机浏览「小英雄论坛」（或怪人内网），查看城内最新目击帖与求助信息');
+  if (hasRelations) {
+    const relationHint = relations.slice(0, 2).join('、');
+    sceneMenu.push(`与熟悉的人物互动（${relationHint}${relations.length > 2 ? ' 等' : ''}）`);
+  }
+  if (hasKnownHeroes) {
+    const heroHint = knownHeroes.join('、');
+    sceneMenu.push(`与其他小英雄联络或私信交流（${heroHint}）`);
+  }
+  if (isFallen && master !== '无') {
+    sceneMenu.push(`侍奉、联系或思念主人【${master}】，或在怪人组织据点放纵享乐`);
+  }
+
+  // --- 7. 叙事钩子 ---
+  const storyHooks = [];
+  if (turnCount === 0) {
+    storyHooks.push('上次战斗或事件留下的身心余韵——后穴与核心残留的胀热感、某句萦绕不去的话、或一丝无法言说的快感回味');
+    storyHooks.push('主角对刚刚发生的事的回味与自我反思');
+  } else {
+    storyHooks.push('主角内心某个尚未解答的小疑问');
+    storyHooks.push('一段似曾相识的日常片段，唤起对过去某次战斗或补魔的回忆');
+    storyHooks.push('周围世界一丝不易察觉的变化（论坛上的一则离奇传闻、街头一个可疑的身影、一次偶遇）');
+  }
+  if (isFallen) {
+    storyHooks.push('堕落生活深处，一丝隐秘的放纵满足或对下一个猎物的躁动期待');
+  } else {
+    storyHooks.push('作为小英雄与普通高中男生，双重身份在心底的微妙拉扯');
+  }
+  // --- 8. 校园催眠进校认知差分计算 ---
+  const hypnoProgress = Math.round(Number(_.get(stat, '世界.校园催眠.催眠进度', 0)));
+  const isFullyHypnotized = _.get(stat, '世界.校园催眠.完全催眠阶段', false) === true || hypnoProgress >= 100;
+
+  let entryCognitiveConflict = "";
+  if (isFullyHypnotized || hypnoProgress >= 100) {
+    entryCognitiveConflict = "【完全催眠 · 极乐归属】：跨入校门刹那毫无滞涩与怀疑，心中满溢期待与归宿感，熟练欣喜地换装胶衣与目镜，身心全盘拥抱数字代号与纵欲常识。";
+  } else if (hypnoProgress >= 60) {
+    entryCognitiveConflict = "【深度沉沦 · 顺从迎合】：跨入校门时脑中仅闪过一瞬微弱迟疑，转瞬便被耳畔甜腻耳语淹没，身体如肌肉记忆般熟练顺从换装，潜意识完全接纳放浪与代号常识。";
+  } else if (hypnoProgress >= 30) {
+    entryCognitiveConflict = "【认知动摇 · 恍惚拉扯】：脑海中清醒理智与情欲本能激烈拉扯——理智仍在提醒常识错乱，但目镜耳语与微电流不断瓦解防线，身体半推半就地顺从换装，陷入迷茫与恍惚。";
+  } else {
+    entryCognitiveConflict = "【清醒警惕 · 身体被动支配】：理智瞬间察觉到全员胶衣与下流言行的巨大荒谬（大脑警铃大作、极力抗拒），但受结界微光操纵，身体却如提线木偶般不由自主、生涩地跟随换装附和，大脑与肉体产生严重割裂与对抗。";
+  }
+_%>
+intermission_life_protocol:
+  objective: "现在是【幕间休息】。请暂缓节奏，聚焦于生活细节与角色内心，【保持场景的连贯性】。"
+
+  current_rhythm:
+    phase: "<%= paceTitle %>"
+    guidance: "<%= paceGuidance %>"
+    time_pacing: "<%= timePacing %>"
+
+  character_anchors:
+    world: "<%= dMonth %>月<%= dDay %>日 · <%= season %>"
+    identity: "<%= identity %>"
+<%_ if (hasRelations) { _%>
+    relations: ["<%= relations.join('", "') %>"]
+<%_ } _%>
+<%_ if (hasKnownHeroes) { _%>
+    known_heroes: ["<%= knownHeroes.join('", "') %>"]
+<%_ } _%>
+
+  narrative_elements:
+    instruction: "在推进日常时，你可以根据当前的上下文，自然地从以下场景中选择 1-2 个展开（无需生硬罗列，符合语境即可）："
+    scene_menu:
+<%_ sceneMenu.forEach(s => { _%>
+      - "<%= s %>"
+<%_ }); _%>
+    scene_selection_hint: "选择与当前上下文最契合的场景，避免贪多。同一场景应延续上一回合的连贯性，而非每回合都换地方。"
+
+  story_hooks:
+    instruction: "幕间不仅是休息，也是为后续剧情埋线的窗口。你可以在不引入新事件的前提下，自然地埋下以下伏笔之一："
+    hints:
+<%_ storyHooks.forEach(h => { _%>
+      - "<%= h %>"
+<%_ }); _%>
+    guidance: "钩子应该【轻】【隐】【留白】：一闪而过的细节，不需要在本次回复中给出答案。"
+
+  writing_guidance:
+    - "【对话为主】：让角色的性格通过语言自然流露，而非旁白解说。"
+    - "【五感细节】：更衣室里的汗味与沐浴露香气、战衣紧贴肌肤的触感、滚烫的红茶、雨后的潮湿空气……用细节构建沉浸感。"
+    - "【内心独白】：适当穿插主角的内心活动，展现他真实而充满少年气的一面。"
+    - "【留白之美】：不必面面俱到，让读者自己想象未写出的部分。"
+<%_ if (!isAtSchool && !_.get(stat, '世界.校园催眠.结界已破除', false) && _.get(stat, '世界.校园催眠.启用', true)) { _%>
+    - "【跨入校门认知同化】：学园当前处于高阶怪人<%= instructorName %>主导的催眠结界覆盖下。若本回合剧情涉及前往学校、清晨上学或跨入校门，描写踏过校门刹那空气泛起紫色微光，耳边目镜传来轻柔靡靡的催眠耳语与电流，神智瞬间被结界同化：自然接受『全员是怪人组织战斗员、彼此以战斗员数字代号相称、说话露骨放浪并随时随地追求肉体快感』的荒诞日常，自然在教室（或更衣室）脱下普通校服，穿上漆黑全包式紧身战斗员制服、佩戴紫色目镜，对他人的称谓改为战斗员数字代号，顺理成章融入这片纵欲乐园（严禁冷硬军训与惩戒、严禁称呼真名）。"
+    - "【进校认知错乱差分】：<%= entryCognitiveConflict %>"
+    - "【校内的<%= instructorName %>】：以怪人的真实面目现身并指导战斗员，身材健壮高大、肌肉虬结，紧身衣下常态勃起的雄伟巨根与充沛雄性荷尔蒙，为人豪爽风趣且纵欲开放，行动直截了当。"
+    - "【校外的<%= instructorName %>（雄性侵略与主动出击）】：伪装成健硕帅气、深受学生信赖与喜爱的明星体育老师，校外绝不暴露怪人代号。但他对主角怀有强烈的捕食与占有欲，一旦独处（如器材室反锁、无人更衣室、私家车内或课后单独指导），便会彻底展现怪人本质的雄性侵略性：\n        1. 表面关照作幌子：借『特殊加练、体能拉伸、肌肉放松』为由主动封死主角回避空间，用高大健硕的身躯步步贴近压制。\n        2. 极具侵略性的主动上手：绝不等待主角试探！他会主动出击动手动脚（从身后紧贴环抱、大手径直探入运动服内揉捏敏感带、低头嗅闻主角脖颈体味并深吻索舌）。\n        3. 强势索求亲密关系：用富有磁性且露骨的低沉耳语调情，直白向主角索求发生深层肉体关系；带着不容拒绝的成年雄性霸道与荷尔蒙压迫，让主角在『师生禁忌』与『催眠潜意识迷恋』中难以抗拒地顺从陷落。"
+<%_ } _%>
+
+  tone_guidance:
+    - "【色情尺度】：幕间的色情描写需为幕间气氛服务，不应喧宾夺主。以身体余韵、微弱的燥热与隐秘性暗示为主，避免无端爆发激烈性交。"
+    - "【体育老师接触特例】：若当前场景涉及与校外体育老师【<%= instructorName %>】独处，不受上述保守尺度的限制！老师必须展现其主动侵略性，允许并鼓励其展开强烈的肢体亲密接触、挑逗摸索与实质性的肉体关系推进！"
+    - "【情感基调】：偏向轻松、温暖或青春荷尔蒙，而不是高压对抗。"
+    - "【节奏感】：慢。给读者留出呼吸与沉浸日常的空间。"
+
+<%_}_%>
+<%_}_%>

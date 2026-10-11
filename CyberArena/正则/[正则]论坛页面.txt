@@ -1,0 +1,203 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;600;700&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --glass-deep: rgba(8,8,24,0.55);
+  --glass-mid: rgba(10,10,30,0.45);
+  --glass-light: rgba(14,14,38,0.35);
+  --text: #d8d8f0;
+  --sub: #8888aa;
+  --purple: #b347ea;
+  --cyan: #00d4ff;
+  --pink: #ff2d95;
+  --gold: #ffe080;
+  --green: #50fa7b;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:transparent;color:var(--text);font-family:'Noto Sans SC',sans-serif;padding:8px;-webkit-font-smoothing:antialiased;font-size:13px}
+
+.container{
+  max-width:780px;margin:0 auto;
+  background:var(--glass-deep);backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:4px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.5),inset 0 0 40px rgba(179,71,234,0.03);
+  position:relative;
+}
+.container::before{
+  content:'';position:absolute;top:-1px;left:20%;right:20%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,212,255,0.4),rgba(179,71,234,0.4),rgba(255,45,149,0.4),transparent);
+  z-index:3;border-radius:50%;
+}
+.inner{
+  background:var(--glass-mid);backdrop-filter:blur(12px) saturate(140%);
+  border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:2px;
+}
+.inner2{
+  background:var(--glass-light);backdrop-filter:blur(8px) saturate(120%);
+  border:1px solid rgba(255,255,255,0.04);border-radius:12px;padding:18px 20px;
+  position:relative;overflow:hidden;
+}
+
+.forum-header{text-align:center;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.forum-title{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:3px;text-shadow:0 0 14px rgba(179,71,234,0.4)}
+.forum-status{color:var(--sub);font-family:'Rajdhani',sans-serif;font-size:0.68rem;margin-top:4px;letter-spacing:1px;font-weight:600}
+
+.post-card{background:rgba(12,12,28,0.35);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.04);border-left:2px solid rgba(179,71,234,0.25);border-radius:0 10px 10px 0;margin-bottom:12px;overflow:hidden;transition:border-color .2s}
+.post-card:hover{border-left-color:var(--cyan)}
+.post-header{padding:12px 14px 8px}
+.post-section{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;margin-bottom:5px;letter-spacing:0.5px;font-family:'Rajdhani',sans-serif;color:var(--purple);border:1px solid rgba(179,71,234,0.25);background:rgba(179,71,234,0.06)}
+.post-title{font-size:14px;font-weight:600;color:#ddddf0;margin:3px 0;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px}
+.post-meta{font-size:10px;color:var(--sub);display:flex;gap:14px;flex-wrap:wrap;font-family:'Rajdhani',sans-serif}
+.post-meta .author{color:var(--pink);font-weight:600}
+.post-meta .views{color:var(--gold)}
+.post-tags{margin-top:4px;display:flex;gap:5px;flex-wrap:wrap}
+.post-tag{font-size:9px;color:var(--cyan);background:rgba(0,212,255,0.06);padding:1px 5px;border-radius:3px;font-family:'Rajdhani',sans-serif}
+.post-body{padding:14px;font-size:13px;line-height:1.7;color:#b8b8cc;white-space:pre-wrap}
+.post-body.reply-body{padding:8px 14px;color:#9090a0;font-size:12px;background:rgba(0,0,0,0.12)}
+.post-replies{border-top:1px solid rgba(255,255,255,0.04);background:rgba(0,0,0,0.08)}
+.replies-toggle{padding:8px 14px;font-size:11px;color:var(--cyan);cursor:pointer;user-select:none;display:flex;align-items:center;gap:5px;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px}
+.replies-toggle:hover{color:#5ee8ff}
+.replies-toggle .arrow{transition:transform .15s;display:inline-block;font-size:9px}
+.replies-toggle.open .arrow{transform:rotate(90deg)}
+.reply-list{padding:0 14px 10px;display:none}
+.reply-item{padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.reply-item:last-child{border-bottom:none}
+.reply-author{font-size:10px;font-weight:600;color:var(--gold);margin-bottom:1px;font-family:'Rajdhani',sans-serif}
+.reply-content{font-size:12px;color:var(--sub);line-height:1.5;white-space:pre-wrap}
+.no-posts{text-align:center;color:var(--sub);padding:30px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="container"><div class="inner"><div class="inner2">
+<div class="forum-header">
+  <div class="forum-title">⚡ 黑曜市地下论坛</div>
+  <div class="forum-status" id="forum-status"></div>
+</div>
+<div id="forum-content"></div>
+</div></div></div>
+
+<script type="text/plain" id="__forum_data">$1</script>
+<script>
+(function(){
+  var raw = document.getElementById('__forum_data');
+  if(!raw) return;
+  var text = raw.textContent.trim();
+  if(!text) return;
+
+  var posts = [];
+  var blocks = text.split(/\n(?=\[)/);
+  
+  blocks.forEach(function(block){
+    block = block.trim();
+    if(!block) return;
+    var lines = block.split('\n');
+    
+    var headerMatch = lines[0].match(/^\[(.+?)\]\s*(.+)$/);
+    if(!headerMatch) return;
+    var section = headerMatch[1].trim();
+    var title = headerMatch[2].trim();
+    
+    var author = '', date = '', views = '', tags = '';
+    var bodyLines = [];
+    var replies = [];
+    var inBody = false, inReplies = false, currentReply = '';
+    
+    for(var i=1; i<lines.length; i++){
+      var line = lines[i];
+      
+      var authorMatch = line.match(/^(作者|发帖人):\s*(.+?)\s*\|\s*(.+?)\s*\|\s*浏览量:\s*(\d+)/);
+      if(authorMatch){ author = authorMatch[2].trim(); date = authorMatch[3].trim(); views = authorMatch[4].trim(); continue; }
+      
+      var tagMatch = line.match(/^标签:\s*(.+)/);
+      if(tagMatch){ tags = tagMatch[1].trim(); continue; }
+      
+      if(line.match(/^---回复---$/)){ inBody = false; inReplies = true; continue; }
+      
+      if(inReplies && line.match(/^---$/)){ if(currentReply) replies.push(currentReply.trim()); currentReply = ''; continue; }
+      
+      if(line.trim() === ''){ if(inBody && bodyLines.length>0) inBody = false; continue; }
+      
+      if(!inBody && !inReplies){ inBody = true; }
+      
+      if(inBody){ bodyLines.push(line); }
+      else if(inReplies){ if(currentReply) currentReply += '\n'+line; else currentReply = line; }
+    }
+    if(currentReply) replies.push(currentReply.trim());
+    
+    var body = bodyLines.join('\n').trim();
+    if(!body) return;
+    
+    posts.push({section:section,title:title,author:author,date:date,views:views,tags:tags,body:body,replies:replies});
+  });
+
+  var statusEl = document.getElementById('forum-status');
+  var contentEl = document.getElementById('forum-content');
+  
+  if(posts.length===0){
+    contentEl.innerHTML = '<div class="no-posts">论坛暂时没有新帖子。</div>';
+    return;
+  }
+
+  statusEl.textContent = posts.length + ' 个帖子';
+
+  posts.forEach(function(p,idx){
+    var tagsHtml = '';
+    if(p.tags){
+      var tarr = p.tags.split(/\s*#\s*/).filter(function(t){return t.length>0;});
+      if(tarr.length>0){
+        tagsHtml = '<div class="post-tags">'+tarr.map(function(t){return '<span class="post-tag">#'+t+'</span>';}).join('')+'</div>';
+      }
+    }
+    
+    var repliesHtml = '';
+    if(p.replies.length>0){
+      var rid = 'replies-'+idx;
+      var replyItems = p.replies.map(function(r){
+        var parts = r.split('\n');
+        var firstLine = parts[0];
+        var colonIdx = firstLine.indexOf(':');
+        var rAuthor = '', rContent = '';
+        if(colonIdx>0){
+          rAuthor = firstLine.substring(0,colonIdx).trim();
+          rContent = firstLine.substring(colonIdx+1).trim();
+          if(parts.length>1) rContent += '\n'+parts.slice(1).join('\n');
+        }else{ rContent = r; }
+        return '<div class="reply-item"><div class="reply-author">'+rAuthor+'</div><div class="reply-content">'+rContent+'</div></div>';
+      }).join('');
+      
+      repliesHtml = 
+        '<div class="post-replies">'+
+          '<div class="replies-toggle" onclick="var r=document.getElementById(\''+rid+'\');var t=this;if(r.style.display==\'block\'){r.style.display=\'none\';t.classList.remove(\'open\')}else{r.style.display=\'block\';t.classList.add(\'open\')}">'+
+            '<span class="arrow">▶</span> '+p.replies.length+' 条回复'+
+          '</div>'+
+          '<div class="reply-list" id="'+rid+'">'+replyItems+'</div>'+
+        '</div>';
+    }
+
+    contentEl.insertAdjacentHTML('beforeend',
+      '<div class="post-card">'+
+        '<div class="post-header">'+
+          '<span class="post-section">['+p.section+']</span>'+
+          '<div class="post-title">'+p.title+'</div>'+
+          '<div class="post-meta">'+
+            '<span class="author">'+p.author+'</span>'+
+            '<span>'+p.date+'</span>'+
+            '<span class="views">'+p.views+' 浏览</span>'+
+          '</div>'+
+          tagsHtml+
+        '</div>'+
+        '<div class="post-body">'+p.body+'</div>'+
+        repliesHtml+
+      '</div>'
+    );
+  });
+})();
+</script>
+</body>
+</html>
+```

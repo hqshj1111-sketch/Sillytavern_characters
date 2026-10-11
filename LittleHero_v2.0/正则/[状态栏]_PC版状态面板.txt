@@ -1,0 +1,3172 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>状态总览</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-source-exo-2/4.5.0/700.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-source-sarabun/4.5.12/400.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-source-sarabun/4.5.12/600.css" rel="stylesheet">
+    <style>
+        :root {
+            --card-bg: #1a1b26;
+            --card-bg-blur: rgba(26, 27, 38, 0.95);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-color: #c0caf5;
+            --text-secondary: #787c99;
+
+            --accent-color: #b4befe;
+            --accent-glow: rgba(180, 190, 254, 0.3);
+            --hp-color: #9ece6a;
+            --mp-color: #7aa2f7;
+            --pleasure-color: #f7768e;
+            --corruption-color: #bb9af7;
+            --ultimate-color: #e0af68;
+            --combat-color: #f87171;
+
+            --font-main: 'Sarabun', sans-serif;
+            --font-header: 'Exo 2', sans-serif;
+            font-feature-settings: "tnum";
+            -webkit-font-smoothing: antialiased;
+
+            --gm-bg: rgba(19, 20, 31, 0.98);
+            --gm-border: #2f354b;
+            --gm-text: #a9b1d6;
+            --gm-accent: #7aa2f7;
+            --gm-input-bg: #1a1b26;
+            --gm-radius: 12px;
+        }
+
+        body {
+            background-color: transparent;
+            font-family: var(--font-main);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* --- 动画系统 --- */
+        @keyframes mp-leak-flash {
+            0%, 100% { box-shadow: 0 0 5px var(--mp-color); }
+            50% { box-shadow: 0 0 15px var(--pleasure-color); background: var(--pleasure-color) !important; opacity: 0.85; }
+        }
+        .mp-leaking {
+            animation: mp-leak-flash 3.0s infinite ease-in-out !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse-soft {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+        @keyframes flash-danger {
+            50% { border-color: var(--combat-color); box-shadow: 0 0 10px var(--combat-color); }
+        }
+        @keyframes mental-glitch-shudder {
+            0% { transform: translate(0, 0); text-shadow: none; color: inherit; }
+            20% { transform: translate(-2px, 1px); text-shadow: 2px 0 #ff0055, -2px 0 #00ffff; }
+            40% { transform: translate(1px, -1px); text-shadow: none; color: inherit; }
+            60% { transform: translate(-1px, 2px); text-shadow: -2px 0 #ff0055, 2px 0 #00ffff; color: var(--combat-color); }
+            80% { transform: translate(1px, -2px); text-shadow: none; }
+            100% { transform: translate(0, 0); text-shadow: none; }
+        }
+        .corrupt-active {
+            display: inline-block;
+            font-weight: 800;
+            letter-spacing: 2px;
+            animation: mental-glitch-shudder 0.25s infinite steps(2);
+            will-change: transform, text-shadow;
+        }
+
+        @keyframes animHeartbeat {
+            0%, 30% { transform: scale(1); opacity: 0.06; }
+            15% { transform: scale(1.15); opacity: 0.18; }
+            30% { transform: scale(1); opacity: 0.06; }
+            45% { transform: scale(1.15); opacity: 0.18; }
+        }
+        @keyframes glowHeartbeat {
+            0%, 30% { opacity: 0.05; }
+            15%, 45% { opacity: 0.4; }
+            30% { opacity: 0.1; }
+        }
+        @keyframes animErode {
+            0%, 30% { transform: rotate(-15deg) scale(1.1); opacity: 0.08; }
+            50% { transform: rotate(-8deg) scale(1.35); opacity: 0.2; filter: blur(2px); }
+        }
+        @keyframes glowErode {
+            0%, 100% { opacity: 0.05; }
+            50% { opacity: 0.3; }
+        }
+        @keyframes glowBreath {
+            0% { opacity: 0; }
+            100% { opacity: 0.25; }
+        }
+        @keyframes animBreath {
+            0% { transform: rotate(-15deg) scale(1.1); opacity: 0.06; }
+            100% { transform: rotate(-10deg) scale(1.2); opacity: 0.12; }
+        }
+
+        @keyframes fetal-core-beat-pc {
+            0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; box-shadow: 0 0 4px #ffb6c1; }
+            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; box-shadow: 0 0 8px #f7768e; }
+        }
+        .fetal-hp-notch-pc {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                -45deg,
+                rgba(247, 118, 142, 0.25),
+                rgba(247, 118, 142, 0.25) 3px,
+                rgba(0, 0, 0, 0.4) 3px,
+                rgba(0, 0, 0, 0.4) 6px
+            );
+            border-left: 1.5px solid var(--pleasure-color);
+            z-index: 3;
+            cursor: help;
+        }
+        .fetal-hp-notch-pc::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #ffffff;
+            animation: fetal-core-beat-pc 2.4s infinite ease-in-out;
+        }
+
+        /* --- 主卡片容器 --- */
+        .status-card {
+            display: grid;
+            grid-template-columns: 1fr 1.25fr;
+            gap: 24px;
+            min-height: 580px;
+            align-items: start;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.6);
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 26px;
+            max-width: 95%;
+            margin: auto;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, var(--accent-glow) 0%, rgba(0,0,0,0) 25%);
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 20px;
+        }
+
+        .theme-fallen .status-card::before { background: linear-gradient(90deg, #f7768e, #bb9af7); }
+        .theme-eroded .status-card::before { background: linear-gradient(90deg, #bb9af7, #7aa2f7); }
+        .state-ultimate-ready { box-shadow: 0 0 30px rgba(224, 175, 104, 0.3); }
+
+        .panel-left, .panel-right {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+        }
+        .panel-left:hover { z-index: 102; }
+        .panel-right {
+            height: 580px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 16px;
+        }
+        .panel-right:has(.has-tooltip:hover) { z-index: 101; }
+
+        .card-header { padding-bottom: 8px; text-align: center; }
+        .card-header h2 {
+            margin: 0;
+            font-family: var(--font-header);
+            font-size: 1.4em;
+            color: var(--text-color);
+            letter-spacing: 1px;
+            font-weight: 700;
+            opacity: 0.9;
+        }
+
+        /* --- 进度条系统 --- */
+        .progress-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .stack-header {
+            font-family: var(--font-header);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            opacity: 0.7;
+        }
+        .progress-item .progress-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .progress-label i { margin-right: 8px; color: var(--text-secondary); width: 1.2em; text-align: center; }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+            position: relative !important;
+            overflow: hidden !important;
+            transform: translateZ(0);
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .progress-value { font-family: var(--font-header); font-size: 0.9em; opacity: 0.9; }
+
+        .fetal-hp-lock-track {
+            position: absolute !important;
+            right: 0 !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            height: 100% !important;
+            border-radius: 0 5px 5px 0 !important;
+            background: repeating-linear-gradient(
+                -45deg,
+                rgba(255, 255, 255, 0.85),
+                rgba(255, 255, 255, 0.85) 4px,
+                rgba(247, 118, 142, 0.5) 4px,
+                rgba(247, 118, 142, 0.5) 8px
+            );
+            border-left: 2px solid #f7768e;
+            box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.8), 0 0 6px rgba(247, 118, 142, 0.4);
+            z-index: 3 !important;
+            cursor: help;
+        }
+        .fetal-hp-lock-track::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #ffffff;
+            animation: fetal-core-beat-pc 2.4s infinite ease-in-out;
+        }
+
+
+        /* --- 心跳共鸣条 (EKG) --- */
+        .ekg-wrapper {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 12px;
+            align-items: center;
+            background: rgba(247, 118, 142, 0.1);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(247, 118, 142, 0.2);
+        }
+        .ekg-heart-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: rgba(247, 118, 142, 0.2);
+            border-radius: 50%;
+        }
+        .ekg-icon { color: var(--pleasure-color); font-size: 1.1em; }
+        .ekg-icon.beating { animation: soft-beat 1.5s infinite ease-in-out; }
+        .ekg-icon.beating-fast { animation: soft-beat 0.6s infinite ease-in-out; }
+        @keyframes soft-beat {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; text-shadow: 0 0 10px var(--pleasure-color); }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        .ekg-bar-container { height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; position: relative; }
+        .ekg-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f7768e, #ff9e64);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(247, 118, 142, 0.4);
+        }
+        .ekg-bar-fill.critical { background: linear-gradient(90deg, #ff0055, #ff5599); animation: bar-pulse 2s infinite; }
+        @keyframes bar-pulse { 0% { opacity: 0.8; } 50% { opacity: 1; box-shadow: 0 0 15px #ff0055; } 100% { opacity: 0.8; } }
+        .ekg-data { font-family: var(--font-header); font-weight: 700; color: var(--pleasure-color); font-size: 1.1em; }
+
+        /* --- Tab 切换面板 --- */
+        .tab-container { display: flex; gap: 8px; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 10px; }
+        .tab-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: var(--font-header);
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .tab-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-color); }
+        .tab-btn.active { background: var(--accent-color); color: #1a1b26; font-weight: bold; box-shadow: 0 2px 10px rgba(180, 190, 254, 0.3); }
+        .content-container { flex-grow: 1; position: relative; overflow: hidden; }
+        .tab-content { display: none; height: 100%; overflow-y: auto; animation: fadeIn 0.4s ease; padding-right: 4px; }
+        .tab-content.active { display: block; }
+        .tab-content::-webkit-scrollbar { width: 4px; }
+        .tab-content::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 2px; }
+
+        /* --- 详细信息网格 --- */
+        .details-grid { display: grid; grid-template-columns: auto 1fr; gap: 12px 20px; font-size: 0.95em; align-items: baseline; }
+        .details-section-header {
+            font-weight: 700;
+            color: var(--accent-color);
+            grid-column: 1 / -1;
+            margin: 12px 0 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1em;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+        }
+        .details-section-header i { margin-right: 8px; opacity: 0.8; }
+        .item-label { color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; gap: 6px; align-self: baseline; padding-top: 2px; }
+        .item-value { color: var(--text-color); line-height: 1.4; font-weight: 400; }
+
+        .rich-value-box { display: inline-flex; flex-direction: column; justify-content: center; vertical-align: baseline; width: 100%; }
+        .rich-main-text { font-size: 1.05em; font-weight: 400; color: var(--text-color); line-height: 1.4; }
+        .rich-sub-text { font-size: 0.85em; color: var(--text-secondary); margin-top: 4px; display: flex; gap: 5px; flex-wrap: wrap; line-height: 1.2; }
+        .info-tag {
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+        }
+        .info-tag i { margin-right: 4px; opacity: 0.7; font-size: 0.9em; }
+        .rank-badge {
+            padding: 1px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            background: var(--accent-glow);
+            color: var(--text-color);
+            border: 1px solid var(--accent-color);
+            box-shadow: 0 0 10px -4px var(--accent-glow);
+            display: inline-block;
+        }
+
+        /* --- 状态上下文 --- */
+        .context-box { padding: 16px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; text-align: center; }
+        .battle-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .status-side.player-side { text-align: left; }
+        .status-side.enemy-side { text-align: right; }
+        .side-main { font-family: var(--font-header); font-weight: 700; font-size: 1.2em; color: var(--text-color); }
+        .side-status-tag {
+            display: inline-block;
+            font-size: 0.75em;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: var(--accent-color);
+            color: #1a1b26;
+            margin-top: 4px;
+        }
+        .intermission-status .main-status { font-size: 1.2em; font-weight: 700; color: var(--accent-color); margin-bottom: 4px; }
+        .combat-log-display { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); font-size: 0.85em; text-align: left; color: var(--text-secondary); }
+        .log-success { color: var(--hp-color); font-weight: bold; }
+        .log-failure { color: var(--combat-color); font-weight: bold; }
+
+        /* --- 生体容器 (Bio-Flask) --- */
+        .bio-container-widget {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+            align-items: center;
+        }
+        .bio-flask {
+            height: 74px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-top: none;
+            position: relative;
+            overflow: hidden;
+            transform: translateZ(0);
+            z-index: 1;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .flask-tier-1 { width: 50px; border-radius: 0 0 16px 16px; box-shadow: inset 0 -5px 15px rgba(0,0,0,0.3), 0 5px 15px rgba(0,0,0,0.2); }
+        .flask-tier-2 { width: 56px; border-radius: 0 0 20px 20px; border-color: rgba(247, 118, 142, 0.3); background: rgba(247, 118, 142, 0.03); box-shadow: inset 0 -5px 15px rgba(247, 118, 142, 0.1), 0 5px 15px rgba(0,0,0,0.2); }
+        .flask-tier-3 { width: 64px; border-radius: 0 0 26px 26px; border-color: rgba(247, 118, 142, 0.6); background: rgba(247, 118, 142, 0.08); box-shadow: inset 0 -5px 20px rgba(247, 118, 142, 0.3), 0 5px 15px rgba(0,0,0,0.2); }
+        .flask-tier-4 { width: 72px; border-radius: 0 0 32px 32px; border-color: var(--pleasure-color); background: rgba(247, 118, 142, 0.15); animation: flask-pulse-max 3s infinite ease-in-out; }
+
+        @keyframes flask-pulse-max {
+            0%, 100% { box-shadow: inset 0 -5px 20px rgba(247, 118, 142, 0.4), 0 0 10px rgba(247, 118, 142, 0.2); transform: scale(1); }
+            50% { box-shadow: inset 0 -5px 30px rgba(247, 118, 142, 0.7), 0 0 25px rgba(247, 118, 142, 0.5); transform: scale(1.02); }
+        }
+        .liquid-wave {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 50%, #cbd5e1 100%);
+            transition: height 0.8s cubic-bezier(0.5, 0, 0.1, 1), background 0.5s ease;
+            opacity: 0.95; box-shadow: inset 0 5px 15px rgba(255,255,255,0.4);
+            will-change: height, background;
+        }
+        .liquid-wave::before {
+            content: ''; position: absolute; top: -3px; left: 0; width: 100%; height: 6px;
+            background: rgba(255,255,255,0.6); border-radius: 50%;
+            transform: scaleX(1.2); opacity: 0.7; box-shadow: 0 -1px 2px rgba(255,255,255,0.3);
+        }
+        @keyframes liquid-viscous-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .bio-flask.danger .liquid-wave {
+            background: linear-gradient(45deg, #fff0f5, #ffe4e1, #fff0f5);
+            background-size: 200% 200%;
+            animation: liquid-viscous-flow 4s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(255, 228, 225, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+        .bio-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 4px; }
+        .bio-tag {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px; padding: 1px 6px; font-size: 0.75em;
+            color: var(--text-secondary); white-space: nowrap; transition: all 0.2s;
+        }
+        .bio-tag.risk-high { background: rgba(247, 118, 142, 0.2); border-color: var(--pleasure-color); color: var(--pleasure-color); }
+
+        /* --- 性癖条目与等级 --- */
+        .kink-row { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 4px 0; }
+        .kink-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .rank-icon { width: 1.2em; text-align: center; }
+        .rank-0 { color: var(--text-secondary); opacity: 0.5; }
+        .rank-1 { color: #81C784; }
+        .rank-2 { color: #64B5F6; }
+        .rank-3 { color: #BA68C8; }
+        .rank-4 { color: #FFD54F; text-shadow: 0 0 5px rgba(255, 213, 79, 0.4); animation: pulse-soft 2s infinite; }
+        .kink-xp { font-family: var(--font-header); font-size: 0.85em; color: var(--text-secondary); }
+        .kink-xp.is-max { color: var(--ultimate-color); font-weight: bold; }
+        .kink-progress-container { height: 4px; background: rgba(0,0,0,0.3); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+        .boss-phase-marker { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.3); z-index: 5; }
+
+        /* --- Tooltip 悬浮组件 --- */
+        .has-tooltip { position: relative; cursor: help; }
+        .has-tooltip > .custom-tooltip { display: none !important; }
+        .custom-tooltip-portal {
+            position: fixed;
+            visibility: hidden;
+            opacity: 0;
+            background: rgba(20, 21, 30, 0.98);
+            border: 1px solid var(--accent-color);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            width: max-content;
+            max-width: 320px;
+            z-index: 9999999 !important; /* 突破所有卡片与面板层叠 */
+            box-shadow: 0 12px 40px rgba(0,0,0,0.9), 0 0 15px rgba(180, 190, 254, 0.15);
+            transition: opacity 0.15s ease;
+            pointer-events: none;
+            text-align: left;
+            line-height: 1.5;
+            top: 0;
+            left: 0;
+            font-family: var(--font-main);
+            color: var(--text-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .custom-tooltip-portal.active { visibility: visible; opacity: 1; }
+        .custom-tooltip-portal .label {
+            color: var(--accent-color);
+            font-size: 0.9em;
+            font-weight: 800;
+            margin-bottom: 4px;
+            display: block;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 2px;
+        }
+        .custom-tooltip-portal .value { color: var(--text-color); font-size: 0.9em; white-space: normal; }
+
+        /* --- 动态主题色彩配置 --- */
+        .status-card.theme-eroded {
+            --accent-color: #d946ef;
+            --accent-glow: rgba(217, 70, 239, 0.5);
+            --text-color: #fce7f3;
+            --hp-color: #a78bfa;
+            --mp-color: #e879f9;
+            box-shadow: 0 10px 40px rgba(192, 38, 211, 0.15);
+        }
+        .status-card.theme-fallen-core {
+            --accent-color: #e06c75;
+            --accent-glow: rgba(224, 108, 117, 0.25);
+            --text-color: #e4e2eb;
+            --text-secondary: #8c8599;
+            --hp-color: #c75a74;
+            --mp-color: #9d7cd8;
+            --ultimate-color: #dfb67f;
+            background-color: #16131c;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(224, 108, 117, 0.05);
+            position: relative;
+            z-index: 1;
+        }
+
+        .master-banner {
+            background: linear-gradient(135deg, rgba(20, 10, 20, 0.9), rgba(40, 15, 25, 0.7));
+            border: 1px solid rgba(247, 118, 142, 0.3); border-left: 4px solid var(--pleasure-color);
+            border-radius: 8px; margin-bottom: 16px; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); position: relative; overflow: hidden;
+        }
+        .master-banner::after {
+            content: '\f6f0'; font-family: "Font Awesome 6 Free"; font-weight: 900;
+            position: absolute; right: -10px; bottom: -20px;
+            font-size: 5em; color: var(--pleasure-color); opacity: 0.05; transform: rotate(-15deg); pointer-events: none;
+        }
+        .master-banner-label { color: var(--pleasure-color); font-size: 0.85em; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        .master-banner-value { font-family: var(--font-header); font-size: 1.25em; font-weight: 700; color: var(--ultimate-color); text-shadow: 0 0 10px rgba(224, 175, 104, 0.2); }
+
+        .curse-mark-banner {
+            border-radius: 8px; margin-bottom: 16px; padding: 12px 16px;
+            display: flex; flex-direction: column; gap: 6px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); position: relative; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1); border-left-width: 4px;
+            transition: all 0.4s ease;
+        }
+        .curse-mark-banner .watermark-icon {
+            position: absolute; right: -10px; bottom: -20px;
+            font-size: 5.5em; opacity: 0.05; transform: rotate(-15deg);
+            pointer-events: none; z-index: 0; transition: color 0.4s;
+        }
+        .curse-mark-content { position: relative; z-index: 1; }
+
+        .curse-state-fallen::before { animation: glowHeartbeat 2.5s infinite linear; }
+        .curse-state-fallen .watermark-icon { animation: animHeartbeat 2.5s infinite linear; }
+        .curse-state-eroded::before { animation: glowErode 4s infinite ease-in-out; }
+        .curse-state-eroded .watermark-icon { animation: animErode 4s infinite ease-in-out; }
+        .curse-state-dormant::before { animation: glowBreath 3s infinite alternate ease-in-out; }
+        .curse-state-dormant .watermark-icon { animation: animBreath 3s infinite alternate ease-in-out; }
+
+
+        /* --- 被俘状态全局特效 --- */
+        .status-card.state-captured { border-color: rgba(248, 113, 113, 0.8) !important; }
+        .status-card.state-captured::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 99; border-radius: 20px;
+            background: repeating-linear-gradient(-45deg, rgba(0,0,0,0) 0, rgba(0,0,0,0) 15px, rgba(248, 113, 113, 0.04) 15px, rgba(248, 113, 113, 0.04) 30px);
+            animation: captured-pulse-pc 3s infinite alternate ease-in-out;
+        }
+        @keyframes captured-pulse-pc {
+            0% { box-shadow: inset 0 0 80px rgba(0,0,0,0.8), inset 0 0 15px rgba(248, 113, 113, 0.15); }
+            100% { box-shadow: inset 0 0 150px rgba(0,0,0,0.98), inset 0 0 50px rgba(248, 113, 113, 0.5); }
+        }
+
+        /* --- 双重身份蜕变特效 --- */
+        .name-transformer {
+            display: inline-grid;
+            grid-template-areas: "name-stack";
+            place-items: center;
+            vertical-align: middle;
+            cursor: help;
+            line-height: 1;
+        }
+        .name-transformer .name-text {
+            grid-area: name-stack;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease, letter-spacing 0.4s ease;
+        }
+        .name-transformer .name-real {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0px);
+        }
+        .name-transformer .name-magic {
+            opacity: 0;
+            transform: translateY(6px) scale(0.95);
+            filter: blur(4px);
+            pointer-events: none;
+        }
+        .name-transformer:hover .name-real,
+        .name-transformer:active .name-real {
+            opacity: 0;
+            transform: translateY(-6px) scale(0.95);
+            filter: blur(4px);
+            pointer-events: none;
+        }
+        .name-transformer:hover .name-magic,
+        .name-transformer:active .name-magic {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0px);
+            letter-spacing: 1px;
+        }
+        .state-captured .name-transformer .name-text {
+            color: var(--combat-color) !important;
+            text-shadow: 0 0 12px rgba(248, 113, 113, 0.6) !important;
+        }
+
+        /* --- 世界情报档案卡片 --- */
+        .lore-archive-grid { display: flex; flex-direction: column; gap: 10px; }
+        .lore-item-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(0, 0, 0, 0.2) 100%);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 12px 14px;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .lore-item-card:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .lore-item-card.type-social { border-left-color: #7aa2f7; }
+        .lore-item-card.type-enemy { border-left-color: #f7768e; }
+        .lore-item-card.type-kink { border-left-color: #bb9af7; }
+        .lore-item-card.type-rule { border-left-color: #e0af68; }
+
+        .lore-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .lore-card-key {
+            font-weight: 700;
+            font-size: 0.95em;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .lore-card-badge {
+            font-size: 0.75em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .badge-social { background: rgba(122, 162, 247, 0.15); color: #7aa2f7; border: 1px solid rgba(122, 162, 247, 0.3); }
+        .badge-enemy { background: rgba(247, 118, 142, 0.15); color: #f7768e; border: 1px solid rgba(247, 118, 142, 0.3); }
+        .badge-kink { background: rgba(187, 154, 247, 0.15); color: #bb9af7; border: 1px solid rgba(187, 154, 247, 0.3); }
+        .badge-rule { background: rgba(224, 175, 104, 0.15); color: #e0af68; border: 1px solid rgba(224, 175, 104, 0.3); }
+
+        .lore-card-body {
+            font-size: 0.9em;
+            color: var(--text-color);
+            line-height: 1.5;
+            opacity: 0.9;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .lore-empty-state {
+            text-align: center;
+            padding: 40px 10px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            opacity: 0.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 500px) {
+            .gm-panel {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                width: 100% !important;
+                max-width: 100%;
+                height: 70vh;
+                border-radius: 12px 12px 0 0;
+                transform-origin: bottom center;
+                resize: none;
+            }
+            .gm-panel.maximized { height: 95vh !important; }
+            .gm-trigger { margin-right: 10px; }
+        }
+/* ============ 声望系统面板 ============ */
+.reputation-panel {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(0,0,0,0.25));
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.5s ease;
+}
+.reputation-panel::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    opacity: 0.3;
+}
+@keyframes rep-legend-glow {
+    0%, 100% { box-shadow: 0 0 0 rgba(247,118,142,0); }
+    50% { box-shadow: 0 0 22px rgba(247,118,142,0.18), inset 0 0 30px rgba(247,118,142,0.05); }
+}
+.reputation-panel.is-legend { animation: rep-legend-glow 4s infinite ease-in-out; }
+
+.rep-row { display: flex; flex-direction: column; gap: 7px; }
+.rep-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.rep-title {
+    font-weight: 700; font-size: 0.95em; color: var(--text-color);
+    display: flex; align-items: center; gap: 6px;
+}
+.rep-title i { opacity: 0.7; font-size: 0.9em; }
+.rep-silent {
+    font-size: 0.78em; opacity: 0.55; font-weight: 400;
+    padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.05);
+}
+.rep-badge {
+    font-size: 0.78em; font-weight: 700; padding: 2px 9px; border-radius: 6px;
+    border: 1px solid; display: inline-flex; align-items: center; gap: 4px;
+    letter-spacing: 0.3px; white-space: nowrap;
+    transition: all 0.4s ease;
+}
+
+/* 知名度单向条 */
+.rep-fame-track {
+    position: relative; height: 10px; background: rgba(0,0,0,0.5);
+    border-radius: 5px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+}
+.rep-fame-fill {
+    position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.rep-fame-marker {
+    position: absolute; top: -2px; bottom: -2px; width: 1px;
+    background: rgba(255,255,255,0.18); z-index: 2;
+}
+.rep-fame-thumb {
+    position: absolute; top: 50%; width: 10px; height: 10px;
+    border-radius: 50%; transform: translate(-50%,-50%); z-index: 3;
+    transition: left 0.5s cubic-bezier(0.4,0,0.2,1);
+    border: 2px solid var(--card-bg, #1a1b26);
+}
+.rep-fame-scale {
+    position: relative; height: 14px;
+    font-size: 0.7em; color: var(--text-secondary);
+    opacity: 0.65; margin-top: 2px;
+}
+.rep-fame-scale > span {
+    position: absolute; top: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+.rep-fame-scale > span:first-child { transform: translateX(0); }
+.rep-fame-scale > span:last-child  { transform: translateX(-100%); }
+
+
+/* 风评双向条 */
+.rep-opinion-track {
+    position: relative; height: 10px; background: rgba(0,0,0,0.5);
+    border-radius: 5px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+}
+.rep-opinion-mid {
+    position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px;
+    background: rgba(255,255,255,0.3); transform: translateX(-50%); z-index: 2;
+    border-radius: 1px;
+}
+.rep-opinion-fill {
+    position: absolute; top: 0; bottom: 0; z-index: 1;
+    transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.rep-opinion-thumb {
+    position: absolute; top: 50%; width: 12px; height: 12px;
+    border-radius: 50%; transform: translate(-50%,-50%); z-index: 3;
+    transition: left 0.5s cubic-bezier(0.4,0,0.2,1);
+    border: 2px solid var(--card-bg, #1a1b26);
+}
+.rep-opinion-scale {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    font-size: 0.72em; padding: 0 1px;
+}
+.rep-opinion-scale > span:first-child { text-align: left; }
+.rep-opinion-scale > span:last-child  { text-align: right; }
+.rep-opinion-scale > .rep-zero        { text-align: center; padding: 0 6px; }
+
+.rep-opinion-scale > span { transition: all 0.4s ease; }
+.rep-zero {
+    font-family: var(--font-header); opacity: 0.5;
+    font-size: 0.9em; font-weight: 600;
+}
+
+.rep-desc {
+    font-size: 0.82em; display: flex; align-items: baseline; gap: 8px;
+    line-height: 1.45; padding-top: 1px;
+}
+.rep-value {
+    font-family: var(--font-header); font-weight: 800;
+    font-size: 1.05em; text-shadow: 0 0 8px currentColor;
+    flex-shrink: 0;
+}
+
+@media (max-width: 500px) {
+    .reputation-panel { padding: 12px 12px; }
+    .rep-title { font-size: 0.88em; }
+    .rep-badge { font-size: 0.72em; padding: 2px 7px; }
+    .rep-fame-scale, .rep-opinion-scale { font-size: 0.65em; }
+    .rep-desc { font-size: 0.78em; }
+    .rep-value { font-size: 0.95em; }
+}
+
+/* ============ 社会视角 · 风评标签 ============ */
+.persona-tags-panel {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg,
+        rgba(180, 190, 254, 0.03) 0%,
+        rgba(0, 0, 0, 0.28) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 14px 18px 16px;
+    margin-top: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 面板顶部装饰线 */
+.persona-tags-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 15%; right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent,
+        var(--accent-color),
+        transparent);
+    opacity: 0.35;
+}
+
+/* 内标题 */
+.persona-tags-panel .pt-header {
+    font-size: 0.75em;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 2px;
+    padding-bottom: 9px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.65;
+    text-transform: uppercase;
+}
+.persona-tags-panel .pt-header i {
+    color: var(--accent-color);
+    font-size: 0.95em;
+    opacity: 0.9;
+}
+
+/* 每一项：3px 竖条 + 100px 标签 + 内容 */
+.persona-tag-row {
+    display: grid;
+    grid-template-columns: 3px 92px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+}
+.persona-tag-row:last-child {
+    padding-bottom: 2px;
+    border-bottom: none;
+}
+
+/* 左侧彩色竖条 */
+.persona-tag-row .pt-accent {
+    width: 3px;
+    align-self: stretch;
+    border-radius: 2px;
+    min-height: 22px;
+    margin-top: 1px;
+    transition: box-shadow 0.3s ease;
+}
+
+/* 标签 */
+.persona-tag-row .pt-label {
+    font-size: 0.86em;
+    font-weight: 700;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding-top: 2px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+.persona-tag-row .pt-label i {
+    width: 1em;
+    text-align: center;
+    font-size: 0.95em;
+}
+
+/* 内容 */
+.persona-tag-row .pt-value {
+    color: var(--text-color);
+    font-size: 0.93em;
+    line-height: 1.55;
+    word-break: break-word;
+    opacity: 0.95;
+}
+
+/* ==== 三类差异化配色 ==== */
+
+/* 表世界 → 蓝 */
+.persona-tag-row.pt-world .pt-accent { background: #7aa2f7; }
+.persona-tag-row.pt-world .pt-label i { color: #7aa2f7; }
+
+/* 小英雄 → 紫 */
+.persona-tag-row.pt-magic .pt-accent { background: #bb9af7; }
+.persona-tag-row.pt-magic .pt-label i { color: #bb9af7; }
+
+/* 流言 → 金 + 发光 + 斜体 */
+.persona-tag-row.pt-rumor .pt-accent {
+    background: #e0af68;
+    box-shadow: 0 0 10px rgba(224, 175, 104, 0.45);
+}
+.persona-tag-row.pt-rumor .pt-label { color: #e0af68; }
+.persona-tag-row.pt-rumor .pt-label i { color: #e0af68; }
+.persona-tag-row.pt-rumor .pt-value {
+    font-style: italic;
+    color: #e0af68;
+    opacity: 0.92;
+}
+
+/* 轻量布局优化：仅作用于 PC 状态栏，不改变游戏及交互逻辑。 */
+.status-card {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    padding: 20px;
+    gap: 18px;
+    box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.5);
+}
+.panel-left { gap: 12px; }
+.panel-right { padding: 14px; }
+.card-header { padding-bottom: 4px; }
+.card-header h2 { font-size: 21px; line-height: 1.35; }
+.name-transformer { max-width: 100%; min-width: 0; }
+.name-transformer .name-text {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+}
+.name-transformer .name-text > span { min-width: 0; }
+.calendar-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px 8px;
+    margin-top: 7px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-color);
+}
+.calendar-date { white-space: nowrap; }
+.calendar-meta > i, .calendar-season, .calendar-unset { color: var(--text-secondary); }
+.calendar-meta > i { font-size: 12px; }
+.calendar-season { white-space: nowrap; }
+.calendar-season::before { content: '·'; margin-right: 8px; }
+.progress-label { gap: 8px; }
+.progress-label > :first-child { min-width: 0; overflow-wrap: anywhere; }
+.progress-value, .ekg-data {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-align: right;
+}
+.tab-btn { min-width: 0; }
+.item-value, .rich-main-text, .rich-sub-text, .lore-card-body, .sub-status {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.details-grid { grid-template-columns: auto minmax(0, 1fr); }
+/* 阈值按 iframe 可用宽度生效，不依赖显示器分辨率。 */
+@media (max-width: 820px) {
+    .status-card { padding: 16px; gap: 14px; }
+    .panel-right { padding: 12px; }
+    .tab-container { gap: 3px; }
+    .tab-btn { padding: 8px 5px; gap: 4px; }
+    .details-grid { column-gap: 12px; }
+}
+@media (max-width: 640px) {
+    body { padding: 6px; }
+    .status-card { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+    .panel-right { min-width: 0; }
+}
+
+/* --- 小英雄与NPC名录样式 --- */
+.roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+    margin-bottom: 14px;
+}
+.roster-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3.5px solid #7aa2f7;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.roster-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.roster-card.hero-camp {
+    border-left-color: #7aa2f7;
+}
+.roster-card.villain-camp {
+    border-left-color: #f7768e;
+}
+.rc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.rc-name {
+    font-weight: 700;
+    font-size: 0.95em;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.rc-badge {
+    font-size: 0.72em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+.badge-hero {
+    background: rgba(122, 162, 247, 0.18);
+    color: #7aa2f7;
+    border: 1px solid rgba(122, 162, 247, 0.35);
+}
+.badge-villain {
+    background: rgba(247, 118, 142, 0.18);
+    color: #f7768e;
+    border: 1px solid rgba(247, 118, 142, 0.35);
+}
+.rc-meta {
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.rc-ability {
+    font-size: 0.78em;
+    color: var(--accent-color);
+    background: rgba(180, 190, 254, 0.06);
+    padding: 3px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rc-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.74em;
+    color: var(--text-secondary);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 4px;
+    margin-top: 2px;
+}
+.rc-arrow {
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+/* 一般 NPC 样式 */
+.npc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+    margin-bottom: 14px;
+}
+.roster-npc-card {
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 3px solid var(--text-secondary);
+    border-radius: 6px;
+}
+.npc-card-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+.npc-name {
+    font-weight: 700;
+    font-size: 0.88em;
+    color: var(--text-color);
+}
+.npc-badge {
+    font-size: 0.7em;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+}
+.npc-rel {
+    font-size: 0.72em;
+    color: var(--accent-color);
+    margin-left: auto;
+}
+.npc-desc {
+    font-size: 0.8em;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* 弹窗样式 */
+.roster-popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99999999;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    box-sizing: border-box;
+}
+.roster-popup-overlay.show {
+    display: flex;
+}
+.roster-popup {
+    background: #1a1b26;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 22px;
+    max-width: 440px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.85);
+    position: relative;
+}
+.popup-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 1.2em;
+    padding: 4px;
+    transition: color 0.15s;
+}
+.popup-close:hover {
+    color: #fff;
+}
+.popup-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.88em;
+}
+.popup-label {
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    font-size: 0.9em;
+}
+.popup-val {
+    text-align: right;
+    color: var(--text-color);
+    word-break: break-word;
+}
+
+</style>
+</head>
+<body>
+    <div id="status-card-container"></div>
+    <div class="roster-popup-overlay" id="roster-popup" onclick="if(event.target===this)closeHeroPopup()">
+        <div class="roster-popup" id="roster-popup-content"></div>
+    </div>
+
+<script>
+    let lastActiveTabId = 'panel-character';
+    let _gmSnapshot = null;
+    let _currentMvuData = null;
+
+    // --- 核心工具函数 ---
+    function updateDOM(fromNode, toNode) {
+        if (!fromNode || !toNode) return;
+
+        const fromAttrs = fromNode.attributes;
+        const toAttrs = toNode.attributes;
+        for (const attr of toAttrs) {
+            if (fromNode.getAttribute(attr.name) !== attr.value) {
+                fromNode.setAttribute(attr.name, attr.value);
+            }
+        }
+        for (const attr of fromAttrs) {
+            if (!toNode.hasAttribute(attr.name)) {
+                fromNode.removeAttribute(attr.name);
+            }
+        }
+
+        const fromChildren = Array.from(fromNode.childNodes);
+        const toChildren = Array.from(toNode.childNodes);
+        const maxLen = Math.max(fromChildren.length, toChildren.length);
+
+        for (let i = 0; i < maxLen; i++) {
+            const fromChild = fromChildren[i];
+            const toChild = toChildren[i];
+            if (!toChild) {
+                fromNode.removeChild(fromChild);
+            } else if (!fromChild) {
+                fromNode.appendChild(toChild.cloneNode(true));
+            } else if (fromChild.nodeType !== toChild.nodeType || fromChild.tagName !== toChild.tagName) {
+                fromNode.replaceChild(toChild.cloneNode(true), fromChild);
+            } else if (fromChild.nodeType === Node.TEXT_NODE) {
+                if (fromChild.textContent !== toChild.textContent) {
+                    fromChild.textContent = toChild.textContent;
+                }
+            } else if (fromChild.nodeType === Node.ELEMENT_NODE) {
+                updateDOM(fromChild, toChild);
+            }
+        }
+    }
+
+    const getValue = (data, path, defaultValue = null) => {
+        const value = path.split('.').reduce((acc, part) => acc && acc[part], data);
+        return (value === undefined || value === null) ? defaultValue : value;
+    };
+
+    const getDeep = (obj, path, def) => {
+        return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? def;
+    };
+
+    const createDetailItem = (label, value, iconClass = null) => {
+        if (!value || value === '待设定' || value === '无') return '';
+        const iconHtml = iconClass ? `<i class="fa-solid ${iconClass}"></i>` : '';
+        return `<div class='item-label'>${iconHtml}${label}</div><div class='item-value'>${value}</div>`;
+    };
+
+    const createRichItem = (label, mainText, subHtml, iconClass = null) => {
+        if (!mainText || mainText === '待设定' || mainText === '无') return '';
+        const iconHtml = iconClass ? `<i class="fa-solid ${iconClass}"></i>` : '';
+        const subContent = subHtml ? `<div class='rich-sub-text'>${subHtml}</div>` : '';
+        return `
+        <div class='item-label'>${iconHtml}${label}</div>
+        <div class='rich-value-box'>
+            <div class='rich-main-text'>${mainText}</div>
+            ${subContent}
+        </div>`;
+    };
+
+    const TOOLTIP_DEFINITIONS = {
+        '主角.核心状态.体力值.当前': `<div class='label'>核心作用:</div><div class='value'>角色的生命值，代表其在战斗中承受伤害的能力。</div><div class='label'>机制说明:</div><div class='value'>因敌人的攻击而减少，可通过休息或特定技能恢复。</div><div class='label'>归零:</div><div class='value'>角色将陷入“力尽待辱”状态并输掉战斗，被动承受敌人无止尽的侵犯。</div>`,
+        '主角.核心状态.能量值.当前': {
+            '善良': `<div class='label'>核心作用:</div><div class='value'>施展英雄技能的核心能源。</div><div class='label'>使用:</div><div class='value'>所有主动技能（攻击、防御、辅助）都会消耗能量。</div><div class='label'>归零:</div><div class='value'>无法使用核心能力，且可能导致着装状态被强制解除，陷入危机。</div>`,
+            '堕落': `<div class='label'>核心作用:</div><div class='value'>驱动堕落力量的源泉。</div><div class='label'>机制说明:</div><div class='value'>无论是戏耍猎物还是展现力量，都需要消耗欲力。</div><div class='label'>功能:</div><div class='value'>它是你快乐的结晶，也是使用能力的燃料。</div>`
+        },
+        '主角.快感状态.快感值': `<div class='label'>核心作用:</div><div class='value'>角色在遭受特定攻击或感官刺激时累积的生理愉悦度。</div><div class='label'>机制说明:</div><div class='value'>当该值达到或超过当前的【高潮阈值】时，会触发高潮事件。</div><div class='label'>关键后果:</div><div class='value'>高潮会消耗体力、增加侵蚀度，且大幅增加对应性癖的经验，并重置快感值。</div>`,
+        '主角.快感状态.侵蚀度': {
+            '善良': `<div class='label'>核心作用:</div><div class='value'>精神与肉体被邪恶欲望侵蚀的程度。</div><div class='label'>来源:</div><div class='value'>遭受洗脑精神攻击、被内射或在高潮中获得。</div><div class='label'>后果:</div><div class='value'>增加的侵蚀将影响主角的身心，达到100%时，将触发黑化沉沦事件。</div>`,
+            '堕落': `<div class='label'>核心作用:</div><div class='value'>从主人那里获得的宠爱，或是自身堕落本质的体现。</div><div class='label'>意义:</div><div class='value'>代表了你对欲望的屈从与掌控程度。该值越高，你的力量和存在就越发稳固。</div>`
+        },
+        '主角.核心状态.正义充能': `<div class='label'>核心作用:</div><div class='value'>在和敌人的战斗、以及在逆境中忍耐时所积蓄的反击能量。</div><div class='label'>获取:</div><div class='value'>通过有效攻击、或在承受敌方的攻击和侵犯时积蓄。</div><div class='label'>用途:</div><div class='value'>充能至100%时，可以宣言发动必杀的终结技。</div>`,
+        '主角.核心状态.混沌充能': `<div class='label'>核心作用:</div><div class='value'>在享受战斗与快乐的过程中凝聚的混沌能量。</div><div class='label'>获取:</div><div class='value'>通过玩弄对手、享受战斗中的快感来积蓄。</div><div class='label'>用途:</div><div class='value'>充能至100%时，可通过宣言展开名为“福音领域”的必杀技，为战斗画上休止符。</div>`,
+        'alertness': `<div class='label'>【环境警戒度】</div><div class='value'>代表敌人对你存在的察觉与锁定程度。<br><br>每点警戒度将使敌人感知检定获得 <span style=\"color:var(--combat-color);font-weight:bold;\">+1 额外加值</span>！<br>当达到 <span style=\"color:var(--combat-color);font-weight:bold;\">10/10</span> 时仍在尝试试探，主角将遭到突袭！</div>`
+    };
+
+const renderProgressItem = (item, data, isFallen) => {
+        const value = getValue(data, item.path, 0);
+        const max = item.options.max || 100;
+        const percentage = Math.max(0, Math.min(100, (value / max) * 100));
+        const orgasmIndicator = (item.path.includes('快感值') && value >= max) ? `<span title='高潮！'>⚡</span>` : '';
+
+        let tooltipText = item.options.tooltipOverride || TOOLTIP_DEFINITIONS[item.path] || null;
+        if (typeof tooltipText === 'object' && tooltipText !== null) {
+            tooltipText = isFallen ? tooltipText['堕落'] : tooltipText['善良'];
+        }
+        const tooltipIconHtml = tooltipText
+            ? `<span class='has-tooltip'><i class="fa-solid fa-circle-info info-icon-pc tooltip-trigger"></i><span class='custom-tooltip'>${tooltipText}</span></span>`
+            : '';
+
+        const extraCls = item.options.extraClass ? ` ${item.options.extraClass}` : '';
+
+        return `
+        <div class='progress-item'>
+            <div class='progress-label'>
+                <span><i class='${item.options.icon}'></i> <span>${item.label}</span> ${tooltipIconHtml} ${orgasmIndicator}</span>
+                <span class='progress-value'>${Math.round(value)}/${max}</span>
+            </div>
+            <div class='progress-bar' style="position: relative; overflow: hidden;">
+                <div class='progress-fill${extraCls}' style='width: ${percentage}%; background: ${item.options.color}; position: relative; z-index: 1;'></div>
+            </div>
+        </div>`;
+    };
+
+const computeFameLevel = (fame) => {
+    if (fame < 15) return '默默无闻';
+    if (fame < 45) return '都市传说';
+    if (fame < 85) return '公众热议';
+    return '无人不晓';
+};
+
+const computeRepLevel = (rep, isFallen) => {
+    if (isFallen) {
+        if (rep <= -70) return '令人战栗的灾厄';
+        if (rep <= -30) return '可怕的堕落小英雄';
+        if (rep < 30)   return '一点也不可怕而且很色';
+        return '国民级涩情偶像';
+    } else {
+        if (rep >= 70)  return '圣洁的英雄';
+        if (rep >= 30)  return '可靠的守护者';
+        if (rep > -30)  return '争议小英雄';
+        if (rep > -70)  return '无能的荡妇';
+        return '公共肉便器';
+    }
+};
+
+const renderReputationPanel = (data, personality) => {
+    const fame = getValue(data, '名声.知名度', 0);
+    const rep  = getValue(data, '名声.风评', 0);
+    const isFallen = (personality === '反派' || personality === '恶堕');
+
+    const FAME_CFG = {
+        '默默无闻': { color: '#565f89', icon: 'fa-user-secret', desc: '无人知晓她的存在' },
+        '都市传说': { color: '#7aa2f7', icon: 'fa-moon',        desc: '巷尾流言中的模糊身影' },
+        '公众热议': { color: '#e0af68', icon: 'fa-fire',        desc: '媒体与社交网络的常客' },
+        '无人不晓': { color: '#f7768e', icon: 'fa-crown',       desc: '城市的文化符号' }
+    };
+
+    const REP_CFG_GOOD = {
+        '圣洁的英雄':       { color: '#9ece6a', icon: 'fa-shield-halved', desc: '市民心中的精神支柱！' },
+        '可靠的守护者':     { color: '#7aa2f7', icon: 'fa-hand-fist',     desc: '寻求帮助的最好选择。' },
+        '争议小英雄':     { color: '#e0af68', icon: 'fa-scale-balanced', desc: '舆论纠缠不清。' },
+        '无能的荡妇':       { color: '#bb9af7', icon: 'fa-droplet',       desc: '流言沾染了情色气味……' },
+        '公共肉便器':       { color: '#f7768e', icon: 'fa-heart-crack',   desc: '被视作可随意侵犯的玩具与肉便器。' }
+    };
+    const REP_CFG_FALLEN = {
+        '令人战栗的灾厄':         { color: '#f7768e', icon: 'fa-skull', desc: '所到之处，人群惊慌逃窜……' },
+        '可怕的堕落小英雄':     { color: '#bb9af7', icon: 'fa-ghost', desc: '被暗中议论的危险存在。' },
+        '一点也不可怕而且很色':   { color: '#e0af68', icon: 'fa-heart', desc: '威胁性被严重低估' },
+        '国民级涩情偶像':         { color: '#f7768e', icon: 'fa-star',  desc: '被疯狂追捧的欲望象征❤' }
+    };
+
+    const rCfgTable = isFallen ? REP_CFG_FALLEN : REP_CFG_GOOD;
+    const rawFameLevel = getValue(data, '名声.知名度等级', '');
+    const rawRepLevel  = getValue(data, '名声.风评等级', '');
+
+    const fameLevel = FAME_CFG[rawFameLevel] ? rawFameLevel : computeFameLevel(fame);
+    const repLevel  = rCfgTable[rawRepLevel]  ? rawRepLevel  : computeRepLevel(rep, isFallen);
+
+    const fCfg = FAME_CFG[fameLevel] || FAME_CFG['默默无闻'];
+    const rCfg = rCfgTable[repLevel]  || { color: '#565f89', icon: 'fa-question', desc: '社会尚未形成明确评价' };
+
+    const repPct    = (rep + 100) / 2;
+    const repBarLeft  = Math.min(50, repPct);
+    const repBarWidth = Math.abs(repPct - 50);
+
+    const axisLeft  = isFallen ? '威慑 / 恐惧' : '失格 / 恶堕';
+    const axisRight = isFallen ? '娱乐 / 欲望' : '正义 / 可靠';
+    const fameMarkers = [15, 45, 85];
+
+    const silent = getValue(data, '名声.沉寂时间', 0);
+    const silentTip = silent > 0
+        ? `<span class="rep-silent" title="沉寂天数">💤 ${silent}天</span>` : '';
+
+    const legendClass = fame >= 85 ? ' is-legend' : '';
+
+    return `
+    <div class="reputation-panel${legendClass}">
+        <div class="rep-row">
+            <div class="rep-head">
+                <span class="rep-title"><i class="fa-solid fa-eye"></i> 知名度 ${silentTip}</span>
+                <span class="rep-badge" style="color:${fCfg.color}; border-color:${fCfg.color}; background:${fCfg.color}22;">
+                    <i class="fa-solid ${fCfg.icon}"></i> ${fameLevel}
+                </span>
+            </div>
+            <div class="rep-fame-track">
+                ${fameMarkers.map(m => `<div class="rep-fame-marker" style="left:${m}%"></div>`).join('')}
+                <div class="rep-fame-fill" style="width:${Math.min(100, fame)}%; background:linear-gradient(90deg, #565f89, ${fCfg.color});"></div>
+                <div class="rep-fame-thumb" style="left:${Math.min(100, fame)}%; background:${fCfg.color}; box-shadow:0 0 10px ${fCfg.color};"></div>
+            </div>
+            <div class="rep-fame-scale">
+                <span style="left:0;">神秘</span>
+                <span style="left:15%;">都市传说</span>
+                <span style="left:45%;">公众热议</span>
+                <span style="left:85%;">无人不晓</span>
+            </div>
+            <div class="rep-desc">
+                <span class="rep-value" style="color:${fCfg.color};">${fame}</span>
+                <span style="color:${fCfg.color}aa;">${fCfg.desc}</span>
+            </div>
+        </div>
+
+        <div class="rep-row" style="margin-top:16px;">
+            <div class="rep-head">
+                <span class="rep-title"><i class="fa-solid fa-scale-balanced"></i> 风评</span>
+                <span class="rep-badge" style="color:${rCfg.color}; border-color:${rCfg.color}; background:${rCfg.color}22;">
+                    <i class="fa-solid ${rCfg.icon}"></i> ${repLevel}
+                </span>
+            </div>
+            <div class="rep-opinion-track">
+                <div class="rep-opinion-mid"></div>
+                <div class="rep-opinion-fill" style="left:${repBarLeft}%; width:${repBarWidth}%; background:${rCfg.color};"></div>
+                <div class="rep-opinion-thumb" style="left:${repPct}%; background:${rCfg.color}; box-shadow:0 0 10px ${rCfg.color};"></div>
+            </div>
+            <div class="rep-opinion-scale">
+                <span style="color:${rep < 0 ? rCfg.color : 'inherit'}; opacity:${rep < 0 ? 1 : 0.5};">◄ ${axisLeft}</span>
+                <span class="rep-zero">0</span>
+                <span style="color:${rep > 0 ? rCfg.color : 'inherit'}; opacity:${rep > 0 ? 1 : 0.5};">${axisRight} ►</span>
+            </div>
+            <div class="rep-desc">
+                <span class="rep-value" style="color:${rCfg.color};">${rep > 0 ? '+' : ''}${rep}</span>
+                <span style="color:${rCfg.color}aa;">${rCfg.desc}</span>
+            </div>
+        </div>
+    </div>`;
+};
+const renderPersonaTags = (data) => {
+    const tags = getValue(data, '名声.风评标签', {}) || {};
+    const worldTag = tags.表世界身份风评;
+    const mgTag    = tags.小英雄身份风评;
+    const rumorTag = tags.流言;
+
+    if (!worldTag && !mgTag && !rumorTag) return '';
+
+    // 流言自动加引号，避免AI忘加
+    const wrapRumor = (t) => {
+        if (!t) return '—';
+        const stripped = t.replace(/^["""]|["""]$/g, '');
+        return `"${stripped}"`;
+    };
+
+    return `
+    <div class="persona-tags-panel">
+        <div class="pt-header">
+            <i class="fa-solid fa-comments"></i>
+            <span>公众印象</span>
+        </div>
+        <div class="persona-tag-row pt-world">
+            <div class="pt-accent"></div>
+            <div class="pt-label"><i class="fa-solid fa-user-tie"></i> 表世界</div>
+            <div class="pt-value">${worldTag || '—'}</div>
+        </div>
+        <div class="persona-tag-row pt-magic">
+            <div class="pt-accent"></div>
+            <div class="pt-label"><i class="fa-solid fa-wand-magic-sparkles"></i> 小英雄</div>
+            <div class="pt-value">${mgTag || '—'}</div>
+        </div>
+        <div class="persona-tag-row pt-rumor">
+            <div class="pt-accent"></div>
+            <div class="pt-label"><i class="fa-solid fa-comment-dots"></i> 流言</div>
+            <div class="pt-value">${wrapRumor(rumorTag)}</div>
+        </div>
+    </div>`;
+};
+
+    const renderCharacterInfo = (data, personality) => {
+        let masterInfoHtml = '';
+        if ((personality === '反派' || personality === '恶堕')) {
+            const masterName = getValue(data, '主角.核心状态.主人', '无');
+            if (masterName && masterName !== '无') {
+                masterInfoHtml = `
+                <div class='master-banner'>
+                    <div class='master-banner-label'><i class="fa-solid fa-crown"></i> <span>主人❤</span></div>
+                    <div class='master-banner-value'>${masterName}</div>
+                </div>`;
+            }
+        }
+
+        return `
+            ${masterInfoHtml}
+            <div class="details-grid">
+                <div class='details-section-header'><i class="fa-solid fa-address-card"></i> <b>核心人设</b></div>
+                ${createDetailItem('年龄', getValue(data, '主角.基本信息.年龄'), 'fa-cake-candles')}
+                ${createRichItem('身份', getValue(data, '主角.个人信息.身份&职业') || getValue(data, '主角.个人信息.身份/职业'), '', 'fa-user-tie')}
+                ${createRichItem('性格', getValue(data, '主角.个人信息.性格特质'), '', 'fa-masks-theater')}
+
+                <div class='details-section-header'><i class="fa-solid fa-bolt"></i> <b>英雄武装与能力</b></div>
+                ${createDetailItem('强度', getValue(data, '主角.核心状态.基础强度', 50), 'fa-burst')}
+                ${createDetailItem('武装', getValue(data, '主角.个人信息.武装'), 'fa-gavel')}
+                ${createDetailItem('战衣', getValue(data, '主角.个人信息.紧身战衣') || getValue(data, '主角.个人信息.变身服'), 'fa-shirt')}
+                ${createDetailItem('核心能力', getValue(data, '主角.个人信息.核心能力'), 'fa-bolt')}
+
+                ${(() => {
+                    const rawColor = getValue(data, '主角.个人信息.代表色', '未设定');
+                    const cleanText = String(rawColor).replace(/\s*\([^)]*#[0-9a-fA-F]{6}[^)]*\)/g, '').trim();
+                    const hexCodes = String(rawColor).match(/#[0-9a-fA-F]{6}/g);
+                    let bgStyle = 'var(--accent-color)';
+                    if (hexCodes && hexCodes.length > 0) {
+                        bgStyle = hexCodes.length === 1 ? hexCodes[0] : `linear-gradient(90deg, ${hexCodes.join(', ')})`;
+                    } else if (['金', 'gold'].some(s => String(rawColor).includes(s))) {
+                        bgStyle = '#FFD700';
+                    } else if (['红', 'red'].some(s => String(rawColor).includes(s))) {
+                        bgStyle = '#FF6B6B';
+                    } else if (['蓝', 'blue'].some(s => String(rawColor).includes(s))) {
+                        bgStyle = '#4D96FF';
+                    } else if (['粉', 'pink'].some(s => String(rawColor).includes(s))) {
+                        bgStyle = '#FFB6C1';
+                    } else if (['紫', 'purple'].some(s => String(rawColor).includes(s))) {
+                        bgStyle = '#BB9AF7';
+                    } else if (['黑', 'black'].some(s => String(rawColor).includes(s))) {
+                        bgStyle = '#333333';
+                    }
+
+                    return createRichItem('代表色', cleanText,
+                        `<div style="width:100%; height:6px; border-radius:3px; background:${bgStyle}; box-shadow: 0 1px 4px rgba(0,0,0,0.3); opacity:0.9; margin-top:2px;"></div>`,
+                    'fa-palette');
+                })()}
+
+                <div class='details-section-header'><i class="fa-solid fa-dna"></i> <b>相貌与身材</b></div>
+                ${createDetailItem('脸型', getValue(data, '主角.相貌特征.脸型'), 'fa-user-circle')}
+                ${createDetailItem('五官', getValue(data, '主角.相貌特征.五官'), 'fa-eye')}
+                ${createDetailItem('发型', getValue(data, '主角.相貌特征.发型与发色'), 'fa-user-astronaut')}
+                ${createDetailItem('眼睛', getValue(data, '主角.相貌特征.眼睛颜色'), 'fa-eye-dropper')}
+
+                ${createDetailItem('身高', getValue(data, '主角.身材细节.身高'), 'fa-ruler-vertical')}
+                ${createRichItem('三围', getValue(data, '主角.身材细节.三围'), `<span class='info-tag'>体脂 ${getValue(data, '主角.身材细节.体脂率')}</span>`, 'fa-ruler-combined')}
+
+                ${createDetailItem('体态', getValue(data, '主角.身材细节.体态'), 'fa-person-walking')}
+                ${createDetailItem('皮肤状态', getValue(data, '主角.身材细节.皮肤状态'), 'fa-feather-alt')}
+                ${createDetailItem('特殊记号', getValue(data, '主角.相貌特征.特殊记号'), 'fa-star-of-life')}
+                ${createDetailItem('肌肉线条', getValue(data, '主角.身材细节.肌肉线条'), 'fa-dumbbell')}
+
+                <div class='details-section-header'><i class="fa-solid fa-gem"></i> <b>私密特征</b></div>
+                ${createDetailItem('胸部/胸肌', getValue(data, '主角.性器官特征.胸肌形态'), 'fa-shield-halved')}
+                ${createDetailItem('乳首', getValue(data, '主角.性器官特征.乳头颜色'), 'fa-circle-dot')}
+                ${createDetailItem('阴茎', getValue(data, '主角.性器官特征.阴茎形态'), 'fa-mars')}
+                ${createDetailItem('体毛', getValue(data, '主角.性器官特征.体毛状况'), 'fa-leaf')}
+                ${createDetailItem('敏感度', getValue(data, '主角.性器官特征.天生敏感度'), 'fa-bolt-lightning')}
+
+                <div class='details-section-header'><i class="fa-solid fa-users"></i> <b>社会影响</b></div>
+${renderReputationPanel(data, personality)}
+${renderPersonaTags(data)}
+            </div>`;
+    };
+
+    const renderBodyStatus = (data) => {
+        const bodyParts = getValue(data, '主角.身体部位状况', {});
+        const bodyPartsHtml = Object.entries(bodyParts).map(([part, statusVal]) => {
+            if (part === '$meta') return '';
+            const status = typeof statusVal === 'string' ? statusVal : '完好';
+            return createDetailItem(part, `<span style='color:${status === '完好' ? 'var(--text-secondary)' : 'var(--combat-color)'}'>${status}</span>`);
+        }).join('');
+
+        let modificationsHtml = Object.entries(getValue(data, '主角.永久性身体改造', {}))
+            .filter(([k]) => k !== '$meta' && k !== '$__META_EXTENSIBLE__$')
+            .map(([modName, modData]) => {
+            const partText = getValue(modData, '部位', '未知');
+            const detailsText = getValue(modData, '详情', '无');
+            const sourceText = getValue(modData, '来源', '未知');
+            let tooltipContent = `<div class='label'>部位:</div><div class='value'>${partText}</div><div class='label'>详情:</div><div class='value'>${detailsText}</div><div class='label'>来源:</div><div class='value'>${sourceText}</div>`;
+            return `<span class='has-tooltip'><span class="tooltip-trigger">✨ ${modName}</span><span class='custom-tooltip'>${tooltipContent}</span></span>`;
+        }).join('<br>');
+        if (!modificationsHtml.trim()) modificationsHtml = '<span style="opacity:0.5">肉体纯洁无暇。</span>';
+
+        const penisState = getValue(data, '主角.生理状态.阴茎状态.当前状态', '疲软');
+        const anusState = getValue(data, '主角.生理状态.后穴状态.当前状态', '紧致');
+        const anusWetness = getValue(data, '主角.生理状态.后穴状态.湿润度', '干燥');
+        const anusDev = getValue(data, '主角.生理状态.后穴状态.松弛度', 0);
+        const coreState = getValue(data, '主角.生理状态.能量核心状态.当前状态', '稳定');
+        const coreCap = getValue(data, '主角.生理状态.能量核心状态.容量', 50);
+
+        let semenHtml = '';
+        const semenAmount = getValue(data, '主角.生理状态.体液存储.体内精液.总量', getValue(data, '主角.生理状态.体液与分泌.能量核心内精液.存量', 0));
+        const semenSources = Object.keys(getValue(data, '主角.生理状态.体液存储.体内精液.来源', getValue(data, '主角.生理状态.体液与分泌.能量核心内精液.来源', {}))).filter(s => s !== '$meta' && s !== '$__META_EXTENSIBLE__$');
+
+        const pct = Math.min(100, (semenAmount / coreCap) * 100);
+        const isOverflow = semenAmount >= coreCap;
+        let riskTag = '', riskLevel = '安宁';
+        if (isOverflow) { riskLevel = '满溢界限'; riskTag = 'risk-high'; }
+        else if (pct > 80) { riskLevel = '小腹鼓胀'; riskTag = 'risk-high'; }
+        else if (pct > 50) { riskLevel = '半满'; }
+        else if (pct > 20) { riskLevel = '存积'; }
+
+        let tierClass = 'flask-tier-1';
+        let capLabel = '标准';
+        let capColor = 'inherit';
+        if (coreCap >= 200) { tierClass = 'flask-tier-4'; capLabel = '❤苗床化'; capColor = 'var(--pleasure-color)'; }
+        else if (coreCap >= 150) { tierClass = 'flask-tier-3'; capLabel = '深度开发'; capColor = '#f472b6'; }
+        else if (coreCap >= 100) { tierClass = 'flask-tier-2'; capLabel = '已扩张'; capColor = '#fb7185'; }
+
+        let sourceTagsHtml = semenSources.length > 0
+            ? semenSources.slice(0, 3).map(s => `<span class='bio-tag'>${s.split(':')[0]}</span>`).join('')
+            : `<span class='bio-tag' style="opacity:0.5">洁净</span>`;
+        if (semenSources.length > 3) sourceTagsHtml += `<span class='bio-tag'>+${semenSources.length - 3}</span>`;
+
+        const flaskClass = `bio-flask ${tierClass} ${isOverflow ? 'danger' : ''}`;
+
+        semenHtml = `
+        <div class="bio-container-widget" style="
+            grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 16px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.1));
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px; padding: 14px 16px; align-items: center;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        ">
+            <div class="${flaskClass}">
+                <div class="liquid-wave" style="height: ${pct}%"></div>
+            </div>
+            <div class="bio-data" style="width: 100%;">
+                <div class="bio-header" style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+                    <div class="bio-title" style="font-weight:bold; color:var(--accent-color);">
+                        <i class="fa-solid fa-flask"></i> 内部容量
+                        <span style="font-size:0.75em; color:${capColor}; margin-left:4px; font-weight:normal;">[${capLabel}]</span>
+                    </div>
+                    <div class="bio-tag ${riskTag}" style="font-size:0.7em;">${riskLevel}</div>
+                </div>
+                <div class="bio-readout" style="font-family:var(--font-header); font-size:1.15em; margin-bottom:4px; font-weight:600;">
+                    ${semenAmount} <small style="opacity:0.6; font-size:0.75em; font-weight:normal;">/ ${coreCap} ml</small>
+                </div>
+                <div class="bio-tags">${sourceTagsHtml}</div>
+            </div>
+        </div>`;
+
+        const itemObj = getValue(data, '主角.道具栏', {});
+        const itemKeys = Object.keys(itemObj).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+        let itemsHtml = '';
+        if (itemKeys.length > 0) {
+            const tagsHtml = itemKeys.map(k => {
+                const val = itemObj[k];
+                let content = k;
+                if (val && val !== 1 && val !== '1' && val !== true && val !== '有') {
+                    content += ` <span style="opacity:0.6; padding-left:5px; margin-left:3px; border-left:1px solid rgba(255,255,255,0.2); font-size:0.9em;">${val}</span>`;
+                }
+                return `<span class="bio-tag" style="background:rgba(122, 162, 247, 0.1); border-color:rgba(122, 162, 247, 0.2); color:var(--text-color);">${content}</span>`;
+            }).join('');
+            itemsHtml = `<div class='details-section-header'><i class="fa-solid fa-box-open"></i> <b>持有物</b></div><div class="bio-tags" style="margin-bottom:8px; grid-column: 1 / -1;">${tagsHtml}</div>`;
+        } else {
+            itemsHtml = `<div class='details-section-header'><i class="fa-solid fa-box-open"></i> <b>持有物</b></div><div style="opacity:0.4; font-size:0.9em; padding-left:4px; grid-column: 1 / -1;">(空)</div>`;
+        }
+
+        const formatObjs = (dataObj) => {
+            if (!dataObj || typeof dataObj !== 'object') return '<span style="opacity:0.5">无</span>';
+            const validKeys = Object.keys(dataObj).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+            if (validKeys.length === 0) return '<span style="opacity:0.5">无</span>';
+            return validKeys.map(k => {
+                const v = dataObj[k];
+                const desc = (typeof v === 'object') ? (v.特征 || v.状态 || v.description || '存在') : v;
+                return `${k} <span style="opacity:0.7; font-size:0.9em">(${desc})</span>`;
+            }).join('<br>');
+        };
+
+        return `<div class="details-grid">
+            <div class='details-section-header'><i class="fa-solid fa-shirt"></i> <b>服装与身体状态</b></div>
+            ${bodyPartsHtml}
+            <div class='details-section-header'><i class="fa-solid fa-atom"></i> <b>内部状态</b></div>
+            ${createDetailItem('生理体态', getValue(data, '主角.生理状态.当前体态', '平常'), 'fa-heart-pulse')}
+            ${createDetailItem('阴茎', penisState, 'fa-mars')}
+            ${createDetailItem('后穴', `${anusState} | 松弛 ${anusDev} (${anusWetness})`, 'fa-asterisk')}
+            ${createDetailItem('能量核心', coreState, 'fa-atom')}
+            <div class='details-section-header'><i class="fa-solid fa-flask-vial"></i> <b>体液与改造</b></div>
+            ${semenHtml}
+            ${createDetailItem('改造列表', modificationsHtml, 'fa-list-ul')}
+            ${itemsHtml}
+            <div class='details-section-header'><i class="fa-solid fa-virus"></i> <b>侵入异物</b></div>
+            ${createDetailItem('后穴内', formatObjs(getValue(data, '主角.生理状态.后穴状态.内部异物')), 'fa-cube')}
+            ${createDetailItem('异物寄生', formatObjs(getValue(data, '主角.生理状态.异物寄生.列表', getValue(data, '主角.生理状态.能量核心内异物.异物列表'))), 'fa-cubes')}
+        </div>`;
+    };
+
+    const renderRecords = (data, personality) => {
+        const curseDesc = getValue(data, '主角.黑暗印记.描述', '无');
+        const curseXp = getValue(data, '主角.黑暗印记.经验', 0);
+        let curseHtml = '';
+
+        if (curseXp > 0 || (curseDesc && curseDesc !== '生成中……' && curseDesc !== '待设定')) {
+            const level = curseXp <= 0 ? 0 : (curseXp < 150 ? 1 : (curseXp < 400 ? 2 : 3));
+            const corruption = getValue(data, '主角.快感状态.污染度', 0);
+
+            let titleColor, bgColor, iconClass, animState;
+
+            if ((personality === '反派' || personality === '恶堕')) {
+                titleColor = 'var(--pleasure-color)';
+                bgColor = 'linear-gradient(135deg, rgba(40, 15, 25, 0.9), rgba(20, 10, 20, 0.7))';
+                iconClass = 'fa-solid fa-heart-pulse';
+                animState = 'curse-state-fallen';
+            } else if (corruption >= 65) {
+                titleColor = 'var(--corruption-color)';
+                bgColor = 'linear-gradient(135deg, rgba(30, 20, 40, 0.8), rgba(20, 15, 30, 0.7))';
+                iconClass = 'fa-brands fa-diaspora';
+                animState = 'curse-state-eroded';
+            } else {
+                titleColor = 'var(--text-secondary)';
+                bgColor = 'linear-gradient(135deg, rgba(30, 30, 40, 0.6), rgba(20, 20, 25, 0.5))';
+                iconClass = 'fa-solid fa-seedling';
+                animState = 'curse-state-dormant';
+            }
+
+            const finalAnimClass = level >= 3 ? animState : '';
+
+            let curseTraitsHtml = '';
+            if (level >= 1) {
+                const traits = [];
+                if ((personality === '英雄')) {
+                    traits.push({ icon: 'fa-temperature-arrow-up', name: '发情阻碍', desc: '战斗中快感超过40%时，黑暗印记会发烫并吸收体力，削减自身的战斗强度。' });
+                    traits.push({ icon: 'fa-burst', name: '敏感侵蚀', desc: '核心与前列腺敏感度持续上升，受击更容易诱发性冲动与快感。' });
+                    traits.push({ icon: 'fa-droplet-slash', name: '纯洁试炼', desc: '保持能量核心内没有精液，身体不发生高潮，黑暗印记会因饥饿而逐渐削弱。彻底克服黑暗印记后，基础强度将获得永久提升，并降低污染度。' });
+                    if (level >= 2) traits.push({ icon: 'fa-wand-magic-sparkles', name: '魔力发情', desc: '[Lv.2解锁] 魔力回路被污染。战斗中每次消耗MP施展魔法，流失的魔力都会被强行转化为性快感。' });
+                    if (level >= 3) {
+                        traits.push({ icon: 'fa-heart-crack', name: '痛觉转换', desc: '[Lv.3解锁] 痛觉中枢被篡改。战斗中承受的任何物理伤害与痛楚，都会被瞬间扭曲为绝顶的快感浪潮。' });
+                        traits.push({ icon: 'fa-biohazard', name: '深渊侵蚀', desc: '[Lv.3解锁] 无时无刻不在散发堕落的荷尔蒙，每天清晨强制增加 5 点污染度。' });
+                    }
+                } else {
+                    traits.push({ icon: 'fa-fire', name: '爱欲强化', desc: '战斗中快感超过40%时，黑暗印记会将激活并提供魔力，增强自身的强度。' });
+                    traits.push({ icon: 'fa-heart', name: '苗床渴求', desc: '彻底拥抱被灌注与开发的快感，能量核心容量与吸收效率大幅提高。' });
+                    traits.push({ icon: 'fa-glass-water', name: '精液饥渴', desc: '黑暗印记极度依赖精液灌溉。若能量核心空虚，黑暗印记将干瘪衰退，并导致恩宠与力量流失。' });
+                    if (level >= 2) traits.push({ icon: 'fa-wand-magic-sparkles', name: '魔力发情', desc: '[Lv.2解锁] 魔力与快感深度绑定。消耗魔力不再是负担，反而能带来快感。' });
+                    if (level >= 3) {
+                        traits.push({ icon: 'fa-heart-pulse', name: '痛觉转换', desc: '[Lv.3解锁] 痛觉被完全逆转。承受的物理伤害与痛楚都会转化为快感。' });
+                        traits.push({ icon: 'fa-crown', name: '深渊眷顾', desc: '[Lv.3解锁] 完全适应堕落，每天清晨能从黑暗印记中汲取恩宠。' });
+                    }
+                }
+
+                curseTraitsHtml = `<div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">` +
+                    traits.map(t => `
+                    <span class='has-tooltip' style='display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:6px; background:rgba(0,0,0,0.4); border:1px solid ${titleColor}; color:${titleColor}; font-size:0.85em; cursor:help; box-shadow: 0 2px 4px rgba(0,0,0,0.2);'>
+                        <span class="tooltip-trigger"><i class="fa-solid ${t.icon}"></i> ${t.name}</span>
+                        <span class='custom-tooltip'>
+                            <div class='label'>${t.name}</div>
+                            <div class='value'>${t.desc}</div>
+                        </span>
+                    </span>`).join('') + `</div>`;
+            }
+
+            curseHtml = `
+            <div class='curse-mark-banner curse-lv${level} ${finalAnimClass}' style="--curse-glow: ${titleColor}; background: ${bgColor}; border-left-color: ${titleColor};">
+                <div class="curse-mark-content">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom:6px; margin-bottom:6px;">
+                        <div style="color: ${titleColor}; font-size: 0.9em; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                            <i class="${iconClass}"></i> <span>黑暗印记显现</span>
+                        </div>
+                        <div style="font-family: var(--font-header); font-size: 0.95em; font-weight:700; color: ${titleColor}; opacity: 0.9;">
+                            Lv.${level} <span style="font-size:0.75em; opacity:0.6; font-weight:normal;">(${curseXp} XP)</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.9em; color: var(--text-color); line-height: 1.5; opacity: 0.9;">
+                        ${curseDesc}
+                    </div>
+                    ${curseTraitsHtml}
+                </div>
+                <i class="${iconClass} watermark-icon" style="color: ${titleColor};"></i>
+            </div>`;
+        }
+
+        const KINK_LEVELS = {
+            0: { name: '未觉醒', xp_needed: 100, icon: 'fa-circle-notch' },
+            1: { name: '萌芽', xp_needed: 250, icon: 'fa-leaf' },
+            2: { name: '熟练', xp_needed: 500, icon: 'fa-layer-group' },
+            3: { name: '心醉', xp_needed: 1000, icon: 'fa-heart' },
+            4: { name: '极境', xp_needed: Infinity, icon: 'fa-crown' }
+        };
+
+        const kinks = getValue(data, '主角.快感状态.性癖', {});
+        const kinkEntries = Object.entries(kinks)
+            .filter(([key, val]) => key !== '$meta' && (val.经验 > 0 || val.经验值 > 0))
+            .sort(([, a], [, b]) => (b.经验 || b.经验值 || 0) - (a.经验 || a.经验值 || 0));
+
+        let kinkHtml = '';
+        if (kinkEntries.length === 0) {
+            kinkHtml = `<div style='grid-column: 1/-1; text-align:center; color:var(--text-secondary); padding:10px;'>暂无性癖觉醒</div>`;
+        } else {
+            kinkHtml = kinkEntries.map(([key, val]) => {
+                const exp = val.经验 || val.经验值 || 0;
+                const level = val.等级 || 0;
+                const levelInfo = KINK_LEVELS[level] || KINK_LEVELS[0];
+                const isMax = levelInfo.xp_needed === Infinity;
+                const rankClass = `rank-${Math.min(level, 4)}`;
+                const prevXp = level > 0 ? KINK_LEVELS[level - 1].xp_needed : 0;
+
+                let progressPercent = 0;
+                if (isMax) {
+                    progressPercent = 100;
+                } else {
+                    progressPercent = Math.max(0, Math.min(100, ((exp - prevXp) / (levelInfo.xp_needed - prevXp)) * 100));
+                }
+
+                let xpDisplayHtml = isMax
+                    ? `<span class="kink-xp is-max">${exp} <small>MAX</small></span>`
+                    : `<span class="kink-xp">${exp} <small>/ ${levelInfo.xp_needed}</small></span>`;
+                const barColor = isMax ? 'var(--ultimate-color)' : 'var(--accent-color)';
+
+                return `
+                <div style="grid-column: 1/-1; margin-bottom:6px;">
+                    <div class="kink-row">
+                        <div class="kink-name ${rankClass}">
+                            <i class="fa-solid ${levelInfo.icon} rank-icon"></i>
+                            <span>${key} <span style="font-size:0.8em; opacity:0.8; font-weight:normal;">Lv.${level}</span></span>
+                        </div>
+                        <div>${xpDisplayHtml}</div>
+                    </div>
+                    <div class="kink-progress-container">
+                        <div class="progress-fill" style="width: ${progressPercent}%; background: ${barColor}; box-shadow: 0 0 10px ${barColor};"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        const getListValues = (path) => {
+            const raw = getValue(data, path, {});
+            if (Array.isArray(raw)) return raw;
+            if (typeof raw === 'object' && raw !== null) return Object.values(raw);
+            return [];
+        };
+
+        const bossesList = getListValues('记录.战斗档案');
+        let bossesHtml = bossesList.filter(b => b !== '$__META_EXTENSIBLE__$').map(boss => {
+            const bossName = (typeof boss === 'object' ? boss.名称 : boss) || '未知';
+            const tagsArray = (typeof boss === 'object' ? boss.核心主题 : []) || [];
+            const result = (typeof boss === 'object' ? boss.结果 : 'WIN') || 'WIN';
+            const cType = (typeof boss === 'object' ? boss.战斗类型 : '') || '';
+            const encAlign = (typeof boss === 'object' ? boss.遭遇阵营 : '') || personality;
+
+            const tagsText = (tagsArray.length > 0) ? `<div class='label'>核心主题:</div><div class='value'>${tagsArray.join(', ')}</div>` : '无特殊主题';
+
+            let tooltipBadge = '';
+            if (cType) {
+                if (encAlign === '善良') {
+                    if (cType === '小英雄') {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(187, 154, 247, 0.15); color:#bb9af7; border:1px solid rgba(187, 154, 247, 0.5); border-radius:4px;'><i class="fa-solid fa-moon"></i> 堕落小英雄</span></div>`;
+                    } else if (cType === '人类') {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(122, 162, 247, 0.15); color:#7aa2f7; border:1px solid rgba(122, 162, 247, 0.5); border-radius:4px;'><i class="fa-solid fa-user-secret"></i> 人类恶棍</span></div>`;
+                    } else {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(248, 113, 113, 0.15); color:#f87171; border:1px solid rgba(248, 113, 113, 0.5); border-radius:4px;'><i class="fa-solid fa-ghost"></i> 魔物</span></div>`;
+                    }
+                } else {
+                    if (cType === '小英雄') {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(255, 255, 255, 0.15); color:#fff; border:1px solid rgba(255, 255, 255, 0.8); border-radius:4px; box-shadow: 0 0 6px rgba(255,255,255,0.4); text-shadow: 0 0 4px rgba(255,255,255,0.8);'><i class="fa-solid fa-feather"></i> 小英雄</span></div>`;
+                    } else if (cType === '人类') {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(122, 162, 247, 0.15); color:#7aa2f7; border:1px solid rgba(122, 162, 247, 0.5); border-radius:4px;'><i class="fa-solid fa-user-tie"></i> 人类玩物</span></div>`;
+                    } else {
+                        tooltipBadge = `<div style='margin-bottom:8px;'><span style='font-size:0.85em; padding:3px 8px; background:rgba(247, 118, 142, 0.15); color:#f7768e; border:1px solid rgba(247, 118, 142, 0.5); border-radius:4px;'><i class="fa-solid fa-paw"></i> 猎物</span></div>`;
+                    }
+                }
+            }
+
+            const tooltipContent = `${tooltipBadge}${tagsText}`;
+
+            let icon, styleClass;
+            if (result === 'LOSE') {
+                icon = 'fa-heart-crack';
+                styleClass = 'color: var(--combat-color); opacity: 0.8;';
+            } else {
+                icon = 'fa-skull-crossbones';
+                styleClass = 'color: var(--text-color);';
+            }
+
+            return `<span class='has-tooltip' style='display:inline-block; margin-right:8px; margin-bottom:6px; ${styleClass}'><span class="tooltip-trigger"><i class="fa-solid ${icon}"></i> ${bossName}</span><span class='custom-tooltip'>${tooltipContent}</span></span>`;
+        }).join('<br>');
+
+        const childrenObj = getValue(data, '记录.诞下的子嗣', {});
+        let parsedChildren = [];
+
+        if (Array.isArray(childrenObj)) {
+            parsedChildren = childrenObj.filter(c => c && c !== '$__META_EXTENSIBLE__$').map(c => {
+                return typeof c === 'object' ? { 名称: c.名称 || '新生儿', 来源: c.来源 || '未知', 特征: c.特征 || '无' }
+                                             : { 名称: String(c), 来源: '未知', 特征: '无' };
+            });
+        } else if (typeof childrenObj === 'object' && childrenObj !== null) {
+            Object.keys(childrenObj).forEach(key => {
+                if (key === '$meta' || key === '$__META_EXTENSIBLE__$') return;
+                const val = childrenObj[key];
+                if (typeof val === 'object' && val !== null) {
+                    parsedChildren.push({
+                        名称: val.名称 || key,
+                        来源: val.来源 || '未知',
+                        特征: val.特征 || '无'
+                    });
+                } else {
+                    parsedChildren.push({ 名称: key, 来源: '未知', 特征: String(val) });
+                }
+            });
+        }
+
+        const childrenDisplayHtml = parsedChildren.length > 0 ? parsedChildren.map(child => {
+            const tooltipContent = `<div class='label'>来源:</div><div class='value'>${child.来源}</div><div class='label'>特征:</div><div class='value'>${child.特征}</div>`;
+            return `<span class='has-tooltip'><span class="tooltip-trigger">👼 ${child.名称}</span><span class='custom-tooltip'>${tooltipContent}</span></span>`;
+        }).join(' <br>') : '';
+
+        const recordsHeader = '战斗记录';
+        const recordsIcon = ((personality === '英雄')) ? 'fa-skull-crossbones' : 'fa-gem';
+        const childrenLabel = ((personality === '英雄')) ? '战败改造' : '我的孩子';
+
+        const sexStatsHtml = `
+            <div class='details-section-header'><i class="fa-solid fa-heart-pulse"></i> <b>性经历统计</b></div>
+            ${createDetailItem('总性交次数', `${getValue(data, '主角.性行为统计.总性交次数', 0)} 次`, 'fa-venus-mars')}
+            ${createDetailItem('接收内射', `${getValue(data, '主角.性行为统计.总内射接收次数', 0)} 次`, 'fa-arrow-down-to-bracket')}
+            ${createDetailItem('内射他人', `${getValue(data, '主角.性行为统计.总内射他人次数', 0)} 次`, 'fa-arrow-up-from-bracket')}
+            ${createDetailItem('为他人口交', `${getValue(data, '主角.性行为统计.总为他人口交次数', 0)} 次`, 'fa-lips')}
+            ${createDetailItem('被他人口交', `${getValue(data, '主角.性行为统计.总被他人口交次数', 0)} 次`, 'fa-comment-dots')}
+            ${createDetailItem('自我手淫', `${getValue(data, '主角.性行为统计.总自己手淫次数', 0)} 次`, 'fa-hand')}
+            ${createDetailItem('给他人手淫', `${getValue(data, '主角.性行为统计.总给他人手淫次数', 0)} 次`, 'fa-hands')}
+            ${createDetailItem('被他人手淫', `${getValue(data, '主角.性行为统计.总被他手淫次数', 0)} 次`, 'fa-hands-holding')}`;
+
+        return `${curseHtml}<div class="details-grid">
+            <div class='details-section-header'><i class="fa-solid fa-arrow-trend-up"></i> <b>性癖开发</b></div>
+            ${kinkHtml}
+            ${sexStatsHtml}
+            <div class='details-section-header'><i class="fa-solid fa-scroll"></i> <b>冒险记录</b></div>
+            ${createDetailItem('总高潮次数', getValue(data, '主角.快感状态.总高潮次数', 0), 'fa-wave-square')}
+            ${createDetailItem('总战败', getValue(data, '记录.总战败次数', 0), 'fa-heart-crack')}
+            ${createDetailItem(recordsHeader, bossesHtml, recordsIcon)}
+            ${createDetailItem(childrenLabel, childrenDisplayHtml, 'fa-baby')}
+        </div>`;
+    };
+
+    // Tab 4: 世界与名录档案
+    const renderWorldLore = (data) => {
+        // 1. 小英雄名录
+        const heroRoster = getValue(data, '世界.小英雄名录', {});
+        const heroEntries = Object.entries(heroRoster).filter(([k]) => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+
+        let heroSectionHtml = '';
+        if (heroEntries.length > 0) {
+            const heroCardsHtml = heroEntries.map(([realName, hero]) => {
+                const isHero = (hero.人格阵营 || '英雄') === '英雄';
+                const heroName = isHero ? (hero.英雄名 || realName) : (hero.堕落英雄名 || hero.英雄名 || realName);
+                const campClass = isHero ? 'hero-camp' : 'villain-camp';
+                const badgeClass = isHero ? 'badge-hero' : 'badge-villain';
+                const campLabel = isHero ? '英雄' : '反派';
+                const ability = isHero ? (hero.英雄核心能力 || '') : (hero.反派核心能力 || hero.英雄核心能力 || '');
+                const rel = hero.与主角关系 || '';
+                const iden = hero.表面身份 || '';
+                const safeRealName = String(realName).replace(/'/g, "\\'");
+
+                return `
+                <div class="roster-card ${campClass}" onclick="showHeroPopup('${safeRealName}')">
+                    <div class="rc-header">
+                        <span class="rc-name"><i class="fa-solid ${isHero ? 'fa-shield-halved' : 'fa-skull'}"></i> ${heroName}</span>
+                        <span class="rc-badge ${badgeClass}">${campLabel}</span>
+                    </div>
+                    <div class="rc-meta">
+                        <span class="rc-real"><i class="fa-solid fa-id-card"></i> ${realName}${iden ? ' · ' + iden : ''}</span>
+                        ${rel ? `<span class="rc-rel"><i class="fa-solid fa-heart"></i> ${rel}</span>` : ''}
+                    </div>
+                    ${ability ? `<div class="rc-ability" title="${ability}"><i class="fa-solid fa-wand-magic-sparkles"></i> ${ability}</div>` : ''}
+                    <div class="rc-footer">
+                        <span>战绩: ${hero.战胜主角次数||0}胜 / ${hero.败于主角次数||0}败</span>
+                        <span>恶堕: ${hero.恶堕次数||0}次</span>
+                        <i class="fa-solid fa-chevron-right rc-arrow"></i>
+                    </div>
+                </div>`;
+            }).join('');
+
+            heroSectionHtml = `
+            <div class="details-section-header" style="margin-top:0;">
+                <i class="fa-solid fa-users"></i> <b>小英雄名录 (${heroEntries.length})</b>
+            </div>
+            <div class="roster-grid">${heroCardsHtml}</div>`;
+        }
+
+        // 2. 一般NPC名录
+        const npcRoster = getValue(data, '世界.一般NPC名录', {});
+        const npcEntries = Object.entries(npcRoster).filter(([k]) => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+
+        let npcSectionHtml = '';
+        if (npcEntries.length > 0) {
+            const npcCardsHtml = npcEntries.map(([name, val]) => {
+                const isObj = typeof val === 'object' && val !== null;
+                const desc = isObj ? (val.描述 || val.关系 || val.身份 || '') : String(val);
+                const identity = isObj ? (val.身份 || '') : '';
+                const rel = isObj ? (val.关系 || '') : '';
+                return `
+                <div class="roster-npc-card">
+                    <div class="npc-card-top">
+                        <span class="npc-name"><i class="fa-solid fa-user"></i> ${name}</span>
+                        ${identity ? `<span class="npc-badge">${identity}</span>` : ''}
+                        ${rel ? `<span class="npc-rel">${rel}</span>` : ''}
+                    </div>
+                    <div class="npc-desc">${desc}</div>
+                </div>`;
+            }).join('');
+
+            npcSectionHtml = `
+            <div class="details-section-header" style="margin-top:${heroEntries.length > 0 ? '14px' : '0'};">
+                <i class="fa-solid fa-user-group"></i> <b>一般NPC名录 (${npcEntries.length})</b>
+            </div>
+            <div class="npc-grid">${npcCardsHtml}</div>`;
+        }
+
+        // 3. 世界情报档案
+        const rawNotes = getValue(data, '世界.世界观备注', {});
+        const loreEntries = Object.entries(rawNotes).filter(([k]) => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+
+        const getCategory = (key) => {
+            if (/^(人际|NPC|关系|同伴|朋友|人物|组织)/i.test(key)) {
+                return { typeClass: 'type-social', badgeClass: 'badge-social', icon: 'fa-solid fa-user-tag', label: '人物羁绊' };
+            }
+            if (/^(弱点|魔物|敌方|危险|Boss|威胁|怪)/i.test(key)) {
+                return { typeClass: 'type-enemy', badgeClass: 'badge-enemy', icon: 'fa-solid fa-skull', label: '敌人情报' };
+            }
+            if (/^(觉醒记录|性癖|恶堕|烙印|印痕)/i.test(key)) {
+                return { typeClass: 'type-kink', badgeClass: 'badge-kink', icon: 'fa-solid fa-heart-crack', label: '觉醒性癖' };
+            }
+            return { typeClass: 'type-rule', badgeClass: 'badge-rule', icon: 'fa-solid fa-scroll', label: '世界设定' };
+        };
+
+        let loreSectionHtml = '';
+        if (loreEntries.length > 0) {
+            const loreCardsHtml = loreEntries.map(([key, val]) => {
+                const cat = getCategory(key);
+                const displayKey = key.replace(/^(人际关系_|弱点_|魔物常识_|觉醒记录_)/, '');
+                return `
+                <div class="lore-item-card ${cat.typeClass}">
+                    <div class="lore-card-top">
+                        <div class="lore-card-key">
+                            <i class="${cat.icon}" style="opacity: 0.8;"></i>
+                            <span>${displayKey}</span>
+                        </div>
+                        <span class="lore-card-badge ${cat.badgeClass}">${cat.label}</span>
+                    </div>
+                    <div class="lore-card-body">${val}</div>
+                </div>`;
+            }).join('');
+
+            loreSectionHtml = `
+            <div class="details-section-header" style="margin-top:${(heroEntries.length > 0 || npcEntries.length > 0) ? '14px' : '0'};">
+                <i class="fa-solid fa-book-atlas"></i> <b>世界情报档案 (${loreEntries.length})</b>
+            </div>
+            ${loreCardsHtml}`;
+        }
+
+        const totalEntries = heroEntries.length + npcEntries.length + loreEntries.length;
+        if (totalEntries === 0) {
+            return `
+            <div class="lore-empty-state">
+                <i class="fa-solid fa-feather-pointed" style="font-size: 1.8em; margin-bottom: 4px; opacity: 0.5;"></i>
+                <span>✧ 暂无记录的名录人物与世界情报 ✧</span>
+            </div>`;
+        }
+
+        return `
+        <div class="lore-archive-grid">
+            ${heroSectionHtml}
+            ${npcSectionHtml}
+            ${loreSectionHtml}
+        </div>`;
+    };
+
+    const renderEKGMonitor = (data) => {
+        const current = getValue(data, '主角.快感状态.快感值', 0);
+        const threshold = getValue(data, '主角.快感状态.高潮阈值', 100);
+        const ratio = Math.min(1, current / threshold);
+        const percent = ratio * 100;
+        let beatClass = 'beating';
+        let fillClass = '';
+
+        if (current >= threshold) {
+            beatClass = 'beating-fast';
+            fillClass = 'critical';
+        } else if (ratio >= 0.7) {
+            beatClass = 'beating-fast';
+        }
+
+        return `
+        <div class="ekg-wrapper">
+            <div class="ekg-heart-box"><i class="fa-solid fa-heart ekg-icon ${beatClass}"></i></div>
+            <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
+                <div style="display:flex; justify-content:space-between; font-size:0.8em; color:var(--text-secondary); padding:0 2px;">
+                    <span>PLEASURE</span><span>${Math.round(percent)}%</span>
+                </div>
+                <div class="ekg-bar-container"><div class="ekg-bar-fill ${fillClass}" style="width: ${percent}%"></div></div>
+            </div>
+            <div class="ekg-data">${Math.round(current)}</div>
+        </div>`;
+    };
+
+    const LOCAL_MSG_ID = (() => {
+        try {
+            return typeof getCurrentMessageId !== 'undefined' ? getCurrentMessageId() : null;
+        } catch(e) {
+            return null;
+        }
+    })();
+
+    // 日期展示读取现有 YYYYMMDD（兼容 MMDD）；不推进时间、不修改变量。
+    const renderCalendar = (data) => {
+        const raw = getValue(data, '世界.日期');
+        const numeric = typeof raw === 'number' ||
+            (typeof raw === 'string' && /^[0-9]{3,8}$/.test(raw.trim()));
+        const value = numeric ? Number(raw) : NaN;
+        if (!Number.isInteger(value)) {
+            return '<div class="calendar-meta"><span class="calendar-unset">日期未记录</span></div>';
+        }
+
+        let year = null;
+        let month = 0;
+        let day = 0;
+
+        if (value >= 1000000) {
+            year = Math.floor(value / 10000);
+            month = Math.floor((value % 10000) / 100);
+            day = value % 100;
+        } else {
+            month = Math.floor(value / 100);
+            day = value % 100;
+        }
+
+        const isLeap = year ? ((year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)) : false;
+        const days = [0, 31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        if (month < 1 || month > 12 || day < 1 || day > (days[month] || 31)) {
+            return '<div class="calendar-meta"><span class="calendar-unset">日期未记录</span></div>';
+        }
+        const seasons = ['', '隆冬', '寒冬', '早春', '春暖', '暮春', '初夏', '盛夏', '盛夏', '初秋', '深秋', '初冬', '深冬'];
+        const yearStr = year ? year + '年' : '';
+        const date = yearStr + String(month).padStart(2, '0') + '月' + String(day).padStart(2, '0') + '日';
+        return '<div class="calendar-meta"><i class="fa-regular fa-calendar" aria-hidden="true"></i>' +
+            '<span class="calendar-date">' + date + '</span><span class="calendar-season">' + seasons[month] + '</span></div>';
+    };
+
+    const renderStatusPanel = (data) => {
+        window._lastRenderedData = data;
+        const isGreeting = (LOCAL_MSG_ID === 0 || String(LOCAL_MSG_ID) === '0');
+
+        if (!data || !getValue(data, '系统状态.主角创建完毕')) {
+            if (isGreeting) return '';
+            return `<div class="status-card" style="display: block; min-height: auto; max-width: 450px; margin: 30px auto; padding: 25px; border-left: 4px solid var(--ultimate-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); background-color: var(--card-bg);">
+            <div style="font-family: var(--font-header); font-size: 1.2em; font-weight: 700; color: var(--ultimate-color); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> 未检测到主角创建
+            </div>
+            <div style="font-size: 0.95em; color: var(--text-color); line-height: 1.6;">
+                <div style="margin-bottom: 8px;">请检查变量更新是否正常。</div>
+                <ul style="margin: 0 0 15px 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li>打开消息旁的 <i class="fa-solid fa-pen"></i> <b>小铅笔</b> 检查底部的变量更新指令是否存在。</li>
+                </ul>
+                <div style="margin-bottom: 8px; border-top: 1px solid var(--border-color); padding-top: 12px;">如果完全没有变量更新：</div>
+                <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary);">
+                    <li style="margin-bottom: 6px;"><strong style="color: var(--text-color);">使用 Deepseek：</strong>打开预设自带的 <span style="color: var(--accent-color); font-weight: 600;">“变量更新提醒”</span>。</li>
+                    <li><strong style="color: var(--text-color);">使用 Gemini：</strong>检查 <span style="color: var(--accent-color); font-weight: 600;">世界书</span> 是否被正确勾选与注入。</li>
+                </ul>
+            </div>
+        </div>`;
+        }
+
+        const personality = getValue(data, '主角.核心状态.人格状态', '英雄');
+        const isFallen = (personality === '反派' || personality === '恶堕');
+        const corruption = getValue(data, '主角.快感状态.侵蚀度', 0);
+        const levelState = getValue(data, '进程.阶段', '幕间休息');
+
+        const isTransformed = getValue(data, '主角.核心状态.着装状态', false);
+        const magicName = getValue(data, '主角.基本信息.英雄名', '待设定');
+        const realName = getValue(data, '主角.基本信息.姓名', '待设定');
+        const currentName = (isTransformed && magicName) ? magicName : (realName || '主角');
+        const prefixText = '';
+
+        const currentEvents = getValue(data, '系统状态.待处理事件', {});
+        const isCorrupting = currentEvents['小英雄黑化'] || currentEvents['恶堕临界点'];
+        const isCaptured = levelState === '被捕囚禁';
+
+        let identityHtml = '';
+        if (isTransformed) {
+            identityHtml = `
+            <span class="name-transformer">
+                <span class="name-text name-real" style="color: var(--accent-color); text-shadow: 0 0 10px var(--accent-glow);">${magicName}</span>
+                <span class="name-text name-magic" style="color: var(--text-secondary); text-shadow: none;"><i class="fa-solid fa-user-secret" style="font-size:0.85em;"></i><span>${realName}</span></span>
+            </span>`;
+        } else {
+            identityHtml = `
+            <span class="name-transformer">
+                <span class="name-text name-real">${realName}</span>
+                <span class="name-text name-magic" style="color: var(--accent-color); text-shadow: 0 0 10px var(--accent-glow);"><i class="fa-solid fa-wand-magic-sparkles" style="font-size:0.85em;"></i><span>${magicName}</span></span>
+            </span>`;
+        }
+
+        let headerTitle = '';
+        if (isCaptured) {
+            headerTitle = `
+            <div class='${isCorrupting ? 'corrupt-active' : ''}' style='display:inline-flex; flex-direction:column; align-items:center; gap: 8px; color: var(--combat-color);'>
+                <div style='display:inline-flex; align-items:center; justify-content:center; gap: 8px; line-height: 1;'>
+                    <i class="fa-solid fa-link" style="opacity:0.8; font-size:0.9em; display:flex;"></i>
+                    ${prefixText ? `<span>${prefixText}</span>` : ''}
+                    ${identityHtml}
+                </div>
+                <span style="font-size: 0.65em; font-family: var(--font-header); display: inline-flex; align-items:center; justify-content:center; gap: 4px; padding: 4px 14px; border-radius: 6px; background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.4); font-weight: 800; letter-spacing: 2px; text-shadow: none; box-shadow: 0 2px 8px rgba(248,113,113,0.2); line-height: 1;\">
+                    <i class="fa-solid fa-lock" style="font-size:0.9em;"></i> CAPTURED
+                </span>
+            </div>`;
+        } else {
+            headerTitle = `<div class='${isCorrupting ? 'corrupt-active' : ''}' style='display:inline-flex; align-items:center; justify-content:center; gap:6px; line-height: 1;'>${prefixText ? `<span>${prefixText}</span>` : ''}${identityHtml}</div>`;
+        }
+
+        const hpLabel = isFallen ? '耐久' : '体力';
+        const mpLabel = isFallen ? '欲力' : '能量';
+        const corruptionLabel = isFallen ? '恩宠' : '侵蚀';
+        const corruptionIcon = isFallen ? 'fa-crown' : 'fa-biohazard';
+        const ultimateLabel = isFallen ? '欲望充能' : '意志充能';
+        const ultimateIcon = isFallen ? 'fa-moon' : 'fa-sun';
+
+        const tab1Label = isFallen ? '烙印' : '档案';
+        const tab2Label = isFallen ? '肉体' : '身体';
+        const tab3Label = isFallen ? '战果' : '记录';
+        const tab4Label = isFallen ? '纪要' : '世界';
+        const bodyTabIcon = isFallen ? 'fa-venus-mars' : 'fa-dna';
+        const recordsTabIcon = isFallen ? 'fa-trophy' : 'fa-book-medical';
+        const worldTabIcon = isFallen ? 'fa-book-skull' : 'fa-book-atlas';
+
+        let themeClass = 'theme-pure';
+        if (isFallen) {
+            themeClass = 'theme-fallen-core';
+        } else if (corruption > 65) {
+            themeClass = 'theme-eroded';
+        }
+        let cardClass = `status-card ${themeClass}`;
+
+        if (isCaptured) cardClass += ' state-captured';
+        if (getValue(data, '主角.核心状态.正义充能', 0) >= 100 || getValue(data, '主角.核心状态.混沌充能', 0) >= 100) cardClass += ' state-ultimate-ready';
+        else if (getValue(data, '主角.核心状态.体力值.当前', 100) <= 35) cardClass += ' state-danger';
+
+        // 提前解析战斗/H事件检定日志，供战斗与被俘H事件共同调用
+        let combatLogHtml = '';
+        const lastCombatLog = getValue(data, '主角.战斗临时.当前战斗日志', '无');
+        if (lastCombatLog && lastCombatLog !== '无') {
+            const parts = lastCombatLog.split('|');
+            const resultText = parts[0] || '检定';
+            const TIER_FAIL = ['CRIT_FAIL', 'FAIL', 'STALEMATE', 'CRISIS', 'EXHAUSTED', 'AMBUSH', 'SURRENDER'];
+            const LABEL_FAIL = ['失败', '纠缠', '玩火', '受挫', '失守', '遭遇侵犯', '小幅失误', '突袭', '暴起', '危机爆发', '力尽', '脱身受阻', '逃跑失败', '被压制', '抵抗受挫', '理智失守'];
+            const tierTag = (lastCombatLog.match(/(?:^|\\|)\s*T:([A-Z_]+)\s*(?=\||$)/) || [])[1] || '';
+            const isFailure = tierTag ? TIER_FAIL.includes(tierTag) : LABEL_FAIL.some(k => resultText.includes(k));
+
+            const logBadgeColor = isFailure ? 'var(--combat-color)' : 'var(--hp-color)';
+            const logBgColor = isFailure ? 'rgba(248, 113, 113, 0.05)' : 'rgba(158, 206, 106, 0.05)';
+            const logBorderColor = isFailure ? 'rgba(248, 113, 113, 0.15)' : 'rgba(158, 206, 106, 0.15)';
+
+            combatLogHtml = `
+            <div class="combat-log-display" style="
+                margin-top: 14px;
+                padding: 10px 14px;
+                background: ${logBgColor};
+                border: 1px solid ${logBorderColor};
+                border-radius: 8px;
+                text-align: left;
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+            ">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.85em;">
+                    <span style="color: var(--text-secondary); font-family: var(--font-header); font-weight: 700; letter-spacing: 1px;">
+                        <i class="fa-solid fa-terminal" style="margin-right: 4px; font-size: 0.9em;"></i> TACTICAL FEED
+                    </span>
+                    <span style="
+                        color: ${logBadgeColor};
+                        font-weight: 800;
+                        padding: 1px 6px;
+                        border-radius: 4px;
+                        background: rgba(0, 0, 0, 0.3);
+                        border: 1px solid ${logBorderColor};
+                        font-size: 0.9em;
+                    ">
+                        ${resultText.replace(/^(?:结果|战前|遭遇|抵抗|爆发|忍耐|迎合):/, '').trim()}
+                    </span>
+                </div>
+                <div style="color: var(--text-color); font-size: 0.85em; font-family: 'Consolas', monospace; opacity: 0.9; line-height: 1.4;">
+                    ${parts.slice(1).filter(p => !/^\s*T:[A-Z_]+\s*$/.test(p)).join(' <span style="opacity:0.3; margin:0 4px;">|</span> ')}
+                </div>
+            </div>`;
+        }
+
+        let contextualHtml = '';
+        if (['战斗准备', '战斗回合', '终结回合'].includes(levelState)) {
+            const bossName = getValue(data, '世界.当前关卡.名称', '未知');
+            const cType = getValue(data, '世界.当前关卡.战斗类型', '未知');
+
+            let typeIcon = 'fa-spaghetti-monster-flying';
+            let typeLabel = cType;
+            let typeBadgeStyle = 'color: var(--text-secondary); background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);';
+
+            if (!isFallen) {
+                if (cType === '小英雄') {
+                    typeIcon = 'fa-moon';
+                    typeLabel = '堕落小英雄';
+                    typeBadgeStyle = 'color: #bb9af7; background: rgba(187, 154, 247, 0.15); border: 1px solid rgba(187, 154, 247, 0.4);';
+                } else if (cType === '人类') {
+                    typeIcon = 'fa-mask';
+                    typeLabel = '怪人组织干部';
+                    typeBadgeStyle = 'color: #7aa2f7; background: rgba(122, 162, 247, 0.15); border: 1px solid rgba(122, 162, 247, 0.4);';
+                } else {
+                    typeIcon = 'fa-spaghetti-monster-flying';
+                    typeLabel = '魔物/生物兵器';
+                    typeBadgeStyle = 'color: #f87171; background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.4);';
+                }
+            } else {
+                if (cType === '小英雄') {
+                    typeIcon = 'fa-shield-halved';
+                    typeLabel = '纯洁小英雄';
+                    typeBadgeStyle = 'color: #ffffff; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.8); text-shadow: 0 0 4px rgba(255,255,255,0.6);';
+                } else if (cType === '人类') {
+                    typeIcon = 'fa-user-ninja';
+                    typeLabel = '凡人/赏金猎人';
+                    typeBadgeStyle = 'color: #e0af68; background: rgba(224, 175, 104, 0.15); border: 1px solid rgba(224, 175, 104, 0.4);';
+                } else {
+                    typeIcon = 'fa-paw';
+                    typeLabel = '生物兵器/猎物';
+                    typeBadgeStyle = 'color: #f7768e; background: rgba(247, 118, 142, 0.15); border: 1px solid rgba(247, 118, 142, 0.4);';
+                }
+            }
+
+            let statusDisplay;
+            if (levelState === '战斗准备') {
+                const bossThemes = getValue(data, '世界.当前关卡.核心主题', []).filter(t => t !== '$__META_EXTENSIBLE__$');
+                let themesHtml = (bossThemes.length > 0) ? `<div class='boss-themes' style="margin-top:6px; font-size:0.82em; color:var(--text-secondary);"><i class='fa-solid fa-tags'></i> ${bossThemes.join(' / ')}</div>` : '';
+
+                const rawAlert = parseInt(getValue(data, '系统状态.待处理事件.环境警戒度', 0), 10) || 0;
+                const alertness = Math.min(10, Math.max(0, rawAlert)); // 强制钳制在 0~10，防止溢出显示 12/10
+                let alertnessHtml = '';
+                if (rawAlert > 0) {
+                    let alertColor, alertLabel;
+                    if (alertness >= 8) { alertColor = 'var(--combat-color)'; alertLabel = '濒临暴露'; }
+                    else if (alertness >= 4) { alertColor = 'var(--ultimate-color)'; alertLabel = '引起警觉'; }
+                    else { alertColor = 'var(--hp-color)'; alertLabel = '隐蔽/安全'; }
+
+                    alertnessHtml = `
+                    <div style="margin-top: 10px; text-align: left; background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid ${alertColor}; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; color: ${alertColor}; font-weight: bold; margin-bottom: 5px; white-space: nowrap; gap: 8px;">
+                            <span class='has-tooltip' style="cursor:help; display: inline-flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; text-overflow: ellipsis;">
+                                <i class="fa-solid fa-eye tooltip-trigger"></i> 警戒: [${alertLabel}]
+                                <span class='custom-tooltip'>${TOOLTIP_DEFINITIONS['alertness']}</span>
+                            </span>
+                            <span style="font-family: var(--font-header); font-size: 0.95em; white-space: nowrap; flex-shrink: 0;">
+                                <span style="font-size:0.8em; opacity:0.8; font-weight:normal; margin-right:4px;">(+${alertness} 敌方加成)</span>${alertness}<span style="font-size:0.75em; opacity:0.6; font-weight:normal;">/10</span>
+                            </span>
+                        </div>
+                        <div class="progress-bar" style="height: 5px; background: rgba(0,0,0,0.5); border-radius: 3px;">
+                            <div class="progress-fill" style="width: ${(alertness / 10) * 100}%; background: ${alertColor}; box-shadow: 0 0 8px ${alertColor}; transition: width 0.4s, background 0.4s; border-radius: 3px;"></div>
+                        </div>
+                    </div>`;
+                }
+
+                const prepHeaderColor = isFallen ? 'var(--pleasure-color)' : 'var(--ultimate-color)';
+                const prepHeaderTag = isFallen ? 'HUNTING PREP' : 'PRE-COMBAT';
+                const prepHeaderText = isFallen ? '锁定猎物' : '战前周旋';
+                const prepBoxStyle = isFallen
+                    ? 'border: 1px solid rgba(247, 118, 142, 0.2); border-top: 3px solid var(--pleasure-color); background: linear-gradient(180deg, rgba(247, 118, 142, 0.08) 0%, rgba(26, 27, 38, 0.4) 100%);'
+                    : 'border: 1px solid rgba(224, 175, 104, 0.2); border-top: 3px solid var(--ultimate-color); background: linear-gradient(180deg, rgba(224, 175, 104, 0.08) 0%, rgba(26, 27, 38, 0.4) 100%);';
+
+                statusDisplay = `
+                <div class="intermission-status" style="${prepBoxStyle} border-radius: 12px; padding: 16px 20px; text-align: center;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.85em; font-weight:bold; color:${prepHeaderColor}; letter-spacing:1px; margin-bottom:6px;">
+                        <span><i class="fa-solid fa-crosshairs"></i> ${prepHeaderTag}</span>
+                        <span>${prepHeaderText}</span>
+                    </div>
+                    <div class='main-status' style='color: var(--text-color); font-size: 1.25em; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;'>
+                        ${bossName}
+                        <span style="font-size:0.55em; font-weight:600; padding:2px 8px; border-radius:6px; ${typeBadgeStyle}">
+                            <i class="fa-solid ${typeIcon}"></i> ${typeLabel}
+                        </span>
+                    </div>
+                    ${themesHtml}
+                    ${alertnessHtml}
+                    ${combatLogHtml}
+                </div>`;
+            } else {
+                const bossToughness = getValue(data, '世界.当前关卡.Boss韧性值', null);
+                let bossHealthBar = '';
+
+                const threatLv = getValue(data, '世界.威胁等级', 1);
+                const threatConfig = isFallen
+                    ? { 1: { t: '玩物', c: '#a8d8ea' }, 2: { t: '猎物', c: '#bb9af7' }, 3: { t: '强敌', c: '#f7768e' } }
+                    : { 1: { t: '骚扰者', c: '#9ece6a' }, 2: { t: '侵犯者', c: '#e0af68' }, 3: { t: '支配者', c: '#f87171' } };
+                const tInfo = threatConfig[threatLv] || { t: '未知威胁', c: '#787c99' };
+                const threatHtml = `<span style="color:${tInfo.c}; font-weight:bold; padding:2px 6px; background:rgba(0,0,0,0.2); border-radius:4px; margin-left:6px; font-size:0.8em;">Lv.${threatLv} ${tInfo.t}</span>`;
+
+                if (bossToughness !== null) {
+                    const bossHpPct = Math.max(0, Math.min(100, bossToughness));
+                    bossHealthBar = `
+                    <div class='progress-item'>
+                        <div class='progress-label'><span><i class='fa-solid fa-shield-virus'></i> <span>韧性 (Boss)</span></span><span class='progress-value'>${bossToughness}/100</span></div>
+                        <div class='progress-bar' style="position:relative; overflow:visible; background:rgba(0,0,0,0.6);">
+                            <div class="boss-phase-marker" style="left: 30%;" data-phase="P3"></div>
+                            <div class="boss-phase-marker" style="left: 70%;" data-phase="P2"></div>
+                            <div class='progress-fill' style='width: ${bossHpPct}%; background: var(--combat-color); position:relative; z-index:1;'></div>
+                        </div>
+                    </div>`;
+                }
+                const posture = getValue(data, '主角.核心状态.当前战斗姿态', '战斗中');
+                const postureMap = isFallen ? { '战斗中': '狩猎中', '劣势': '享乐中' } : { '战斗中': '戦闘中', '劣势': '劣勢' };
+                const bossState = getValue(data, '世界.当前关卡.Boss状态', '完好');
+                const bossThemes = getValue(data, '世界.当前关卡.核心主题', []).filter(t => t !== '$__META_EXTENSIBLE__$');
+
+                statusDisplay = `
+                <div class="battle-status-grid" style="
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+                    gap: 12px;
+                    align-items: stretch;
+                    margin-bottom: 12px;
+                    width: 100%;
+                ">
+                    <div class="status-side player-side" style="
+                        display: flex; flex-direction: column; align-items: center; justify-content: center;
+                        text-align: center;
+                        background: linear-gradient(180deg, rgba(122, 162, 247, 0.05), rgba(26, 27, 38, 0.35));
+                        border: 1px solid rgba(122, 162, 247, 0.15);
+                        border-radius: 10px;
+                        padding: 10px 8px;
+                        min-width: 0;
+                        container-type: inline-size;
+                    ">
+                        <div style="color: var(--text-secondary); font-size: 0.72em; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px;">Player</div>
+                        <div class="side-main" title="${currentName}" style="
+                            font-size: clamp(0.75em, 12cqw, 1.1em);
+                            line-height: 1.25;
+                            font-weight: bold;
+                            color: var(--text-color);
+                            margin-bottom: 8px;
+                            white-space: normal;
+                            word-break: break-word;
+                            overflow-wrap: anywhere;
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                        ">${currentName}</div>
+                        <span class="side-status-tag" style="
+                            display: inline-block;
+                            font-size: 0.75em;
+                            font-weight: 700;
+                            padding: 2px 8px;
+                            border-radius: 4px;
+                            background: var(--mp-color);
+                            color: #1a1b26;
+                            margin-top: auto;
+                        ">${postureMap[posture] || posture}</span>
+                    </div>
+
+                    <div style="
+                        font-family: var(--font-header);
+                        font-style: italic;
+                        font-weight: 900;
+                        font-size: 0.95em;
+                        color: var(--text-secondary);
+                        background: rgba(255, 255, 255, 0.04);
+                        width: 32px; height: 32px;
+                        border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center;
+                        border: 1px solid var(--border-color);
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+                        flex-shrink: 0;
+                        align-self: center;
+                    ">VS</div>
+
+                    <div class="status-side enemy-side" style="
+                        display: flex; flex-direction: column; align-items: center; justify-content: center;
+                        text-align: center;
+                        background: linear-gradient(180deg, rgba(248, 113, 113, 0.05), rgba(26, 27, 38, 0.35));
+                        border: 1px solid rgba(248, 113, 113, 0.15);
+                        border-radius: 10px;
+                        padding: 10px 8px;
+                        min-width: 0;
+                        container-type: inline-size;
+                    ">
+                        <div style="color: var(--text-secondary); font-size: 0.72em; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px;">Enemy</div>
+                        <div class="side-main" title="${bossName}" style="
+                            font-size: clamp(0.75em, 12cqw, 1.1em);
+                            line-height: 1.25;
+                            font-weight: bold;
+                            color: var(--text-color);
+                            margin-bottom: 8px;
+                            white-space: normal;
+                            word-break: break-word;
+                            overflow-wrap: anywhere;
+                            display: -webkit-box;
+                            -webkit-line-clamp: 2;
+                            -webkit-box-orient: vertical;
+                            overflow: hidden;
+                        ">
+                            <i class="fa-solid ${typeIcon}" style="opacity:0.6; font-size:0.85em; margin-right:2px;"></i>${bossName}
+                        </div>
+                        <span class="side-status-tag" style="
+                            display: inline-block;
+                            font-size: 0.75em;
+                            font-weight: 700;
+                            padding: 2px 8px;
+                            border-radius: 4px;
+                            background: var(--combat-color);
+                            color: #1a1b26;
+                            margin-top: auto;
+                        ">${bossState}</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; font-size: 0.8em; margin-bottom: 12px; color: var(--text-secondary); padding: 0 4px;">
+                    <span><i class="fa-solid fa-circle-exclamation"></i> 遭遇评级: ${threatHtml}</span>\n                    ${bossThemes.length > 0 ? `<span><i class="fa-solid fa-tags"></i> 主题: ${bossThemes.filter(t => t !== '$__META_EXTENSIBLE__$').join('/')}</span>` : ''}
+                </div>
+                ${bossHealthBar}
+                ${combatLogHtml}`;
+            }
+            contextualHtml = `<div class="context-box">${statusDisplay}</div>`;
+        } else if (levelState === '被捕囚禁') {
+            const isBrainwash = getValue(data, '主角.囚禁状态.洗脑中', false) === true;
+            const prisonDay = getValue(data, '主角.囚禁状态.监禁天数', 1);
+            const prisonTurn = getValue(data, '主角.囚禁状态.监禁回合', 1);
+            const freedom = getValue(data, '主角.囚禁状态.自由度', '严密监禁');
+            const freedomMod = getValue(data, '主角.囚禁状态.自由度加值', 0);
+            const escProg = getValue(data, '主角.囚禁状态.逃脱进度', 0);
+            const brainProg = getValue(data, '主角.囚禁状态.洗脑进度', 0);
+            const handlerName = getValue(data, '世界.当前关卡.名称', '怪人组织');
+            const remTurns = getValue(data, '主角.囚禁状态.洗脑剩余回合', 0);
+
+            const headerColor = isBrainwash ? 'var(--pleasure-color)' : 'var(--combat-color)';
+            const headerTag = isBrainwash ? 'BRAINWASHING' : 'CAPTIVITY';
+            const headerTitle = isBrainwash ? `洗脑审讯中 (余${remTurns}轮)` : `基地监禁 (第${prisonDay}天/第${prisonTurn}轮)`;
+            const headerIcon = isBrainwash ? 'fa-solid fa-brain fa-fade' : 'fa-solid fa-link';
+
+            contextualHtml = `
+            <div class="context-box intermission-status" style="
+                border: 1px solid ${isBrainwash ? 'rgba(247, 118, 142, 0.2)' : 'rgba(248, 113, 113, 0.2)'};
+                border-top: 3px solid ${headerColor};
+                background: linear-gradient(180deg, ${isBrainwash ? 'rgba(247, 118, 142, 0.08)' : 'rgba(248, 113, 113, 0.08)'} 0%, rgba(26, 27, 38, 0.45) 100%);
+                border-radius: 12px;
+                padding: 16px 20px;
+                text-align: center;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            ">
+                <div style="display:flex; justify-content:space-between; align-items:center; color:${headerColor}; font-weight:700; font-size:0.85em; letter-spacing:1px; margin-bottom:10px;">
+                    <span><i class="${headerIcon}"></i> ${headerTag}</span>
+                    <span>${headerTitle}</span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:12px; font-size:0.82em;">
+                    <span style="background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); color:var(--text-secondary);">
+                        <i class="fa-solid fa-user-secret" style="margin-right:4px;"></i>看守: <strong style="color:var(--text-color);">${handlerName}</strong>
+                    </span>
+                    <span style="background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); color:var(--text-secondary);">
+                        <i class="fa-solid fa-key" style="margin-right:4px;"></i>自由度: <strong style="color:${headerColor};">${freedom}</strong> <span style="opacity:0.7;">(${freedomMod>=0?'+'+freedomMod:freedomMod})</span>
+                    </span>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:6px;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; font-family:var(--font-header); font-size:0.8em; color:var(--hp-color); margin-bottom:3px; font-weight:600;">
+                            <span><i class="fa-solid fa-person-running" style="margin-right:4px;"></i>逃脱准备</span>
+                            <span>${escProg}%</span>
+                        </div>
+                        <div class="progress-bar" style="height:6px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
+                            <div class="progress-fill" style="width:${Math.min(100, escProg)}%; background:linear-gradient(90deg, #9ece6a, #73d0a2); box-shadow:0 0 8px rgba(158,206,106,0.6); height:100%; border-radius:4px; transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display:flex; justify-content:space-between; font-family:var(--font-header); font-size:0.8em; color:var(--pleasure-color); margin-bottom:3px; font-weight:600;">
+                            <span><i class="fa-solid fa-brain" style="margin-right:4px;"></i>洗脑沦陷</span>
+                            <span>${brainProg}%</span>
+                        </div>
+                        <div class="progress-bar" style="height:6px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
+                            <div class="progress-fill" style="width:${Math.min(100, brainProg)}%; background:linear-gradient(90deg, #bb9af7, #f7768e); box-shadow:0 0 8px rgba(247,118,142,0.6); height:100%; border-radius:4px; transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+                ${combatLogHtml}
+            </div>`;
+        } else if (levelState === '幕间休息' && getValue(data, '世界.校园催眠.主角在校', false) === true && !getValue(data, '世界.校园催眠.结界已破除', false)) {
+            const hypnoProg = getValue(data, '世界.校园催眠.催眠进度', 0);
+            const suspLevel = getValue(data, '世界.校园催眠.疑心度', 0);
+            const isFullHypno = getValue(data, '世界.校园催眠.完全催眠阶段', false) === true || hypnoProg >= 100;
+            const instructorName = getValue(data, '世界.校园催眠.掌控教官代号', '教官07号');
+
+            let stageTitle = "初期潜伏";
+            if (isFullHypno) stageTitle = "完全催眠期";
+            else if (hypnoProg >= 60) stageTitle = "深度沉沦期";
+            else if (hypnoProg >= 30) stageTitle = "中期受训期";
+
+            contextualHtml = `
+            <div class="context-box intermission-status" style="
+                border: 1px solid rgba(187, 154, 247, 0.25);
+                border-top: 3px solid #bb9af7;
+                background: linear-gradient(180deg, rgba(187, 154, 247, 0.08) 0%, rgba(26, 27, 38, 0.45) 100%);
+                border-radius: 12px;
+                padding: 16px 20px;
+                text-align: center;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            ">
+                <div style="display:flex; justify-content:space-between; align-items:center; color:#bb9af7; font-weight:700; font-size:0.85em; letter-spacing:1px; margin-bottom:10px;">
+                    <span><i class="fa-solid fa-graduation-cap"></i> CAMPUS HYPNOSIS</span>
+                    <span>${stageTitle}</span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:12px; font-size:0.82em;">
+                    <span style="background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); color:var(--text-secondary);">
+                        <i class="fa-solid fa-user-ninja" style="margin-right:4px;"></i>执掌: <strong style="color:#bb9af7;">${instructorName}</strong>
+                    </span>
+                    <span style="background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.08); color:var(--text-secondary);">
+                        <i class="fa-solid fa-mask" style="margin-right:4px;"></i>装束: <strong style="color:var(--text-color);">全包战衣+紫色目镜</strong>
+                    </span>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:6px;">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; font-family:var(--font-header); font-size:0.8em; color:#bb9af7; margin-bottom:3px; font-weight:600;">
+                            <span><i class="fa-solid fa-eye-slash" style="margin-right:4px;"></i>催眠认同</span>
+                            <span>${hypnoProg}%</span>
+                        </div>
+                        <div class="progress-bar" style="height:6px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
+                            <div class="progress-fill" style="width:${Math.min(100, hypnoProg)}%; background:linear-gradient(90deg, #7aa2f7, #bb9af7); box-shadow:0 0 8px rgba(187,154,247,0.6); height:100%; border-radius:4px; transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display:flex; justify-content:space-between; font-family:var(--font-header); font-size:0.8em; color:#e0af68; margin-bottom:3px; font-weight:600;">
+                            <span><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i>异样疑心</span>
+                            <span>${isFullHypno ? 'LOCKED: 0%' : suspLevel + '%'}</span>
+                        </div>
+                        <div class="progress-bar" style="height:6px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
+                            <div class="progress-fill" style="width:${isFullHypno ? 0 : Math.min(100, suspLevel)}%; background:linear-gradient(90deg, #e0af68, #ff9e64); box-shadow:0 0 8px rgba(224,175,104,0.6); height:100%; border-radius:4px; transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+                ${combatLogHtml}
+            </div>`;
+        } else {
+            const eventName = getValue(data, '世界.幕间H事件.名称', '无');
+            if (eventName && eventName !== '无') {
+                const eventThemes = getValue(data, '世界.幕间H事件.核心主题', []).filter(t => t !== '$__META_EXTENSIBLE__$').join(' / ');
+                const escapeProgress = getValue(data, '世界.幕间H事件.逃脱进度', 0);
+                const isResolved = escapeProgress >= 100 || getValue(data, '系统状态.待处理事件.H事件落幕');
+
+                if (isResolved) {
+                    contextualHtml = `
+                    <div class="context-box intermission-status" style="
+                        border: 1px solid rgba(158, 206, 106, 0.2);
+                        border-top: 3px solid var(--hp-color);
+                        background: linear-gradient(180deg, rgba(158, 206, 106, 0.08) 0%, rgba(26, 27, 38, 0.45) 100%);
+                        border-radius: 12px;
+                        padding: 16px 20px;
+                        text-align: center;
+                        box-shadow: 0 8px 25px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+                        display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    ">
+                        <div style="color: var(--hp-color); font-weight: 700; font-size: 0.85em; letter-spacing: 2px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-circle-check" style="animation: pulse-soft 2s infinite;"></i>
+                            <span>CRISIS RESOLVED / 挣脱成功</span>
+                        </div>
+
+                        <div class="main-status" style="font-size: 1.2em; line-height: 1.4; font-weight: 700; color: var(--text-color); margin-bottom: 12px; text-shadow: 0 2px 10px rgba(158, 206, 106, 0.35);">
+                            ${eventName.replace('EVENT：', '')}
+                        </div>
+
+                        <div style="width: 100%; max-width: 280px; margin: 0 auto 8px auto;">
+                            <div style="display: flex; justify-content: space-between; font-family: var(--font-header); font-size: 0.8em; color: var(--hp-color); margin-bottom: 4px; font-weight: 600;">
+                                <span>事件进度</span>
+                                <span>100% (SUCCESS)</span>
+                            </div>
+                            <div class="progress-bar" style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 4px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);">
+                                <div class="progress-fill" style="width: 100%; background: linear-gradient(90deg, #9ece6a, #73d0a2); box-shadow: 0 0 10px rgba(158, 206, 106, 0.6); height: 100%; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+
+                        <div class="sub-status" style="color: var(--text-secondary); font-size: 0.82em; display: flex; align-items: center; justify-content: center; gap: 6px; opacity: 0.85; margin-top: 4px; font-style: italic;">
+                            <i class="fa-solid fa-spinner fa-spin"></i> <span>H事件落幕...</span>
+                        </div>
+                    </div>`;
+                } else {
+                    contextualHtml = `
+                    <div class="context-box intermission-status" style="
+                        border: 1px solid rgba(247, 118, 142, 0.15);
+                        border-top: 3px solid var(--pleasure-color);
+                        background: linear-gradient(180deg, rgba(247, 118, 142, 0.08) 0%, rgba(26, 27, 38, 0.4) 100%);
+                        border-radius: 12px;
+                        padding: 16px 20px;
+                        text-align: center;
+                        box-shadow: 0 8px 25px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+                        display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    ">
+                        <div style="color: var(--pleasure-color); font-weight: 700; font-size: 0.85em; letter-spacing: 2px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-heart-crack" style="animation: soft-beat 1.5s infinite ease-in-out;"></i>
+                            <span>H-EVENT ENCOUNTER</span>
+                        </div>
+
+                        <div class="main-status" style="font-size: 1.25em; line-height: 1.4; font-weight: 700; color: var(--text-color); margin-bottom: 12px; text-shadow: 0 2px 10px rgba(247, 118, 142, 0.3);">
+                            ${eventName.replace('EVENT：', '')}
+                        </div>
+
+                        <div style="width: 100%; max-width: 280px; margin: 0 auto 8px auto;">
+                            <div style="display: flex; justify-content: space-between; font-family: var(--font-header); font-size: 0.8em; color: var(--pleasure-color); margin-bottom: 4px; font-weight: 600;">
+                                <span>挣脱进度</span>
+                                <span>${escapeProgress}%</span>
+                            </div>
+                            <div class="progress-bar" style="height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 4px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);">
+                                <div class="progress-fill" style="width: ${Math.min(100, escapeProgress)}%; background: linear-gradient(90deg, #f7768e, #ff9e64); box-shadow: 0 0 10px rgba(247, 118, 142, 0.6); transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); height: 100%; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+
+                        <div class="sub-status" style="color: var(--text-secondary); font-size: 0.82em; display: flex; align-items: center; justify-content: center; gap: 6px; opacity: 0.85; margin-top: 4px;">
+                            <i class="fa-solid fa-tags"></i> <span>${eventThemes || '未锁定性癖'}</span>
+                        </div>
+                        ${combatLogHtml}
+                    </div>`;
+                }
+            } else {
+                const stateText = { '幕间休息': (isFallen ? '🍷 间歇中' : '☕ 幕间休整'), '终结回合': '✨ 终结时刻', '战斗胜利': '🏆 战斗胜利', '战斗败北': '💔 力尽败北', '战后处理': '🧹 战后清理' }[levelState] || levelState;
+                const dailyState = getValue(data, '主角.生理状态.当前生理动态', '呼吸平稳');
+
+                let themeColor = isFallen ? 'var(--pleasure-color)' : 'var(--hp-color)';
+                let rgb = isFallen ? '247, 118, 142' : '158, 206, 106';
+
+                if (levelState === '战斗败北') {
+                    themeColor = 'var(--combat-color)';
+                    rgb = '248, 113, 113';
+                } else if (levelState === '战后处理' || levelState === '终结回合') {
+                    themeColor = 'var(--ultimate-color)';
+                    rgb = '224, 175, 104';
+                } else if (levelState === '战斗胜利') {
+                    themeColor = isFallen ? 'var(--pleasure-color)' : 'var(--hp-color)';
+                    rgb = isFallen ? '247, 118, 142' : '158, 206, 106';
+                }
+
+                const bgGradient = `linear-gradient(180deg, rgba(${rgb}, 0.08) 0%, rgba(26, 27, 38, 0.4) 100%)`;
+                const shadowCol = `rgba(${rgb}, 0.25)`;
+
+                contextualHtml = `
+                <div class="context-box intermission-status" style="
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-top: 3px solid ${themeColor};
+                    background: ${bgGradient};
+                    border-radius: 12px;
+                    padding: 18px 20px;
+                    text-align: center;
+                    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+                    display: flex; flex-direction: column; align-items: center; justify-content: center;
+                ">
+                    <div style="color: ${themeColor}; font-weight: 700; font-size: 0.9em; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 8px ${shadowCol}; display: flex; align-items: center; gap: 8px;">
+                        ${stateText}
+                    </div>
+                    <div class="sub-status" style="color: var(--text-color); font-size: 0.95em; font-weight: 500; line-height: 1.5; opacity: 0.85; max-width: 90%;">
+                        <span style="opacity: 0.4; font-size: 0.8em; margin-right: 4px;">✧</span>
+                        ${dailyState}
+                        <span style="opacity: 0.4; font-size: 0.8em; margin-left: 4px;">✧</span>
+                    </div>
+                </div>`;
+            }
+        }
+
+        const ekgMonitorHtml = (typeof renderEKGMonitor === 'function') ? renderEKGMonitor(data) : '';
+
+        const maxMp = getValue(data, '主角.核心状态.能量值.最大', 100);
+        const pThreshold = getValue(data, '主角.快感状态.高潮阈值', 100);
+        const pRatio = pThreshold > 0 ? (getValue(data, '主角.快感状态.快感值', 0) / pThreshold) : 0;
+        const isLeaking = getValue(data, '主角.核心状态.着装状态', false) && (pRatio > 0.5);
+
+        let mpExtraClass = '';
+        let mpTooltipOverride = null;
+        if (isLeaking) {
+            mpExtraClass = 'mp-leaking';
+            const leakRate = Math.max(2, Math.floor(maxMp * 0.05 * pRatio));
+            const baseTooltip = isFallen ? TOOLTIP_DEFINITIONS['主角.核心状态.能量值.当前']['堕落'] : TOOLTIP_DEFINITIONS['主角.核心状态.能量值.当前']['善良'];
+            mpTooltipOverride = baseTooltip + `<div class='label' style='color:var(--pleasure-color); margin-top:8px;'><i class='fa-solid fa-triangle-exclamation'></i> 警告：能量失控泄露中！</div><div class='value' style='color:var(--pleasure-color);'>由于快感浓度达到50%，维持着装的能量受到干扰，每回合将额外流失约 <b>${leakRate}</b> 点 MP！</div>`;
+        }
+
+        let bottomBarHtml = '';
+        if (levelState === '幕间休息') {
+            const hasHEvent = getValue(data, '世界.幕间H事件.名称', '无') !== '无' && !getValue(data, '系统状态.待处理事件.H事件落幕');
+            if (hasHEvent) {
+                const tooltipText = "<div class='label'>【幕间色情危机】</div><div class='value'>当前遭遇突发性癖事件。请根据人设选择迎合或反抗。<br><br><span style='color:var(--pleasure-color);'>💡 提示：此时强行推进主线可能导致逻辑错乱，请先解决眼前的色情危机！</span></div>";
+                const tooltipHtml = `<span class='has-tooltip'><i class="fa-solid fa-circle-info info-icon-pc tooltip-trigger"></i><span class='custom-tooltip'>${tooltipText}</span></span>`;
+                bottomBarHtml = `
+                <div class='stack-header'>系统状态</div>
+                <div class='progress-item'>
+                    <div class='progress-label'>
+                        <span style="color:var(--pleasure-color)"><i class='fa-solid fa-heart-crack'></i> <span>危机应对中</span> ${tooltipHtml}</span>
+                        <span class='progress-value' style="color:var(--pleasure-color); font-size:0.8em;">LOCKED</span>
+                    </div>
+                    <div class='progress-bar'>
+                        <div class='progress-fill' style='width: 100%; background: var(--pleasure-color); opacity: 0.6; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.2) 10px, rgba(0,0,0,0.2) 20px);'></div>
+                    </div>
+                </div>`;
+            } else {
+                const turnCount = parseInt(getValue(data, '系统状态.幕间回合计数', 0), 10);
+                const eventCompleted = getValue(data, '系统状态.幕间事件完成', true);
+
+                let radarLabel = '';
+                let radarValue = 0;
+                let radarMax = 100;
+                let radarPct = 0;
+                let radarColor = '';
+                let radarIcon = '';
+                let radarTooltipText = '';
+                let isReady = false;
+
+                if (eventCompleted === false) {
+                    radarMax = 6;
+                    isReady = turnCount >= radarMax;
+                    radarValue = Math.min(radarMax, turnCount);
+                    radarPct = (radarValue / radarMax) * 100;
+                    radarColor = isReady ? 'var(--pleasure-color)' : 'var(--text-secondary)';
+                    radarIcon = isReady ? 'fa-solid fa-heart-pulse' : 'fa-regular fa-heart';
+                    radarLabel = isReady ? 'H事件即将发生！' : '有色色的氛围……';
+
+                    radarTooltipText = isReady
+                        ? "<div class='label'>【H事件即将发生】</div><div class='value'>日常突发H事件已在酝酿。</div>"
+                        : "<div class='label'>【事件准备中】</div><div class='value'>主角拥有至少一项明确的性癖，会在固定回合后触发H事件哦！</div>";
+                } else {
+                    radarMax = 8;
+                    isReady = turnCount >= radarMax;
+                    radarValue = Math.min(radarMax, turnCount);
+                    radarPct = (radarValue / radarMax) * 100;
+                    radarColor = isReady ? 'var(--ultimate-color)' : 'var(--text-secondary)';
+                    radarIcon = isReady ? 'fa-solid fa-crosshairs' : 'fa-solid fa-hourglass-half';
+                    radarLabel = isReady ? 'BOSS出现中' : '下一场战斗尚未到来……';
+
+                    radarTooltipText = isReady
+                        ? "<div class='label'>【BOSS即将出现】</div><div class='value'>系统已在暗中生成了敌人。继续探索或日常对话即可触发遭遇战！</div>"
+                        : "<div class='label'>【BOSS战冷却中】</div><div class='value'>当前为安全的日常探索时间。每次交互都会推进进度。<br><br><span style='color:var(--ultimate-color);'>💡 提示：自然聊天即可，系统会在进度满时自动生成危机。</span></div>";
+                }
+
+                const radarTooltipHtml = `<span class='has-tooltip'><i class=\"fa-solid fa-circle-info info-icon-pc tooltip-trigger\"></i><span class='custom-tooltip'>${radarTooltipText}</span></span>`;
+
+                bottomBarHtml = `
+                <div class='stack-header'>推进倒计时</div>
+                <div class='progress-item'>
+                    <div class='progress-label'>
+                        <span style="color:${radarColor}"><i class='${radarIcon}'></i> <span style=\"${isReady ? 'font-weight:bold;' : ''}\">${radarLabel}</span> ${radarTooltipHtml}</span>
+                        <span class='progress-value' style=\"color:${radarColor}\">${radarValue}/${radarMax}</span>
+                    </div>
+                    <div class='progress-bar'>
+                        <div class='progress-fill' style='width: ${radarPct}%; background: ${radarColor}; ${isReady ? 'box-shadow: 0 0 8px ' + radarColor + ';' : ''} transition: width 0.4s ease;'></div>
+                    </div>
+                </div>`;
+            }
+        } else {
+            bottomBarHtml = `
+            <div class='stack-header'>必杀技</div>
+            <div class='progress-item'>${renderProgressItem({ path: isFallen ? '主角.核心状态.混沌充能' : '主角.核心状态.正义充能', label: ultimateLabel, options: { icon: 'fa-solid ' + ultimateIcon, color: 'var(--ultimate-color)' } }, data, isFallen)}</div>`;
+        }
+
+        const progressHtml = `<div class=\"progress-stack\">
+            <div class='stack-header'>基础资源</div>
+            ${renderProgressItem({ path: '主角.核心状态.体力值.当前', label: hpLabel, options: { icon: 'fa-solid fa-heart', color: 'var(--hp-color)', max: getValue(data, '主角.核心状态.体力值.最大', 100) } }, data, isFallen)}
+            ${renderProgressItem({ path: '主角.核心状态.能量值.当前', label: mpLabel, options: { icon: 'fa-solid fa-wand-magic-sparkles', color: 'var(--mp-color)', max: maxMp, extraClass: mpExtraClass, tooltipOverride: mpTooltipOverride } }, data, isFallen)}
+            <div class='stack-header'>精神与感官</div>
+            ${ekgMonitorHtml}
+            ${renderProgressItem({ path: '主角.快感状态.侵蚀度', label: corruptionLabel, options: { icon: 'fa-solid ' + corruptionIcon, color: 'var(--corruption-color)' } }, data, isFallen)}
+            ${bottomBarHtml}
+        </div>`;
+
+        const tabbedHtml = `
+            <div class=\"tab-container\">
+                <button class=\"tab-btn\" data-target=\"panel-character\"><i class=\"fa-solid fa-address-card\"></i> ${tab1Label}</button>
+                <button class=\"tab-btn\" data-target=\"panel-body\"><i class=\"fa-solid ${bodyTabIcon}\"></i> ${tab2Label}</button>
+                <button class=\"tab-btn\" data-target=\"panel-records\"><i class=\"fa-solid ${recordsTabIcon}\"></i> ${tab3Label}</button>
+                <button class=\"tab-btn\" data-target=\"panel-world\"><i class=\"fa-solid ${worldTabIcon}\"></i> ${tab4Label}</button>
+            </div>
+            <div class=\"content-container\">
+                <div id=\"panel-character\" class=\"tab-content\">${renderCharacterInfo(data, personality)}</div>
+                <div id=\"panel-body\" class=\"tab-content\">${renderBodyStatus(data)}</div>
+                <div id=\"panel-records\" class=\"tab-content\">${renderRecords(data, personality)}</div>
+                <div id=\"panel-world\" class=\"tab-content\">${renderWorldLore(data)}</div>
+            </div>`;
+
+        return `<div class='${cardClass}'>
+            <div class=\"panel-left\">
+                <div class=\"card-header\"><h2>${headerTitle}</h2>${renderCalendar(data)}</div>
+                ${contextualHtml}
+                ${progressHtml}
+            </div>
+            <div class=\"panel-right\">${tabbedHtml}</div>
+        </div>`;
+    };
+
+    const renderPanelWithData = (stat_data) => {
+        if (typeof hideDynamicTooltip === 'function') {
+            hideDynamicTooltip();
+            const oldTooltips = document.querySelectorAll('.custom-tooltip-dynamic');
+            oldTooltips.forEach(el => el.remove());
+        }
+        const container = document.getElementById('status-card-container');
+        if (!container) return;
+        try {
+            const newHTML = renderStatusPanel(stat_data);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newHTML;
+            const newContent = tempDiv.firstChild;
+            if (newContent && newContent.querySelector) {
+                const newActiveButton = newContent.querySelector(`[data-target="${lastActiveTabId}"]`);
+                if (newActiveButton) newActiveButton.classList.add('active');
+                const newActivePanel = newContent.querySelector(`#${lastActiveTabId}`);
+                if (newActivePanel) newActivePanel.classList.add('active');
+            }
+            if (container.firstChild) {
+                updateDOM(container.firstChild, newContent);
+            } else {
+                if(newContent) container.appendChild(newContent);
+            }
+        } catch (error) {
+            console.error('Status Panel Error:', error);
+            container.innerHTML = `<div class='status-card' style='color:var(--combat-color);'>渲染出错: ${error.message}</div>`;
+        }
+    };
+
+    function getMvuInstance() {
+        try {
+            return window.Mvu || (window.parent && window.parent.Mvu) || (window.top && window.top.Mvu) || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+const setupTooltips = () => {
+        let portal = document.getElementById('pc-status-portal-tooltip');
+        if (!portal) {
+            portal = document.createElement('div');
+            portal.id = 'pc-status-portal-tooltip';
+            portal.className = 'custom-tooltip-portal';
+            document.body.appendChild(portal);
+        }
+
+        const showTip = (target) => {
+            const tpl = target.querySelector('.custom-tooltip');
+            if (!tpl || !portal) return;
+
+            portal.innerHTML = tpl.innerHTML;
+            portal.classList.add('active');
+
+            const targetRect = target.getBoundingClientRect();
+            const tipRect = portal.getBoundingClientRect();
+
+            let top = targetRect.top + (targetRect.height / 2) - (tipRect.height / 2);
+            let left = targetRect.right + 12;
+
+            // 边缘避让算法：若右侧超出屏幕，则翻转至目标元素左侧
+            if (left + tipRect.width > window.innerWidth - 10) {
+                left = targetRect.left - tipRect.width - 12;
+            }
+            if (left < 10) left = 10;
+
+            // 垂直方向上下边界贴靠
+            if (top + tipRect.height > window.innerHeight - 10) {
+                top = window.innerHeight - tipRect.height - 10;
+            }
+            if (top < 10) top = 10;
+
+            portal.style.top = `${top}px`;
+            portal.style.left = `${left}px`;
+        };
+
+        const hideTip = () => {
+            if (portal) {
+                portal.classList.remove('active');
+            }
+        };
+
+        document.addEventListener('mouseover', (e) => {
+            const trigger = e.target.closest('.has-tooltip');
+            if (trigger) showTip(trigger);
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const trigger = e.target.closest('.has-tooltip');
+            if (trigger) hideTip();
+        });
+
+        window.addEventListener('scroll', hideTip, true);
+    };
+
+    setupTooltips();
+
+    const init = () => {
+        const Mvu = window.Mvu || (window.parent && window.parent.Mvu) || (window.top && window.top.Mvu);
+        if (Mvu && Mvu.events) {
+            document.addEventListener(Mvu.events.VARIABLE_UPDATE_ENDED, (e) => {
+                if (e.detail && e.detail.stat_data) {
+                    renderPanelWithData(e.detail.stat_data);
+                }
+            });
+            (async () => {
+                try {
+                    if (typeof getChatMessages !== 'undefined') {
+                        const msgs = await getChatMessages(getCurrentMessageId());
+                        const data = msgs[0]?.data?.stat_data || Mvu.getMvuData({type:'message', message_id:-1})?.stat_data;
+                        renderPanelWithData(data);
+                    }
+                } catch (e) {
+                    console.warn("[PC Status] Initial fetch failed.", e);
+                }
+            })();
+            const container = document.getElementById('status-card-container');
+            if (container) {
+                container.addEventListener('click', (event) => {
+                    const button = event.target.closest('.tab-btn');
+                    if (!button || button.classList.contains('active')) return;
+                    const targetPanelId = button.dataset.target;
+                    const targetPanel = container.querySelector(`#${targetPanelId}`);
+                    if (!targetPanel) return;
+                    container.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    container.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'));
+                    button.classList.add('active');
+                    targetPanel.classList.add('active');
+                    lastActiveTabId = targetPanelId;
+                });
+            }
+        } else {
+            setTimeout(init, 500);
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    window.gm_update = async (path, value, mode = 'set') => {
+        try {
+            const Mvu = window.Mvu || window.parent?.Mvu || window.top?.Mvu;
+            if (!Mvu) return;
+            const mvuData = Mvu.getMvuData({ type: 'message', message_id: -1 });
+            if (!mvuData) return;
+            if (typeof _ !== 'undefined' && _.set) {
+                if (mode === 'remove') _.unset(mvuData, path);
+                else if (mode === 'add') {
+                    const old = _.get(mvuData, path) || 0;
+                    _.set(mvuData, path, Number(old) + Number(value));
+                } else {
+                    _.set(mvuData, path, value);
+                }
+            }
+            await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: -1 });
+            const cleanData = JSON.parse(JSON.stringify(mvuData.stat_data || mvuData));
+            document.dispatchEvent(new CustomEvent(Mvu.events.VARIABLE_UPDATE_ENDED, { detail: { stat_data: cleanData }, bubbles: true }));
+            setTimeout(() => {
+                try { renderGM && renderGM(); } catch(e) {}
+            }, 50);
+        } catch (e) {
+            console.error("[GM Update]", e);
+        }
+    };
+
+    // 小英雄名录弹窗详情
+    window.showHeroPopup = (realName) => {
+        const mvu = getMvuInstance();
+        const data = window._lastRenderedData || (mvu && mvu.getMvuData && mvu.getMvuData({ type: 'message', message_id: -1 })?.stat_data);
+        if (!data) return;
+        const roster = getValue(data, '世界.小英雄名录', {});
+        const hero = roster[realName];
+        if (!hero) return;
+        const isHero = (hero.人格阵营 || '英雄') === '英雄';
+        const campColor = isHero ? '#7aa2f7' : '#f7768e';
+        const campName = isHero ? '英雄阵营' : '反派阵营';
+        const heroName = isHero ? (hero.英雄名 || realName) : (hero.堕落英雄名 || hero.英雄名 || realName);
+        const rawFields = [
+            ['真实姓名', realName],
+            ['表面身份', hero.表面身份],
+            ['人格阵营', `<span style="color:${campColor}; font-weight:bold;">${campName}</span>`],
+            ['核心能力', isHero ? hero.英雄核心能力 : (hero.反派核心能力 || hero.英雄核心能力)],
+            ['代表色', isHero ? hero.英雄代表色 : (hero.反派代表色 || hero.英雄代表色)],
+            ['性格特质', isHero ? hero.英雄性格特质 : (hero.反派性格特质 || hero.英雄性格特质)],
+            ['外貌身材', hero.外貌身材],
+            ['与主角关系', hero.与主角关系],
+            ['战胜主角', `${hero.战胜主角次数 || 0} 次`],
+            ['败于主角', `${hero.败于主角次数 || 0} 次`],
+            ['内射主角', `${hero.内射主角次数 || 0} 次`],
+            ['被主角内射', `${hero.被主角内射次数 || 0} 次`],
+            ['恶堕/善堕', `${hero.恶堕次数 || 0}次恶堕 / ${hero.善堕次数 || 0}次善堕`],
+            ['恶堕进度', `${hero.恶堕进度 || 0}%`],
+            ['善堕进度', `${hero.善堕进度 || 0}%`],
+        ];
+        const rows = rawFields.filter(([_,v]) => v !== undefined && v !== null && v !== '' && v !== '待设定' && v !== '-').map(([k,v]) => `<div class="popup-row"><span class="popup-label">${k}</span><span class="popup-val">${v}</span></div>`).join('');
+        const popupHtml = `
+            <div style="position:relative;">
+                <div class="popup-close" onclick="closeHeroPopup()"><i class="fa-solid fa-xmark"></i></div>
+                <h3 style="color:${campColor}; margin:0 0 4px 0; display:flex; align-items:center; gap:8px; font-size:1.25em;">
+                    <i class="fa-solid ${isHero ? 'fa-shield-halved' : 'fa-skull'}"></i> ${heroName}
+                </h3>
+                <div style="font-size:0.82em; color:var(--text-secondary); margin-bottom:14px;">真实身份：${realName}</div>
+                <div style="display:flex; flex-direction:column; gap:2px;">${rows}</div>
+            </div>`;
+        const el = document.getElementById('roster-popup-content');
+        if (el) el.innerHTML = popupHtml;
+        const pop = document.getElementById('roster-popup');
+        if (pop) pop.classList.add('show');
+    };
+
+    window.closeHeroPopup = () => {
+        const pop = document.getElementById('roster-popup');
+        if (pop) pop.classList.remove('show');
+    };
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') window.closeHeroPopup();
+    });
+
+</script>
+</body>
+</html>
+```

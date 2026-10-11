@@ -1,0 +1,566 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>夏日小镇 · 归乡车票 (手账版) v1.0</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+           基础环境 & 手账本主体
+           ========================================= */
+        body {
+            margin: 0; padding: 20px; 
+            font-family: "Kaiti", "Microsoft YaHei", sans-serif;
+            background: url('https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=1920&auto=format&fit=crop') center/cover fixed;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .notebook-container {
+            width: 850px; max-width: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+            background-color: #fdf5e6; 
+            background-repeat: repeat;
+            background-blend-mode: multiply;
+            border-radius: 8px;
+            box-shadow: 10px 20px 50px rgba(0,0,0,0.4), inset 15px 0 20px rgba(0,0,0,0.03);
+            border-left: 8px solid #bd9e7b; 
+            position: relative; 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            padding: 30px 40px;
+            color: #3e2723;
+            position: relative;
+        }
+
+        /* 顶部标题栏 */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px dashed rgba(189, 158, 123, 0.5);
+            padding-bottom: 15px;
+            position: relative;
+        }
+        header h2 {
+            font-family: "ZCOOL KuaiLe", sans-serif;
+            font-size: 32px;
+            color: #1565c0;
+            margin: 0 0 10px 0;
+            letter-spacing: 2px;
+            text-shadow: 1px 2px 0px rgba(255,255,255,0.8);
+        }
+        header p {
+            margin: 0; font-weight: bold; color: #5d4037;
+            font-size: 15px;
+        }
+
+        /* =========================================
+           存档管理器 (便签贴纸风格)
+           ========================================= */
+        .profile-manager {
+            background: #fff9c4;
+            border: 2px dashed #fbc02d;
+            border-radius: 6px;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            box-shadow: 2px 5px 12px rgba(0,0,0,0.1);
+            transform: rotate(0.5deg);
+            display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;
+            position: relative;
+            z-index: 10;
+        }
+        /* 胶带效果 */
+        .profile-manager::before {
+            content: ''; position: absolute; top: -12px; left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            width: 100px; height: 25px;
+            background: rgba(255,255,255,0.4);
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+            backdrop-filter: blur(2px);
+        }
+
+        .manager-left { display: flex; align-items: center; gap: 10px; flex-grow: 1; min-width: 250px;}
+        .profile-manager label { font-family: "ZCOOL KuaiLe", sans-serif; color: #f57f17; font-size: 18px; flex-shrink: 0; }
+        
+        #profile-select {
+            flex-grow: 1; background: rgba(255,255,255,0.6); border: 1px solid #fbc02d; border-radius: 4px;
+            padding: 8px; color: #5d4037; font-family: inherit; font-size: 15px; font-weight: bold;
+            outline: none; cursor: pointer; transition: 0.2s;
+        }
+        #profile-select:focus { border-color: #e65100; background: #fff; box-shadow: 0 0 5px rgba(245, 127, 23, 0.3);}
+        
+        .manager-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .manager-btn {
+            font-family: inherit; font-weight: bold; font-size: 13px; padding: 6px 12px; 
+            border: 1px dashed #bd9e7b; border-radius: 4px;
+            background: #fdf5e6; color: #5d4037; cursor: pointer; 
+            transition: all 0.2s; box-shadow: 1px 2px 4px rgba(0,0,0,0.05);
+        }
+        .manager-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 2px 4px 8px rgba(0,0,0,0.1); background: #fff;}
+        .manager-btn:active:not(:disabled) { transform: translateY(0); }
+        .manager-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        #save-profile-btn { color: #2e7d32; border-color: #81c784; background: #e8f5e9; }
+        #delete-profile-btn { color: #c62828; border-color: #e57373; background: #ffebee; }
+
+        /* =========================================
+           表单布局与字段区块 (手绘风)
+           ========================================= */
+        .form-section {
+            border: none; padding: 0; margin-bottom: 30px;
+            position: relative;
+        }
+        .form-section legend {
+            font-family: "ZCOOL KuaiLe", sans-serif;
+            font-size: 22px; color: #d32f2f;
+            display: inline-block; margin-bottom: 15px;
+            border-bottom: 2px dashed #ffcdd2;
+            padding-bottom: 4px; line-height: 1;
+        }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { color: #5d4037; font-size: 15px; font-weight: bold; display: flex; align-items: center; gap: 6px;}
+        
+        /* 输入控件美化 (横线与网格手写区) */
+        input[type="text"] {
+            background: transparent;
+            border: none; border-bottom: 2px dashed rgba(189, 158, 123, 0.6);
+            padding: 8px 5px; color: #1565c0; font-family: inherit; font-size: 16px; font-weight: bold;
+            transition: all 0.3s; width: 100%; box-sizing: border-box;
+        }
+        input[type="text"]:focus {
+            outline: none; border-bottom-color: #d84315; background: rgba(255,255,255,0.4); border-radius: 4px 4px 0 0;
+        }
+        input[type="text"]::placeholder { color: rgba(141, 110, 99, 0.5); font-weight: normal; }
+
+        /* 文本域：横纹稿纸效果 */
+        textarea { 
+            width: 100%; box-sizing: border-box; resize: none;
+            background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(189, 158, 123, 0.3) 31px, rgba(189, 158, 123, 0.3) 32px);
+            background-color: rgba(255,255,255,0.4);
+            border: 1px solid rgba(189, 158, 123, 0.4); border-radius: 4px;
+            padding: 0 10px; line-height: 32px; font-family: inherit; font-size: 15px; color: #1565c0; font-weight: bold;
+            min-height: 96px; /* 3行 */
+            max-height: 256px;
+            overflow-y: auto; transition: all 0.3s;
+        }
+        textarea:focus { outline: none; border-color: #d84315; background-color: rgba(255,255,255,0.7); box-shadow: 2px 2px 8px rgba(0,0,0,0.05);}
+        textarea::placeholder { color: rgba(141, 110, 99, 0.5); font-weight: normal; }
+        
+        /* 现代化 Radio 按钮 (贴纸风格) */
+        .radio-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; }
+        .radio-group label {
+            background: #fff; border: 1px dashed #bd9e7b; color: #5d4037;
+            padding: 8px 15px; border-radius: 4px; cursor: pointer;
+            font-family: "Kaiti", sans-serif; font-weight: bold; font-size: 14px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            transform: rotate(-1deg); transition: all 0.2s;
+            text-align: center; flex: 1; min-width: 80px;
+        }
+        .radio-group label:nth-child(even) { transform: rotate(1deg); }
+        .radio-group label:hover { transform: scale(1.05) rotate(0deg); box-shadow: 3px 4px 8px rgba(0,0,0,0.15); z-index: 2;}
+        
+        .radio-group input[type="radio"] { display: none; }
+        .radio-group input[type="radio"]:checked + label { 
+            background: #ffe082; border-color: #f57f17; color: #e65100; 
+            transform: scale(1.05) rotate(0deg); box-shadow: 3px 4px 10px rgba(0,0,0,0.15); border-style: solid; z-index: 3;
+        }
+        
+        /* =========================================
+           底部操作区 (印章/大贴纸风格)
+           ========================================= */
+        .submit-area { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px dashed rgba(189, 158, 123, 0.4); display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; align-items: center; position: relative;}
+        
+        .action-btn {
+            font-family: "ZCOOL KuaiLe", sans-serif; font-size: 20px; letter-spacing: 1px;
+            border: 2px dashed; border-radius: 8px; padding: 12px 30px; 
+            cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 3px 5px 12px rgba(0,0,0,0.15);
+            transform: rotate(-1deg);
+        }
+        
+        #generate-btn { background: #ffcdd2; color: #c62828; border-color: #e53935; }
+        #generate-btn:hover:not(:disabled) { transform: scale(1.05) rotate(0deg); box-shadow: 4px 8px 20px rgba(229, 57, 53, 0.3); background: #ef9a9a;}
+        #generate-btn:active:not(:disabled) { transform: scale(0.98); box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        
+        #reset-form-btn { background: #f1f8e9; color: #33691e; border-color: #7cb342; transform: rotate(1deg); font-size: 16px; padding: 12px 20px;}
+        #reset-form-btn:hover { transform: scale(1.05) rotate(0deg); box-shadow: 4px 6px 15px rgba(124, 179, 66, 0.3); background: #dcedc8; }
+        
+        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.5); transform: none; box-shadow: none; }
+        
+        #copy-notification { position: absolute; bottom: -30px; width: 100%; text-align: center; left: 0; font-size: 14px; font-weight: bold; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; color: #2e7d32;}
+
+        /* 滚动条定制 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(189, 158, 123, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(189, 158, 123, 0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(189, 158, 123, 0.8); }
+    </style>
+</head>
+<body>
+    <div class="notebook-container">
+        <div class="main-content">
+            <header>
+                <h2><i class="fa-solid fa-sun" style="color: #f57f17;"></i> 夏日小镇 · 归乡车票</h2>
+                <p>蝉鸣、海风与老电风扇的声音。设定你的身份，踏上归乡的列车。</p>
+            </header>
+
+            <div class="profile-manager">
+                <div class="manager-left">
+                    <label for="profile-select"><i class="fa-solid fa-ticket-simple"></i> 车票夹</label>
+                    <select id="profile-select">
+                        <option value="">-- 尚无已存方案 --</option>
+                    </select>
+                </div>
+                <div class="manager-group">
+                    <button id="load-profile-btn" class="manager-btn" title="读取所选方案"><i class="fa-solid fa-upload"></i> 读取</button>
+                    <button id="save-profile-btn" class="manager-btn" title="保存当前表单"><i class="fa-solid fa-save"></i> 留存</button>
+                    <button id="delete-profile-btn" class="manager-btn" title="删除所选方案"><i class="fa-solid fa-trash"></i> 撕毁</button>
+                    <div style="width: 2px; border-left: 2px dotted #bd9e7b; margin: 0 4px;"></div>
+                    <button id="export-profiles-btn" class="manager-btn" title="导出文件"><i class="fa-solid fa-file-export"></i></button>
+                    <button id="import-profiles-btn" class="manager-btn" title="导入文件"><i class="fa-solid fa-file-import"></i></button>
+                </div>
+                <input type="file" id="import-file-input" accept=".json" style="display: none;">
+            </div>
+
+            <form id="creator-form" onsubmit="return false;">
+                <fieldset class="form-section">
+                    <legend><i class="fa-solid fa-address-card"></i> 基础设定</legend>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="char-name">姓名</label>
+                            <input type="text" id="char-name" placeholder="写下你的名字...">
+                        </div>
+                        <div class="form-group">
+                            <label for="char-age">年龄</label>
+                            <input type="text" id="char-age" placeholder="例如：18岁、20岁...">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="char-bg">回乡背景 / 身份</label>
+                            <input type="text" id="char-bg" placeholder="例如：考学失败回乡散心、继承旧宅的都市打工人...">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="char-personality">性格标签 / 设定</label>
+                            <input type="text" id="char-personality" placeholder="例如：内向腼腆、好奇心旺盛、有些毒舌、温柔的大哥哥...">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fa-solid fa-pencil"></i> 外貌速写 <span style="font-size: 12px; color: #8d6e63; font-family: 'Kaiti', sans-serif;">(AI将基于此补全)</span></legend>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="appearance-keywords">外貌与气质关键词</label>
+                            <textarea id="appearance-keywords" placeholder="例如：充满书卷气的都市少年、略带忧郁感、清爽的短发、戴着半框眼镜..."></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="body-keywords">身材与体质描述</label>
+                            <textarea id="body-keywords" placeholder="例如：175cm、偏瘦弱但匀称、不常晒太阳的白皙皮肤，或是更加私密的特征..."></textarea>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend><i class="fa-solid fa-paperclip"></i> 页脚备注</legend>
+                    <div class="form-group full-width">
+                        <textarea id="extra-notes" placeholder="如果你有什么其他特殊的设定或要求，可以写在这片空白处..."></textarea>
+                    </div>
+                </fieldset>
+                
+                <div class="submit-area">
+                    <button id="generate-btn" type="button" class="action-btn"><i class="fa-solid fa-train"></i> <span>检票并踏上旅途</span></button>
+                    <button id="reset-form-btn" type="button" class="action-btn" title="清除当前所有填写内容，重置表单"><i class="fa-solid fa-eraser"></i> <span>擦除笔迹</span></button>
+                    <p id="copy-notification"></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('creator-form');
+            const generateBtn = document.getElementById('generate-btn');
+            const resetFormBtn = document.getElementById('reset-form-btn');
+            const notification = document.getElementById('copy-notification');
+            const allInputs = Array.from(form.querySelectorAll('input, textarea, select'));
+            
+            const profileSelect = document.getElementById('profile-select');
+            const loadProfileBtn = document.getElementById('load-profile-btn');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const deleteProfileBtn = document.getElementById('delete-profile-btn');
+            const exportProfilesBtn = document.getElementById('export-profiles-btn');
+            const importProfilesBtn = document.getElementById('import-profiles-btn');
+            const importFileInput = document.getElementById('import-file-input');
+            const initialButtonHTML = generateBtn.innerHTML;
+
+            // 配置独立的存取Key
+            const AUTOSAVE_KEY = 'summerTown_AutoSave_v1';
+            const PROFILE_STORAGE_KEY = 'summerTown_ProfileManager_v1';
+            
+            let saveTimeout;
+
+            // --- 文本框高度自适应逻辑 (配合行高) ---
+            const textareas = document.querySelectorAll('textarea');
+            const autoResizeTextarea = (ta) => {
+                ta.style.height = 'auto'; 
+                ta.style.height = ta.scrollHeight + 'px'; 
+            };
+            textareas.forEach(ta => {
+                ta.addEventListener('input', () => autoResizeTextarea(ta));
+            });
+
+            const showNotification = (message, color = '#2e7d32') => {
+                notification.textContent = message;
+                notification.style.color = color;
+                notification.style.opacity = '1';
+                clearTimeout(notification.timeoutId);
+                notification.timeoutId = setTimeout(() => { notification.style.opacity = '0'; }, 3500);
+            };
+            
+            const getCurrentFormData = () => {
+                const data = {};
+                allInputs.forEach(input => {
+                    if (input.type === 'radio') {
+                        if (input.checked) data[input.name] = input.value;
+                    } else if (input.id) {
+                        data[input.id] = input.value;
+                    }
+                });
+                return data;
+            };
+
+            const populateForm = (data) => {
+                if (!data) return;
+                allInputs.forEach(input => {
+                    const key = (input.type === 'radio') ? input.name : (input.id || input.name);
+                    if (data[key] !== undefined) {
+                        if (input.type === 'radio') {
+                           input.checked = (input.value === data[key]);
+                        } else {
+                           input.value = data[key];
+                        }
+                    } else {
+                        if (input.type === 'text' || input.tagName === 'TEXTAREA') {
+                            input.value = '';
+                        }
+                    }
+                });
+                setTimeout(() => { textareas.forEach(ta => autoResizeTextarea(ta)); }, 10);
+            };
+
+            const saveAutoSave = () => localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(getCurrentFormData()));
+            const debouncedAutoSave = () => { clearTimeout(saveTimeout); saveTimeout = setTimeout(saveAutoSave, 500); };
+            
+            const loadAutoSave = () => {
+                const autoSavedData = localStorage.getItem(AUTOSAVE_KEY);
+                if (autoSavedData) {
+                    populateForm(JSON.parse(autoSavedData));
+                }
+            };
+
+            const getProfiles = () => JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY)) || {};
+            const saveProfiles = (profiles) => localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profiles));
+            
+            const populateDropdown = () => {
+                const profiles = getProfiles();
+                const profileNames = Object.keys(profiles);
+                
+                profileSelect.innerHTML = '';
+                if (profileNames.length === 0) {
+                    profileSelect.innerHTML = '<option value="">-- 尚无已存方案 --</option>';
+                    loadProfileBtn.disabled = true;
+                    deleteProfileBtn.disabled = true;
+                    exportProfilesBtn.disabled = true; 
+                    importProfilesBtn.disabled = false;
+                } else {
+                    profileSelect.innerHTML = '<option value="">-- 选择一个方案 --</option>';
+                    profileNames.sort().forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        profileSelect.appendChild(option);
+                    });
+                    loadProfileBtn.disabled = false;
+                    deleteProfileBtn.disabled = false;
+                    exportProfilesBtn.disabled = false;
+                    importProfilesBtn.disabled = false;
+                }
+            };
+
+            form.addEventListener('input', debouncedAutoSave);
+            
+            saveProfileBtn.addEventListener('click', () => {
+                const defaultName = document.getElementById('char-name').value || '未命名车票';
+                const profileName = prompt('请在车票上写下留存的名字：', defaultName);
+                if (profileName && profileName.trim() !== '') {
+                    const profiles = getProfiles();
+                    profiles[profileName.trim()] = getCurrentFormData();
+                    saveProfiles(profiles);
+                    populateDropdown();
+                    profileSelect.value = profileName.trim();
+                    showNotification(`车票 "${profileName.trim()}" 已妥善保管！`);
+                }
+            });
+
+            loadProfileBtn.addEventListener('click', () => {
+                const selectedName = profileSelect.value;
+                if (selectedName) {
+                    const profiles = getProfiles();
+                    if (profiles[selectedName]) {
+                        populateForm(profiles[selectedName]);
+                        debouncedAutoSave();
+                        showNotification(`已抽出车票 "${selectedName}"。`);
+                    }
+                } else {
+                    showNotification('请先从夹子中选择一张车票。', '#c62828');
+                }
+            });
+
+            deleteProfileBtn.addEventListener('click', () => {
+                const selectedName = profileSelect.value;
+                if (selectedName) {
+                    if (confirm(`确定要将车票 "${selectedName}" 撕毁吗？此操作无法挽回。`)) {
+                        const profiles = getProfiles();
+                        delete profiles[selectedName];
+                        saveProfiles(profiles);
+                        populateDropdown();
+                        showNotification(`车票 "${selectedName}" 已被撕毁。`, '#f57f17');
+                    }
+                } else {
+                    showNotification('请先选择一张要撕毁的车票。', '#c62828');
+                }
+            });
+
+            exportProfilesBtn.addEventListener('click', () => {
+                const profiles = getProfiles();
+                if (Object.keys(profiles).length === 0) return;
+                const dataStr = JSON.stringify(profiles, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `summer-town-tickets-${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showNotification('票夹已打包带走！');
+            });
+
+            importProfilesBtn.addEventListener('click', () => importFileInput.click());
+
+            importFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedProfiles = JSON.parse(e.target.result);
+                        if (typeof importedProfiles !== 'object' || importedProfiles === null) { throw new Error('无效的文件格式。'); }
+                        let currentProfiles = getProfiles();
+                        let importedCount = 0, skippedCount = 0;
+                        for (const name in importedProfiles) {
+                            if (currentProfiles[name]) {
+                                if (confirm(`已存在同名车票 "${name}"，是否要覆盖它？`)) { currentProfiles[name] = importedProfiles[name]; importedCount++; } 
+                                else { skippedCount++; }
+                            } else { currentProfiles[name] = importedProfiles[name]; importedCount++; }
+                        }
+                        saveProfiles(currentProfiles);
+                        populateDropdown();
+                        showNotification(`成功装入 ${importedCount} 张车票，跳过 ${skippedCount} 张。`);
+                    } catch (error) {
+                        showNotification('装入失败！请检查票据格式。', '#c62828');
+                        console.error("Import error:", error);
+                    } finally {
+                        importFileInput.value = '';
+                    }
+                };
+                reader.readAsText(file);
+            });
+            
+            resetFormBtn.addEventListener('click', () => {
+                if (confirm('确定要用橡皮擦掉所有写下的设定吗？')) {
+                    form.reset();
+                    document.getElementById('reg-south').checked = true;
+                    debouncedAutoSave();
+                    showNotification('纸面已恢复空白。', '#f57f17');
+                }
+            });
+
+            generateBtn.addEventListener('click', () => {
+                saveAutoSave();
+                generateBtn.disabled = true;
+                generateBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>列车进站中...</span>`;
+                notification.style.opacity = '0';
+                
+                const data = getCurrentFormData();
+                const formatValue = (value, placeholder = '[未填写，请AI基于情境自由发挥补全]') => {
+                    const trimmedValue = (value || "").trim();
+                    return trimmedValue === '' ? placeholder : `"${trimmedValue}"`;
+                };
+
+                // --- 构建发给AI的YAML指令 ---
+                const yamlString =`<init_data>
+\`\`\`yaml
+# AI任务指令：解析以下用户创角档案，生成夏日归乡的开场白，并按系统要求初始化所有变量。
+# 对于未详细描写的部位或缺失信息（如具体的脸型、五官、身高等），请AI基于给定的关键词进行富有想象力的、合理的扩写与补全。
+
+创角档案:
+  基本信息:
+    姓名: ${formatValue(data['char-name'], '未知 (请AI赋予一个符合日式夏日小镇背景的名字)')}
+    年龄: ${formatValue(data['char-age'], '18岁')}
+    性格: ${formatValue(data['char-personality'], '请AI基于背景自由发挥')}
+    背景: ${formatValue(data['char-bg'], '城里长大的孩子，因为种种原因趁着暑假回到了乡下小镇。')}
+  相貌与身材:
+    外貌关键词: ${formatValue(data['appearance-keywords'])}
+    肉体与性征关键词: ${formatValue(data['body-keywords'])}
+  额外备注: ${formatValue(data['extra-notes'], '无')}
+\`\`\`
+</init_data>`;
+                
+                setTimeout(() => {
+                    try {
+                        const inputArea = window.parent.document.querySelector('#send_textarea');
+                        const sendButton = window.parent.document.querySelector('#send_but');
+                        if (inputArea && sendButton) {
+                            inputArea.value = yamlString;
+                            inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                            sendButton.click();
+                            showNotification('列车已到站！等待AI回应...');
+                            generateBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>顺利抵达</span>`;
+                        } else { throw new Error('SillyTavern UI not found.'); }
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                        generateBtn.innerHTML = `<i class="fa-solid fa-xmark"></i> <span>发送失败</span>`;
+                        navigator.clipboard.writeText(yamlString).then(() => {
+                            showNotification('自动发送失败！已复制到剪贴板。', '#c62828');
+                            alert('自动发送失败！您的设定信息已复制到剪贴板，请手动粘贴并发送。');
+                        });
+                    }
+                    setTimeout(() => {
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = initialButtonHTML;
+                    }, 5000);
+                }, 500);
+            });
+
+            // 初始化流程
+            populateDropdown(); 
+            loadAutoSave(); 
+        });
+    </script>
+</body>
+</html>
+```

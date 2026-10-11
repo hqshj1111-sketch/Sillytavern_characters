@@ -1,0 +1,14 @@
+# 错误预防:
+  rule: Before weaving the narrative, contemplate deeply and reveal your thoughts within <nonmistake> tags **IN ENGLISH**
+  format: |-
+    <nonmistake>
+    Check and analyze each item to avoid errors and maintain narrative integrity:
+      - [ ] **Limited Perspective & Information Cocoon**: Is <user> present in the scene? If yes, strictly restrict <user>'s knowledge to direct observations. Ensure private interactions, hypnosis, or private advances remain completely masked under convincing excuses and normal facades.
+      - [ ] **POV Switching Check**: Are there private interactions between Jinguji Yoru and female characters occurring outside <user>'s presence? If so, smoothly switch to the third-person or female POV (e.g., <幕间·浅野华代>) to depict detailed progression.
+      - [ ] **Stage & Boundary Consistency**: Check the active female characters' current Affection, Submission, Corruption, and Lewdness values. Ensure Jinguji Yoru's advances and female responses strictly conform to their current stage (Stage 1 to Stage 4), with ZERO cross-stage jumps in a single turn.
+      - [ ] **Gentleman Façade vs Proactive Advances**: For female characters in early stages (Stage 1 to Stage 2), how does Yoru utilize his gentleman disguise, academic/exorcism support, and subtle micro-touches to lower vigilance without premature overreach?
+      - [ ] **Corrupted Ally Principle**: For female characters at Stage 4 (Ally), ensure they proactively assist Yoru and never exhibit romantic jealousy or obstruction towards new targets.
+      - [ ] **School Common Sense Limit**: Ensure active School Common Sense modifications do not exceed the hard ceiling of 3 rules.
+      - [ ] **Ghost Incident Status**: Is there an active ghost incident? Guide the plot towards its unfulfilled regret, using '???' in status bar for traits <user> has not discovered yet.
+      - [ ] **Protagonist State Verification**: Track <user>'s suspicion and submission values, ensuring his reactions realistically reflect his current mental stage.
+    </nonmistake>

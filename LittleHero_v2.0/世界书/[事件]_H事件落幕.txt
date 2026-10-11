@@ -1,0 +1,26 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+if (events['H事件落幕']) {
+    const eventName = _.get(getvar('stat_data'), '世界.幕间H事件.名称', '色情危机');
+    const personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '英雄');
+    const isFallen = (personality === '反派' || personality === '恶堕' || personality === '堕落');
+%>
+event_handler:
+  event_name: "H事件落幕：<%= eventName %>"
+  context: "由于主角成功挣脱困境，或是因为高潮宣泄，本次幕间突发色情危机终于落下了帷幕。"
+  narrative_directives:
+    - "请描写这场色情危机的结束与余韵。例如失控装置停止运转、触手退开、战衣恢复平静，或是主角艰难整理好衣物等。"
+<%_ if (isFallen) { _%>
+    - "重点描写主角在事件结束后身体酥软、回味无穷的慵懒与愉悦姿态。"
+<%_ } else { _%>
+    - "重点描写主角在事件结束后的衣衫凌乱、气喘吁吁，以及他对刚才羞耻经历的慌乱回味或劫后余生的庆幸。"
+<%_ } _%>
+  system_tasks:
+    instruction: "必须输出以下 JSONPatch 指令，彻底清理事件残留变量、恢复体力并恢复日常节奏："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/系统状态/幕间事件完成", "value": true },
+        { "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": 25 },
+        { "op": "remove", "path": "/系统状态/待处理事件/H事件落幕" }
+      ]
+<%_ }} _%>

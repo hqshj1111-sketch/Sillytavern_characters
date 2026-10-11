@@ -1,0 +1,39 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+const stat = getvar('stat_data');
+if (events['校园催眠识破事件']) {
+    const instructorName = _.get(stat, '世界.校园催眠.怪人代号', '教官01号');
+    const playerStrength = Number(_.get(stat, '主角.核心状态.基础强度', 50));
+    // 动态Boss强度与主角挂钩：略高于主角（挑战性Boss）
+    const bossPower = Math.round(playerStrength * 1.15) + 5;
+%>
+---
+# 事件: 校园催眠识破决战
+event_handler:
+  event_name: "校园催眠识破"
+  context: "主角的【疑心度】已达 100%！笼罩在脑海中的精神迷雾被彻底撕碎，主角清醒地认识到整个学校已被怪人【<%= instructorName %>】的催眠结界所支配，全班师生都被改造成了忠诚的紧身衣战斗员。"
+  enemy_info:
+    name: "<%= instructorName %>"
+    type: "校园催眠识破"
+    base_strength: <%= bossPower %>
+
+  narrative_directives:
+    - "【当众对峙】：主角摘下或抗拒眼前的紫色目镜，站起身来当众喝止荒诞的课堂教学，直接揭露教官的催眠真相。"
+    - "【教官反应】：<%= instructorName %>发出冰冷的嗤笑，夸赞主角能在结界下坚持清醒，随即挥动教鞭或张开支配力场，准备亲自出手将这名叛逆的见习小英雄彻底降服。"
+    - "【同班反应】：周围身穿漆黑紧身服的同学们整齐划一地转过头，用冷漠或同情的目光注视着反抗的主角。"
+    - "【决战打响】：主角与怪人教官直接进入交锋！"
+
+  system_tasks:
+    instruction: "请在 JSONPatch 中直接切换阶段至战斗回合并进入交战姿态，装填教官数据，并移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/进程/阶段", "value": "战斗回合" },
+        { "op": "replace", "path": "/主角/核心状态/当前战斗姿态", "value": "战斗中" },
+        { "op": "replace", "path": "/世界/当前关卡/名称", "value": "<%= instructorName %>" },
+        { "op": "replace", "path": "/世界/当前关卡/战斗类型", "value": "校园催眠识破" },
+        { "op": "replace", "path": "/世界/当前关卡/Boss韧性值", "value": 100 },
+        { "op": "replace", "path": "/世界/当前关卡/Boss基础强度", "value": <%= bossPower %> },
+        { "op": "replace", "path": "/世界/当前关卡/核心主题", "value": ["催眠&洗脑", "拘束&紧缚", "$__META_EXTENSIBLE__$"] },
+        { "op": "remove", "path": "/系统状态/待处理事件/校园催眠识破事件" }
+      ]
+<%_ }} _%>

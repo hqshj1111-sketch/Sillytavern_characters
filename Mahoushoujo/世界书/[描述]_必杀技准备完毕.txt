@@ -1,0 +1,47 @@
+<%_{
+// --- [描述] 必杀技准备 (合并版) ---
+const stat = getvar('stat_data');
+const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+const isFallen = personality === '堕落';
+const phase = _.get(stat, '进程.阶段');
+
+const ultVar = isFallen ? '主角.核心状态.污秽魔力' : '主角.核心状态.净化之力';
+const ult = _.get(stat, ultVar, 0);
+const bossState = _.get(stat, '世界.当前关卡.Boss状态', '完好');
+
+const isCaptured = Boolean(_.get(stat, '系统状态.被俘状态', false)) === true 
+                || String(_.get(stat, '系统状态.被俘状态')) === 'true';
+
+// 只有在【未被俘】时，才触发必杀技准备提示
+if (ult >= 100 && bossState !== '濒死' && !isCaptured) {
+    const isDefeated = phase === '战斗败北';
+
+    const eventText = isFallen
+        ? '福音领域：主角积蓄的爱欲已经抵达满溢，释放出来的下一次攻击就能彻底击败眼前的敌人！'
+        : '必杀准备完毕：主角已经积攒了足够的能量或是找到了致命的反击机会！';
+_%>
+# 提示: 必杀准备完毕
+action_trigger:
+  event: "<%= eventText %>"
+  narrative_guidance:
+    bad_example: "【系统提示】现在是最佳时机！输入 `必杀技`..."
+    good_example:
+<%_ if (isFallen) { _%>
+      - "通过主角的感官来描写。例如：'力量在她体内达到了临界点，即将化为实质的爱欲满溢而出。'"
+<%_ } else { _%>
+      - "通过主角的感官的思路进行描写必杀的准备。"
+<%_ } _%>
+      - "在描写的结尾引导性地、自然地将行动权交给玩家。"
+<%_ if (isDefeated) { _%>
+  comeback_context: |
+<%_ if (isFallen) { _%>
+    主角已经倒地，但污秽魔力达到了顶峰，可以释放必杀技。
+    若是明确选择释放，说明这是绝境中的逆转——"从溃败中绽放的爱欲福音"，强调这是猎物反噬猎人的瞬间。
+    在叙事完成后，AI 必须使用 JSONPatch 将 Boss 韧性值减至 0 来表现必杀技的效果，并将阶段切换至战斗胜利。
+<%_ } else { _%>
+    主角的净化之力达到了顶峰。
+    如果主角选择用最后的意志释放全部力量，在叙事完成后，AI 必须使用 JSONPatch 将 Boss 韧性值减至 0 来表现必杀技的毁灭性效果，并将阶段切换至战斗胜利。
+<%_ } _%>
+<%_ } _%>
+<%_ } _%>
+<%_ } _%>

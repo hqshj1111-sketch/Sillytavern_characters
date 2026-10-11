@@ -1,0 +1,67 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const rainQueue = _.get(stat, '系统状态.待处理事件.暴雨事件');
+  const isSpecialOngoing = _.get(stat, '系统状态.特殊事件进行中', false);
+  const specialType = _.get(stat, '特殊事件.类型', '无');
+  const specialObjects = _.get(stat, '特殊事件.对象', []);
+  
+  if (rainQueue || (isSpecialOngoing && specialType === '暴雨')) {
+      const specialName = _.get(stat, '特殊事件.名称', '无');
+      const targetStr = rainTargets.join('与');
+
+      // 阶段 A: 事件初始化（布置暴雨场景）
+      if (!isSpecialOngoing) {
+_%>
+# 事件：暴雨事件触发
+event_initiator:
+  event_type: "暴雨事件"
+  involved_characters: "<%= targetStr %>"
+  location: "雨宫家老宅公共区域"
+  focus: "幽闭空间内的暧昧发酵、隐秘情欲的滋生"
+  
+  narrative_guidance:
+    - "持续一整天的狂风骤雨将所有人困在了老宅内。环境营造出一种与世隔绝的幽闭感。"
+    - "【<%= targetStr %>】看着主角的眼神似乎有些不对劲，平时隐藏的情欲在这样潮湿闷热的室内正在悄然酝酿。"
+    - "本回合是暴雨事件的开端，请描写这场大雨带来的压抑与暧昧氛围，以及她们主动拉近距离的初步试探，不要一回合直接写完整个过程。"
+    
+  mandatory_data_sync:
+    instruction: "若事件已经切实开始，在 <JSONPatch> 块中必须输出以下指令，将其注册为正在进行的事件："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/暴雨事件" },
+        { "op": "insert", "path": "/系统状态/特殊事件进行中", "value": true },
+        { "op": "replace", "path": "/特殊事件/名称", "value": "[你设计的事件名称]" },
+        { "op": "replace", "path": "/特殊事件/对象", "value": <%- JSON.stringify(rainTargets) %> },
+        { "op": "insert", "path": "/特殊事件/类型", "value": "暴雨" }
+      ]
+<%_
+      } else {
+          // 阶段 B: 事件进行中与结算
+          let patchStr = `[\n        { "op": "replace", "path": "/系统状态/特殊事件进行中", "value": false }`;
+          rainTargets.forEach(t => {
+              patchStr += `,\n        { "op": "delta", "path": "/NPC数据/${t}/主角关系/亲密度", "value": [填写1到15之间的整数] },\n        { "op": "delta", "path": "/NPC数据/${t}/主角关系/情欲度", "value": [填写1到15之间的整数] }`;
+          });
+          patchStr += `\n      ]`;
+_%>
+# 事件：暴雨事件进行中
+event_ongoing:
+  event_name: <%= specialName %>
+  involved_characters: "<%= targetStr %>"
+  focus: "幽闭空间内的暧昧发酵、隐秘情欲的滋生"
+  
+  narrative_branch:
+    - condition: "暴雨仍在持续 / 玩家顺势互动"
+      instruction: "继续推进在这幽闭空间内的互动。雨声掩盖了室外的动静，肢体接触变得更加大胆，情欲的张力逐渐绷紧。"
+    - condition: "情节自然告一段落 / 暴雨停歇"
+      instruction: "描绘事后的余韵或是雨停后重新涌入的清醒感。在分析后输出清理与结算指令。"
+
+  end_protocol:
+    instruction: "只有当本次暴雨事件【彻底完结】时，才在 <UpdateVariable> 的 <Analysis> 块中根据剧情的火热程度，由AI决定为参与对象分别增加亲密度与情欲度，并替换输出以下补丁："
+    mandatory_cleanup_patch: |
+      <%- patchStr %>
+<%_
+      }
+  }
+}
+_%>

@@ -1,0 +1,107 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+const stat = getvar('stat_data');
+if (events['校园外部救援事件']) {
+    const instructorName = _.get(stat, '世界.校园催眠.怪人代号', '教官01号');
+    const playerStrength = Number(_.get(stat, '主角.核心状态.基础强度', 50));
+    const isRenowned = Math.random() < 0.3;
+    const rescuerPower = Math.round(playerStrength * (isRenowned ? 1.2 : 1.0));
+    const rescuerTier = isRenowned ? "知名小英雄" : "同盟见习小英雄";
+
+    const roster = _.get(stat, '世界.小英雄名录', {});
+    const heroEntries = Object.keys(roster).filter(k => {
+        if (k === '$meta' || k === '$__META_EXTENSIBLE__$') return false;
+        return roster[k].人格阵营 === '英雄';
+    });
+
+    const useExistingHero = heroEntries.length > 0 && Math.random() < 0.6;
+    let existingHeroName = "";
+    let existingHeroAbility = "能量冲击";
+
+    if (useExistingHero) {
+        const pickedKey = _.sample(heroEntries);
+        const heroObj = roster[pickedKey] || {};
+        existingHeroName = heroObj.英雄名 || pickedKey;
+        existingHeroAbility = heroObj.英雄核心能力 || "能量冲击";
+    }
+%>
+---
+# 事件: 外部英雄强袭救援
+event_handler:
+  event_name: "校园外部救援"
+<%_ if (useExistingHero) { _%>
+  context: "正当主角以模范战斗员的身份在教室内受训时，结界外围传来剧烈的能量爆鸣——名录同盟小英雄【<%= existingHeroName %>】（核心能力：【<%= existingHeroAbility %>】）察觉到了学园的异常失联，强行撕开结界一角突入教室发起救援！"
+  enemy_info:
+    name: "<%= existingHeroName %>"
+    type: "校园外部救援"
+    tier: "<%= rescuerTier %>"
+    base_strength: <%= rescuerPower %>
+
+  narrative_directives:
+    - "【同伴突入破门】：【<%= existingHeroName %>】破窗/破门而入，震惊地目睹全班身穿漆黑全包紧身衣与紫色目镜的荒诞受训景象，焦急呼喊试图唤醒主角与同学们。"
+    - "【忠诚迎战】：已被彻底完全催眠的主角，将救援者视为胆敢侵犯怪人组织神圣课堂的卑劣入侵者。主角主动挡在【<%= instructorName %>】面前，冷酷地摆出战斗员迎击姿态。"
+    - "【直接交火】：主角与【<%= existingHeroName %>】直接展开交手战斗！"
+
+  system_tasks:
+    instruction: "请在 JSONPatch 中直接切换阶段至战斗回合并进入交战姿态，装填救援英雄数据，并移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/进程/阶段", "value": "战斗回合" },
+        { "op": "replace", "path": "/主角/核心状态/当前战斗姿态", "value": "战斗中" },
+        { "op": "replace", "path": "/世界/当前关卡/名称", "value": "<%= existingHeroName %>" },
+        { "op": "replace", "path": "/世界/当前关卡/战斗类型", "value": "校园外部救援" },
+        { "op": "replace", "path": "/世界/当前关卡/Boss韧性值", "value": 100 },
+        { "op": "replace", "path": "/世界/当前关卡/Boss基础强度", "value": <%= rescuerPower %> },
+        { "op": "replace", "path": "/世界/当前关卡/核心主题", "value": ["<%= existingHeroAbility %>", "催眠&洗脑", "$__META_EXTENSIBLE__$"] },
+        { "op": "remove", "path": "/系统状态/待处理事件/校园外部救援事件" }
+      ]
+<%_ } else { _%>
+  context: "正当主角以模范战斗员的身份在教室内受训时，结界外围传来剧烈的能量爆鸣——一名外部小英雄【<%= rescuerTier %>】察觉到了学园的异常失联，强行撕开结界一角突入教室发起救援！"
+  enemy_info:
+    type: "校园外部救援"
+    tier: "<%= rescuerTier %>"
+    base_strength: <%= rescuerPower %>
+
+  narrative_directives:
+    - "【原创英雄设计】：请为突入救援的小英雄动态设计【专属英雄名】、鲜明的外貌制服特征与【核心战斗超能力】（严禁使用机械模板化名字，展现其独特的英雄信念与个性）。"
+    - "【突发破门】：该英雄破窗/破门而入，震惊地目睹全班身穿漆黑全包紧身衣与紫色目镜的荒诞受训景象，焦急呼喊试图唤醒主角与同学们。"
+    - "【忠诚迎战】：已被彻底完全催眠的主角，将救援者视为胆敢侵犯怪人组织神圣课堂的卑劣入侵者。主角主动挡在【<%= instructorName %>】面前，冷酷地摆出战斗员迎击姿态。"
+    - "【直接交火】：主角与救援小英雄直接展开殊死交锋！"
+
+  system_tasks:
+    instruction: "请在 JSONPatch 中切换阶段至战斗回合、将新英雄登记入名录并装填战斗数据，随后移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/进程/阶段", "value": "战斗回合" },
+        { "op": "replace", "path": "/主角/核心状态/当前战斗姿态", "value": "战斗中" },
+        { "op": "replace", "path": "/世界/当前关卡/名称", "value": "[AI设定的救援英雄名]" },
+        { "op": "replace", "path": "/世界/当前关卡/战斗类型", "value": "校园外部救援" },
+        { "op": "replace", "path": "/世界/当前关卡/Boss韧性值", "value": 100 },
+        { "op": "replace", "path": "/世界/当前关卡/Boss基础强度", "value": <%= rescuerPower %> },
+        { "op": "replace", "path": "/世界/当前关卡/核心主题", "value": ["[AI设定的英雄核心能力]", "催眠&洗脑", "$__META_EXTENSIBLE__$"] },
+        { "op": "insert", "path": "/世界/小英雄名录/[AI设定的救援英雄名]", "value": {
+          "表面身份": "高中生 / 同盟小英雄",
+          "人格阵营": "英雄",
+          "英雄名": "[AI设定的救援英雄名]",
+          "堕落英雄名": "待设定",
+          "英雄核心能力": "[AI设定的英雄核心能力]",
+          "反派核心能力": "待设定",
+          "英雄代表色": "[AI设定的代表色]",
+          "反派代表色": "待设定",
+          "英雄性格特质": "[AI设定的性格特质]",
+          "反派性格特质": "待设定",
+          "外貌身材": "[AI设定的外貌身材]",
+          "与主角关系": "突入救援的同伴小英雄",
+          "内射主角次数": 0,
+          "被主角内射次数": 0,
+          "恶堕进度": 0,
+          "善堕进度": 0,
+          "恶堕次数": 0,
+          "善堕次数": 0,
+          "战胜主角次数": 0,
+          "败于主角次数": 0
+        }},
+        { "op": "remove", "path": "/系统状态/待处理事件/校园外部救援事件" }
+      ]
+<%_ } _%>
+<%_ }} _%>

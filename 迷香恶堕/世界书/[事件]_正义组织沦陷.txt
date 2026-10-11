@@ -1,0 +1,63 @@
+<%_
+{
+const s = getvar('stat_data') || {};
+const created = _.get(s, '系统状态.主角创建完毕') === true;
+if (created) {
+    const collapsedEvent = _.get(s, '系统状态.待处理事件.正义组织沦陷');
+    if (collapsedEvent === true) {
+        const heroNames = ['夜守真白', '虎渡太阳', '槌谷陆', '风祭优羽'];
+        const heroes = s.小英雄 || {};
+        const justHeroes = heroNames.filter(n => _.get(heroes, n + '.恶堕状态.阵营归属', '正义') === '正义');
+        const undercoverHeroes = heroNames.filter(n => _.get(heroes, n + '.恶堕状态.阵营归属', '正义') === '内应');
+        const fallenHeroes = heroNames.filter(n => _.get(heroes, n + '.恶堕状态.阵营归属', '正义') === '彻底恶堕');
+        const fallenList = _.get(s, '组织.正义联盟.已恶堕角色', []);
+        const commanderFallen = (Array.isArray(fallenList) ? fallenList : []).some(e => String(e).indexOf('司令') !== -1);
+        const keyNpcs = _.get(s, '组织.正义联盟.关键人物', {});
+        const npcNames = Object.keys(keyNpcs).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+        const justStr = justHeroes.join('、') || '无';
+        const underStr = undercoverHeroes.join('、') || '无';
+        const fallenStr = fallenHeroes.join('、') || '无';
+        const listStr = (Array.isArray(fallenList) && fallenList.length) ? fallenList.join('、') : '无';
+_%>
+# 事件：正义组织沦陷
+organization_collapse_handler:
+  event_name: "正义组织沦陷"
+  objective: "正义联盟的基地沦陷进度已达 100，组织彻底崩溃。请基于当前阵营分布与关键人物状态，描写这场终局沦陷。"
+
+## 当前阵营态势
+- 正义小英雄：<%= justStr %>
+- 内应小英雄：<%= underStr %>
+- 彻底恶堕小英雄：<%= fallenStr %>
+- 已恶堕角色列表：<%= listStr %>
+
+## 沦陷方式判定
+<%_ if (commanderFallen) { _%>
+- 【从上而下】：司令（铁壁）已沦为怪人阵营，组织从最高层带头瓦解。铁壁公开投敌或反戈一击，忠于他的下属随之崩溃；其余关键人物按各自是否恶堕行动。
+<%_ } else { _%>
+- 【从下而上】：司令（铁壁）尚未恶堕、仍在坚守。沦陷自基层而起——小英雄叛变、关键人物倒戈，层层侵蚀直至组织名存实亡；铁壁被迫面对众叛亲离的终局。
+<%_ } _%>
+
+## 各角色行动
+<%_ if (justHeroes.length) { _%>
+- 正义小英雄（<%= justStr %>）：面对组织崩溃，或坚守残局、或掩护同伴撤退、或仍试图反击，按各自性格与长期目标行动。
+<%_ } _%>
+<%_ if (undercoverHeroes.length) { _%>
+- 内应小英雄（<%= underStr %>）：趁乱公开身份、暗中策反、或协助怪人组织收尾，完成最后的内应使命。
+<%_ } _%>
+<%_ if (fallenHeroes.length) { _%>
+- 彻底恶堕小英雄（<%= fallenStr %>）：以怪人阵营身份正面现身，参与对正义联盟的最终清算。
+<%_ } _%>
+<%_ npcNames.forEach(n => { const npc = keyNpcs[n] || {}; const f = (Array.isArray(fallenList) ? fallenList : []).some(e => String(e) === String(npc.身份 || '') + n); _%>
+- 关键人物 <%= n %>（<%= npc.身份 || '' %>，<%= f ? '已恶堕' : '未恶堕' %>）：<%= f ? '随沦陷倒向怪人阵营，按自身恶堕立场行动。' : '仍在负隅顽抗或被迫逃亡，按性格与立场行动。' %>
+<%_ }); _%>
+
+  mandatory_data_sync:
+    instruction: "描写完正义组织沦陷的终局后，请在 <UpdateVariable> 的 <JSONPatch> 块中输出以下强制指令："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/正义组织沦陷" }
+      ]
+<%_
+    }
+} }
+_%>

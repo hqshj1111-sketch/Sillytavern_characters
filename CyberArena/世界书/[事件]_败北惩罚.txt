@@ -1,0 +1,60 @@
+<%# [事件] 败北惩罚 %>
+<%_ {
+const stat = getvar('stat_data') || {};
+const j = (v) => JSON.stringify(v);
+const phase = _.get(stat, '进程.阶段', '');
+if (phase === '败北惩罚') {
+  const oppName = _.get(stat, '擂台状态.对手名字', '胜者');
+  const oppRank = _.get(stat, '擂台状态.对手段位', '公猪');
+  const playerRank = _.get(stat, '主角.擂台数据.擂台段位', '公猪');
+  const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+
+  const roster = _.get(stat, '记录.性斗士名录', {});
+  const vsRecord = _.get(roster, oppName + '.与主角对战记录', {});
+  const mcWins = vsRecord.主角胜 || 0;
+  const mcLosses = vsRecord.主角负 || 0;
+  let recordLabel = '首遇';
+  if (mcWins > 0 && mcLosses > 0) recordLabel = '互有胜负';
+  else if (mcWins > mcLosses) recordLabel = '胜多败少';
+  else if (mcLosses > mcWins) recordLabel = '败多胜少';
+
+  const isUpset = playerRank !== oppRank;
+  const upsetLabel = isUpset ? '爆冷' : '';
+_%>
+# 指令: 败北惩罚
+
+event_handler:
+  event_name: "败北惩罚"
+  context: "<%= alias %>被<%= oppName %>耗尽精力，无奈败北。这是擂台结算前的福利环节——胜者有权在败者身上尽情享用。请在一回合内完成本阶段的全部叙事，叙事完成后移除本事件，为后续擂台结算留出空间。"
+
+
+  narrative_guidance:
+    match_context:
+      - "两人段位：<%= alias %><%= playerRank %> vs <%= oppName %><%= oppRank %><% if (isUpset) { %>——【爆冷】段位差让这场败北更具冲击力<% } %>"
+      - "历史交手：<%= recordLabel %>"
+
+    loser_reaction:
+      - "<%= alias %>心有不甘，但身体被<%= oppName %>彻底征服。在快感的冲击下，诚实地向<%= oppName %>的鸡巴认输，嘴上也许还在逞强，可身体的收缩、迎合与失控的呻吟已经无可辩驳地宣告了臣服。在被<%= oppName %>灌满的过程中，从嘴硬到承认并下流地迎合、或者沉默地承受但身体的反应藏不住——是败北叙事的核心。"
+
+    winner_reaction:
+      - "<%= oppName %>用下流的言语宣泄胜利的亢奋。对着身下的<%= alias %>毫不掩饰地吐出脏话和羞辱，言语上的碾压和肉体上的支配同步进行。"
+
+    crowd_and_dialogue:
+      - "观众席的呐喊、口哨和下流的起哄贯穿全场。<%= oppName %>和<%= alias %>之间的对话互动是叙事重点——<%= alias %>的不甘回应、<%= oppName %>的得意嘲讽、以及两人在交合中偶尔冒出的直白评论。观众的反应随两人互动而起伏。"
+
+    filling_sequence:
+      - "根据<%= oppName %>的种族和性爱风格，叙述他如何一次次地用不同方式将<%= alias %>灌满精液。每一轮结束都伴随着<%= oppName %>的宣言和观众的鼓噪。被灌满的过程是败北仪式的核心——<%= alias %>的身体被<%= oppName %>彻底标记。"
+
+  prohibitions:
+    - "严禁将败北写成彻底的人格崩溃——败者心有不甘但仍能承受"
+    - "严禁描写不可逆的严重伤残或致命伤害"
+    - "严禁让主角在享用阶段爆发逆转——胜负已定"
+
+  mandatory_data_sync:
+    instruction: "本回合叙事完成后，切换阶段至擂台结算。"
+    patch_code: |
+      [
+        {"op":"replace","path":"/进程/阶段","value":"擂台结算"}
+      ]
+
+<%_ } } _%>

@@ -1,76 +1,161 @@
-<%#
-  [系统] 幕间生活引擎 (连贯版)
-%>
 <%_{
-// --- 1. 环境检查 ---
+// --- [系统] 幕间生活引擎 (精简版) ---
+
 const stat = getvar('stat_data') || {};
 const currentEventName = _.get(stat, '世界.幕间H事件.名称', '无');
 const isCharCreated = String(_.get(stat, '系统状态.主角创建完毕')) === 'true';
 const isIntermission = _.get(stat, '进程.阶段') === '幕间休息';
 const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
-const hasForcedEvent = !!pendingEvents['强制分娩'];
-
-// 读取幕间事件完成状态
+const hasForcedEvent = !!pendingEvents['分娩事件'] || !!pendingEvents['净化受孕事件'];
 const rawEventCompleted = _.get(stat, '系统状态.幕间事件完成', true);
 const eventCompleted = String(rawEventCompleted) === 'true';
 
 // 仅在真正的日常空白期（无H事件、无强制事件）激活
 if (isCharCreated && isIntermission && !hasForcedEvent && currentEventName === '无') {
   
-  // --- 2. 变量提取 ---
+  // --- 1. 基础数据 ---
   const personality = _.get(stat, '主角.核心状态.人格状态', '善良');
+  const isFallen = personality === '堕落';
   const turnCount = parseInt(_.get(stat, '系统状态.幕间回合计数', 0), 10);
   
-  // 提取可用元素供AI参考，而不是强制随机
-  let availableElements =[];
-  if (personality === '堕落') {
-      const master = _.get(stat, '主角.核心状态.主人', '无');
-      if (master !== '无') availableElements.push(`侍奉或思念主人(${master})`);
-      availableElements.push("享受堕落的消遣");
-      availableElements.push("巡视或布置巢穴");
-  } else {
-      availableElements.push("与使魔互动");
-      availableElements.push("处理表世界身份的日常(学校/工作/社交)");
-      availableElements.push("独处的平静时光");
-  }
-
-  // 子嗣系统整合
+  // --- 2. 角色锚点（精简版）---
+  const identity = _.get(stat, '主角.个人信息.身份&职业', '待设定');
+  const master = _.get(stat, '主角.核心状态.主人', '无');
+  
+  // --- 3. 使魔与子嗣 ---
+  const familiarType = _.get(stat, '主角.个人信息.使魔伙伴种类', '待设定');
+  const familiarPers = _.get(stat, '主角.个人信息.使魔伙伴性格', '');
+  const hasFamiliar = familiarType && familiarType !== '待设定';
+  
   const childrenData = _.get(stat, '记录.诞下的子嗣', {});
-  const childrenList = Array.isArray(childrenData) ? childrenData : (typeof childrenData === 'object' && childrenData !== null ? Object.values(childrenData) :[]);
-  const validChildren = childrenList.filter(c => typeof c === 'object' && c !== null && c !== "$__META_EXTENSIBLE__$");
-  if (validChildren.length > 0) {
-      const childNames = validChildren.map(c => c.名称 || '子嗣').join('、');
-      availableElements.push(`照顾生下的孩子们)`);
-  }
-
-  // --- 3. 动态节奏控制 (核心优化) ---
-  // 根据幕间经过的回合数，平滑过渡氛围，直到H事件(Entry 34)接管
-  let paceTitle = "";
-  let paceGuidance = "";
-
+  const childrenList = Array.isArray(childrenData) 
+    ? childrenData 
+    : (typeof childrenData === 'object' && childrenData !== null ? Object.values(childrenData) : []);
+  const validChildren = childrenList.filter(c => 
+    typeof c === 'object' && c !== null && c !== '$__META_EXTENSIBLE__$'
+  );
+  const hasChildren = validChildren.length > 0;
+  
+  // --- 4. 关系网 ---
+  const notes = _.get(stat, '世界.世界观备注', {});
+  const relations = Object.entries(notes)
+    .filter(([k]) => 
+      k !== '$meta' && k !== '$__META_EXTENSIBLE__$' && 
+      /^(人际关系|NPC|同伴|朋友|亲人)/i.test(k)
+    )
+    .map(([k]) => k.replace(/^(人际关系_|NPC_|同伴_|朋友_|亲人_)/, ''))
+    .slice(0, 5);
+  const hasRelations = relations.length > 0;
+  
+  // --- 5. 日期与季节 ---
+  const rawDate = parseInt(_.get(stat, '世界.日期', 101), 10);
+  const dMonth = Math.floor(rawDate / 100) || 1;
+  const dDay = (rawDate % 100) || 1;
+  const SEASONS = {
+    1: '隆冬', 2: '寒冬', 3: '早春', 4: '春暖',
+    5: '暮春', 6: '初夏', 7: '盛夏', 8: '盛夏',
+    9: '初秋', 10: '深秋', 11: '初冬', 12: '深冬'
+  };
+  const season = SEASONS[dMonth] || '';
+  
+  // --- 6. 节奏分级 (4 段) ---
+  let paceTitle, paceGuidance, timePacing;
   if (turnCount === 0) {
-      paceTitle = "【修整与余韵】";
-      paceGuidance = "主角刚刚经历了一场剧烈的事件（战斗或剧情）。请侧重描写她清理痕迹、平复呼吸、整理装备或洗浴休息的过渡场景。";
+    paceTitle = '【修整与余韵】';
+    paceGuidance = '主角刚刚经历了一场剧烈的事件。请侧重描写清理痕迹、平复呼吸、整理装备或洗浴休息的过渡场景，让紧绷的身体与精神缓慢松弛下来。';
+    timePacing = '时间跨度：事件结束后的数小时内。';
+  } else if (turnCount <= 2) {
+    paceTitle = '【日常展开期】';
+    paceGuidance = '生活刚刚回到正轨。侧重展现主角作为普通人的一面：她的习惯、爱好、与周围人的互动。自然地铺垫信息，为后续剧情提供情感锚点。';
+    timePacing = '时间跨度：半天到一天。';
   } else if (turnCount < 6) {
-      paceTitle = "【平稳的日常】";
-      paceGuidance = "平静的日常与生活互动，挖掘主角人设，展示和信息。本阶段不应该引入任何新事件、新任务！不允许破坏日常感！";
+    paceTitle = '【平稳的日常】';
+    paceGuidance = '日常已平稳运行。这是深化人设、拓展关系、埋设伏笔的黄金窗口。允许一次外出、一场对话、或一段独处思考。避免任何突发冲突。';
+    timePacing = '时间跨度：一天到数天。';
   } else {
-      paceTitle = "【暗流涌动的日常】";
-      paceGuidance = "平静的日常已经持续了一段时间。在维持生活场景的同时，请开始为调查等行动留下故事钩子与叙事空间。";
+    paceTitle = '【暗流涌动的日常】';
+    paceGuidance = '平静之下开始积累张力。在维持生活场景的同时，可以安排一些模糊的预兆、异样的气息、或某人不经意的一句话，为即将到来的危机埋线。';
+    timePacing = '时间跨度：临近下一场冲突前的几天。';
+  }
+  
+  // --- 7. 场景菜单 (根据角色信息动态构建) ---
+  const sceneMenu = [];
+  if (hasFamiliar) {
+    sceneMenu.push(`与使魔【${familiarType}】的互动${familiarPers ? `（性格：${familiarPers}）` : ''}`);
+  }
+  sceneMenu.push(`处理表世界身份的日常（${identity}）`);
+  sceneMenu.push('独处时光——思考、休憩、研究自己的能力、或回忆');
+  if (hasRelations) {
+    const relationHint = relations.slice(0, 2).join('、');
+    sceneMenu.push(`与熟悉的人物互动（${relationHint}${relations.length > 2 ? ' 等' : ''}）`);
+  }
+  if (hasChildren) {
+    sceneMenu.push(`照料生下的孩子（共 ${validChildren.length} 名）`);
+  }
+  if (isFallen && master !== '无') {
+    sceneMenu.push(`侍奉或思念主人【${master}】`);
+  }
+  
+  // --- 8. 叙事钩子 (根据节奏动态调整) ---
+  const storyHooks = [];
+  if (turnCount === 0) {
+    storyHooks.push('上次战斗或事件留下的身心余韵——某句萦绕不去的话、某个隐约的痛感、或一丝无法言说的失落');
+    storyHooks.push('主角对刚刚发生的事的回味与反思');
+  } else {
+    storyHooks.push('主角内心某个尚未解答的小疑问');
+    storyHooks.push('一段似曾相识的日常片段，唤起某段回忆');
+    storyHooks.push('周围世界一丝不易察觉的变化（一则传闻、一个陌生人、一次偶遇）');
+  }
+  if (isFallen) {
+    storyHooks.push('堕落生活深处，一丝隐约的空虚或对下一个猎物的期待');
+  } else {
+    storyHooks.push('作为魔法少女与普通少女，双重身份在心底的拉扯');
   }
 _%>
 intermission_life_protocol:
-  objective: "现在是幕间休息环节。请暂缓节奏，聚焦于生活细节与角色内心，【保持场景的连贯性】。"
-  
+  objective: "现在是【幕间休息】。请暂缓节奏，聚焦于生活细节与角色内心，【保持场景的连贯性】。"
+
   current_rhythm:
     phase: "<%= paceTitle %>"
     guidance: "<%= paceGuidance %>"
-  
+    time_pacing: "<%= timePacing %>"
+
+  character_anchors:
+    world: "<%= dMonth %>月<%= dDay %>日 · <%= season %>"
+    identity: "<%= identity %>"
+<%_ if (hasFamiliar) { _%>
+    familiar: "<%= familiarType %><%= familiarPers ? `（${familiarPers}）` : '' %>"
+<%_ } _%>
+<%_ if (hasRelations) { _%>
+    relations: ["<%= relations.join('", "') %>"]
+<%_ } _%>
+
   narrative_elements:
-    instruction: "在推进日常时，你可以根据当前的上下文，自然地融入以下元素（无需生硬罗列，符合语境即可）："
-    elements: [ "<%- availableElements.join('", "') %>" ]
+    instruction: "在推进日常时，你可以根据当前的上下文，自然地从以下场景中选择 1-2 个展开（无需生硬罗列，符合语境即可）："
+    scene_menu:
+<%_ sceneMenu.forEach(s => { _%>
+      - "<%= s %>"
+<%_ }); _%>
+    scene_selection_hint: "选择与当前上下文最契合的场景，避免贪多。同一场景应延续上一回合的连贯性，而非每回合都换地方。"
 
-  polishing_instructions:
-    - "【幕间休息】: 你不应该让主角的身体淫乱化、过分敏感，或是被之前战斗的痕迹严重困扰。如果在幕间专注色情描写，就失去了挖掘主角人设、拓展人际关系等的重要机会。"
+  story_hooks:
+    instruction: "幕间不仅是休息，也是为后续剧情埋线的窗口。你可以在不引入新事件的前提下，自然地埋下以下伏笔之一："
+    hints:
+<%_ storyHooks.forEach(h => { _%>
+      - "<%= h %>"
+<%_ }); _%>
+    guidance: "钩子应该【轻】【隐】【留白】：一闪而过的细节，不需要在本次回复中给出答案。"
 
-<%_ }} _%>
+  writing_guidance:
+    - "【对话为主】：让角色的性格通过语言自然流露，而非旁白解说。"
+    - "【五感细节】：食物的温度、街道的气味、使魔毛发的触感……用细节构建沉浸感。"
+    - "【内心独白】：适当穿插主角的内心活动，展现她真实的一面。"
+    - "【留白之美】：不必面面俱到，让读者自己想象未写出的部分。"
+
+  tone_guidance:
+    - "【色情尺度】：幕间的色情描写需为幕间气氛服务，不应喧宾夺主。让主角的身体不被发情等原因产生严重困扰。"
+    - "【情感基调】：偏向轻松、温暖，而不是紧张与对抗。"
+    - "【节奏感】：慢。给读者留出呼吸的空间。"
+
+<%_}_%>
+<%_}_%>

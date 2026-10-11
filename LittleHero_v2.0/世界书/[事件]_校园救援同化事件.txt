@@ -1,0 +1,78 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+const stat = getvar('stat_data');
+if (events['校园救援同化事件']) {
+    const rescuerName = _.get(stat, '世界.当前关卡.名称', '突入的救援英雄');
+    const instructorName = _.get(stat, '世界.校园催眠.怪人代号', '教官01号');
+    const roster = _.get(stat, '世界.小英雄名录', {});
+    const isInRoster = !!roster[rescuerName];
+    const heroObj = roster[rescuerName] || {};
+%>
+---
+# 事件: 救援英雄制服与同化受训
+event_handler:
+  event_name: "校园救援同化"
+  context: "主角以怪人组织精锐战斗员的身份，在激战中成功击败并彻底制服了前来救援的小英雄【<%= rescuerName %>】！"
+
+  narrative_directives:
+    - "【制服救援者与欲望引诱】：主角将力竭的【<%= rescuerName %>】按倒在课桌间。教官【<%= instructorName %>】赞许地走下讲台，下令由主角作为前辈，亲手打破对方虚伪的正义面具，将其拉入全员沉沦的放纵乐园。"
+    - "【穿戴战衣与肉体开发】：主角亲手为【<%= rescuerName %>】套上漆黑全包紧身衣，戴上紫色目镜，配合微电流与当堂亲密抚弄，开发其敏感身躯，向其灌输『抛下羞耻、拥抱极乐』的新常识。"
+    - "【新同伴沉沦诞生】：【<%= rescuerName %>】眼中的抗拒在强烈的快感潮涌中迅速崩溃，身心软化沉醉，主动迎合主角与教官的抚弄，成为一同在教室享乐的新晋战斗员。"
+
+<%_ if (isInRoster) { _%>
+  rescuer_roster_profile:
+    name: "<%= rescuerName %>"
+    original_ability: "<%= heroObj.英雄核心能力 || '能量操纵' %>"
+    original_color: "<%= heroObj.英雄代表色 || '纯洁之色' %>"
+    original_trait: "<%= heroObj.英雄性格特质 || '正义坚毅' %>"
+    appearance: "<%= heroObj.外貌身材 || '身姿挺拔' %>"
+    instruction: "该英雄已在名录中，请根据其原有的英雄信息，针对性描写其被改造成战斗员的反派特征（堕落英雄名：『战斗员[编号]号』，反派核心能力、反派代表色、反派性格特质等）。"
+
+  system_tasks:
+    instruction: "请在 JSONPatch 中更新名录中该英雄为反派战斗员状态，切换回幕间休息，并移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/世界/小英雄名录/<%= rescuerName %>/人格阵营", "value": "反派" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= rescuerName %>/堕落英雄名", "value": "战斗员[编号]号" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= rescuerName %>/反派核心能力", "value": "[AI根据英雄能力设计的反派能力]" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= rescuerName %>/反派代表色", "value": "漆黑/暗紫" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= rescuerName %>/反派性格特质", "value": "[AI设计的反派战斗员性格]" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= rescuerName %>/与主角关系", "value": "同校受训同僚战斗员" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= rescuerName %>/恶堕进度", "value": 100 },
+        { "op": "delta", "path": "/世界/小英雄名录/<%= rescuerName %>/恶堕次数", "value": 1 },
+        { "op": "delta", "path": "/世界/小英雄名录/<%= rescuerName %>/败于主角次数", "value": 1 },
+        { "op": "replace", "path": "/进程/阶段", "value": "幕间休息" },
+        { "op": "remove", "path": "/系统状态/待处理事件/校园救援同化事件" }
+      ]
+<%_ } else { _%>
+  system_tasks:
+    instruction: "请在 JSONPatch 中将新同化的战斗员插入名录，切换回幕间休息，并移除本事件："
+    mandatory_patch: |
+      [
+        { "op": "insert", "path": "/世界/小英雄名录/<%= rescuerName %>", "value": {
+          "表面身份": "被同化的高中战斗员",
+          "人格阵营": "反派",
+          "英雄名": "<%= rescuerName %>",
+          "堕落英雄名": "战斗员[编号]号",
+          "英雄核心能力": "[AI设定的英雄核心能力]",
+          "反派核心能力": "[AI设定的反派核心能力]",
+          "英雄代表色": "[AI设定的英雄代表色]",
+          "反派代表色": "漆黑/暗紫",
+          "英雄性格特质": "[AI设定的英雄性格特质]",
+          "反派性格特质": "[AI设定的反派战斗员性格]",
+          "外貌身材": "[AI设定的外貌身材]",
+          "与主角关系": "同校受训同僚战斗员",
+          "内射主角次数": 0,
+          "被主角内射次数": 0,
+          "恶堕进度": 100,
+          "善堕进度": 0,
+          "恶堕次数": 1,
+          "善堕次数": 0,
+          "战胜主角次数": 0,
+          "败于主角次数": 1
+        }},
+        { "op": "replace", "path": "/进程/阶段", "value": "幕间休息" },
+        { "op": "remove", "path": "/系统状态/待处理事件/校园救援同化事件" }
+      ]
+<%_ } _%>
+<%_ }} _%>

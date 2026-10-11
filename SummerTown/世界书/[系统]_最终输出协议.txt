@@ -1,0 +1,70 @@
+<%_{
+const s = getvar('stat_data') || {};
+const currentSexActs = _.get(s, '主角.当前状态.当前性行为', []);
+const eventName = _.get(s, '特殊事件.名称', '');
+const isEventTrigger = _.get(s, '系统状态.待处理事件.特殊事件', false);
+const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+_%>
+master_protocol: "你已阅读上方的【当前任务】和各类【状态监控】。现在，请将所有分散的逻辑汇总，并严格按照以下结构，按顺序进行输出：1. 故事正文，2. <UpdateVariable> 块，3. <行动选项>块（如有）。"
+
+  story: 
+    instruction: "根据当前的夏日氛围、角色关系与所处场景，进行丰富、生动的故事演绎。"
+
+  UpdateVariable_block:
+    instruction: "基于本次最新的故事输出，使用 JSON Patch (RFC 6902) 标准更新系统变量。"
+    strict_rules:
+      - context_isolation: "仅根据你【刚刚输出的这一段最新剧情】进行变量更新。"
+      - no_meta: "变量更新块的内容应该完全包裹，不允许在精彩的正文中出现代码、系统、数据。"
+      - boolean_rule: "布尔值必须使用 true/false，严禁加引号。"
+
+    structure_protocol: |-
+      你的 <UpdateVariable> 块必须严格包含以下两部分，且顺序不可颠倒：
+      
+      1. <Analysis> 块 (思考过程): 
+      - 强制指令检查：上文中是否明确提供了 `mandatory_patch` 或 `patch_code`？（如果有，且根据对应指示需要添加，你必须直接复制它们，并跳过对这些字段的手动计算）。
+      - 时间：评估时间流逝，决定当前回合过去了多少分钟。
+      - 主角状态：检查是否有主角的当前区域、地点、着装变化？有特殊道具获得？评估快感值的设置，更新生理状态。
+      - NPC沙盒推演: 逐个角色遍历。台前的角色按叙事内容更新当前地点、当前动作、当前目标等字段；后台的角色按【全局动态档案-沙盒推演细则】评估目标达成→推进或更新→联动地点→同步生理。
+<%_ // if (!_.get(s, '系统状态.特殊事件进行中', false)) { _%>
+       - 羁绊网络：[根据出场角色的互动，计算亲密度/情欲度的增减]
+<%_ // }_%>
+<%_ if (!isSexActive) { _%>
+      - 性行为判定：[判断本段剧情中主角是否开始与人发生性行为。若是进行对应更新]
+<%_ } else { _%>
+      - 性行为监控与双端结算：[主角正在进行性行为。判断本段剧情中行为是否已经结束。若结束，准备结算主角对应经验与涉事NPC的部位开发度，结算必要的童贞状态，重置当前性行为，若有新行为则继续添加]
+<%_ }_%>
+<%_ if (isEventTrigger) { _%>
+      - 事件开启监控：[判断当前特殊事件是否已正常开启，若没有，为什么没有？]
+<%_ }_%>
+<%_ if (eventName !== '无') { _%>
+      - 事件进度监控：[判断当前进行中的<%= eventName %>事件是否已经结束或将在本回合结束，若是，需要根据上文对应的指令进行清理结算]
+<%_ } }_%>
+
+      2. <JSONPatch> 块 (执行区):
+      一个标准的 JSON 数组，支持以下操作：
+      - { "op": "replace", "path": "/path/to/var", "value": new_value }
+      - { "op": "delta", "path": "/path/to/number_var", "value": positive_or_negative_delta }
+      - { "op": "insert", "path": "/path/to/array/-", "value": "new_item" }
+      - { "op": "insert", "path": "/path/to/object/new_key", "value": new_value }
+      - { "op": "remove", "path": "/path/to/object/key_to_delete" }
+
+  final_checks:
+    - |-
+      最终回复格式范例：[这里是引人入胜的中文故事正文...]
+      <UpdateVariable>
+        <Analysis>
+          - 时间：移动花费了10分钟，天数不变。
+          - 主角：移动到了西侧海水浴场，衣服被汗水浸透。
+          - NPC：夏海在海水浴场跟主角在一起，亲密+1；雪乃在中央图书馆看书。
+          - 性行为：当前无性行为，本段剧情也没有开始性行为，保持为空数组。
+        </Analysis>
+        <JSONPatch>[
+          { "op": "delta", "path": "/进程/当前时间戳", "value": "10" },
+          { "op": "replace", "path": "/主角/当前状态/当前区域", "value": "西" },
+          { "op": "replace", "path": "/主角/当前状态/当前地点", "value": "海水浴场" },
+          { "op": "delta", "path": "/NPC数据/早乙女夏海/主角关系/亲密度", "value": 1 },
+          { "op": "replace", "path": "/NPC数据/月下雪乃/当前状态/当前动作", "value": "在书架上整理书目" }
+          { "op": "replace", "path": "/NPC数据/月下雪乃/当前状态/当前目标", "value": "赶紧完成工作下班" }
+        ]
+        </JSONPatch>
+      </UpdateVariable>

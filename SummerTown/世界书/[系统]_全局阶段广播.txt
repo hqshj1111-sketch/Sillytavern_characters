@@ -1,0 +1,47 @@
+<%_ {
+const stat = getvar('stat_data');
+const currentPhase = _.get(stat, '进程.阶段', '创角阶段');
+const days = _.get(stat, '进程.暑假天数', 1);
+
+const eventsObj = _.get(stat, '系统状态.待处理事件', {});
+const activeEvents = Object.keys(eventsObj).filter(k => !k.startsWith('$'));
+const eventNotify = activeEvents.length > 0 ? `\n> **[⏳ 待处理事件]**: ${activeEvents.join('、')}` : "";
+const eventName = _.get(stat, '特殊事件.名称', "无");
+
+// 提取当前性行为数组并判断状态
+const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+
+let summerStage = "";
+let stageVibe = "";
+let stageInstruction = "";
+
+if (days <= 10) {
+    summerStage = "【前期：重逢与试探】";
+    stageVibe = "略带生疏的怀旧感、重拾回忆、悄然滋长的情欲。";
+    stageInstruction = "侧重描绘小镇风情与夏日燥热。前期互动以日常陪伴、拉近距离为主，但角色间对身体接触和性邀约持坦然开放态度，情色互动可直接自然地发生，不需要特殊氛围铺垫。";
+} else if (days <= 20) {
+    summerStage = "【中期：升温与沉溺】";
+    stageVibe = "燥热、暧昧、情欲成为日常的一部分。";
+    stageInstruction = "随着夏日深入，角色们习惯了彼此的身体，性爱自然地融入日常，不再需要特殊借口。多角关系和平共存，邀约与被邀约都是寻常事。同时依旧允许纯粹的情感互动，但身体的交缠已是相处的常态之一。描绘应兼顾温柔与肉欲。";
+} else {
+    summerStage = "【后期：离别前的狂热】";
+    stageVibe = "依依不舍、情感爆发、毫无保留的交付。";
+    stageInstruction = "暑假即将结束，情感与肉体均达到顶峰，角色主动创造出更多亲密回忆。此时可以有群体互动、户外大胆尝试等，但也不乏私密温存的时刻。重点描绘那种想要铭刻彼此的、浓烈而真挚的结合，而非绝望的宣泄。";
+}
+
+if (currentPhase !== '创角阶段') {
+_%>
+# 【全局阶段广播】
+当前日期进度：暑假第 <%= days %> 天
+当前游戏进程：<%= summerStage %> 
+<%_ if (eventNotify !== "" && eventName === '无') {_%>
+<%= eventNotify %>
+<%_ } _%>
+氛围基调：<%= stageVibe %>
+GM叙事指导：<%= stageInstruction %>
+视角约束: "正文叙事中，主角不具备全知视角，只知道自己当前所在地点发生的事及通过合理途径获知的信息，严禁出现主角不可能知晓的内容。但在后台的NPC沙盒推演和变量维护中，AI以全知视角模拟所有角色的行动。"
+<%_ if (isSexActive) { _%>
+> **【⚠️ 核心叙事警告】**：检测到当前正在进行性行为！请暂时挂起日常指导，**务必严格按照「动态性行为叙事协议」的标准**，结合角色的实际开发度与经验进行精细的感官描写与互动创作！
+<%_ } _%>
+<%_ } }_%>

@@ -1,39 +1,28 @@
 ﻿<%_
 {
-  // 1. 获取数据与事件
   const stat = getvar('stat_data');
   const events = _.get(stat, '系统状态.待处理事件', {});
-  const targetKink = events['性癖觉醒事件']; // 期望格式: "触手" 或 "异种奸" 等字符串
+  const targetKink = events['性癖觉醒事件'];
 
-  // 2. 只有当存在觉醒目标时才触发
   if (targetKink && typeof targetKink === 'string') {
       const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
-      const currentCorruption = _.get(stat, '主角.快感状态.侵蚀度', 0);
-      
-      // 3. 动态文本生成
-      let psychology = "";
-      
-      if (personality === '英雄') {
-          psychology = "主角发现，身体记住了这种快感，描述他对这一变化的反应和内心想法。";
-      } else {
-          psychology = "主角获得了新的快乐源泉与爱好。";
-      }
 _%>
-# 事件：性癖深度觉醒
-# 触发原因：主角对 [<%= targetKink %>] 的经验充足，明确反应于身心。
-
-milestone_awakening_protocol:
-  target_kink: "<%= targetKink %>"
-  
-  psychological_guidance:
-    instruction: "<%= psychology %>"
-
-  mandatory_data_sync:
-    instruction: "执行以下 Patch："
-    patch_code: |
+event_handler:
+  event_name: "性癖深度觉醒"
+  context: "主角对【<%= targetKink %>】的体验已经累积到足以影响身心的程度。他的身体记住了这种快感，这一倾向正从单纯的肉体反应深化为明确的身心偏好。"
+  narrative_directives:
+<%_ if (personality === '英雄') { _%>
+    - "主角察觉到了自己身体的变化：每当与【<%= targetKink %>】相关的场景浮现于脑海，或是现实中遭遇类似刺激时，身体的反应总是先于理智一步。身体已有了自己的记忆。"
+<%_ } else { _%>
+    - "主角接纳了这份新的快乐源泉。对【<%= targetKink %>】的喜好已经刻入身心。他可能会主动寻找与此相关的刺激，或是回顾那些让他的身体记住这一切的瞬间。"
+<%_ } _%>
+  system_tasks:
+    instruction: "请根据上述心理转变，在 <JSONPatch> 中完成觉醒记录的登记、经验奖励并发放清理指令："
+    mandatory_patch: |
       [
-        { "op": "remove", "path": "/系统状态/待处理事件/性癖觉醒事件" },   
-        { "op": "insert", "path": "/世界/世界观备注/觉醒记录_<%= targetKink %>", "value": "主角已对<%= targetKink %>产生明确的生理依赖。" }
+        { "op": "insert", "path": "/世界/世界观备注/觉醒记录_<%= targetKink %>", "value": "[简述主角因该性癖觉醒而发生的变化及全新喜好]" },
+        { "op": "delta", "path": "/主角/黑暗印记/经验", "value": 30 },
+        { "op": "remove", "path": "/系统状态/待处理事件/性癖觉醒事件" }
       ]
 <%_ 
   } 

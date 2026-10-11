@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GSAP 动效演示 - 恶堕状态栏</title>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 20%, #1a0b2e, #0a0412 70%);
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    color: #e8e3f5;
+    padding: 40px;
+  }
+
+  .card {
+    width: 360px;
+    border-radius: 18px;
+    padding: 26px 24px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(200, 130, 255, 0.25);
+    backdrop-filter: blur(8px);
+  }
+
+  /* 流动渐变描边 */
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 20px;
+    background: conic-gradient(from var(--angle, 0deg),
+      #ff4fd8, #a855f7, #22d3ee, #ff4fd8);
+    z-index: -1;
+    animation: none;
+  }
+
+  .title {
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-align: center;
+    margin-bottom: 20px;
+    background: linear-gradient(90deg, #ff4fd8, #a855f7, #22d3ee, #ff4fd8);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .row {
+    margin-bottom: 16px;
+  }
+
+  .label {
+    font-size: 13px;
+    color: #b9aed6;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .bar {
+    height: 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #ff4fd8, #a855f7);
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-weight: bold;
+    color: #ff6ae0;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    margin: 4px;
+    border: 1px solid rgba(168, 85, 247, 0.5);
+    color: #d8c7ff;
+    opacity: 0;
+  }
+
+  .typing-line {
+    min-height: 22px;
+    font-size: 14px;
+    color: #7fe3f0;
+    border-left: 2px solid #22d3ee;
+    padding-left: 10px;
+    margin-top: 14px;
+  }
+
+  .particle {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff4fd8;
+    pointer-events: none;
+    top: 100%;
+  }
+
+  button {
+    margin-top: 16px;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #fff;
+    background: linear-gradient(90deg, #ff4fd8, #a855f7);
+    transition: transform 0.1s;
+  }
+  button:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">恶堕状态监视器</div>
+
+    <!-- 数字滚动 + 进度条 -->
+    <div class="row">
+      <div class="label"><span>恶堕度</span><span class="num" id="n1">0</span></div>
+      <div class="bar"><div class="bar-fill" id="b1"></div></div>
+    </div>
+
+    <div class="row">
+      <div class="label"><span>好感度</span><span class="num" id="n2">0</span></div>
+      <div class="bar"><div class="bar-fill" id="b2"></div></div>
+    </div>
+
+    <div class="row">
+      <div class="label"><span>气味沉溺度</span><span class="num" id="n3">0</span></div>
+      <div class="bar"><div class="bar-fill" id="b3"></div></div>
+    </div>
+
+    <!-- 交错出现的徽章 -->
+    <div>
+      <span class="badge">第一阶段</span>
+      <span class="badge">第二阶段</span>
+      <span class="badge">沦陷</span>
+    </div>
+
+    <!-- 打字机效果 -->
+    <div class="typing-line" id="typing"></div>
+
+    <button id="replay">重新播放动画</button>
+  </div>
+
+  <script>
+    gsap.registerPlugin();
+
+    // 粒子背景
+    function spawnParticles() {
+      for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        document.body.appendChild(p);
+        gsap.to(p, {
+          y: -window.innerHeight - 50,
+          x: gsap.utils.random(-80, 80),
+          duration: gsap.utils.random(3, 8),
+          delay: gsap.utils.random(0, 5),
+          repeat: -1,
+          ease: 'none',
+          opacity: gsap.utils.random(0.3, 0.8),
+        });
+      }
+    }
+
+    // 数字滚动 + 进度条联动
+    function animateBar(barId, numId, target) {
+      const obj = { v: 0 };
+      gsap.to(obj, {
+        v: target,
+        duration: 2,
+        ease: 'power2.out',
+        onUpdate: () => {
+          document.getElementById(numId).textContent = Math.round(obj.v);
+        },
+      });
+      gsap.to('#' + barId, {
+        width: target + '%',
+        duration: 2,
+        ease: 'power2.out',
+      });
+    }
+
+    function play() {
+      // 流光标题
+      gsap.to('.title', {
+        backgroundPosition: '300% 0',
+        duration: 3,
+        repeat: -1,
+        ease: 'linear',
+      });
+
+      // 渐变描边旋转
+      gsap.to('.card', {
+        '--angle': '360deg',
+        duration: 6,
+        repeat: -1,
+        ease: 'linear',
+      });
+
+      // 进度条数字
+      animateBar('b1', 'n1', 87);
+      animateBar('b2', 'n2', 64);
+      animateBar('b3', 'n3', 92);
+
+      // 徽章交错弹出
+      gsap.fromTo('.badge', 
+        { opacity: 0, scale: 0.5, y: 10 },
+        { opacity: 1, scale: 1, y: 0, stagger: 0.2, duration: 0.5, ease: 'back.out(2)' });
+
+      // 呼吸灯(闪烁)
+      gsap.to('.card', {
+        boxShadow: '0 0 30px rgba(255, 79, 216, 0.5)',
+        duration: 1,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+
+      // 打字机
+      const text = '检测到身体正在逐渐适应气味……';
+      let chars = '';
+      const tl = gsap.timeline();
+      tl.to({}, {
+        duration: text.length * 0.06,
+        onUpdate: function () {
+          const n = Math.floor(this.progress() * text.length);
+          chars = text.slice(0, n);
+          document.getElementById('typing').textContent = chars;
+        },
+      });
+    }
+
+    spawnParticles();
+    play();
+
+    document.getElementById('replay').addEventListener('click', () => {
+      gsap.killTweensOf(['.badge', '.bar-fill']);
+      play();
+    });
+  </script>
+</body>
+</html>

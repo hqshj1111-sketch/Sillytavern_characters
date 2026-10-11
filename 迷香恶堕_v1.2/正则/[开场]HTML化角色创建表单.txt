@@ -1,0 +1,819 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>迷香恶堕 · 角色创建终端</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-main: #0c0915;
+  --theme-primary: #a855f7;
+  --theme-primary-glow: #b347ea;
+  --theme-primary-dim: rgba(168, 85, 247, 0.15);
+  --theme-secondary: #ec4899;
+  --theme-secondary-glow: #ff2d95;
+  --theme-secondary-dim: rgba(236, 72, 153, 0.15);
+  --theme-accent: #ffd08a;
+
+  --glass-deep: rgba(14, 10, 24, 0.88);
+  --glass-card: rgba(22, 16, 38, 0.72);
+  --glass-inner: rgba(30, 22, 52, 0.55);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-theme: rgba(168, 85, 247, 0.35);
+
+  --text-main: #e2d9f3;
+  --text-sub: #9487b0;
+  --text-dim: #63577d;
+
+  --cyan-glow: #00d4ff;
+  --green-glow: #4ade80;
+  --red-alert: #f43f5e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: transparent;
+  color: var(--text-main);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 10px 4px;
+  display: flex;
+  justify-content: center;
+}
+
+.mxe-create-container {
+  width: 880px;
+  max-width: 100%;
+  position: relative;
+}
+
+.glass-panel-outer {
+  background: var(--glass-deep);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--border-theme);
+  border-radius: 20px;
+  padding: 6px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.7), inset 0 0 30px rgba(168, 85, 247, 0.04);
+  position: relative;
+}
+.glass-panel-outer::before {
+  content: ''; position: absolute; top: -1px; left: 15%; right: 15%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--theme-primary-glow), var(--theme-secondary-glow), transparent);
+  border-radius: 50%;
+}
+.glass-panel-inner {
+  background: var(--glass-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header */
+.create-header {
+  text-align: center;
+  margin-bottom: 22px;
+  position: relative;
+}
+.create-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border-radius: 20px;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid var(--border-theme);
+  color: var(--theme-primary-glow);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.create-title {
+  font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+  font-size: 1.65rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #fff;
+  text-shadow: 0 0 16px rgba(168, 85, 247, 0.5), 0 0 30px rgba(236, 72, 153, 0.3);
+}
+.create-title span { color: var(--theme-secondary-glow); }
+.create-sub {
+  color: var(--text-sub);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+/* Profile Manager */
+.profile-manager-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+.profile-manager-bar label {
+  color: var(--theme-accent);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.profile-manager-bar select {
+  flex: 1;
+  min-width: 140px;
+  background: rgba(14, 10, 24, 0.7);
+  border: 1px solid var(--border-theme);
+  border-radius: 8px;
+  color: var(--text-main);
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  outline: none;
+  cursor: pointer;
+}
+.profile-btn-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mgr-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-sub);
+  font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.mgr-btn:hover:not(:disabled) {
+  background: var(--theme-primary-dim);
+  border-color: var(--border-theme);
+  color: #fff;
+  box-shadow: 0 0 10px var(--theme-primary-dim);
+}
+.mgr-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Sections */
+.form-section {
+  background: var(--glass-inner);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--theme-primary-glow);
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.section-title span.badge-tag {
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-sub);
+  font-weight: 500;
+}
+
+/* Field Grid */
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.fields-grid.cols-3 {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+.fields-grid.single {
+  grid-template-columns: 1fr;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+.form-field label {
+  color: var(--text-sub);
+  font-size: 0.73rem;
+  font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.form-field input, .form-field select, .form-field textarea {
+  background: rgba(10, 7, 18, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-main);
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+  border-color: var(--theme-primary-glow);
+  outline: none;
+  box-shadow: 0 0 12px var(--theme-primary-dim);
+}
+.form-field textarea {
+  resize: none;
+  min-height: 54px;
+  line-height: 1.5;
+}
+.form-field select {
+  cursor: pointer;
+}
+.form-field .field-hint {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+/* Submit Area */
+.submit-container {
+  text-align: center;
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.btn-submit-main {
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+  border: 1px solid var(--theme-primary-glow);
+  color: #fff;
+  padding: 12px 36px;
+  border-radius: 14px;
+  font-family: 'Rajdhani', 'Noto Sans SC', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 20px var(--theme-primary-dim), 0 4px 15px rgba(0, 0, 0, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-submit-main:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.4), 0 0 40px rgba(236, 72, 153, 0.25);
+  filter: brightness(1.1);
+}
+.btn-submit-main:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-reset-light {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-dim);
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-reset-light:hover {
+  color: var(--text-sub);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.notice-box {
+  min-height: 18px;
+  font-size: 0.72rem;
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 1px;
+  color: var(--theme-accent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.footer-bar {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 2px;
+}
+</style>
+</head>
+<body>
+
+<div class="mxe-create-container">
+  <div class="glass-panel-outer">
+    <div class="glass-panel-inner">
+
+      <!-- Header -->
+      <div class="create-header">
+        <div class="create-badge">🔮 怪人组织 · 最高杰作改造终端</div>
+        <h1 class="create-title">迷香恶堕 <span>· 角色创建</span></h1>
+        <div class="create-sub">定制你的怪人主角设定、市民伪装身份与首个诱捕目标，开启新星市恶堕之旅。</div>
+      </div>
+
+      <!-- Profile Manager -->
+      <div class="profile-manager-bar">
+        <label for="profile-select">📂 方案管理:</label>
+        <select id="profile-select">
+          <option value="">-- 尚无已存方案 --</option>
+        </select>
+        <div class="profile-btn-group">
+          <button id="save-profile-btn" type="button" class="mgr-btn" title="保存当前表单至方案">💾 保存</button>
+          <button id="load-profile-btn" type="button" class="mgr-btn" disabled title="读取所选方案">📂 读取</button>
+          <button id="delete-profile-btn" type="button" class="mgr-btn" disabled title="删除所选方案">🗑️ 删除</button>
+          <button id="export-profiles-btn" type="button" class="mgr-btn" disabled title="导出方案为JSON文件">📤 导出</button>
+          <button id="import-profiles-btn" type="button" class="mgr-btn" title="从JSON文件导入方案">📥 导入</button>
+          <input type="file" id="import-file-input" accept=".json" style="display:none" />
+        </div>
+      </div>
+
+      <form id="mxe-creator-form">
+
+        <!-- Section 1: 怪人真身与核心属性 -->
+        <div class="form-section">
+          <div class="section-title">
+            <span>😈 模块一：怪人真身与核心属性</span>
+            <span class="badge-tag">最高杰作设定</span>
+          </div>
+          <div class="fields-grid">
+            <div class="form-field">
+              <label>真实姓名</label>
+              <input type="text" id="char-name" placeholder="如 夜野" value="夜野" />
+              <div class="field-hint">怪人在组织与博士面前使用的真名</div>
+            </div>
+            <div class="form-field">
+              <label>怪人代号</label>
+              <input type="text" id="char-alias" placeholder="如 迷香之主、雄臭怪人" value="迷香之主" />
+              <div class="field-hint">英雄与媒体对怪人的称谓</div>
+            </div>
+            <div class="form-field">
+              <label>兽人物种</label>
+              <input type="text" id="char-species" list="species-options" placeholder="如 雄性黑狼、雄性白虎" value="雄性黑狼" />
+              <datalist id="species-options">
+                <option value="雄性黑狼" />
+                <option value="雄性白虎" />
+                <option value="雄性雪豹" />
+                <option value="雄性杜宾" />
+                <option value="雄性雄狮" />
+                <option value="雄性黑豹" />
+                <option value="雄性龙兽人" />
+                <option value="雄性公牛" />
+                <option value="雄性鬃狗" />
+              </datalist>
+            </div>
+            <div class="form-field">
+              <label>年龄</label>
+              <input type="text" id="char-age" placeholder="如 23岁" value="23岁" />
+            </div>
+            <div class="form-field full-width">
+              <label>性格特质</label>
+              <input type="text" id="char-personality" placeholder="如 沉稳狡黠、对博士忠诚、支配欲强" value="沉稳狡黠、对博士忠诚、支配欲强" />
+            </div>
+            <div class="form-field full-width">
+              <label>背景经历</label>
+              <textarea id="char-background" placeholder="如 原本是碌碌无为的普通市民，被博士看中并改造为“最高杰作”，对博士忠心耿耿。">原本是碌碌无为的普通市民，被博士看中并改造为“最高杰作”，对博士忠心耿耿。</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: 身体细节与外貌特征 -->
+        <div class="form-section">
+          <div class="section-title">
+            <span>🐺 模块二：体态与相貌特征</span>
+            <span class="badge-tag">肉体强化状态</span>
+          </div>
+          <div class="fields-grid cols-3">
+            <div class="form-field">
+              <label>身高</label>
+              <input type="text" id="char-height" placeholder="如 186 cm" value="186 cm" />
+            </div>
+            <div class="form-field">
+              <label>体态特点</label>
+              <input type="text" id="char-body-type" placeholder="如 魁梧匀称、极具压迫感" value="魁梧匀称、极具压迫感" />
+            </div>
+            <div class="form-field">
+              <label>肌肉线条</label>
+              <input type="text" id="char-muscle" placeholder="如 深刻健美，胸肌与腹肌块垒分明" value="深刻健美，胸肌与腹肌块垒分明" />
+            </div>
+            <div class="form-field full-width">
+              <label>脸型五官</label>
+              <input type="text" id="char-face" placeholder="如 深邃野性的狼系面容，金色凌厉瞳孔，棱角分明" value="深邃野性的狼系面容，金色凌厉瞳孔，棱角分明" />
+            </div>
+            <div class="form-field full-width">
+              <label>毛发质感与分布</label>
+              <input type="text" id="char-fur" placeholder="如 漆黑顺滑短毛，胸颈部鬃毛茂密深沉" value="漆黑顺滑短毛，胸颈部鬃毛茂密深沉" />
+            </div>
+            <div class="form-field full-width">
+              <label>气味特征 (雄臭设定)</label>
+              <input type="text" id="char-scent" placeholder="选填，如沉稳浓郁的雄性麝香与微汗气息等。留空则由AI根据物种与设定创意生成" value="沉稳浓郁的雄性麝香与微汗气息，混杂着淡淡烟草与雪松木香" />
+              <div class="field-hint">主角释放的雄臭气味基调，留空时AI将根据兽人物种与体态自由创意推演</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: 市民伪装身份 -->
+        <div class="form-section">
+          <div class="section-title">
+            <span>🏢 模块三：市民伪装身份网络</span>
+            <span class="badge-tag">日常掩护身份</span>
+          </div>
+          <div class="fields-grid">
+            <div class="form-field">
+              <label>伪装姓名</label>
+              <input type="text" id="char-disguise-name" placeholder="如 叶野夜" value="叶野夜" />
+              <div class="field-hint">与小英雄日常接触时公开使用的名字</div>
+            </div>
+            <div class="form-field">
+              <label>伪装职业 / 身份</label>
+              <input type="text" id="char-disguise-job" list="job-options" placeholder="如 港区物流仓库管理员 / 街角咖啡店学徒" value="港区物流仓库管理员 / 街角咖啡店学徒" />
+              <datalist id="job-options">
+                <option value="港区物流仓库管理员 / 街角咖啡店学徒" />
+                <option value="星辉大学图书馆管理员" />
+                <option value="中心区商业街健身房兼职教练" />
+                <option value="旧城区动物收容所义工" />
+                <option value="街角咖啡店学徒 / 自由摄影师" />
+              </datalist>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: 开场首个接触对象 -->
+        <div class="form-section">
+          <div class="section-title">
+            <span>🎯 模块四：开场走向与首个接触对象</span>
+            <span class="badge-tag">开场叙事引导</span>
+          </div>
+          <div class="fields-grid">
+            <div class="form-field full-width">
+              <label style="color:var(--theme-secondary-glow); font-weight:700;">首个接触对象</label>
+              <select id="char-first-target" style="border-color:var(--theme-secondary-glow); background:rgba(236,72,153,0.06); font-weight:600;">
+                <option value="无 (默认·基地开场)">无 (默认·怪人组织基地开场，与博士深度互动调试，交代总任务)</option>
+                <option value="夜守真白 (队长·夜影·猫)">夜守真白 (队长·夜影·猫)</option>
+                <option value="虎渡太阳 (白雷·白虎)">虎渡太阳 (白雷·白虎)</option>
+                <option value="槌谷陆 (追风·犬)">槌谷陆 (追风·犬)</option>
+                <option value="风祭优羽 (幻狐·狐狸)">风祭优羽 (幻狐·狐狸)</option>
+              </select>
+              <div class="field-hint">选择在开场序章中，主角完成改造后首个前往新星市接触的小英雄。由 AI 自由构思相遇的契机与场景细节；选“无”则主要描写基地与博士的互动。</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5: 游戏难度设定 -->
+        <div class="form-section">
+          <div class="section-title">
+            <span>🎮 模块五：游戏难度设定</span>
+            <span class="badge-tag">游戏机制与叙事倾向</span>
+          </div>
+          <div class="fields-grid">
+            <div class="form-field full-width">
+              <label style="color:var(--theme-primary-glow); font-weight:700;">游戏难度模式</label>
+              <select id="game-difficulty" style="border-color:var(--border-theme); background:rgba(168,85,247,0.06); font-weight:600;">
+                <option value="简单" selected>简单 (默认·沉浸爽快 — 小英雄信任度高、防备较低，气味沉沦顺畅，联盟安保宽松)</option>
+                <option value="困难">困难 (硬核·步步为营 — 小英雄戒备森严、警觉敏锐、气味更易起疑，联盟监控与防线严密)</option>
+              </select>
+              <div class="field-hint">简单模式下小英雄更容易亲近和沉迷气味；困难模式下小英雄警惕性更高、对异常举止与雄臭更敏锐，正义联盟监控更严密，需步步为营。</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="submit-container">
+          <button id="generate-btn" type="button" class="btn-submit-main">
+            <span>⚡ 启动改造 · 潜入新星市</span>
+          </button>
+          <button id="reset-form-btn" type="button" class="btn-reset-light">重置表单为默认</button>
+          <div id="notice-msg" class="notice-box"></div>
+        </div>
+
+      </form>
+
+      <div class="footer-bar">DESIGNED FOR 迷香恶堕 · FURRY CORRUPTION SYSTEM</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const STORAGE_AUTOSAVE = 'mxe_char_creator_autosave_v1';
+  const STORAGE_PROFILES = 'mxe_char_creator_profiles_v1';
+
+  const form = document.getElementById('mxe-creator-form');
+  const profileSelect = document.getElementById('profile-select');
+  const saveProfileBtn = document.getElementById('save-profile-btn');
+  const loadProfileBtn = document.getElementById('load-profile-btn');
+  const deleteProfileBtn = document.getElementById('delete-profile-btn');
+  const exportProfilesBtn = document.getElementById('export-profiles-btn');
+  const importProfilesBtn = document.getElementById('import-profiles-btn');
+  const importFileInput = document.getElementById('import-file-input');
+  const generateBtn = document.getElementById('generate-btn');
+  const resetFormBtn = document.getElementById('reset-form-btn');
+  const noticeMsg = document.getElementById('notice-msg');
+
+  // Fields Mapping
+  const fields = [
+    'char-name', 'char-alias', 'char-species', 'char-age', 'char-personality',
+    'char-background', 'char-height', 'char-body-type', 'char-muscle', 'char-face',
+    'char-fur', 'char-scent', 'char-disguise-name', 'char-disguise-job', 'char-first-target', 'game-difficulty'
+  ];
+
+  function showNotice(text, isError) {
+    if (!noticeMsg) return;
+    noticeMsg.textContent = text;
+    noticeMsg.style.color = isError ? 'var(--red-alert)' : 'var(--theme-accent)';
+    noticeMsg.style.opacity = '1';
+    setTimeout(function() { noticeMsg.style.opacity = '0'; }, 3500);
+  }
+
+  function getFormData() {
+    var data = {};
+    fields.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) data[id] = el.value.trim();
+    });
+    return data;
+  }
+
+  function setFormData(data) {
+    if (!data) return;
+    fields.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && data[id] !== undefined) {
+        el.value = data[id];
+        // Auto-expand textarea
+        if (el.tagName.toLowerCase() === 'textarea') {
+          el.style.height = 'auto';
+          el.style.height = el.scrollHeight + 'px';
+        }
+      }
+    });
+  }
+
+  function getSavedProfiles() {
+    try {
+      var str = localStorage.getItem(STORAGE_PROFILES);
+      return str ? JSON.parse(str) : {};
+    } catch(e) { return {}; }
+  }
+
+  function saveSavedProfiles(profiles) {
+    try {
+      localStorage.setItem(STORAGE_PROFILES, JSON.stringify(profiles));
+    } catch(e) {}
+  }
+
+  function refreshProfileDropdown() {
+    var profiles = getSavedProfiles();
+    var keys = Object.keys(profiles);
+    profileSelect.innerHTML = '';
+
+    if (keys.length === 0) {
+      var opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = '-- 尚无已存方案 --';
+      profileSelect.appendChild(opt);
+      loadProfileBtn.disabled = true;
+      deleteProfileBtn.disabled = true;
+      exportProfilesBtn.disabled = true;
+    } else {
+      var optDefault = document.createElement('option');
+      optDefault.value = '';
+      optDefault.textContent = '-- 请选择方案 --';
+      profileSelect.appendChild(optDefault);
+      keys.forEach(function(k) {
+        var opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = k;
+        profileSelect.appendChild(opt);
+      });
+      loadProfileBtn.disabled = false;
+      deleteProfileBtn.disabled = false;
+      exportProfilesBtn.disabled = false;
+    }
+  }
+
+  // Textarea auto-resize & Auto-save
+  var textareas = document.querySelectorAll('textarea');
+  textareas.forEach(function(ta) {
+    ta.addEventListener('input', function() {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+      autoSave();
+    });
+  });
+
+  var inputs = document.querySelectorAll('input, select');
+  inputs.forEach(function(el) {
+    el.addEventListener('change', autoSave);
+    el.addEventListener('input', autoSave);
+  });
+
+  function autoSave() {
+    try {
+      localStorage.setItem(STORAGE_AUTOSAVE, JSON.stringify(getFormData()));
+    } catch(e) {}
+  }
+
+  function loadAutoSave() {
+    try {
+      var str = localStorage.getItem(STORAGE_AUTOSAVE);
+      if (str) {
+        setFormData(JSON.parse(str));
+      }
+    } catch(e) {}
+  }
+
+  // --- Profile Manager Events ---
+  saveProfileBtn.addEventListener('click', function() {
+    var name = prompt('请输入方案名称：', document.getElementById('char-name')?.value + ' · ' + document.getElementById('char-alias')?.value);
+    if (!name || !name.trim()) return;
+    var profiles = getSavedProfiles();
+    profiles[name.trim()] = getFormData();
+    saveSavedProfiles(profiles);
+    refreshProfileDropdown();
+    profileSelect.value = name.trim();
+    showNotice('方案 "' + name.trim() + '" 保存成功！');
+  });
+
+  loadProfileBtn.addEventListener('click', function() {
+    var selected = profileSelect.value;
+    if (!selected) { showNotice('请先选择要读取的方案', true); return; }
+    var profiles = getSavedProfiles();
+    if (profiles[selected]) {
+      setFormData(profiles[selected]);
+      autoSave();
+      showNotice('已读取方案 "' + selected + '"！');
+    }
+  });
+
+  deleteProfileBtn.addEventListener('click', function() {
+    var selected = profileSelect.value;
+    if (!selected) { showNotice('请先选择要删除的方案', true); return; }
+    if (confirm('确定要删除方案 "' + selected + '" 吗？')) {
+      var profiles = getSavedProfiles();
+      delete profiles[selected];
+      saveSavedProfiles(profiles);
+      refreshProfileDropdown();
+      showNotice('方案 "' + selected + '" 已删除');
+    }
+  });
+
+  exportProfilesBtn.addEventListener('click', function() {
+    var profiles = getSavedProfiles();
+    if (Object.keys(profiles).length === 0) return;
+    var blob = new Blob([JSON.stringify(profiles, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'mxe-profiles-' + Date.now() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showNotice('方案已成功导出为 JSON 文件！');
+  });
+
+  importProfilesBtn.addEventListener('click', function() {
+    importFileInput.click();
+  });
+
+  importFileInput.addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        var imported = JSON.parse(evt.target.result);
+        if (typeof imported !== 'object' || !imported) throw new Error('Invalid format');
+        var cur = getSavedProfiles();
+        var count = 0;
+        for (var k in imported) {
+          cur[k] = imported[k];
+          count++;
+        }
+        saveSavedProfiles(cur);
+        refreshProfileDropdown();
+        showNotice('成功导入 ' + count + ' 个方案！');
+      } catch(err) {
+        showNotice('导入失败：文件格式不正确', true);
+      } finally {
+        importFileInput.value = '';
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  resetFormBtn.addEventListener('click', function() {
+    if (confirm('确定要将表单所有内容重置为初始默认状态吗？')) {
+      localStorage.removeItem(STORAGE_AUTOSAVE);
+      location.reload();
+    }
+  });
+
+  // --- Submit to SillyTavern ---
+  generateBtn.addEventListener('click', function() {
+    autoSave();
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<span>⚡ 正在生成序章...</span>';
+
+    var d = getFormData();
+    var formatVal = function(v, fallback) {
+      var val = (v || '').trim();
+      return val === '' ? (fallback || '[AI请填充]') : '"' + val.replace(/"/g, '\\"') + '"';
+    };
+
+    var yamlStr = '<init_data>\n' +
+'```yaml\n' +
+'# AI任务指令：解析以下用户创角档案，生成开场白并初始化所有变量。\n' +
+'# 对于值为 "[AI请填充]" 的字段，请基于已有设定进行合理补充。\n' +
+'\n' +
+'创角档案:\n' +
+'  基本信息:\n' +
+'    姓名: ' + formatVal(d['char-name'], '夜野') + '\n' +
+'    物种: ' + formatVal(d['char-species'], '雄性黑狼') + '\n' +
+'    年龄: ' + formatVal(d['char-age'], '23岁') + '\n' +
+'    性格: ' + formatVal(d['char-personality'], '沉稳狡黠、对博士忠诚、支配欲强') + '\n' +
+'    背景: ' + formatVal(d['char-background']) + '\n' +
+'  怪人代号: ' + formatVal(d['char-alias'], '迷香之主') + '\n' +
+'  相貌与身体:\n' +
+'    身高: ' + formatVal(d['char-height'], '186 cm') + '\n' +
+'    体态: ' + formatVal(d['char-body-type'], '魁梧匀称、极具压迫感') + '\n' +
+'    肌肉线条: ' + formatVal(d['char-muscle'], '深刻健美，胸肌与腹肌块垒分明') + '\n' +
+'    脸型五官: ' + formatVal(d['char-face']) + '\n' +
+'    毛发: ' + formatVal(d['char-fur']) + '\n' +
+'    气味特征: ' + formatVal(d['char-scent'], '沉稳浓郁的雄性麝香与微汗气息，混杂着淡淡烟草与雪松木香') + '\n' +
+'  伪装身份:\n' +
+'    伪装姓名: ' + formatVal(d['char-disguise-name'], '叶野夜') + '\n' +
+'    伪装职业: ' + formatVal(d['char-disguise-job'], '港区物流仓库管理员 / 街角咖啡店学徒') + '\n' +
+'  开场设定:\n' +
+'    首个接触对象: ' + formatVal(d['char-first-target'], '无 (默认·基地开场)') + '\n' +
+'    游戏难度: ' + formatVal(d['game-difficulty'], '简单') + '\n' +
+'```\n' +
+'</init_data>';
+
+    setTimeout(function() {
+      try {
+        var inputArea = (window.parent && window.parent.document && window.parent.document.querySelector('#send_textarea')) || document.querySelector('#send_textarea');
+        var sendButton = (window.parent && window.parent.document && window.parent.document.querySelector('#send_but')) || document.querySelector('#send_but');
+        if (inputArea && sendButton) {
+          inputArea.value = yamlStr;
+          inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+          setTimeout(function() {
+            sendButton.click();
+          }, 150);
+        } else {
+          showNotice('指令已生成，请在酒馆中发送');
+          console.log('[迷香恶堕 创角YAML]\n', yamlStr);
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = '<span>⚡ 启动改造 · 潜入新星市</span>';
+        }
+      } catch(err) {
+        console.error('发送创角指令失败:', err);
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<span>⚡ 启动改造 · 潜入新星市</span>';
+      }
+    }, 200);
+  });
+
+  // Init
+  refreshProfileDropdown();
+  loadAutoSave();
+})();
+</script>
+</body>
+</html>
+```

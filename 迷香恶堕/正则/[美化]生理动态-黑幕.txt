@@ -1,0 +1,8 @@
+<span class="mxe-spoiler mxe-spoiler-physio" title="鼠标悬停查看角色生理动态"><style>
+.mxe-spoiler { display: inline-flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; margin: 2px 3px; padding: 2px 8px; border-radius: 6px; transition: all 0.3s ease; vertical-align: middle; cursor: pointer; text-decoration: none; font-size: inherit; max-width: 100%; box-sizing: border-box; }
+.mxe-spoiler-physio { background: #200a14; border: 1px solid rgba(244,63,94,0.35); box-shadow: 0 0 8px rgba(244,63,94,0.15); }
+.mxe-spoiler-physio .spoiler-tag { font-family: 'Rajdhani', 'Noto Sans SC', sans-serif; font-size: 0.74rem; font-weight: 700; color: #fb7185; background: rgba(244,63,94,0.2); padding: 1px 6px; border-radius: 4px; user-select: none; flex-shrink: 0; line-height: 1.4; margin-top: 2px; }
+.mxe-spoiler-physio .spoiler-text { color: transparent; background: rgba(0,0,0,0.92); border-radius: 4px; padding: 1px 4px; filter: blur(5px); transition: all 0.3s ease; user-select: none; white-space: pre-wrap; word-break: break-word; flex: 1 1 auto; line-height: 1.6; }
+.mxe-spoiler-physio:hover, .mxe-spoiler-physio:active { background: #381222; border-color: #f43f5e; box-shadow: 0 0 14px rgba(244,63,94,0.35); }
+.mxe-spoiler-physio:hover .spoiler-text, .mxe-spoiler-physio:active .spoiler-text { color: #ff9ebb; background: transparent; filter: blur(0); user-select: text; }
+</style><span class="spoiler-tag">💓 生理</span><span class="spoiler-text">$1</span></span>

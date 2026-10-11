@@ -4,90 +4,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>温和行动指令 v4.0</title>
+    <title>行动指令面板</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --font-family: 'Noto Serif SC', serif;
-            /* 莫兰迪/柔和色系 */
-            --color-rose: #eebebf;   /* 柔粉 */
-            --color-sky: #a8d8ea;    /* 雾霾蓝 */
-            --color-iris: #ccb7e5;   /* 鸢尾紫 */
-            --color-sand: #f2d0a9;   /* 暖沙 */
+            --color-rose: #eebebf;
+            --color-sky: #a8d8ea;
+            --color-iris: #ccb7e5;
+            --color-sand: #f2d0a9;
             --text-main: #e0e0e0;
-            --text-dim: #aaa;
+            --text-dim: #b6b6c2;
+            /* [MG_FLIP_V2] 对比度补丁 */
+            --tc-btn-bg: rgba(255, 255, 255, 0.05);
+            --tc-text: #e2e8f0;
+            --tac-fight: #f87171;
+            --tac-defend: #7aa2f7;
+            --tac-pause: #bb9af7;
+            --tac-surrender: #f7768e;
+            --tac-finish: #e0af68;
+            --tac-charm: #bb9af7;
         }
         
         body { margin: 0; padding: 0; background: transparent; }
 
-        .options-container {
-            font-family: var(--font-family); 
-            padding: 10px 5px; 
-            max-width: 95%; 
-            margin: 0 auto; 
-            display: flex; 
-            flex-wrap: wrap; 
+        .panel-wrapper {
+            font-family: var(--font-family);
+            padding: 10px 5px;
+            max-width: 95%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
-            justify-content: center; /* 居中排列 */
+        }
+
+        /* ═══ 战术选择区 ═══ */
+        .tactics-section {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 10px 12px;
+            background: rgba(26, 27, 38, 0.6);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .tactics-section.visible { display: flex; }
+        .tactics-section .section-label {
+            width: 100%;
+            font-size: 0.75em;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+        }
+        .tactics-section .section-label i { color: var(--color-iris); }
+
+        .tactic-btn {
+            flex: 1 1 auto;
+            min-width: 62px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 7px 10px;
+            background: var(--tc-btn-bg);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 7px;
+            color: var(--tc-text);
+            font-family: inherit;
+            font-size: 0.82em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .tactic-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.14);
+            border-color: rgba(255,255,255,0.28);
+            color: #ffffff;
+        }
+        .tactic-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .tactic-btn.active { color: #fff; font-weight: 600; }
+        .tactic-btn i { font-size: 0.9em; opacity: 0.85; }
+
+        .tactic-btn.btn-fight.active     { background: rgba(248,113,113,0.18); border-color: var(--tac-fight);     color: var(--tac-fight); }
+        .tactic-btn.btn-defend.active    { background: rgba(122,162,247,0.18); border-color: var(--tac-defend);    color: var(--tac-defend); }
+        .tactic-btn.btn-charm.active     { background: rgba(187,154,247,0.18); border-color: var(--tac-charm);     color: var(--tac-charm); }
+        .tactic-btn.btn-pause.active     { background: rgba(187,154,247,0.18); border-color: var(--tac-pause);     color: var(--tac-pause); }
+        .tactic-btn.btn-surrender.active { background: rgba(247,118,142,0.18); border-color: var(--tac-surrender); color: var(--tac-surrender); }
+        .tactic-btn.btn-finish.active    { background: rgba(224,175,104,0.18); border-color: var(--tac-finish);    color: var(--tac-finish); }
+
+        /* ── 激活态提亮 [MG_FLIP_V2] ── 加实色描边 + 白色文字 + 轻微光晕 */
+        .tactic-btn.btn-fight.active     { background: rgba(248,113,113,0.25); border-color: var(--tac-fight);     color: #fff; box-shadow: 0 0 8px rgba(248,113,113,0.30); }
+        .tactic-btn.btn-defend.active    { background: rgba(122,162,247,0.25); border-color: var(--tac-defend);    color: #fff; box-shadow: 0 0 8px rgba(122,162,247,0.30); }
+        .tactic-btn.btn-charm.active     { background: rgba(187,154,247,0.25); border-color: var(--tac-charm);     color: #fff; box-shadow: 0 0 8px rgba(187,154,247,0.30); }
+        .tactic-btn.btn-pause.active     { background: rgba(187,154,247,0.25); border-color: var(--tac-pause);     color: #fff; box-shadow: 0 0 8px rgba(187,154,247,0.30); }
+        .tactic-btn.btn-surrender.active { background: rgba(247,118,142,0.25); border-color: var(--tac-surrender); color: #fff; box-shadow: 0 0 8px rgba(247,118,142,0.30); }
+        .tactic-btn.btn-finish.active    { background: rgba(224,175,104,0.28); border-color: var(--tac-finish);    color: #fff; box-shadow: 0 0 10px rgba(224,175,104,0.40); }
+
+        @keyframes ultReady {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        .tactic-btn.btn-finish:not(:disabled):not(.active) {
+            color: var(--tac-finish);
+            animation: ultReady 2s infinite ease-in-out;
+        }
+
+        /* ═══ AI 建议选项区 ═══ */
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
         }
 
         .option-btn {
-            flex: 1 1 calc(50% - 10px); /* 双列布局 */
+            flex: 1 1 calc(50% - 10px);
             min-width: 200px;
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
+            display: flex;
+            align-items: center;
+            gap: 12px;
             padding: 12px 16px;
-            
-            /* 极简磨砂玻璃风格 */
             background: rgba(40, 40, 45, 0.4);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px; /* 柔和圆角 */
-            
-            color: var(--text-main); 
+            border-radius: 12px;
+            color: var(--text-main);
             font-size: 14px;
-            cursor: pointer; 
-            position: relative; 
+            cursor: pointer;
+            position: relative;
             overflow: hidden;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             text-align: left;
         }
 
-        /* 悬停效果：轻微上浮 + 边框亮起 */
         .option-btn:hover {
             transform: translateY(-2px);
             background: rgba(60, 60, 65, 0.6);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             border-color: var(--accent-color);
         }
-
-        /* 点击效果 */
         .option-btn:active {
             transform: translateY(0);
             background: rgba(30, 30, 35, 0.7);
         }
 
-        /* 图标容器 */
         .icon-box {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 32px; 
-            height: 32px; 
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.05);
             color: var(--accent-color);
             flex-shrink: 0;
             transition: all 0.3s ease;
         }
-
         .option-btn:hover .icon-box {
             background: var(--accent-color);
-            color: #222; /* 图标反色 */
+            color: #222;
         }
 
         .option-text {
@@ -96,75 +181,456 @@
             opacity: 0.9;
         }
 
-        /* --- 风格分类 --- */
-        .style-radical { --accent-color: var(--color-rose); } /* 激进/本能 */
-        .style-calm    { --accent-color: var(--color-sky); }  /* 冷静/智略 */
-        .style-magic   { --accent-color: var(--color-iris); } /* 魔法/特殊 */
-        .style-desire  { --accent-color: var(--color-sand); } /* 欲望/其他 */
+        .style-radical { --accent-color: var(--color-rose); }
+        .style-calm    { --accent-color: var(--color-sky); }
+        .style-magic   { --accent-color: var(--color-iris); }
+        .style-desire  { --accent-color: var(--color-sand); }
 
-        @media (max-width: 500px) { 
-            .options-container { flex-direction: column; } 
-            .option-btn { width: 100%; }
+        @media (max-width: 500px) {
+            .options-container { flex-direction: column; }
+            .option-btn { width: 100%; flex: 1 1 auto; }
+            .tactic-btn { font-size: 0.75em; padding: 5px 8px; min-width: 54px; }
+        }
+
+        /* ══════════════════════════════════════════
+           ██ 隐藏翻转：背面「撤退 / 投降」
+           ══════════════════════════════════════════ */
+        .panel-wrapper { perspective: 800px; }
+
+        .tactics-section { transition: transform .19s ease, opacity .19s ease; transform-origin: center; }
+
+        /* 隐藏密钮 [MG_FLIP_V2]：原为 opacity:.12 / font-size:.5em 的不可见小点，
+           且背面「返回」按钮继承同一族「隐形密钮」类的 display:none 后永久消失。
+           此处整体重做：正面改为清晰可见的功能键，背面返回键改为实体按钮。 */
+        .tc-toggle-btn {
+            width: 22px;
+            height: 22px;
+            margin-left: 4px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all .2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tc-toggle-btn i { font-size: 0.75em; opacity: 0.85; transition: opacity .2s ease; }
+        .tc-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .tc-toggle-btn:active i { opacity: 1; transform: scale(1.15); }
+
+        /* 背面 */
+        .tc-backface { display: none; width: 100%; gap: 7px; align-items: center; }
+        /* [MG_FLIP_V2] 背面控制区：默认底色 + 细分隔线，与正面拉开层次 */
+        .tc-backface {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 4px;
+        }
+        .tactics-section.is-flipped .section-label,
+        .tactics-section.is-flipped .tactic-btn,
+        .tactics-section.is-flipped > .tc-toggle-btn { display: none; }
+        .tactics-section.is-flipped .tc-backface { display: flex; }
+
+        .tc-back-btn {
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 8px 10px; border-radius: 8px; cursor: pointer; outline: none;
+            font-family: inherit; font-size: 0.8em; font-weight: 700; letter-spacing: .6px;
+            background: var(--tc-btn-bg); transition: all .2s ease;
+        }
+
+        /* 实体「返回」按钮 [MG_FLIP_V2] —— flex:0 0 auto，不与 flee/giveup 等分 */
+        .tc-back-btn.back-return {
+            flex: 0 0 auto;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--tc-text);
+        }
+        .tc-back-btn.back-return:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.32);
+            color: #fff;
+        }
+        /* [MG_FLIP_V2] 撤退 / 投降：高辨识度黄 / 红双色，加亮底与描边 */
+        .tc-back-btn.flee {
+            color: #f1c40f; border: 1px solid rgba(241,196,15,.50); background: rgba(241,196,15,.12);
+        }
+        .tc-back-btn.flee:hover, .tc-back-btn.flee.active {
+            background: rgba(241,196,15,.30); border-color: #f1c40f;
+            box-shadow: 0 0 10px rgba(241,196,15,.40);
+        }
+        .tc-back-btn.giveup {
+            color: #ff7675; border: 1px solid rgba(255,118,117,.50); background: rgba(255,118,117,.12);
+        }
+        .tc-back-btn.giveup:hover, .tc-back-btn.giveup.active {
+            background: rgba(255,118,117,.30); border-color: #ff7675;
+            box-shadow: 0 0 10px rgba(255,118,117,.40);
         }
     </style>
 </head>
 <body>
-    <div class="options-container" id="options-container" style="display:none;">$1</div>
+    <div class="panel-wrapper">
+        <div class="tactics-section" id="tactics-section"></div>
+        <div class="options-container" id="options-container" style="display:none;">$1</div>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        const getDeep = (obj, path, def = null) =>
+            path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? def;
+
+        const getMvu = () =>
+            window.Mvu || window.parent?.Mvu || window.top?.Mvu;
+
+        // ── 战术按钮配置（与 [行动] 行动方式控制台 保持同步） ──
+        const BUTTON_CONFIGS = {
+            '战斗回合': {
+                icon: 'fa-dice-d20',
+                getButtons: (isFallen) => [
+                    { key: '主动', short: '主动', icon: 'fa-hand-fist',           cls: 'btn-fight',     tip: '主动采取行动，争取战局主导权。' },
+                    isFallen
+                        ? { key: '诱惑', short: '诱惑', icon: 'fa-fire',           cls: 'btn-charm',     tip: '从容勾引猎物，用快感削弱敌人。' }
+                        : { key: '牵制', short: '牵制', icon: 'fa-feather-pointed', cls: 'btn-charm',     tip: '分散敌人注意力，削弱其战意。' },
+                    { key: '推进', short: '推进', icon: 'fa-forward',             cls: 'btn-pause',     tip: '暂缓战斗动作，延续当前叙事。' },
+                    { key: '危机', short: '危机', icon: 'fa-heart-crack',         cls: 'btn-surrender', tip: '遭遇一轮情色侵犯，但保持战斗状态。' },
+                    { key: '必杀', short: '必杀', icon: 'fa-wand-magic-sparkles', cls: 'btn-finish',    tip: '充能达 100%！一击必杀瓦解 Boss！', isUlt: true }
+                ]
+            },
+            '战斗准备': {
+                icon: 'fa-crosshairs',
+                getButtons: () => [
+                    { key: '周旋', short: '周旋', icon: 'fa-shield-halved',      cls: 'btn-fight',     tip: '与敌人对峙，进行简单的交手或试探性进攻。' },
+                    { key: '探索', short: '探索', icon: 'fa-magnifying-glass',   cls: 'btn-defend',    tip: '观察环境、搜集情报，或隐匿行踪。' },
+                    { key: '交涉', short: '交涉', icon: 'fa-bullhorn',           cls: 'btn-surrender', tip: '尝试与敌人对话、问话、劝降。' },
+                    { key: '开战', short: '开战', icon: 'fa-wand-magic-sparkles', cls: 'btn-finish',    tip: '正式进入战斗回合。' }
+                ]
+            },
+            'H事件': {
+                icon: 'fa-heart-pulse',
+                getButtons: () => [
+                    { key: '抗拒',    short: '抗拒', icon: 'fa-hand',                 cls: 'btn-defend',    tip: '试图推开、反抗，用意志力压制身体的异样。' },
+                    { key: '忍耐',    short: '忍耐', icon: 'fa-heart-crack',          cls: 'btn-surrender', tip: '咬牙忍耐快感，暂不反抗也不迎合。' },
+                    { key: '魔力爆发', short: '爆发', icon: 'fa-wand-magic-sparkles', cls: 'btn-pause',     tip: '以魔力强行清场、解除异常状态（消耗 30MP）。' },
+                    { key: '迎合',    short: '迎合', icon: 'fa-fire',                 cls: 'btn-finish',    tip: '主动迎合、释放快感，直奔高潮而去。' }
+                ]
+            }
+        };
+
+        const resolveActiveConfig = (stat) => {
+            const phase = getDeep(stat, '进程.阶段', '幕间休息');
+            const hEventName = getDeep(stat, '世界.幕间H事件.名称', '无');
+            if (phase === '战斗回合' || phase === '终结回合') return BUTTON_CONFIGS['战斗回合'];
+            if (phase === '战斗准备') return BUTTON_CONFIGS['战斗准备'];
+            if (phase === '幕间休息' && hEventName !== '无') return BUTTON_CONFIGS['H事件'];
+            return null;
+        };
+
+        // ── 更新战术变量 ──
+        const setTactic = async (tactic) => {
+            try {
+                const Mvu = getMvu();
+                if (!Mvu) return;
+                const mvuData = Mvu.getMvuData({ type: 'message', message_id: -1 });
+                if (!mvuData) return;
+
+                if (typeof _ !== 'undefined' && _.set) {
+                    _.set(mvuData, 'stat_data.主角.战斗临时.战斗方式', tactic);
+                } else {
+                    mvuData.stat_data.主角.战斗临时.战斗方式 = tactic;
+                }
+
+                await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: -1 });
+                const cleanData = JSON.parse(JSON.stringify(mvuData.stat_data || mvuData));
+                document.dispatchEvent(new CustomEvent(Mvu.events.VARIABLE_UPDATE_ENDED, {
+                    detail: { stat_data: cleanData },
+                    bubbles: true
+                }));
+
+                document.querySelectorAll('#tactics-section .tactic-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tactic === tactic);
+                });
+            } catch (e) {
+                console.error('[QuickOptions] setTactic error:', e);
+            }
+        };
+
+        // ── 渲染战术区 ──
+        // ══════════════════════════════════════════
+        // ██ 隐藏翻转：背面「撤退 / 投降」（仅战斗回合可用）
+        // ══════════════════════════════════════════
+        const TC_FLIP_MS = 190;
+        let _tcFlipped = false;
+
+        // 读取当前锁定的战术（从【正面】按钮的 active 态反读）
+        // 注意：工单原稿的 section.querySelector('.tc-back-btn.active').dataset.tactic
+        // 取不到值 —— data-tactic 只挂在正面的 .tactic-btn 上，背面 .tc-back-btn 没有。
+        // 因此这里必须查 .tactic-btn。
+        const getCurrentTactic = () => {
+            const el = document.querySelector('.tactic-btn.active');
+            return el && el.dataset ? el.dataset.tactic : '';
+        };
+
+        const syncSecretState = (currentTactic) => {
+            const section = document.getElementById('tactics-section');
+            if (!section) return;
+            const flee = section.querySelector('.tc-back-btn.flee');
+            const giveup = section.querySelector('.tc-back-btn.giveup');
+            if (flee) flee.classList.toggle('active', currentTactic === '撤退');
+            if (giveup) giveup.classList.toggle('active', currentTactic === '投降');
+        };
+
+        const flipSecret = (toBack) => {
+            const section = document.getElementById('tactics-section');
+            if (!section || _tcFlipped === toBack) return;
+            section.style.transform = 'rotateY(88deg)';
+            section.style.opacity = '0';
+            setTimeout(() => {
+                _tcFlipped = toBack;
+                section.classList.toggle('is-flipped', toBack);
+                section.style.transform = 'rotateY(-88deg)';
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    section.style.transform = '';
+                    section.style.opacity = '';
+                }));
+            }, TC_FLIP_MS);
+        };
+
+        const ensureSecretUI = (section) => {
+            if (!section.querySelector('.tc-backface')) {
+                const back = document.createElement('div');
+                back.className = 'tc-backface';
+
+                const flee = document.createElement('button');
+                flee.className = 'tc-back-btn flee';
+                flee.title = '中断交战、拉开距离脱离战场。判定失败会被追击反打，而且越逃越难。';
+                flee.innerHTML = '<i class="fa-solid fa-person-running"></i><span>撤退</span>';
+                flee.addEventListener('click', () => { setTactic('撤退'); syncSecretState('撤退'); });
+
+                const giveup = document.createElement('button');
+                giveup.className = 'tc-back-btn giveup';
+                giveup.title = '主动放弃战斗，直接判定战败并被俘 —— 不可撤销。';
+                giveup.innerHTML = '<i class="fa-solid fa-flag"></i><span>投降</span>';
+                giveup.addEventListener('click', () => {
+                    if (!confirm('确定投降？\n\n将直接判定战败并被俘，此操作不可撤销。')) return;
+                    setTactic('投降');
+                    syncSecretState('投降');
+                });
+
+                // ── 返回按钮 [MG_FLIP_V2] ──
+                // 原实现把返回键类名设成与正面小圆点同一族的「隐形密钮」类，
+                // 而 CSS 里那个类带 display:none；JS 只给正面的小圆点补过
+                // inline display:flex，从没给返回键补过 —— 于是「返回」按钮被
+                // CSS 永久隐藏，玩家一旦翻到背面就再也回不到正面（死按钮）。
+                // 现改为正规实体按钮：走 .tc-back-btn 的 flex 布局 + 文字标签。
+                const ret = document.createElement('button');
+                ret.type = 'button';
+                ret.className = 'tc-back-btn back-return';
+                ret.title = '取消当前选择并返回常规战术';
+                ret.innerHTML = '<i class="fa-solid fa-arrow-left"></i><span>返回</span>';
+                ret.addEventListener('click', () => {
+                    // 只在「会让 render 再次自动翻回背面」的选择上重置，解除死锁：
+                    //   撤退 / 投降 → 任何 render 都会强制翻回背面
+                    //   空值        → 没有合法选择，回到阵营默认战术
+                    // 若当前是 主动/牵制/推进/危机 等正面战术，则只关闭背面、不动选择。
+                    const cur = getCurrentTactic();
+                    if (cur === '撤退' || cur === '投降' || !cur) {
+                        if (typeof setTactic === 'function') {
+                            setTactic('主动');
+                        } else if (typeof window.setCombatTactic === 'function') {
+                            window.setCombatTactic('主动');
+                        }
+                    }
+                    flipSecret(false);
+                });
+
+                back.appendChild(flee);
+                back.appendChild(giveup);
+                back.appendChild(ret);
+                section.appendChild(back);
+            }
+
+            if (!section.querySelector('#tc-secret-dot')) {
+                // ── 正面翻转开关 [MG_FLIP_V2] ──
+                // 原实现继承 .tc-secret 的 display:none，仅靠 render 补一个
+                // inline display:flex 才出现；图标 opacity 0.12 / font-size 0.5em，
+                // 实际是肉眼不可见的灰尘点。现改为有边框的半透明功能键。
+                // id 仍沿用 tc-secret-dot，以免影响既有显示/隐藏逻辑。
+                const dot = document.createElement('div');
+                dot.id = 'tc-secret-dot';
+                dot.className = 'tc-toggle-btn';
+                dot.title = '展开「撤退 / 投降」选项';
+                dot.innerHTML = '<i class="fa-solid fa-angles-right"></i>';
+                dot.addEventListener('click', () => flipSecret(true));
+                section.appendChild(dot);
+            }
+        };
+
+        const renderTactics = (stat) => {
+            const section = document.getElementById('tactics-section');
+            if (!section) return;
+
+            const config = resolveActiveConfig(stat);
+            if (!config) {
+                section.classList.remove('visible', 'is-flipped');
+                section.innerHTML = '';
+                section.dataset.sig = '';
+                _tcFlipped = false;
+                return;
+            }
+
+            const isFallen = getDeep(stat, '主角.核心状态.人格状态', '善良') === '堕落';
+            const buttons = config.getButtons ? config.getButtons(isFallen) : (config.buttons || []);
+            const currentTactic = getDeep(stat, '主角.战斗临时.战斗方式', buttons[0]?.key || '');
+            const ultPower = parseInt(
+                getDeep(stat, isFallen ? '主角.核心状态.污秽魔力' : '主角.核心状态.净化之力', 0),
+                10
+            );
+            const isUltReady = ultPower >= 100;
+
+            // 只在按钮结构变化时重建 DOM，避免闪烁
+            const signature = buttons.map(b => b.key).join('|') + '_' + isFallen + '_' + isUltReady;
+            if (section.dataset.sig !== signature) {
+                section.dataset.sig = signature;
+                section.innerHTML = `<div class="section-label"><i class="fa-solid ${config.icon}"></i> 战术选择</div>`;
+
+                buttons.forEach(b => {
+                    const btn = document.createElement('button');
+                    btn.className = 'tactic-btn ' + b.cls;
+                    btn.dataset.tactic = b.key;
+                    btn.title = b.tip;
+
+                    const iconEl = document.createElement('i');
+                    iconEl.className = 'fa-solid ' + b.icon;
+                    btn.appendChild(iconEl);
+
+                    const labelEl = document.createElement('span');
+                    labelEl.textContent = b.short;
+                    btn.appendChild(labelEl);
+
+                    if (b.isUlt && !isUltReady) btn.disabled = true;
+
+                    btn.addEventListener('click', () => setTactic(b.key));
+                    section.appendChild(btn);
+                });
+            }
+
+            // 每次渲染同步 active 状态
+            section.querySelectorAll('.tactic-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tactic === currentTactic);
+            });
+
+            // ── 隐藏翻转装配（仅战斗回合）──
+            const isCombatRound = getDeep(stat, '进程.阶段', '') === '战斗回合';
+            ensureSecretUI(section);
+            const _dot = document.getElementById('tc-secret-dot');
+            if (_dot) _dot.style.display = isCombatRound ? 'flex' : 'none';
+            if (!isCombatRound && _tcFlipped) flipSecret(false);
+            // ── 死锁解除 [MG_FLIP_V2] ──
+            // 原实现：只要 currentTactic 是 撤退/投降 就强制翻回背面。
+            // 玩家翻回正面后，下一次 render（变量同步 / 阶梯轮询）会立刻
+            // 再次 flipSecret(true) —— 形成「翻不回正面」的死锁。
+            // 现改为「跟随选择」而非「强制锁死」：
+            //   · 选中 撤退/投降 → 翻到背面，让玩家看见自己的选择
+            //   · 改选其它战术   → 自动翻回正面
+            //   · 点「返回」重置为 主动 → 保持正面，不再被拉回去
+            if (isCombatRound) {
+                const _cur = getCurrentTactic();
+                const _wantsBack = (_cur === '撤退' || _cur === '投降');
+                if (_wantsBack !== _tcFlipped) flipSecret(_wantsBack);
+            } else if (_tcFlipped) {
+                flipSecret(false);
+            }
+            syncSecretState(currentTactic);
+
+            section.classList.add('visible');
+        };
+
+        // ── 渲染 AI 建议选项 ──
+        const OPTION_STYLES = [
+            { className: 'style-radical', icon: 'fa-solid fa-feather-pointed' },
+            { className: 'style-calm',    icon: 'fa-regular fa-snowflake' },
+            { className: 'style-magic',   icon: 'fa-solid fa-wand-magic-sparkles' },
+            { className: 'style-desire',  icon: 'fa-regular fa-heart' }
+        ];
+
+        const handleSend = (text) => {
+            try {
+                const inputArea = window.parent.document.querySelector('#send_textarea');
+                if (inputArea) {
+                    inputArea.value = (inputArea.value.trim() ? inputArea.value + '\\n' : '') + text;
+                    inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        const renderOptions = () => {
             const rawContainer = document.getElementById('options-container');
             if (!rawContainer) return;
-            
             const rawText = rawContainer.textContent;
             rawContainer.innerHTML = '';
+
+            const options = (rawText || '').split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+            if (options.length === 0) return;
+
             rawContainer.style.display = 'flex';
 
-            // 定义四种温和风格
-            const optionStyles = [
-                { type: 'Radical', className: 'style-radical', icon: 'fa-solid fa-feather-pointed' }, // 羽毛 (轻盈/行动)
-                { type: 'Calm',    className: 'style-calm',    icon: 'fa-regular fa-snowflake' },     // 雪花 (冷静/思考)
-                { type: 'Magic',   className: 'style-magic',   icon: 'fa-solid fa-wand-sparkles' },   // 魔杖 (魔法)
-                { type: 'Desire',  className: 'style-desire',  icon: 'fa-regular fa-heart' }          // 爱心 (情感/欲望)
-            ];
-
-            const options = rawText.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
-
-            const handleSend = (text) => {
-                try {
-                    const inputArea = window.parent.document.querySelector('#send_textarea');
-                    if (inputArea) {
-                        inputArea.value = (inputArea.value.trim() ? inputArea.value + '\\n' : '') + text;
-                        inputArea.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                } catch (error) { console.error(error); }
-            };
-            
             options.forEach((text, index) => {
-                // 循环使用样式 (如果选项超过4个)
-                const config = optionStyles[index % optionStyles.length]; 
+                const config = OPTION_STYLES[index % OPTION_STYLES.length];
 
                 const button = document.createElement('button');
                 button.className = 'option-btn ' + config.className;
-                
-                // 图标部分
+
                 const iconBox = document.createElement('div');
                 iconBox.className = 'icon-box';
                 const icon = document.createElement('i');
                 icon.className = config.icon;
                 iconBox.appendChild(icon);
 
-                // 文本部分
                 const textSpan = document.createElement('span');
                 textSpan.className = 'option-text';
                 textSpan.textContent = text;
-                
+
                 button.appendChild(iconBox);
                 button.appendChild(textSpan);
-                
                 button.onclick = () => handleSend(text);
                 rawContainer.appendChild(button);
             });
+        };
+
+        // ── MVU 监听（延迟重试直到 MVU 就绪） ──
+        const initMvuListener = () => {
+            const Mvu = getMvu();
+            if (!Mvu || !Mvu.events) {
+                setTimeout(initMvuListener, 400);
+                return;
+            }
+
+            document.addEventListener(Mvu.events.VARIABLE_UPDATE_ENDED, (e) => {
+                const stat = e.detail?.stat_data;
+                if (stat) renderTactics(stat);
+            });
+
+            try {
+                const wrapper = Mvu.getMvuData({ type: 'message', message_id: -1 });
+                const stat = wrapper?.stat_data || wrapper;
+                if (stat) renderTactics(stat);
+            } catch (e) {}
+        };
+
+        // ── 启动 ──
+        document.addEventListener('DOMContentLoaded', () => {
+            renderOptions();
+            initMvuListener();
         });
     </script>
 </body>

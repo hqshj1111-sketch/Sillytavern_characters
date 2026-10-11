@@ -1,0 +1,117 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const confessorQueue = _.get(stat, '系统状态.待处理事件.告白事件', '');
+  const isSpecialOngoing = _.get(stat, '系统状态.特殊事件进行中', false);
+  const specialType = _.get(stat, '特殊事件.类型', '无');
+  const specialObjects = _.get(stat, '特殊事件.对象', []);
+
+  let confessor = confessorQueue;
+  if (!confessor && isSpecialOngoing && specialType === '告白' && specialObjects.length > 0) {
+    confessor = specialObjects[0];
+  }
+  
+  if (confessor ) {
+      const specialName = _.get(stat, '特殊事件.名称', '无');
+      const currentRel = _.get(stat, `NPC数据.${confessor}.主角关系.当前关系`, '未知');
+      
+      // 读取看法矩阵
+      const intimacy = parseInt(_.get(stat, `NPC数据.${confessor}.主角关系.亲密度`, 0)) || 0;
+      const lust = parseInt(_.get(stat, `NPC数据.${confessor}.主角关系.情欲度`, 0)) || 0;
+      const getLevel = (val) => {
+        if (val >= 75) return 3;
+        if (val >= 50) return 2;
+        if (val >= 25) return 1;
+        return 0;
+      };
+      const iLevel = getLevel(intimacy);
+      const lLevel = getLevel(lust);
+      const matrix = _.get(stat, `NPC数据.${confessor}.看法矩阵`, {});
+      const currentImpression = matrix[`${iLevel}-${lLevel}`] || '特别的存在';
+
+      // 称谓阶段变化检测
+      const getAppellationStage = (val) => {
+          if (val >= 75) return 4;
+          if (val >= 50) return 3;
+          if (val >= 25) return 2;
+          return 1;
+      };
+      let stageCur, stageOld;
+      const stageLust = getAppellationStage(lust);
+      const stageIntNew = getAppellationStage(intimacy);
+      const stageIntOld = Math.max(1, stageIntNew - 1);
+      stageCur = Math.max(stageLust, stageIntNew);
+      stageOld = Math.max(stageLust, stageIntOld);
+      const appellations = _.get(stat, `NPC数据.${confessor}.主角关系.称谓`, {});
+      const oldApp = appellations['阶段' + stageOld] || '';
+      const newApp = appellations['阶段' + stageCur] || '';
+      
+      // 阶段 A: 事件初始化（布置告白场景，带状态拦截锁）
+      if (!isSpecialOngoing) {
+          const isSpecialOngoing = _.get(stat, '系统状态.特殊事件进行中', false);
+          const currentSexActs = _.get(stat, '主角.当前状态.当前性行为', []);
+          const isSexActive = Array.isArray(currentSexActs) && currentSexActs.length > 0;
+          const npcInSex = isSexActive ? currentSexActs.some(act => act['对象'] === confessor) : false;
+          
+          // 仅当：未处于特殊事件 中 且 (未处于性行为 或 性行为对象正是告白者) 时，才予以输出
+          if (!isSpecialOngoing && (!isSexActive || npcInSex)) {
+              const loc = _.get(stat, `NPC数据.${confessor}.当前地点`, '某个隐秘的角落');
+_%>
+# **最高优先级**事件：夏日告白触发
+event_initiator:
+  event_name: "夏日告白"
+  involved_character: "<%= confessor %>" (当前彼此关系标签: <%= currentRel %>)
+  location: "<%= loc %>"
+  focus: "满溢的情感、鼓起勇气的表白、夏日特有的悸动"
+  
+  narrative_guidance:
+    - "【<%= confessor %>】对主角的感情已经突破界限，决定在<%= loc %>向主角吐露心意。"
+    - "当前，主角在他/她心中的印象是【<%= currentImpression %>】。这份告白将把这种印象推向更深的层次。"
+    - "本回合是告白事件的开端，请描写【<%= confessor %>】将主角单独约出或气氛恰到好处时的神态、动作以及前置对话，营造出紧张、暧昧且充满心跳感的氛围。请抛出引子，不要一回合直接写完整个告白和答复。"
+    
+  mandatory_data_sync:
+    instruction: "若事件已经切实开始，在 <JSONPatch> 块中必须输出以下指令："
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/告白事件" },
+        { "op": "insert", "path": "/系统状态/特殊事件进行中", "value": true },
+        { "op": "replace", "path": "/特殊事件/名称", "value": "夏日告白" },
+        { "op": "replace", "path": "/特殊事件/对象", "value": <%- JSON.stringify([confessor]) %> },
+        { "op": "insert", "path": "/特殊事件/类型", "value": "告白" }
+      ]
+<%_
+          }
+      } else {
+          // 阶段 B: 事件进行中与结算
+_%>
+# 事件：夏日告白进行中
+event_ongoing:
+  involved_character: "<%= confessor %>" (当前彼此关系标签: <%= currentRel %>)
+  current_impression: "<%= currentImpression %>"
+  focus: "直白的心意传达与主角的回应"
+  
+  narrative_branch:
+    - condition: "【<%= confessor %>】正在告白 / 主角尚未明确回应"
+      instruction: "详细描写【<%= confessor %>】说出‘我喜欢你’或类似表达时的真情实感，以及肢体语言的细节。这份告白发自于他/她对主角的当前印象——<%= currentImpression %>。等待主角的决定。"
+    - condition: "主角接受了告白"
+      instruction: 
+      - "描写两人心意相通的甜蜜时刻，可能伴随拥抱或初吻。他/她对主角的看法将升华至恋人层面。然后在分析后输出结算指令，将新关系定义为恋人等亲密称呼。"
+      - "同时，<%= confessor %>对主角的信任已达极致，其深层性特质完全浮现：<%= (_.get(stat, `NPC数据.${confessor}.性特质.阶段4`) || []).join('；') %>。请用描绘他/她此刻展现出的全新亲密面貌。"
+    <%_ if (newApp && oldApp !== newApp) { _%>
+      - "称谓跃进：<%= confessor %> 对你的称呼将从「<%= oldApp %>」自然过渡为「<%= newApp %>」。请在接下来的互动中，让他/她主动改口，体现恋爱关系的确立。"
+    <%_ } _%>
+    - condition: "主角拒绝或回避了告白"
+      instruction: "描写【<%= confessor %>】失落但试图掩饰的反应，气氛转为苦涩。然后在分析后输出结算指令，将新关系定义为符合当前状况的词（如：暂时疏远的青梅竹马、退回安全距离的表姐弟等）。"
+
+  end_protocol:
+    instruction: "当本次事件【彻底完结】时，输出补丁清理事件，并替换新关系标签："
+    mandatory_cleanup_patch: |
+      [
+        { "op": "replace", "path": "/系统状态/特殊事件进行中", "value": false },
+        { "op": "replace", "path": "/NPC数据/<%= confessor %>/主角关系/当前关系", "value": "[新关系]" }
+      ]
+<%_
+      }
+  }
+}
+_%>

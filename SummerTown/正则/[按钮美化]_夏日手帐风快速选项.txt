@@ -1,0 +1,176 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>夏日手帐行动指令</title>
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css)">
+    <link href="[https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@400;600&display=swap](https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@400;600&display=swap)" rel="stylesheet">
+    <style>
+        :root {
+            --font-main: 'Kaiti', 'Noto Serif SC', serif;
+            --font-title: 'ZCOOL KuaiLe', sans-serif;
+            /* 适配夏日小镇色系 */
+            --color-paper: #fdf5e6;
+            --color-tape-blue: #e3f2fd;
+            --color-tape-pink: #fce4ec;
+            --color-tape-yellow: #fff9c4;
+            --color-tape-green: #f1f8e9;
+            --text-dark: #4a3b32;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+        }
+
+        .options-container {
+            font-family: var(--font-main);
+            padding: 15px 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            /* 模拟手帐纸张背景 */
+            background-image: url('[https://www.transparenttextures.com/patterns/handmade-paper.png](https://www.transparenttextures.com/patterns/handmade-paper.png)');
+            background-color: var(--color-paper);
+            border-radius: 8px;
+            box-shadow: inset 0 0 15px rgba(189, 158, 123, 0.2);
+            border: 1px solid #bd9e7b;
+        }
+
+        .option-btn {
+            flex: 1 1 calc(45% - 10px);
+            min-width: 160px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            
+            /* 胶带/贴纸风格 */
+            border: none;
+            box-shadow: 2px 3px 8px rgba(0,0,0,0.1);
+            color: var(--text-dark);
+            font-size: 15px;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        /* 胶带撕裂边缘效果 */
+        .option-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.1) 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* 随机旋转角度增加手写感 */
+        .option-btn:nth-child(odd) { transform: rotate(-1.5deg); }
+        .option-btn:nth-child(even) { transform: rotate(1.2deg); }
+
+        .option-btn:hover {
+            transform: scale(1.05) rotate(0deg) translateY(-3px);
+            box-shadow: 4px 6px 12px rgba(0,0,0,0.15);
+            filter: brightness(1.05);
+            z-index: 10;
+        }
+
+        .option-btn:active {
+            transform: scale(0.98);
+            box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .option-text {
+            flex: 1;
+            line-height: 1.2;
+            font-family: var(--font-title);
+        }
+
+        /* --- 样式配色 --- */
+        .style-0 { background-color: var(--color-tape-pink); border-left: 4px solid #f06292; }
+        .style-1 { background-color: var(--color-tape-blue); border-left: 4px solid #64b5f6; }
+        .style-2 { background-color: var(--color-tape-yellow); border-left: 4px solid #ffd54f; }
+        .style-3 { background-color: var(--color-tape-green); border-left: 4px solid #81c784; }
+
+        @media (max-width: 500px) {
+            .option-btn { flex: 1 1 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="options-container" id="options-container" style="display:none;">$1</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawContainer = document.getElementById('options-container');
+            if (!rawContainer) return;
+            
+            const rawText = rawContainer.textContent;
+            rawContainer.innerHTML = '';
+            rawContainer.style.display = 'flex';
+
+            const optionStyles = [
+                { className: 'style-0', icon: 'fa-solid fa-heart' },
+                { className: 'style-1', icon: 'fa-solid fa-cloud' },
+                { className: 'style-2', icon: 'fa-solid fa-star' },
+                { className: 'style-3', icon: 'fa-solid fa-leaf' }
+            ];
+
+            const options = rawText.split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+
+            const handleSend = (text) => {
+                try {
+                    const inputArea = window.parent.document.querySelector('#send_textarea');
+                    if (inputArea) {
+                        inputArea.value = (inputArea.value.trim() ? inputArea.value + '\\n' : '') + text;
+                        inputArea.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                } catch (error) { console.error(error); }
+            };
+            
+            options.forEach((text, index) => {
+                const config = optionStyles[index % optionStyles.length]; 
+
+                const button = document.createElement('button');
+                button.className = 'option-btn ' + config.className;
+                
+                const iconBox = document.createElement('div');
+                iconBox.className = 'icon-box';
+                const icon = document.createElement('i');
+                icon.className = config.icon;
+                iconBox.appendChild(icon);
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'option-text';
+                textSpan.textContent = text;
+                
+                button.appendChild(iconBox);
+                button.appendChild(textSpan);
+                
+                button.onclick = () => handleSend(text);
+                rawContainer.appendChild(button);
+            });
+        });
+    </script>
+</body>
+</html>
+```

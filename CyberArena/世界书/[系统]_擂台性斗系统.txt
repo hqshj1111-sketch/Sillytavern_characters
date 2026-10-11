@@ -1,0 +1,230 @@
+<%_{
+const stat = getvar('stat_data');
+if (_.get(stat, '进程.阶段') === '性斗阶段') {
+  const isRest = _.get(stat, '擂台状态.是否休息回合', false);
+  const heroAlias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+  const oppName = _.get(stat, '擂台状态.对手名字', '对手');
+
+  if (isRest) {
+_%>
+# 擂台性斗系统 — 休息回合
+
+rest_round:
+  context: "第<%= _.get(stat, '擂台状态.当前擂台回合数', 0) %>回合后，双方请求了短暂的休息。下一回合的榨精方为【<%= _.get(stat, '擂台状态.当前进攻方', '主角') === '主角' ? heroAlias : oppName %>】。"
+
+  narrative_guidance:
+    - "描写双方各自退到擂台一角短暂休息的片刻——<%= heroAlias %>靠在擂台护栏上调整呼吸，汗水沿着身体的线条滴落在垫层上；<%= oppName %>在另一侧做着同样的恢复动作。描写体力在数十秒的喘息中缓慢回升、肌肉的酸胀略微消退。"
+    - "描写双方为下一回合进行的准备——<%= heroAlias %>和<%= oppName %>各自调整体势、擦拭身体、眼神交会时传递的挑衅或疲惫。主持人用下流的语调播报双方本场至今的数据，同时预告下一回合的榨精方。观众席上有人趁这个间隙冲向下注窗口加注。"
+    - "严禁描写新回合的开始——叙事在休息结束、双方重新站起的瞬间收束。"
+
+  prohibitions:
+    - "严禁直接描写新性斗回合的开始——休息回合的叙事在双方准备完毕、即将重新交手的临界点戛然而止。"
+
+  mandatory_data_sync:
+    instruction: "休息结束后，双方的体力略微恢复，是否休息置为false，后台自动继续下一轮。"
+    patch_code: |
+      [
+        {"op":"delta","path":"/擂台状态/主角当前体力","value":[随机增加3-8点]},
+        {"op":"delta","path":"/擂台状态/对手当前体力","value":[随机增加3-8点]},
+        {"op":"replace","path":"/擂台状态/是否休息回合","value":false}
+      ]
+
+<%_ } else { _%>
+<%_ const mkPatch = (op, path, val) => ({ "op": op, "path": path, "value": val });
+  const formatPatchBlock = (arr) => {
+    return `<JSONPatch>\n${JSON.stringify(arr, null, 2)}\n</JSONPatch>`;
+  };
+
+  const attacker = _.get(stat, '擂台状态.当前进攻方', '主角');
+  const isHeroAttacker = attacker === '主角';
+
+  const heroAlias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+  const heroSkill = _.get(stat, '擂台状态.主角性技', 50);
+  const heroEndur = _.get(stat, '擂台状态.主角忍耐度', 50);
+  const heroStamina = parseInt(_.get(stat, '擂台状态.主角当前体力', 100));
+  const heroEnergy = parseInt(_.get(stat, '擂台状态.主角当前精力', 100));
+  const heroPleasure = parseInt(_.get(stat, '擂台状态.主角当前快感值', 0));
+  const heroThreshold = parseInt(_.get(stat, '主角.性斗数据.快感阈值', 100));
+  const heroEjacCount = parseInt(_.get(stat, '擂台状态.主角本场射精次数', 0));
+
+  const oppName = _.get(stat, '擂台状态.对手名字', '对手');
+  const oppSkill = _.get(stat, '擂台状态.对手性技', 50);
+  const oppEndur = _.get(stat, '擂台状态.对手忍耐度', 50);
+  const oppStamina = parseInt(_.get(stat, '擂台状态.对手当前体力', 100));
+  const oppEnergy = parseInt(_.get(stat, '擂台状态.对手当前精力', 100));
+  const oppPleasure = parseInt(_.get(stat, '擂台状态.对手当前快感值', 0));
+  const oppEjacCount = parseInt(_.get(stat, '擂台状态.对手本场射精次数', 0));
+
+  const currentRound = parseInt(_.get(stat, '擂台状态.当前擂台回合数', 0));
+  const maxRounds = parseInt(_.get(stat, '擂台状态.最大擂台回合数', 20));
+
+  // 榨精方 vs 被榨方
+  const suckerName = isHeroAttacker ? heroAlias : oppName;
+  const suckeeName = isHeroAttacker ? oppName : heroAlias;
+  const suckerSkill = isHeroAttacker ? heroSkill : oppSkill;
+  const suckeeEndur = isHeroAttacker ? oppEndur : heroEndur;
+  const suckerStamina = isHeroAttacker ? heroStamina : oppStamina;
+  const suckeePleasure = isHeroAttacker ? oppPleasure : heroPleasure;
+  const suckeeEnergy = isHeroAttacker ? oppEnergy : heroEnergy;
+  const suckeeThreshold = isHeroAttacker ? (_.get(stat, '记录.性斗士名录.' + oppName + '.快感阈值') || 100) : heroThreshold;
+
+  // 对手性斗风格与偏好（用于被榨射回合）
+  const oppStyle = isHeroAttacker ? '' : (_.get(stat, '记录.性斗士名录.' + oppName + '.性斗风格') || '');
+  const oppPref = isHeroAttacker ? '' : (_.get(stat, '记录.性斗士名录.' + oppName + '.性行为偏好') || '');
+
+  const DICE_FACE = 20;
+  const DIVISOR = 10;
+  const suckerDice = Math.max(1, Math.floor(suckerSkill / DIVISOR));
+  const suckeeDice = Math.max(1, Math.floor(suckeeEndur / DIVISOR));
+
+  let suckerRoll = 0; for (let i = 0; i < suckerDice; i++) suckerRoll += _.random(1, DICE_FACE);
+  let suckeeRoll = 0; for (let i = 0; i < suckeeDice; i++) suckeeRoll += _.random(1, DICE_FACE);
+  const diff = suckerRoll - suckeeRoll;
+  const suckerFormula = `${suckerDice}d${DICE_FACE}=${suckerRoll}`;
+  const suckeeFormula = `${suckeeDice}d${DICE_FACE}=${suckeeRoll}`;
+
+  const THRESHOLDS = { CRIT: 40, SUCCESS: 10, STALEMATE: -15, FAIL: -40 };
+  let tier, tierLabel;
+  if (diff > THRESHOLDS.CRIT) { tier = 'CRIT'; tierLabel = '大成功'; }
+  else if (diff > THRESHOLDS.SUCCESS) { tier = 'SUCCESS'; tierLabel = '成功'; }
+  else if (diff > THRESHOLDS.STALEMATE) { tier = 'STALEMATE'; tierLabel = '纠缠'; }
+  else if (diff > THRESHOLDS.FAIL) { tier = 'FAIL'; tierLabel = '失败'; }
+  else { tier = 'CRIT_FAIL'; tierLabel = '大失败'; }
+
+  const TIER_VALS = {
+    CRIT:     { staminaCost: [5,15],  pleasureGain: [0,0],   ejacGuaranteed: true,  energyBase: 30 },
+    SUCCESS:  { staminaCost: [10,25], pleasureGain: [0,0],   ejacGuaranteed: true,  energyBase: 20 },
+    STALEMATE:{ staminaCost: [10,25], pleasureGain: [25,40], ejacGuaranteed: false, energyBase: 15 },
+    FAIL:     { staminaCost: [15,30], pleasureGain: [10,25], ejacGuaranteed: false, energyBase: 10 },
+    CRIT_FAIL:{ staminaCost: [20,40], pleasureGain: [0,10],  ejacGuaranteed: false, energyBase: 5 }
+  };
+  const tVal = TIER_VALS[tier];
+  const staminaDelta = _.random(tVal.staminaCost[0], tVal.staminaCost[1]);
+  const pleasureDelta = _.random(tVal.pleasureGain[0], tVal.pleasureGain[1]);
+  const newSuckerStamina = suckerStamina - staminaDelta;
+  const newSuckeePleasure = suckeePleasure + pleasureDelta;
+
+  let ejaculated = false, energyDelta = 0;
+  if (tVal.ejacGuaranteed) {
+    ejaculated = true;
+    energyDelta = tVal.energyBase + Math.floor(Math.abs(diff) / 10);
+  } else if (newSuckeePleasure >= suckeeThreshold) {
+    ejaculated = true;
+    energyDelta = tVal.energyBase + Math.floor(Math.abs(diff) / 10);
+  }
+
+  const tierNarratives = {
+    CRIT: `【大成功】${suckerName} 的榨精攻势完美击穿了 ${suckeeName} 的防线。`,
+    SUCCESS: `【成功】${suckerName} 的榨取动作精准有效，${suckeeName} 的身体不受控制的回应。`,
+    STALEMATE: `【纠缠】双方在快感中拉锯。${suckerName} 的榨取让 ${suckeeName} 的快感急剧攀升。`,
+    FAIL: `【失败】${suckerName} 的榨精被 ${suckeeName} 巧妙地缓冲了。${suckeeName}的快感少量增加。`,
+    CRIT_FAIL: `【大失败】${suckerName} 的榨精完全落空！${suckeeName} 的快感微量增加。`
+  };
+
+  let activePatch = [];
+  if (isHeroAttacker) {
+    activePatch.push(mkPatch("delta", "/擂台状态/主角当前体力", -staminaDelta));
+    activePatch.push(mkPatch("delta", "/擂台状态/对手当前快感值", pleasureDelta));
+  } else {
+    activePatch.push(mkPatch("delta", "/擂台状态/对手当前体力", -staminaDelta));
+    activePatch.push(mkPatch("delta", "/擂台状态/主角当前快感值", pleasureDelta));
+  }
+  if (ejaculated) {
+    activePatch.push(mkPatch("delta", isHeroAttacker ? "/擂台状态/对手当前精力" : "/擂台状态/主角当前精力", -energyDelta));
+    activePatch.push(mkPatch("delta", isHeroAttacker ? "/擂台状态/对手本场射精次数" : "/擂台状态/主角本场射精次数", 1));
+    activePatch.push(mkPatch("replace", isHeroAttacker ? "/擂台状态/对手当前快感值" : "/擂台状态/主角当前快感值", 0));
+  }
+  activePatch.push(mkPatch("insert", "/擂台状态/当前性斗日志/-", `R${currentRound+1}:${tierLabel}|榨:${suckerName}(${suckerFormula})|受:${suckeeName}(${suckeeFormula})|差:${diff}`));
+  activePatch.push(mkPatch("replace", "/擂台状态/当前擂台叙事", tierNarratives[tier]));
+
+  const roundResult = `${tierLabel}`;
+  const roundLog = `R${currentRound+1}: ${suckerName}→${suckeeName} | ${suckerFormula} vs ${suckeeFormula} | ${tierLabel} | 体力-${staminaDelta} | 快感+${pleasureDelta}${ejaculated ? ' | 射精！精力-'+energyDelta : ''}`;
+  const isVictory = ejaculated && (suckeeEnergy - energyDelta <= 0);
+
+  // 状态描述：主角
+  const heroMaxStamina = parseInt(_.get(stat, '主角.性斗数据.最大体力值', 100));
+  const heroMaxEnergy = parseInt(_.get(stat, '主角.性斗数据.最大精力值', 100));
+  const heroStaminaRatio = heroMaxStamina > 0 ? heroStamina / heroMaxStamina : 0;
+  const heroEnergyRatio = heroMaxEnergy > 0 ? heroEnergy / heroMaxEnergy : 0;
+  const heroStaminaDesc = heroStamina <= 0 ? '体力枯竭，每一次榨精都力不从心' : (heroStaminaRatio > 0.5 ? '体力充沛，动作矫健有力' : '体力消耗近半，略微喘息');
+  const heroEnergyDesc = heroEnergyRatio <= 0.2 ? '精囊将近枯竭，精液量稀少' : (heroEnergyRatio <= 0.6 ? '精囊消耗过半，精液逐渐变稀' : '精囊饱满，精液量大浓稠');
+
+  // 状态描述：对手（从擂台状态初始化值推算最大）
+  const oppMaxStamina = parseInt(_.get(stat, '擂台状态.对手当前体力', 100)) + (isHeroAttacker ? 0 : 0); // 用记录中的体力上限
+  const rosterEntry = _.get(stat, '记录.性斗士名录.' + oppName, {});
+  const oppMaxStaminaFromRoster = parseInt(rosterEntry.体力上限 || 100);
+  const oppMaxEnergyFromRoster = parseInt(rosterEntry.精力上限 || 100);
+  const oppStaminaRatio = oppMaxStaminaFromRoster > 0 ? oppStamina / oppMaxStaminaFromRoster : 0;
+  const oppEnergyRatio = oppMaxEnergyFromRoster > 0 ? oppEnergy / oppMaxEnergyFromRoster : 0;
+  const oppStaminaDesc = oppStamina <= 0 ? '体力枯竭，每一次榨精都力不从心' : (oppStaminaRatio > 0.5 ? '体力充沛，动作矫健有力' : '体力消耗近半，略微喘息');
+  const oppEnergyDesc = oppEnergyRatio <= 0.2 ? '精囊将近枯竭，精液量稀少' : (oppEnergyRatio <= 0.6 ? '精囊消耗过半，精液逐渐变稀' : '精囊饱满，精液量大浓稠');
+ _%>
+# 擂台性斗系统
+
+combat_engine_protocol:
+  context:
+    current_round: "<%= currentRound + 1 %>/<%= maxRounds %>"
+    榨精方: "<%= suckerName %>（剩余体力<%= Math.max(0, newSuckerStamina) %>）"
+    被榨方: "<%= suckeeName %>（精液储备剩余<%= ejaculated ? Math.max(0, suckeeEnergy - energyDelta) : suckeeEnergy %> | 当前快感<%= ejaculated ? 0 : newSuckeePleasure %>/<%= suckeeThreshold %>）"
+    骰子结果: "<%= tierLabel %>（榨:<%= suckerFormula %> vs 受:<%= suckeeFormula %> | 差值:<%= diff %>）"
+    叙事提示: "<%= tierNarratives[tier] %>"
+    hero_status: "体力——<%= heroStaminaDesc %> | 精力——<%= heroEnergyDesc %>"
+    opponent_status: "体力——<%= oppStaminaDesc %> | 精力——<%= oppEnergyDesc %>"
+
+  round_result: "<%= roundLog %>"
+
+<%_ if (isHeroAttacker) { _%>
+  hero_squeezing_round:
+    description: "主角<%= heroAlias %>是本回合的榨精方。根据玩家的回复动作描述主角的榨精手法——用手、用嘴、用身体——任何能榨取对手精液的手段。本轮骰子结果：<%= tierLabel %>。"
+    narrative_directives:
+      - "结合玩家给定的榨精手段，完整描述本回合的展开和结果——从主角发起攻势、对手的反应、到骰子结果对应的效果。本轮必须在叙事中完整推进完毕，不留下回合待续。"
+<%_   if (ejaculated) { _%>
+      - "对手<%= oppName %>在本回合被榨至射精。描写他精液涌出的瞬间——身体的痉挛、失控的呻吟、精力值骤降的虚脱。"
+<%_     if (isVictory) { _%>
+      - "【决胜镜头】这是榨干对手的最后一轮！<%= oppName %>射出的精液成为本场最后的弹药——他的精力条触底，系统判定败北。描写擂台灯光切换至胜利模式、全息屏幕锁定最终比分、全场沸腾。描写<%= heroAlias %>在对手瘫软的躯体上直起身、居高临下看着自己榨干的战利品的瞬间。"
+<%_     } _%>
+<%_   } else { _%>
+      - "描写对手在被榨过程中的快感累积——身体的颤抖、克制不住的喘息、快感值逼近临界点的紧张感。"
+<%_   } _%>
+      <%_ if (!isVictory) { _%>- "本回合叙述完成后，说明攻受逆转——下一回合将由对手<%= oppName %>作为榨精方。描写双方短暂调整体势，准备迎接下一轮。回合数的累积和攻受切换已在后台自动处理。"<%_ } _%>
+<%_ } else { _%>
+  hero_being_squeezed_round:
+    description: "对手<%= oppName %>是本回合的榨精方。根据他的性斗风格和性行为偏好确定他的榨精方式。"
+    opponent_style_and_preference:
+      style: "<%= oppStyle || '未知风格' %>"
+      preference: "<%= oppPref || '未知偏好' %>"
+    narrative_directives:
+      - "根据对手的性斗风格和偏好，设计他本轮对主角<%= heroAlias %>的榨精方式。本轮骰子结果：<%= tierLabel %>。"
+      - "结合对手的风格完整描述本回合的展开和结果——从对手发起攻势、主角的承受与忍耐、到骰子结果对应的效果。本轮必须在叙事中完整推进完毕。"
+<%_   if (ejaculated) { _%>
+      - "主角在本回合被榨至射精。描写精液被对手榨出时的身体痉挛与认输的快感冲击。"
+<%_     if (isVictory) { _%>
+      - "【决胜镜头】主角的精力被对手榨干了！最后一发精液在对手的操纵下喷涌而出，系统判定败北。描写擂台灯光切换至对手的胜利模式——全息屏幕锁定比分、全场起哄或欢呼。<%= oppName %>缓缓从主角瘫软的躯体上起身，汗珠顺着胜利者的身体滴落在败者的皮肤上。描写主角在射空后虚脱地躺着的视角——擂台的天花板、观众模糊的脸、对方得胜者的影子从余光中跨过你的身体。"
+<%_     } _%>
+<%_   } else { _%>
+      - "描写主角在被对手榨精时的忍耐——在快感的冲击下维持呼吸和体态，快感值逼近阈值的紧绷。"
+<%_   } _%>
+      <%_ if (!isVictory) { _%>- "本回合叙述完成后，说明攻受逆转——下一回合将由主角<%= heroAlias %>作为榨精方。描写双方短暂调整体势，准备迎接下一轮。回合数的累积和攻受切换已在后台自动处理。"<%_ } _%>
+<%_ } _%>
+
+  common_atmosphere:
+    - "描写现场观赛的淫靡氛围——观众席上此起彼伏的下流喊话、赌徒们盯着全息赔率面板时攥紧的拳头、有人已经在观众席上互相摸着对方的鸡巴准备自己来。"
+    - "描写主持人激情下流的实时讲解——他用粗俗露骨的词汇解说榨精方的动作和被榨方的反应，在精液喷涌的瞬间拉长尾音爆出高潮般的嘶吼。讲解词里混杂着毫不掩饰的个人偏好。"
+
+  danmaku_output:
+    instruction: "在叙事结尾，根据本回合的进程和结果，AI自行设计3-5条观众弹幕并插入到当前弹幕列表变量中。用词下流、粗俗直白。弹幕内容应紧密结合当前回合的具体情况——榨精的动作、被榨方的反应、是否射精、谁是榨精方等。"
+    variable_hint: "弹幕需通过insert追加到 /擂台状态/当前弹幕列表 中。"
+
+  mandatory_patch:
+    narrative_complete_patch: |
+<%= formatPatchBlock(activePatch).split('\n').map(l => '      ' + l).join('\n') %>
+
+  prohibitions:
+    - "严禁在同一回合内让双方都进行榨精行动——每回合只有一方榨精、另一方被榨。"
+    - "严禁跳过性行为描写只写心理活动或弹幕。性斗的核心是榨精与被榨的身体对抗。"
+    - "严禁描写非本轮的内容——本轮必须在叙事中完整推进完毕。"
+    - "严禁手动修改进攻方、回合数——这些由后台自动处理。"
+    - "严禁使用'进攻/防守/攻击'字眼——使用'榨精/被榨'。"
+    - "严禁混淆体能下降方，每回合只有榨精方消耗体力。"
+    - "严禁无视骰子结果进行叙事。叙事方向必须基于骰子结果进行。"
+<%_ } } } _%>

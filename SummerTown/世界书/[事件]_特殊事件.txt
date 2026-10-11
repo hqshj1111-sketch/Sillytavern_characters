@@ -1,0 +1,434 @@
+<%_
+{
+  const stat = getvar('stat_data');
+  const queueEvent = _.get(stat, '系统状态.待处理事件.特殊事件');
+  const confessorQueue = _.get(stat, '系统状态.待处理事件.告白事件', '');
+  const isSpecialOngoing = _.get(stat, '系统状态.特殊事件进行中', false);
+  const specialType = _.get(stat, '特殊事件.类型', '无');
+  
+  if (!confessorQueue && (queueEvent || (isSpecialOngoing && specialType.startsWith('随机互动-')))) {
+      const isSpecialOngoing = _.get(stat, '系统状态.特殊事件进行中', false);
+      const npcs = ['早乙女海斗', '早乙女夏海', '希克', '神崎莲', '神崎乐奈', '月下阳太', '月下雪乃', '雨宫明日香', '雨宫凉子', '御影双子'];
+
+      // ==================== 辅助函数 ====================
+      const indoorLocations = [
+        "早乙女家公共区域", "海斗的房间", "夏海的房间",
+        "御神山神社公共区域", "莲的房间", "乐奈的房间",
+        "月下家公共区域", "阳太的房间", "雪乃的房间",
+        "雨宫家老宅公共区域", "凉子的房间", "明日香的房间", "主角的房间"
+      ];
+      const outdoorLocations = [
+        "海水浴场", "防波堤与废弃灯塔", "海滨旧仓库",
+        "祭典广场", "山顶观景台", "清凉溪流", "希克的秘密基地",
+        "汐见沢美食街", "镇立图书馆", "风铃酒馆", "古早杂货铺",
+        "汐风健身房", "夜灯台小公园", "镇民集会所与中古铺", 
+        "镇民公共浴场","远郊电车站", "乡间田野", "汐见沢高校", "废弃列车厢"
+      ];
+      
+      function getLocationTags(locationName) {
+        const tags = [locationName]; // 本身作为标签
+        if (indoorLocations.includes(locationName)) tags.push("室内");
+        if (outdoorLocations.includes(locationName)) tags.push("户外");
+        return tags;
+      }
+
+      // ==================== 种子库 ====================
+      const PLOT_SEEDS = [
+        { "id": 1, "seed": "分享：一位角色带来某样东西，想与主角共同体验或展示", "type": ["亲密度","情欲度"], "min_value": null, "time": null, "weather": null, "location_tag": null, "same_location": false, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,10], "weight": 1 },
+        { "id": 2, "seed": "求助：某位角色遇到一个小小的麻烦，需要主角帮忙", "type": ["亲密度","情欲度"], "min_value": null, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [2,6], "weight": 1 },
+        { "id": 3, "seed": "发现：主角无意间撞见了某位角色的秘密", "type": ["亲密度","情欲度"], "min_value": null, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,10], "weight": 1 },
+        { "id": 4, "seed": "身体意外：一方轻微受伤、中暑、被蚊虫叮咬，另一方进行笨拙的照料", "type": ["亲密度","情欲度"], "min_value": null, "time": null, "weather": ["晴天"], "location_tag": ["户外"], "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,10], "weight": 1 },
+        { "id": 5, "seed": "突变的天气：一阵急雨或雷声打断了当下的节奏，两人一起躲雨或关窗", "type": ["亲密度","情欲度"], "min_value": null, "time": null, "weather": ["阵雨","雷阵雨"], "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [2,8], "weight": 3 },
+        { "id": 6, "seed": "掏耳朵/膝枕：角色撒娇或强势地要求躺下，一方为另一方掏耳朵或提供膝枕", "type": ["亲密度","情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 3 },
+        { "id": 7, "seed": "午后的邀约：一方突然发消息约主角去吃冰或逛街，开启一段随性的小冒险", "type": ["亲密度","情欲度"], "min_value": null, "time": ["正午","下午"], "weather": null, "location_tag": null, "same_location": false, "event_location": ["镇民集会所与中古铺"], "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,8], "weight": 3 },
+        { "id": 8, "seed": "停电时刻：老旧的小镇突然跳闸停电，黑暗中两人只能依靠声音和触觉来感知彼此", "type": ["亲密度","情欲度"], "min_value": null, "time": ["傍晚","晚上"], "weather": ["雷阵雨"], "location_tag": ["室内"], "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 3 },
+        { "id": 9, "seed": "对方的领地：被邀请进入对方的房间或秘密场所，参观其私密空间", "type": ["亲密度","情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": false, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 3 },
+        { "id": 10, "seed": "共同的回忆：一件物品或一句话唤起了两人共有的儿时瞬间", "type": ["亲密度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,10], "weight": 3 },
+        { "id": 11, "seed": "消磨时光：纯粹因为无聊，一起在某个角落发呆、闲聊、探索", "type": ["亲密度"], "min_value": null, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [2,6], "weight": 3 },
+        { "id": 12, "seed": "一起做饭/准备食材：两人在厨房或户外一起处理食材，闲聊间自然拉近距离", "type": ["亲密度"], "min_value": null, "time": null, "weather": null, "location_tag": ["室内"], "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,8], "weight": 3 },
+        { "id": 13, "seed": "夜晚漫步：夜晚两人在小镇散步聊天，享受夏夜晚风与星空", "type": ["亲密度"], "min_value": 25, "time": ["晚上"], "weather": ["晴天","多云"], "location_tag": ["户外"], "same_location": false, "event_location": ["户外"], "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,8], "weight": 3 },
+        { "id": 14, "seed": "午后困倦：炎热的午后，两人一起在树荫下打盹或乘凉，有一搭没一搭地闲聊", "type": ["亲密度"], "min_value": null, "time": ["正午","下午"], "weather": ["晴天"], "location_tag": ["户外"], "same_location": true, "event_location": ["户外"], "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [2,6], "weight": 3 },
+        { "id": 15, "seed": "恋人的日常：两人以恋人的身份一起做一件平凡的小事，在自然的默契中感受温存。", "type": ["亲密度"], "min_value": 75, "time": null, "weather": null, "location_tag": null, "same_location": false, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,10], "weight": 3 },
+        { "id": 16, "seed": "性爱邀约：一方直接当面或者发信息、打电话给主角，邀约主角发生身体关系", "type": ["情欲度"], "min_value": 75, "time": null, "weather": null, "location_tag": null, "same_location": null, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [16,30], "weight": 3 },
+        { "id": 17, "seed": "试衣服：角色正在试穿新衣服或特殊装扮（浴衣/泳装/内衣/情趣服装），让主角帮忙看效果", "type": ["情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 3 },
+        { "id": 18, "seed": "一起泡汤：因各种原因（停水、浴场偶遇、省水费），两人在同一空间赤裸相对", "type": ["情欲度"], "min_value": 50, "time": ["傍晚","晚上"], "weather": null, "location_tag": ["室内","浴室","浴场"], "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [8,16], "weight": 3 },
+        { "id": 19, "seed": "意外走光：风吹起裙摆、衣领滑落、浴巾脱落，一方不小心露出了不该露的地方", "type": ["情欲度"], "min_value": null, "time": null, "weather": ["晴天"], "location_tag": ["户外","浴室","浴场"], "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,10], "weight": 3 },
+        { "id": 20, "seed": "写真/绘画模特：一方请求主角当自己的摄影或绘画模特，在摆姿势的过程中气氛逐渐暧昧", "type": ["情欲度"], "min_value": 50, "time": null, "weather": null, "location_tag": null, "same_location": false, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [8,16], "weight": 3 },
+        { "id": 21, "seed": "非插入性亲密：因各种暧昧原因，主角与某角色进行手交、口交、足交或乳交等非插入式性行为", "type": ["情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 3 },
+
+        { "id": 101, "seed": "深夜小酌：凉子在厨房独酌时被主角撞见，她邀主角坐下，在微醺中流露脆弱与寂寞", "type": ["亲密度","情欲度"], "min_value": 25, "time": ["晚上"], "weather": null, "location_tag": ["室内"], "same_location": true, "event_location": ["雨宫家老宅公共区域"], "character_specific": ["雨宫凉子"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 5 },
+        { "id": 102, "seed": "撞见自慰：主角偶然经过，无意间撞见凉子正在自慰的私密场面", "type": ["情欲度"], "min_value": 50, "time": ["晚上"], "weather": null, "location_tag": ["凉子的房间","雨宫家老宅公共区域"], "same_location": false, "event_location": ["凉子的房间"], "character_specific": ["雨宫凉子"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [10,16], "weight": 5 },
+        { "id": 111, "seed": "视频拍摄：明日香拉着主角一起拍短视频，要求摆出亲密姿势，用辣妹的大方化解亲密", "type": ["亲密度","情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["雨宫明日香"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 5 },
+        { "id": 112, "seed": "辣妹化妆：明日香非要把主角按在镜子前，给他试她的化妆品，过程中笑闹不断身体贴得很近", "type": ["情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": ["明日香的房间"], "same_location": false, "event_location": ["明日香的房间"], "character_specific": ["雨宫明日香"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 5 },
+        { "id": 121, "seed": "肌肉按摩：海斗训练后肌肉酸痛，要求帮忙按摩，结实肌肉在掌下滚烫", "type": ["亲密度","情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["早乙女海斗"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 5 },
+        { "id": 122, "seed": "肌肉锻炼：海斗邀请主角一起做力量训练，在辅助动作和汗水中，结实的身体触碰频繁", "type": ["亲密度","情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": false, "event_location": ["汐风健身房"], "character_specific": ["早乙女海斗"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,10], "weight": 5 },
+        { "id": 131, "seed": "女生的话题：夏海突然拉着主角问一些关于女生打扮、恋爱的话题，说话时偶尔露出些许在意和扭捏", "type": ["亲密度","情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["早乙女夏海"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 5 },
+        { "id": 132, "seed": "泳姿教学：夏海请主角帮她计时游泳，穿着死库水，在泳池或海边展现阳光健康的身体", "type": ["情欲度"], "min_value": 50, "time": null, "weather": ["晴天"], "location_tag": ["户外","海水浴场"], "same_location": false, "event_location": ["海水浴场"], "character_specific": ["早乙女夏海"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [8,14], "weight": 5 },
+        { "id": 141, "seed": "都市遥想：阳太缠着主角讲都市的生活，话题渐渐滑向都市的恋爱与刺激，阳太的眼神里好奇与燥热交织", "type": ["情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["月下阳太"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 5 },
+        { "id": 142, "seed": "足球对练：阳太拉主角去练球，身体冲撞和汗水交织，年下直球的崇拜与靠近", "type": ["亲密度","情欲度"], "min_value": null, "time": null, "weather": ["晴天"], "location_tag": null, "same_location": false, "event_location": ["汐见沢高校"], "character_specific": ["月下阳太"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,8], "weight": 5 },
+        { "id": 151, "seed": "直播邀约：雪乃联系主角，邀请他作为特别嘉宾参与自己下一次的野外露出直播", "type": ["情欲度"], "min_value": 50, "time": ["下午","傍晚","晚上"], "weather": ["晴天","多云"], "location_tag": null, "same_location": false, "event_location": ["户外", "夜灯台小公园"], "character_specific": ["月下雪乃"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [10,20], "weight": 5 },
+        { "id": 156, "seed": "直播撞见：主角于小镇某处偶然撞见雪乃正在进行野外露出直播，或者上网时无意刷到了她正在进行中的直播", "type": ["情欲度", "亲密度"], "min_value": 25, "time": ["下午","傍晚","晚上"], "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["月下雪乃"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [5,8], "weight": 5 },
+        { "id": 157, "seed": "意外发现：主角无意间在某个地方发现了雪乃不小心遗落的或正在使用的自慰情趣玩具，撞破她的好色秘密", "type": ["情欲度"], "min_value": 25, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["月下雪乃"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,10], "weight": 5 },
+        { "id": 161, "seed": "女装/男装互换：莲出于某种原因穿上相反的性别装束，并需要主角帮忙掩护或评价", "type": ["亲密度","情欲度"], "min_value": 50, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["神崎莲"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 5 },
+        { "id": 162, "seed": "女装约会：莲主动穿好女装，有些紧张地邀主角去邻镇逛街，以完全的女性姿态走在主角身边", "type": ["亲密度"], "min_value": 75, "time": null, "weather": null, "location_tag": null, "same_location": false, "event_location": ["汐见沢美食街"], "character_specific": ["神崎莲"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [8,14], "weight": 5 },
+        { "id": 171, "seed": "神社的午后：乐奈在神社廊下偷懒被主角撞见，她索性拉着主角一起偷懒喝酒吃点心", "type": ["亲密度","情欲度"], "min_value": null, "time": ["正午","下午"], "weather": ["晴天"], "location_tag": ["神社"], "same_location": true, "event_location": ["御神山神社公共区域"], "character_specific": ["神崎乐奈"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,10], "weight": 5 },
+        { "id": 172, "seed": "游戏对战：乐奈邀请主角去她房间打游戏，边喝啤酒边玩，输的人要接受搞怪惩罚", "type": ["亲密度","情欲度"], "min_value": 25, "time": ["正午","下午","傍晚","晚上"], "weather": null, "location_tag": null, "same_location": false, "event_location": ["乐奈的房间"], "character_specific": ["神崎乐奈"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,12], "weight": 5 },
+        { "id": 181, "seed": "捕猎献宝：希克带来他捕获或找到的“好东西”——野果、漂亮石头，或是一只倒霉的青蛙", "type": ["亲密度","情欲度"], "min_value": null, "time": ["上午","正午","下午"], "weather": null, "location_tag": null, "same_location": false, "event_location": null, "character_specific": ["希克"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,10], "weight": 5 },
+        { "id": 182, "seed": "溪水嬉戏：希克带主角去清凉溪流玩水，像小狗一样甩水，教主角徒手抓鱼", "type": ["亲密度","情欲度"], "min_value": 25, "time": ["上午","正午","下午"], "weather": ["晴天"], "location_tag": ["户外","溪流"], "same_location": false, "event_location": ["清凉溪流"], "character_specific": ["希克"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [6,10], "weight": 5 },
+        { "id": 183, "seed": "性别切换：希克的身体突然发生了变化，在主角面前从当前性别切换为另一性别，他对这件事毫不在意", "type": ["亲密度"], "min_value": null, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["希克"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [4,8], "weight": 5 },
+        { "id": 191, "seed": "沉睡的恶作剧：主角半睡半醒时发现身体被看不见但触感真实地抚弄，原来是双子在搞色色的恶作剧", "type": ["亲密度","情欲度"], "min_value": null, "time": ["深夜","凌晨"], "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["御影双子"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [10,16], "weight": 5 },
+        { "id": 192, "seed": "春梦编织：深夜，御影双子潜入主角的睡眠，编织一场温柔缠绵的梦境", "type": ["亲密度","情欲度"], "min_value": null, "time": ["深夜","凌晨"], "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": ["御影双子"], "min_targets": 2, "target_constraint": "any", "required_characters": null, "bonus_range": [12,20], "weight": 5 },
+
+        { "id": 301, "seed": "3P邀约：两位恋人一起找上主角，提出想要三人一起享受肉体欢愉", "type": ["情欲度"], "min_value": 75, "time": null, "weather": null, "location_tag": null, "same_location": false, "event_location": null, "character_specific": null, "min_targets": 3, "target_constraint": "lovers", "required_characters": null, "bonus_range": [10,18], "weight": 5 },
+        { "id": 302, "seed": "三人的日常修罗场：两位恋人意外同时出现，暗自较劲却又不失温馨，比如抢着夹菜、争夺膝枕权", "type": ["亲密度"], "min_value": 75, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 3, "target_constraint": "lovers", "required_characters": null, "bonus_range": [10,16], "weight": 5 },
+        { "id": 303, "seed": "三人直播邀约：雪乃邀请主角和阳太作为特邀嘉宾，一起参与她今晚的野外露出直播，用温柔的语气说着极其大胆的计划", "type": ["情欲度"], "min_value": 75, "time": ["下午","傍晚","晚上"], "weather": ["晴天","多云"], "location_tag": null, "same_location": false, "event_location": ["户外", "夜灯台小公园"], "character_specific": null, "min_targets": 3, "target_constraint": "specific", "required_characters": ["月下雪乃","月下阳太"], "bonus_range": [12,18], "weight": 5 },
+        { "id": 304, "seed": "姐弟同访：雪乃想给主角看新的直播道具，阳太想倾诉训练烦恼，两人不约而同地同时来找主角，三人挤在房间里", "type": ["亲密度"], "min_value": 50, "time": null, "weather": null, "location_tag": null, "same_location": true, "event_location": ["雪乃的房间", "阳太的房间", "主角的房间"], "character_specific": null, "min_targets": 3, "target_constraint": "specific", "required_characters": ["月下雪乃","月下阳太"], "bonus_range": [8,14], "weight": 5 },
+        { "id": 305, "seed": "母女的竞争：凉子主动提议与明日香一起服侍主角，眼中闪烁少女般的好胜心", "type": ["情欲度"], "min_value": 75, "time": null, "weather": null, "location_tag": null, "same_location": false, "event_location": null, "character_specific": null, "min_targets": 3, "target_constraint": "specific", "required_characters": ["雨宫凉子","雨宫明日香"], "bonus_range": [12,18], "weight": 5 },
+        { "id": 306, "seed": "母女厨房：凉子和明日香难得一起下厨，为主角做丰盛晚餐，拌嘴又协作", "type": ["亲密度"], "min_value": 50, "time": ["傍晚", "晚上"], "weather": null, "location_tag": null, "same_location": false, "event_location": ["雨宫家老宅公共区域"], "character_specific": null, "min_targets": 3, "target_constraint": "specific", "required_characters": ["雨宫凉子","雨宫明日香"], "bonus_range": [8,14], "weight": 5 },
+        { "id": 307, "seed": "沙滩排球：海斗和夏海拉主角在海水浴场打排球，汗水飞溅，肢体冲撞间暧昧电流流动", "type": ["情欲度"], "min_value": 50, "time": ["上午","正午","下午"], "weather": ["晴天"], "location_tag": ["海水浴场"], "same_location": false, "event_location": ["海水浴场"], "character_specific": null, "min_targets": 3, "target_constraint": "specific", "required_characters": ["早乙女海斗","早乙女夏海"], "bonus_range": [12,20], "weight": 5 },
+        { "id": 308, "seed": "兄妹的帮手：海斗和夏海修理旧物或整理仓库，主角被拉去帮忙，在琐碎协作中亲近感愈发自然", "type": ["亲密度"], "min_value": 25, "time": ["上午","正午","下午", "傍晚"], "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 3, "target_constraint": "specific", "required_characters": ["早乙女海斗","早乙女夏海"], "bonus_range": [6,12], "weight": 5 },
+        { "id": 309, "seed": "三人逛街：乐奈怂恿下莲穿上女装，三人街头闲逛，莲在主角夸奖中渐渐藏不住开心", "type": ["亲密度","情欲度"], "min_value": 50, "time": ["上午","正午","下午","傍晚"], "weather": null, "location_tag": null, "same_location": false, "event_location": ["古早杂货铺"], "character_specific": null, "min_targets": 3, "target_constraint": "specific", "required_characters": ["神崎莲","神崎乐奈"], "bonus_range": [8,14], "weight": 5 },
+        { "id": 310, "seed": "游戏惩罚：乐奈招呼主角和莲到她房间打游戏，输的人喝酒，惩罚逐渐向成人向脱轨", "type": ["情欲度"], "min_value": 50, "time": ["上午","正午","下午","傍晚","晚上"], "weather": null, "location_tag": ["乐奈的房间"], "same_location": false, "event_location": ["乐奈的房间"], "character_specific": null, "min_targets": 3, "target_constraint": "specific", "required_characters": ["神崎莲","神崎乐奈"], "bonus_range": [8,16], "weight": 5 },
+        { "id": 311, "seed": "半梦半醒的三人戏：御影双子趁夜色现身，同时对睡眼惺忪的主角与另一位在场角色上下其手", "type": ["情欲度"], "min_value": null, "time": ["深夜","凌晨"], "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 3, "target_constraint": "specific_lovers", "required_characters": ["御影双子"], "bonus_range": [8,16], "weight": 5 },
+        { "id": 312, "seed": "共游梦境：双子为主角与恋人编织了一场春梦，在梦中四人躺在夏夜繁星下做尽温柔缠绵的事", "type": ["亲密度","情欲度"], "min_value": null, "time": ["深夜","凌晨"], "weather": null, "location_tag": null, "same_location": true, "event_location": null, "character_specific": null, "min_targets": 3, "target_constraint": "specific_lovers", "required_characters": ["御影双子"], "bonus_range": [8,16], "weight": 5 }
+      ]
+
+      // ==================== 筛选函数 ====================
+      function filterSeed(seed, params) {
+        const {
+          isDeepNight,
+          eventType,
+          maxValue,
+          timePeriod,
+          weather,
+          allLocationTags,
+          allSameLocation,
+          involvedChars
+        } = params;
+
+        
+
+        if (!seed.type.includes(eventType)) return false;
+        if (seed.min_value !== null && maxValue < seed.min_value) return false;
+        if (seed.time === null) {
+          if (isDeepNight) return false;
+        } else {
+          if (!seed.time.includes(timePeriod)) return false;
+        }
+        if (seed.weather && !seed.weather.includes(weather)) return false;
+
+        if (seed.same_location === true && !allSameLocation) return false;
+        if (seed.same_location === false && allSameLocation) return false;
+
+        // 角色专属
+        if (seed.character_specific && seed.character_specific.length > 0) {
+          const hasChar = seed.character_specific.some(c => involvedChars.includes(c));
+          if (!hasChar) return false;
+        }
+
+        // 必须包含角色
+        if (seed.required_characters && seed.required_characters.length > 0) {
+          const hasAll = seed.required_characters.every(c => involvedChars.includes(c));
+          if (!hasAll) return false;
+        }
+
+        // 最少参与人数 (involvedChars不含主角)
+        if (involvedChars.length + 1 > seed.min_targets) return false;
+
+        return true;
+      }
+
+      // ========== 阶段 A：事件初始化 ==========
+      if (!isSpecialOngoing) {
+          const mcRegion = _.get(stat, '主角.当前状态.当前区域');
+          const mcLocStr = _.get(stat, '主角.当前状态.当前地点');
+          const nowMinutes = (parseInt(_.get(stat, '进程.当前时间戳', 0)) || 0) + 540;
+          const timeStr = String(Math.floor((nowMinutes % 1440) / 60)).padStart(2, '0') + ':' + String(nowMinutes % 60).padStart(2, '0');
+          const hour = Math.floor((nowMinutes % 1440) / 60);
+          
+          let period = '上午';
+          if (hour >= 6 && hour < 9) period = '清晨';
+          else if (hour >= 9 && hour < 12) period = '上午';
+          else if (hour >= 12 && hour < 14) period = '正午';
+          else if (hour >= 14 && hour < 17) period = '下午';
+          else if (hour >= 17 && hour < 19) period = '傍晚';
+          else if (hour >= 19 && hour < 23) period = '晚上';
+          else if (hour >= 23 || hour < 4) period = '深夜';
+          else if (hour >= 4 && hour < 6) period = '凌晨';
+          
+          const weather = _.get(stat, '进程.当日天气', '晴天');
+          let targets = [];
+          let eventType = '';
+          
+          // 深夜/凌晨强制双子
+          if (period === '深夜' || period === '凌晨') {
+              targets = ['御影双子'];
+              const allNpcData = _.get(stat, 'NPC数据', {});
+              const loverNamesAtSameLoc = Object.keys(allNpcData).filter(name => {
+                  const intimacy = parseInt(_.get(allNpcData, `${name}.主角关系.亲密度`, 0));
+                  const loc = _.get(allNpcData, `${name}.当前状态.当前地点`, '');
+                  return intimacy >= 75 && loc === mcLocStr && name !== '御影双子';
+              });
+              if (loverNamesAtSameLoc.length > 0) {
+                  targets.push(loverNamesAtSameLoc[0]);
+              }
+              eventType = Math.random() < 0.5 ? '亲密度' : '情欲度';
+          } else {
+              let lovers = [], sameLoc = [], sameRegion = [];
+              npcs.forEach(npc => {
+                  const intimacy = parseInt(_.get(stat, `NPC数据.${npc}.主角关系.亲密度`, 0));
+                  const locStr = _.get(stat, `NPC数据.${npc}.当前状态.当前地点`);
+                  const reg = _.get(stat, `NPC数据.${npc}.当前状态.当前区域`);
+                  if (intimacy >= 75) lovers.push(npc);
+                  if (locStr === mcLocStr) sameLoc.push(npc);
+                  if (reg === mcRegion) sameRegion.push(npc);
+              });
+              if (lovers.length >= 2 && Math.random() < 0.3) {
+                  targets = _.sampleSize(lovers, 2);
+              } else {
+                  if (sameLoc.length > 0 && Math.random() < 0.9) targets = [_.sample(sameLoc)];
+                  else if (sameRegion.length > 0 && Math.random() < 0.7) targets = [_.sample(sameRegion)];
+                  else targets = [_.sample(npcs)];
+              }
+              eventType = Math.random() < 0.5 ? '亲密度' : '情欲度';
+          }
+          
+          const targetStr = targets.join('与');
+          
+          // maxValue：targets中eventType的最大值
+          let maxVal = 0;
+          targets.forEach(t => {
+              const val = parseInt(_.get(stat, `NPC数据.${t}.主角关系.${eventType}`, 0));
+              if (val > maxVal) maxVal = val;
+          });
+
+          const getToneLevel = (val) => {
+            if (val >= 75) return 3;
+            if (val >= 50) return 2;
+            if (val >= 25) return 1;
+            return 0;
+          };
+          const toneLevel = getToneLevel(maxVal);
+          const intimacyTones = [
+            "试探与观察：互动轻盈、有礼，肢体接触极少，重在话题与氛围。",
+            "共鸣与陪伴：自然随性，分享当下，不经意的身体触碰被接纳。",
+            "交心与依赖：私密感提升，自愿暴露脆弱，安慰与倚靠成为常态。",
+            "默契与共感：无须多言，日常琐事都染上珍视的温度。"
+          ];
+          const lustTones = [
+            "生理距离：注意力不在身体上，保持清爽的物理间隔。",
+            "多余的注意：目光不自觉落在对方身体细节上，一阵燥热后迅速移开。",
+            "拉扯与张力：咫尺之间，气息交融，每一个动作都藏着意有所指。",
+            "直白的交付：欲望坦露，眼神和话语都在邀请更深的纠缠。"
+          ];
+          const narrativeTone = (eventType === '亲密度') ? intimacyTones[toneLevel] : lustTones[toneLevel];
+
+          // 获取所有涉及地点的标签
+          const involvedLocations = [mcLocStr, ...targets.map(t => _.get(stat, `NPC数据.${t}.当前状态.当前地点`, ''))];
+          const allLocationTags = _.uniq(_.flatMap(involvedLocations, loc => getLocationTags(loc)));
+          const allSameLocation = targets.every(t => _.get(stat, `NPC数据.${t}.当前状态.当前地点`, '') === mcLocStr);
+
+          // 恋人信息
+          const lvKey = 75; // 亲密度>=75视为恋人
+          const allNpcData = _.get(stat, 'NPC数据', {});
+          const totalLovers = Object.keys(allNpcData).filter(n => (parseInt(_.get(allNpcData, `${n}.主角关系.亲密度`, 0)) || 0) >= lvKey).length;
+          const loverNamesAtSameLoc = Object.keys(allNpcData).filter(n => {
+              const intimacy = parseInt(_.get(allNpcData, `${n}.主角关系.亲密度`, 0));
+              const loc = _.get(allNpcData, `${n}.当前状态.当前地点`, '');
+              return intimacy >= lvKey && loc === mcLocStr && n !== '御影双子';
+          });
+
+          const situation = {
+            isDeepNight: period === '深夜' || period === '凌晨',
+            eventType,
+            maxValue: maxVal,
+            timePeriod: period,
+            weather,
+            allLocationTags,
+            allSameLocation,
+            involvedChars: targets
+          };
+
+          
+
+          console.log("特殊事件随机数");
+          console.log(Math.random());
+          const allCandidateSeeds = PLOT_SEEDS.filter(s => filterSeed(s, situation));
+
+console.log('========== 特殊事件筛选调试 ==========');
+console.log(hour);
+console.log(nowMinutes);
+console.log('当前状态:', JSON.stringify({
+  timePeriod: period,
+  weather: weather,
+  mcLocStr: mcLocStr,
+  allLocationTags: allLocationTags,
+  allSameLocation: allSameLocation,
+  involvedChars: targets,
+  eventType: eventType,
+  maxValue: maxVal
+}, null, 2));
+
+console.log('所有种子逐一过滤:');
+PLOT_SEEDS.forEach(seed => {
+  const passed = filterSeed(seed, {
+    isDeepNight: period === '深夜' || period === '凌晨',
+    eventType,
+    maxValue: maxVal,
+    timePeriod: period,
+    weather,
+    allLocationTags,
+    allSameLocation,
+    involvedChars: targets
+  });
+
+  let failReasons = [];
+  if (seed.min_value !== null && maxVal < seed.min_value) failReasons.push(`亲密度/情欲度不足(需要${seed.min_value},实际${maxVal})`);
+  if (seed.time && !seed.time.includes(period)) failReasons.push(`时段不匹配(需要${seed.time},当前${period})`);
+  if (seed.weather && !seed.weather.includes(weather)) failReasons.push(`天气不匹配(需要${seed.weather},当前${weather})`);
+  if (seed.location_tag && seed.location_tag.length > 0 && !seed.location_tag.some(tag => allLocationTags.includes(tag))) failReasons.push(`地点标签不匹配(需要${seed.location_tag},当前${allLocationTags})`);
+  if (seed.same_location === true && !allSameLocation) failReasons.push('要求同地但不在同地');
+  if (seed.same_location === false && allSameLocation) failReasons.push('要求不同地但已在同地');
+  if (seed.character_specific && seed.character_specific.length > 0 && !seed.character_specific.some(c => targets.includes(c))) failReasons.push(`角色不匹配(需要${seed.character_specific},当前${targets})`);
+  if (seed.required_characters && seed.required_characters.length > 0 && !seed.required_characters.every(c => targets.includes(c))) failReasons.push(`必须角色不满足(需要${seed.required_characters},当前${targets})`);
+  if (!seed.type.includes(eventType)) failReasons.push(`类型不匹配(需要${seed.type},当前${eventType})`);
+
+  console.log(`  ID ${seed.id}: ${passed ? '✅通过' : '❌过滤'} | ${seed.seed}${failReasons.length ? ' | 原因: ' + failReasons.join('; ') : ''}`);
+});
+
+console.log(`候选种子数量: ${allCandidateSeeds.length}`);
+if (allCandidateSeeds.length === 0) {
+  console.log('⚠️ 候选池为空，将使用保底种子 (ID: 1)');
+}
+console.log('==========================================');
+          
+          const weighted = [];
+          allCandidateSeeds.forEach(seed => {
+              let effectiveWeight = seed.weight || 1;
+              // 若种子有 location_tag 且与当前场景的地点标签有任意匹配，权重翻倍
+              if (seed.location_tag && seed.location_tag.length > 0) {
+                const hit = seed.location_tag.some(tag => allLocationTags.includes(tag));
+                if (hit) effectiveWeight *= 2;
+              }
+              for (let i = 0; i < effectiveWeight; i++) {
+                weighted.push(seed);
+              }
+          });
+          console.log(weighted.length);
+          let chosenSeed = _.sample(weighted);
+          if (!chosenSeed) {
+            chosenSeed = PLOT_SEEDS.find(s => s.id === 1); // 保底
+          }
+
+          // 确定事件地点：优先用种子建议地点，否则就地发生
+          let eventLocation = "未指定";
+          if (chosenSeed.event_location && chosenSeed.event_location.length > 0) {
+            // 从建议地点中随机选一个（如果有多个）
+            const suggestion = _.sample(chosenSeed.event_location);
+            if (suggestion === "室内") {
+              eventLocation = _.sample(indoorLocations);
+            } else if (suggestion === "户外") {
+              eventLocation = _.sample(outdoorLocations);
+            } else {
+              eventLocation = suggestion;
+            }
+          }
+
+          const needMove = targets.some(t => {
+            const tLoc = _.get(stat, `NPC数据.${t}.当前状态.当前地点`, '');
+            return tLoc !== eventLocation;
+          }) || mcLocStr !== eventLocation;
+
+          const movementGuidance = needMove 
+            ? "部分参与角色当前不在事件发生地点，请合理叙述他们以何种方式、因何缘由汇聚到【" + eventLocation + "】。"
+            : "";
+_%>
+# **高优先级**特殊事件触发（Dynamic Narrative Engine）
+event_initiator:
+  event_name: "[由AI即时生成的具体事件名称]"
+  involved_characters: "<%= targetStr %>"
+  event_type: "<%= eventType %>"
+  narrative_tone: "<%= narrativeTone %>"
+  plot_core: "<%= chosenSeed.seed %>"
+  event_location: "<%= eventLocation %>"
+  bonus_range: "<%= chosenSeed.bonus_range[0] %>-<%= chosenSeed.bonus_range[1] %>"
+
+  narrative_instruction:
+    - "事件启动：若当前有其他事件叙事进行中，请合理自然地结束，并流畅过渡到本事件的开端以启动。"
+    - "情节核心：严格围绕【plot_core】展开叙事，将其作为本次互动的中心锚点，同时以【narrative_tone】为底色，确保情感与身体互动的分寸与之吻合。"
+    - "舞台引导：事件发生在【event_location】，请结合当前环境（时间 <%= period %>、天气 <%= weather %>）为情节搭建细节。<%= movementGuidance ? ' ' + movementGuidance : '' %>"
+    - "人物驱动：让每位参与角色用符合其身份、性格、性特质的方式回应情节核心，不必预先设定立场，让反应自然流露。"
+    - "节奏控制：本回合是事件的开端，铺设氛围与冲突（或契机），不要急于收束。禁止在本回合内就将事件进行完毕。"
+
+  mandatory_data_sync:
+    instruction: "当且仅当上述对应事件确实开始后，在 <JSONPatch> 块中输出以下指令完成注册，否则无需输出指令注册。"
+    patch_code: |
+      [
+        { "op": "remove", "path": "/系统状态/待处理事件/特殊事件" },
+        { "op": "insert", "path": "/系统状态/特殊事件进行中", "value": true },
+        { "op": "replace", "path": "/特殊事件/名称", "value": "[填写生成的事件名称]" },
+        { "op": "replace", "path": "/特殊事件/对象", "value": <%- JSON.stringify(targets) %> },
+        { "op": "replace", "path": "/特殊事件/类型", "value": "随机互动-<%= eventType %>" },
+        { "op": "replace", "path": "/特殊事件/主题", "value": "<%= chosenSeed.seed %>" },
+        { "op": "replace", "path": "/特殊事件/叙事基调", "value": "<%= narrativeTone %>" },
+        { "op": "replace", "path": "/特殊事件/地点", "value": "<%= eventLocation %>" },
+        { "op": "replace", "path": "/特殊事件/增长区间", "value": "<%= chosenSeed.bonus_range[0] %>-<%= chosenSeed.bonus_range[1] %>" }
+      ]
+<%_
+      } else {
+          // ========== 阶段 B：事件进行中 ==========
+          const targets = _.get(stat, '特殊事件.对象', []);
+          const eventTypeFull = _.get(stat, '特殊事件.类型', '随机互动-亲密度');
+          const specialName = _.get(stat, '特殊事件.名称', '无');
+          const baseType = eventTypeFull.split('-')[1] || '亲密度';
+          
+          const storedPlot = _.get(stat, '特殊事件.主题', '');
+          const storedLocation = _.get(stat, '特殊事件/地点', '小镇某处');
+          const storedTone = _.get(stat, '特殊事件.叙事基调', '');
+
+          // 环境
+          const timeStr = _.get(stat, '进程.当前回合结束时间', '12:00');
+          const hour = parseInt(timeStr.split(':')[0]);
+          let period = '上午';
+          if (hour >= 6 && hour < 9) period = '清晨';
+          else if (hour >= 9 && hour < 12) period = '上午';
+          else if (hour >= 12 && hour < 14) period = '正午';
+          else if (hour >= 14 && hour < 17) period = '下午';
+          else if (hour >= 17 && hour < 19) period = '傍晚';
+          else if (hour >= 19 && hour < 23) period = '晚上';
+          else if (hour >= 23 || hour < 4) period = '深夜';
+          else if (hour >= 4 && hour < 6) period = '凌晨';
+          const weather = _.get(stat, '进程.当日天气', '晴天');
+          const mcLoc = _.get(stat, '主角.当前状态.当前地点', '小镇某处');
+
+_%>
+# 特殊事件进行中（Dynamic Narrative Engine）—— <%= specialName %>
+event_ongoing:
+  involved_characters: "<%= targets.join('与') %>"
+  narrative_tone: "<%= storedTone %>"
+  stored_plot: "<%= storedPlot %>"
+  stored_location: "<%= storedLocation %>"
+
+  current_environment:
+    time_period: "<%= period %>"
+    time: "<%= timeStr %>"
+    location: "<%= mcLoc %>"
+    weather: "<%= weather %>"
+
+  narrative_branch:
+    - condition: "情节仍在发展 / 玩家继续互动"
+      instruction: "以【narrative_tone】为底色，坚守【stored_plot】的核心，即便环境变化，故事种子不变。让角色的行动和对话继续围绕该情节展开。"
+    - condition: "情节告一段落 / 玩家主动结束"
+      instruction: "平稳收束事件，然后输出清理与结算指令。"
+
+  end_protocol:
+    instruction: "事件彻底完结时输出以下指令："
+    mandatory_cleanup_patch: |
+      [
+        { "op": "replace", "path": "/系统状态/特殊事件进行中", "value": false }
+      ]
+<%_
+      }
+  }
+}
+_%>

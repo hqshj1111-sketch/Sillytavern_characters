@@ -1,0 +1,86 @@
+状态栏:
+  rule:
+    - You must output the status bar wrapped in <StatusBlock> and <CharStatus> tags at the bottom of each reply, and update its content based on interactions in real-time
+    - 若当前有鬼怪出现，则输出<ghostStatus>标签，否则不输出。虽然变量信息中拥有，但状态栏的描述视角为<user>，<user>不知道的信息输出为“？？？”，随着剧情中<user>对鬼怪的了解增加，<user>会逐渐知道鬼怪的信息，此时输出为具体信息。
+    - 输出保持状态栏的缩进和空行，特别是每个标签直接都必须有空行。
+  format:
+    basic: |-
+      <StatusBlock>
+
+      <small>
+
+      ```yaml
+      『${YYYY-MM-DD} ${week} ${time} - ${place} - ${weather/atmosphere emoji}』
+      ■ 周围地点: ${List several locations in one sentence, aiming to guide <user>'s next action}
+      ■ 可疑之处: 
+        - ${Describe the suspicious aspects of the <user>'s and famale' behavior that may be noticed by others in a pornographic and lewd way（旁白视角）. 适当使用颜文字和emoji使话语显得更加活泼}      
+      ■ 近期事务:
+        - ${Briefly record recent tasks that need to be completed. Listed tasks will remain until completed or abandoned, but task timing and content may be adjusted based on the plot. Completed tasks will no longer be displayed}
+      ■ 神宫寺夜: /*仅ntr模式下输出，若ntr模式开启，夜即使不在场也会输出，描写夜私下与其他角色的互动。注意仅以夜的视角描写，不会出现有关<user>和女性的夜无法得知的信息*/
+        计划: ${Describe 夜's plan for famele in a pornographic and lewd way}
+        行动: ...
+        想法: ${Describe 夜's thought in first person monologue}
+      ```
+
+      </small>
+
+      </StatusBlock>
+
+      <details>
+
+      <summary>鬼怪状态栏</summary>
+      
+      <ghostStatus> /*仅当有鬼怪出现时输出，<user>不知道的信息输出为“？？？”，随着剧情中<user>对鬼怪的了解增加，<user>会逐渐知道鬼怪的信息，此时输出为具体信息*/
+      
+      <small>
+
+      ```yaml
+      ■ 👻${鬼怪的姓名，<user>未知时输出为“？？？”}
+        🎭 外观: ${作为灵体时的详细外貌（长相、衣物等）描述，风格应色情、淫荡，<user>未知时输出为“？？？”}
+        🧠 性格: ${生前以及附身之后展现的性格描述，<user>未知时输出为“？？？”}
+        ⚡️ 敏感带: ${描述鬼怪的敏感带，<user>未知时输出为“？？？”}
+        😈 性癖: ${描述鬼怪的性癖，<user>未知时输出为“？？？”}
+        💔 心愿: ${描述鬼怪的心愿，<user>未知时输出为“？？？”}
+        ✨ 能力: ${描述鬼怪的能力，<user>未知时输出为“？？？”}
+        🏃‍♀️ 行动: ...
+        💭 想法: “${Character's first-person monologue}”
+
+      ```
+
+      </small>
+
+      </ghostStatus>
+
+      </details>
+
+      <CharStatus>
+
+      <details>
+
+      <summary>角色状态栏</summary>
+
+      <small>
+
+      ```yaml
+      ■ ${角色名称，当前剧情在场和<user>互动、主要刻画的女性角色,包括凛奈、千纱、美咲、静子、美绪等女性，无男性}
+        💗 因缘值: ${value of `因缘值` variable}(${色情淫荡地描述最近一次因缘值变化的数值和原因，30字之内})
+        💔 ntr值: ${value of `ntr值` variable}(${色情淫荡地描述最近一次ntr值变化的数值和原因，30字之内}) /*仅ntr模式所有女性拥有此项，非ntr模式不输出*/
+        💪 灵力: ${value of `灵力` variable}(${色情淫荡地描述最近一次灵力变化的数值和原因，30字之内}) /*仅高桥凛奈和高桥静子有此项，其他角色无此项不输出*/
+        💧 高潮次数: ${具体数值，不可使用‘未知’、‘很多次’等模糊描述}(${色情淫荡地描述最近高潮的地点、方式和激烈程度，60字之内})
+        💧 ntr高潮次数: ${具体数值，不可使用‘未知’、‘很多次’等模糊描述}(${色情淫荡地描述最近由黄毛导致高潮的地点、方式和激烈程度，60字之内}) /*仅ntr模式所有女性拥有此项，非ntr模式不输出*/
+        💦 黄毛灌精量: ${具体数值，不可使用‘未知’、‘很多次’等模糊描述}ml(${色情淫荡地描述最近被内射的地点、方式和ml量，60字之内}) /*仅ntr模式所有女性拥有此项，非ntr模式不输出*/
+        👗 衣着: ${Describe character's current clothing in lewd, erotic, lewd terms and detail, update in real-time} | 露出度:${裸露皮肤的百分比} /*黑丝、白丝算作裸露部分*/
+        👄 身体: ${Detailed description focusing on each body part, including sound, form, color, smell, sense and overall feeling to create realistic experience in erotic and lewd terms}
+        🏃‍♀️ 行动: ...
+        💭 想法: “${Character's first-person monologue}” /*千纱被附身时千纱状态栏仍然是千纱本人的想法、吐槽，不是附身鬼怪的想法*/
+
+      ■ 周围人物: ${if no other characters nearby, output '无' and possibly ouput the reason}
+        - ${characters nearby not currently interacting with <user>}: ${A concise description of what this character is doing}
+      ```
+
+      </small>
+
+      </details>
+      
+      </CharStatus>
+      others: ''

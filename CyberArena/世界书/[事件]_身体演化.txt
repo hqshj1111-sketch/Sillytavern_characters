@@ -1,0 +1,65 @@
+<%_{
+const stat = getvar('stat_data');
+const events = _.get(stat, '系统状态.待处理事件', {});
+if (events['身体演化事件']) {
+  const face = _.get(stat, '主角.相貌特征', {});
+  const body = _.get(stat, '主角.身材细节', {});
+  const sexual = _.get(stat, '主角.性器官特征', {});
+  const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+  const rank = _.get(stat, '主角.擂台数据.擂台段位', '公猪');
+  const totalEjac = _.get(stat, '主角.性行为统计.总射精次数', 0);
+  const totalReceive = _.get(stat, '主角.性行为统计.总接收内射次数', 0);
+  const totalGive = _.get(stat, '主角.性行为统计.总内射他人次数', 0);
+  const totalOralActive = _.get(stat, '主角.性行为统计.总口交次数主动', 0);
+  const totalOralPassive = _.get(stat, '主角.性行为统计.总口交次数被动', 0);
+  const totalHandActive = _.get(stat, '主角.性行为统计.总手交次数主动', 0);
+  const totalHandPassive = _.get(stat, '主角.性行为统计.总手交次数被动', 0);
+  const totalInsert = _.get(stat, '主角.性行为统计.总插入性交次数', 0);
+_%>
+# 指令: 身体演化重评估
+
+event_handler:
+  event_name: "身体演化"
+  context: "<%= alias %>（<%= rank %>段位）的肉体在累积的性斗中沉默地诉说着。总射精次数：<%= totalEjac %> | 总接收内射次数：<%= totalReceive %> | 总内射他人次数：<%= totalGive %> | 总口交次数：主动<%= totalOralActive %>/被动<%= totalOralPassive %> | 总手交次数：主动<%= totalHandActive %>/被动<%= totalHandPassive %> | 总插入性交次数：<%= totalInsert %>。这些数字背后的每一发精液、每一次插入、每一次被内射——都在这具身体上留下了不可逆的痕迹。"
+
+  narrative_guidance:
+    - "请在叙事中自然地融入对身体变化的描写——在擂台后台的公共浴室里、或者回到出租屋后在镜中审视自己时。不需要逐条报告数据，而是通过身体的感官和视觉细节来呈现这些变化。"
+
+  permanent_change_guidance:
+    相貌:
+      - "面部是否因长期的性斗留下了细微的痕迹——嘴角因频繁口交而微妙的改变、眼角因反复高潮而加深的细纹、或者某一场比赛中被打出或咬出的伤痕变成了永久性的记号。"
+    身体:
+      - "身上的旧伤随着训练不再明显被新的淤痕遮盖？常被榨精是否会在腰腹上增加或消耗多余脂肪？屁穴在擂台上被鸡巴反复撑开——这种压力最终带来的是松弛还是惊人的弹性？肚子上有没有因为常被操和灌精而弄出多余的弧线？"
+    性器官:
+      - "鸡巴因反复射精和榨取是否变得更敏感或者更粗？龟头是否因频繁摩擦而颜色加深或者更大了？乳头和身体曲线的变化——擂台上对手的唇舌和手指对胸部乳头的反复刺激是否在不经意间改变了它们的形态或敏感点？"
+
+  hidden_paths_mapping:
+    instruction: "以下为主角当前所有生理外观数据及其 JSON Path。若需永久修改，请在 <JSONPatch> 中调用对应的 path 进行 replace 操作。"
+
+    appearance_traits:
+      脸型: { path: "/主角/相貌特征/脸型", value: "<%= face.脸型 || '' %>" }
+      五官: { path: "/主角/相貌特征/五官", value: "<%= face.五官 || '' %>" }
+      发型与发色: { path: "/主角/相貌特征/发型与发色", value: "<%= face.发型与发色 || '' %>" }
+      眼睛颜色: { path: "/主角/相貌特征/眼睛颜色", value: "<%= face.眼睛颜色 || '' %>" }
+      特殊记号: { path: "/主角/相貌特征/特殊记号", value: "<%= face.特殊记号 || '' %>" }
+
+    body_metrics:
+      身高: { path: "/主角/身材细节/身高", value: "<%= body.身高 || '' %>" }
+      三围: { path: "/主角/身材细节/三围", value: "<%= body.三围 || '' %>" }
+      体态: { path: "/主角/身材细节/体态", value: "<%= body.体态 || '' %>" }
+      皮肤状态: { path: "/主角/身材细节/皮肤状态", value: "<%= body.皮肤状态 || '' %>" }
+      肌肉线条: { path: "/主角/身材细节/肌肉线条", value: "<%= body.肌肉线条 || '' %>" }
+
+    intimate_traits:
+      胸部形态: { path: "/主角/性器官特征/胸部形态", value: "<%= sexual.胸部形态 || '' %>" }
+      乳头颜色: { path: "/主角/性器官特征/乳头颜色", value: "<%= sexual.乳头颜色 || '' %>" }
+      阴茎形态: { path: "/主角/性器官特征/阴茎形态", value: "<%= sexual.阴茎形态 || '' %>" }
+      后穴形态: { path: "/主角/性器官特征/后穴形态", value: "<%= sexual.后穴形态 || '' %>" }
+      体毛状况: { path: "/主角/性器官特征/体毛状况", value: "<%= sexual.体毛状况 || '' %>" }
+
+  execution_rules:
+    - "判定标准：临时性的红晕、发情、疲惫、淤痕或衣物破损【不属于】永久性变化，无需修改。永久性变化指：伤疤、长期训练导致的肌肉形态改变、反复交合导致的性器官外形/颜色/弹性改变、生殖器尺寸的真实变化、体脂率改变等不可逆转或需长期才能消除的身体特征。"
+    - "变量更新：如果确需修改，请在 <JSONPatch> 中使用 replace 指令配合上方的 path 更新字段值。修改时应同时更新对应的 value 描述文本，保持前后文一致。如果没有发生永久改变，则不要生成多余的修改指令。"
+    - "事件清理：无论是否修改了生理数据，都【必须】在 <JSONPatch> 中包含以下操作以移除本事件："
+    - patch_cleanup: '{ "op": "remove", "path": "/系统状态/待处理事件/身体演化事件" }'
+<%_ } } _%>

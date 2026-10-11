@@ -1,0 +1,86 @@
+﻿<%_{
+const stat = getvar('stat_data');
+const phase = _.get(stat, '进程.阶段', '');
+const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+const credits = _.get(stat, '主角.经济.信用点', 0);
+const rank = _.get(stat, '主角.擂台数据.擂台段位', '公猪');
+const events = _.get(stat, '系统状态.待处理事件', {});
+const workEvent = events['前往打工事件'];
+const tierGroup = (rank === '公猪' || rank === '公狗') ? '低' : ((rank === '野猫' || rank === '鬣狗') ? '中' : '高');
+const wageRange = tierGroup === '低' ? '20-50' : (tierGroup === '中' ? '50-100' : (rank === '雄狮' ? '300-500' : '100-250'));
+_%>
+<%_ if (phase !== '幕间日常') { _%>
+phase_redirect:
+  note: "当前处于【<%= phase %>】阶段，打工行动仅可在幕间日常进行。"
+<%_ } else if (workEvent) { _%>
+# 系统指令: 前往打工·<%= workEvent %>
+
+system_handler:
+  context: "打工方向：<%= workEvent %>。段位：<%= rank %>。工资范围：<%= wageRange %>信用点，可获取额外小费。"
+  wage: "<%= wageRange %> 信用点/次（可获取额外小费）"
+
+<%_ if (workEvent === '脑力活') { _%>
+  narrative_guidance:
+<%_   if (tierGroup === '低') { _%>
+    work_types: "废街酒吧算账、暗渠黑市翻译异世界文字、替老一辈性斗士写挑战书。"
+    directives:
+      - "描写在底层的末流店铺工作和同时被客人顺手揩油，这是公猪公狗日常经历的事。"
+      - "描写公共性奴义务在工作间隙被要求、被使用、无法拒绝。"
+<%_   } else if (tierGroup === '中') { _%>
+    work_types: "替擂台经纪人整理赛程表、帮霓街成人用品店做销售、帮暗渠改造商记录库存。"
+    directives:
+      - "描写工作中老板和同事直白的挑逗和揩油，这是常有的事。"
+<%_   } else { _%>
+    work_types: "替擂台赛事做数据分析、为霓街夜总会做排班调度、在性斗士训练馆做理论课教练。"
+    directives:
+      - "描写工作中老板和同事直白的挑逗和揩油，这是常有的事。"
+<%_   } _%>
+
+<%_ } else if (workEvent === '体力活') { _%>
+  narrative_guidance:
+<%_   if (tierGroup === '低') { _%>
+    work_types: "熔渣区卸货搬运、远郊垃圾场分拣、暗渠下水道清理。"
+    directives:
+      - "描写在城市最脏累的角落干活时，来自工头的差遣和工友直白的动手动脚。"
+      - "描写公共性奴义务在休息时间被召唤、被要求、被使用，没有拒绝的余地。"
+<%_   } else if (tierGroup === '中') { _%>
+    work_types: "废旧工厂拆卸零件、替暗渠改造商搬运植入件、在擂台搭建场地装置。"
+    directives:
+      - "描写干体力活的同伴之间直白的调戏、揩油和邀约，这是在工作中时有发生的事。"
+<%_   } else { _%>
+    work_types: "为擂台更换升级设施、替霓街俱乐部改造包厢、在性斗士训练馆做实操课教练。"
+    directives:
+      - "描写一同干活的技师和合同工对你的段位有所忌惮，但仍免不了在工作中穿插着直白的调戏和邀约。"
+<%_   } _%>
+
+<%_ } else if (workEvent === '出卖肉体') { _%>
+<%_   if (tierGroup === '低') { _%>
+  body_work_unavailable:
+    note: "公猪/公狗段位无权选择出卖肉体的打工方向——公共性奴义务意味着身体已经是所有人可无偿使用的。请选择「前往打工·脑力活」或「前往打工·体力活」。"
+<%_   } else if (tierGroup === '中') { _%>
+  narrative_guidance:
+    work_types: "暗渠红灯区的隔间和各种旅馆的钟点房，或者在大街上现场接客。"
+    directives:
+      - "描写不同种族顾客的不同身体特征和癖好，以及工作中需要积累的职业经验和技能。"
+<%_   } else { _%>
+  narrative_guidance:
+    work_types: "霓街VIP俱乐部私人包厢、或者晶苑的某处独栋豪宅。"
+    directives:
+      - "描写高段位带来的更高身价和更挑剔的客户，客户独特的性癖和口味。"
+    tip: "额外小费更多"
+<%_   } _%>
+<%_ } _%>
+
+  common_directives:
+    - "如果工作和训练顺利结束没有被打断，叙事中体现打工花了快一天的时间，结束后时段推进至晚或夜。如果中途发生了需要主角选择或回应的情色事件，叙事在当前时刻停下，不推进时间。"
+    - "如有，描绘打工场所中的异种族元素。"
+    - "情色要素以直白自然的方式融入叙事。"
+
+  mandatory_data_sync:
+    instruction: "打工结束后，移除事件并结算收入。"
+    patch_code: |
+      [
+        {"op":"remove","path":"/系统状态/待处理事件/前往打工事件"},
+        {"op":"delta","path":"/主角/经济/信用点","value":[在<%= wageRange %>信用点范围内随机取值]}
+      ]
+<%_ } } _%>

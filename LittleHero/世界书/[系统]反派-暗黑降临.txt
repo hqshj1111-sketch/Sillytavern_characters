@@ -1,19 +1,28 @@
-﻿<%_
-var personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '英雄');
-if (personality === '反派') {
-    if (
-      _.get(getvar('stat_data'), '进程.阶段') === '战斗回合' &&
-      _.get(getvar('stat_data'), '主角.核心状态.混沌充能') < 100
-    ) {
+﻿<%_{
+const stat = getvar('stat_data');
+const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+const phase = _.get(stat, '进程.阶段');
+
+if (personality === '反派' && phase === '战斗回合') {
+    const ult = parseInt(_.get(stat, '主角.核心状态.混沌充能', 0), 10);
+    if (ult > 0 && ult < 100) {
+        let state, desc;
+        if (ult < 50) { 
+            desc = "战斗的刺激与快感化作甜美的毒药，在体内转化为混沌充能。"; 
+        } else if (ult < 90) { 
+            desc = "能量与情欲深度融合。"; 
+        } else { 
+            desc = "混沌充能已达临界！"; 
+        }
 _%>
-corruption_power_protocol:
+corruption_aura:
   objective: "在战斗中，主角通过以下方式积蓄【混沌充能】。"
   accumulation_methods:
     - source: "主动侵蚀：当主角成功诱惑了敌人，或是利用身体/能量让敌人陷入了快感、动摇了敌人的战意时。"
       action: "适当增加混沌充能。"
     - source: "汲取战斗的愉悦：当描述主角享受战斗、或从与强敌的交锋中获得满足感时。"
       action: "为主角适当增加对应的【混沌充能】。"
-<%_
-    }
-}
-_%>
+  narrative_guidance: 
+    - "<%= desc %>"
+    - "请将这种力量的积蓄自然融入到他的姿态、色气的反击和享受的表情中。【严禁】生硬地重复'他正在积攒混沌充能'这种机械废话！"
+<%_ } } } _%>

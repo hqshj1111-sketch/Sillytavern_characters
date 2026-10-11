@@ -17,7 +17,7 @@
             --border-color: rgba(255, 255, 255, 0.1);
             --input-bg: rgba(0, 0, 0, 0.3);
 
-            /* 默认善良主题色 (紫蓝) */
+            /* 默认英雄主题色 (紫蓝) */
             --accent-color: #bb9af7;
             --accent-glow: rgba(187, 154, 247, 0.35);
             --success-color: #9ece6a;
@@ -25,7 +25,7 @@
             --font-family: 'Noto Serif SC', serif;
         }
 
-        /* 堕落主题色 (猩红) */
+        /* 反派主题色 (猩红) */
         .theme-fallen {
             --accent-color: #f7768e;
             --accent-glow: rgba(247, 118, 142, 0.35);
@@ -203,8 +203,10 @@
     <input type="text" id="char-kinks" placeholder="例如：触手、窒息；乳头是弱点…">
 </div>
 </div></fieldset>
-                <fieldset class="form-section"><legend>魔法契约</legend><div class="form-grid"><div class="form-group"><label for="char-color">代表色</label><div class="color-picker-group"><input type="text" id="char-color-text" value="樱粉色"><div class="color-wrapper"><input type="color" id="char-color-picker" value="#FFB6C1"></div></div></div><div class="form-group"><label for="char-ability">核心能力</label><input type="text" id="char-ability" value="操控光的能力"></div></div></fieldset>
-                <fieldset class="form-section"><legend>简要外貌 (AI将基于此扩写)</legend><div class="form-grid"><div class="form-group"><label for="appearance-keywords">外貌关键词</label><textarea id="appearance-keywords" placeholder="例如：身材高挑，银色长发，像人偶一样精致..."></textarea></div><div class="form-group"><label for="body-keywords">肉体关键词</label><textarea id="body-keywords" placeholder="例如：三围、体态、胸部形状..."></textarea></div></div></fieldset>
+                <fieldset class="form-section"><legend>英雄契约</legend><div class="form-grid"><div class="form-group"><label for="char-color">代表色</label><div class="color-picker-group"><input type="text" id="char-color-text" value="樱粉色"><div class="color-wrapper"><input type="color" id="char-color-picker" value="#FFB6C1"></div></div></div><div class="form-group"><label for="char-ability">核心能力</label><input type="text" id="char-ability" value="操控光的能力"></div></div></fieldset>
+                <fieldset class="form-section"><legend>简要外貌 (AI将基于此扩写)</legend><div class="form-grid"><div class="form-group"><label for="appearance-keywords">外貌关键词</label><textarea id="appearance-keywords" placeholder="例如：中等身高，清爽短发，眼神锐利..."></textarea></div><div class="form-group"><label for="body-keywords">肉体关键词</label><textarea id="body-keywords" placeholder="例如：身高、体态、肌肉线条..."></textarea></div></div></fieldset>
+                <fieldset class="form-section"><legend>人际关系</legend><div class="form-group full-width"><label for="char-relationships">重要之人</label><textarea id="char-relationships" placeholder="描述主角身边的重要角色。例如：青梅竹马山田太郎，同为小英雄，性格热血，与主角经常并肩作战；同班同学佐藤健二，知道主角的秘密但从不追问；还有一个敌对的堕落小英雄黑羽，是主角的死对头..."></textarea></div></fieldset>
+                <fieldset class="form-section"><legend>性经历</legend><div class="form-group full-width"><label for="char-sex-history">过往性行为</label><textarea id="char-sex-history" placeholder="描述主角已有的性经历，AI会据此设置初始的性行为统计次数。例如：和青梅竹马有过几次互相手淫和口交；被某个魔物内射过两次；独自在浴室手淫过很多次..." rows="3"></textarea></div></fieldset>
                 <fieldset class="form-section"><legend>额外备注</legend><div class="form-group full-width"><label for="extra-notes">其他生成要求</label><textarea id="extra-notes" placeholder="如果你有什么其他生成的要求，尽管填写在这里。"></textarea></div></fieldset>
 
                 <div class="submit-area">
@@ -531,12 +533,14 @@ generateBtn.addEventListener('click', () => {
     人格状态: "${data['personality-state']}"
     性格特质: ${formatValue(data['char-traits'])}
     主人: ${data['personality-state'] === '反派' ? formatValue(data['char-master']) : '无'}
-   魔法契约:
+    英雄契约:
      代表色: "${data['char-color-text']}"
      核心能力: "${data['char-ability']}"
   简要外貌:
     外貌关键词: ${formatValue(data['appearance-keywords'])}
     肉体关键词: ${formatValue(data['body-keywords'])}
+  人际关系: ${formatValue(data['char-relationships'], '无')}
+  性经历: ${formatValue(data['char-sex-history'], '无')}
   额外备注: ${formatValue(data['extra-notes'], '无')}
 \`\`\`
 </init_data>`;

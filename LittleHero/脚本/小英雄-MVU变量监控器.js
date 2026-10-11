@@ -11,7 +11,7 @@
             { level: 4, xp: 1000 }, { level: 3, xp: 500 },
             { level: 2, xp: 250 },  { level: 1, xp: 100 }, { level: 0, xp: 0 }
         ],
-        VALID_PHASES: ['创角阶段', '幕间休息', '战斗准备', '战斗回合', '终结回合', '战斗胜利', '战斗败北', '战后处理'],
+        VALID_PHASES: ['创角阶段', '幕间休息', '战斗准备', '战斗回合', '终结回合', '战斗胜利', '战斗败北', '战后处理', '被捕囚禁'],
         VALID_POSTURES: ['非战斗', '战斗中', '劣势', '力尽待辱', '战后虚弱']
     };
 
@@ -165,16 +165,61 @@
                             if (!ctx.events['黑暗印记显现事件'] && !ctx.events['黑暗印记复苏事件']) {
                                 ctx.set('系统状态.待处理事件.黑暗印记显现事件', true);
                                 Logger.warn(`🩸 身体改造触发关联: 强制诱发黑暗印记显现`);
-                            }
+            }
+
                         } else if (curseLv < 3) {
                             ctx.add('主角.黑暗印记.经验', 40);
                             Logger.info(`🩸 身体改造叠加: 吸收同类烙印转化为经验 (+40XP)`);
                         } else {
                             ctx.add('主角.黑暗印记.经验', 15);
                             Logger.info(`🩸 身体改造叠加: 黑暗印记已达极限(Lv.3)，默默吞噬新烙印 (+15XP)`);
-                        }
-                    }
                 }
+            }
+
+            // 善堕备份：小英雄黑化事件首次创建时保存原始英雄身份
+            if (ctx.events['小英雄黑化'] && !ctx.getPrev('系统状态.待处理事件.小英雄黑化')) {
+                const heroName = ctx.get('主角.基本信息.英雄名', '');
+                const suit = ctx.get('主角.个人信息.紧身战衣', '');
+                const color = ctx.get('主角.个人信息.代表色', '');
+                const ability = ctx.get('主角.个人信息.核心能力', '');
+                const trait = ctx.get('主角.个人信息.性格特质', '');
+                if (heroName && heroName !== '待设定') {
+                    ctx.set('主角.核心状态.善堕备份', {
+                        英雄名: heroName,
+                        紧身战衣: suit,
+                        代表色: color,
+                        核心能力: ability,
+                        性格特质: trait
+                    });
+                    Logger.info(`📦 善堕备份已保存原始英雄身份：${heroName}`);
+                }
+                ctx.add('记录.黑化次数', 1);
+                Logger.event(`🖤 黑化计数 +1 (当前: ${ctx.get('记录.黑化次数', 0)})`);
+            }
+
+            // 恶堕备份：善堕事件首次创建时保存当前反派身份（供下次黑化恢复）
+            if (ctx.events['善堕事件'] && !ctx.getPrev('系统状态.待处理事件.善堕事件')) {
+                const fallenName = ctx.get('主角.基本信息.英雄名', '');
+                const fallenSuit = ctx.get('主角.个人信息.紧身战衣', '');
+                const fallenColor = ctx.get('主角.个人信息.代表色', '');
+                const fallenAbility = ctx.get('主角.个人信息.核心能力', '');
+                const fallenTrait = ctx.get('主角.个人信息.性格特质', '');
+                const fallenMaster = ctx.get('主角.核心状态.主人', '无');
+                const markData = ctx.get('主角.永久性身体改造.组织刻印', null);
+                ctx.set('主角.核心状态.恶堕备份', {
+                    英雄名: fallenName,
+                    紧身战衣: fallenSuit,
+                    代表色: fallenColor,
+                    核心能力: fallenAbility,
+                    性格特质: fallenTrait,
+                    主人: fallenMaster,
+                    组织刻印: markData ? { 部位: markData.部位 || '脸颊', 详情: markData.详情 || '', 来源: markData.来源 || '怪人组织' } : null
+                });
+                Logger.info(`📦 恶堕备份已保存当前反派身份：${fallenName} (主人: ${fallenMaster})`);
+                ctx.add('记录.善堕次数', 1);
+                Logger.event(`🤍 善堕计数 +1 (当前: ${ctx.get('记录.善堕次数', 0)})`);
+            }
+        }
             });
 
             if (ctx.get('进程.阶段') !== '战斗回合') {
@@ -271,6 +316,88 @@
                 Logger.warn(`☣️ 英雄线战斗内射惩罚：侵蚀度激增 +${cGain} (注入量: ${semenDelta}ml)`);
             }
 
+            // 反派×小英雄：纯洁能力净化堕落（1ml精液 = -1侵蚀度）
+            const combatType = ctx.get('世界.当前关卡.战斗类型', '无');
+            if (semenDelta > 0 && ctx.personality === '反派' && combatType === '小英雄' && ['战斗败北', '战斗回合', '终结回合', '战后处理'].includes(ctx.get('进程.阶段'))) {
+                const purifyAmount = Math.min(semenDelta, ctx.get('主角.快感状态.侵蚀度', 0));
+                ctx.add('主角.快感状态.侵蚀度', -purifyAmount);
+                Logger.info(`🕊️ 小英雄的纯洁能力净化堕落：侵蚀度 -${purifyAmount} (注入量: ${semenDelta}ml)`);
+                
+                if (ctx.get('主角.快感状态.侵蚀度', 0) <= 0 && !ctx.events['善堕事件']) {
+                    ctx.set('主角.快感状态.侵蚀度', 0);
+                    ctx.set('系统状态.待处理事件.善堕事件', true);
+                    Logger.event('✨ 侵蚀度归零！主角体内的黑暗被完全净化，善堕事件触发！');
+                }
+            }
+
+            // 日期跨天结算
+            const currentDay = ctx.get('世界.日期', 20260305), previousDay = ctx.getPrev('世界.日期', 20260305);
+            if (currentDay > previousDay) {
+                Logger.event(`🌅 日历翻篇，新的一天！重置高潮阈值并计算侵蚀度衰减...`);
+                ctx.set('主角.快感状态.高潮阈值', 100); 
+                let corruptDelta = 0;
+                if (ctx.personality === '反派' && ctx.get('主角.快感状态.侵蚀度', 0) > 20) corruptDelta -= _.random(5, 10);
+                else if (ctx.personality === '英雄' && ctx.get('主角.快感状态.侵蚀度', 0) > 0) corruptDelta -= 2;
+                if (this._getCurseLv(ctx.get('主角.黑暗印记.经验', 0)) >= 3) {
+                    corruptDelta += 4; 
+                    Logger.warn(`👿 黑暗印记Lv.3散发荷尔蒙，每日侵蚀加剧 +4`);
+                }
+                if (corruptDelta !== 0) {
+                    ctx.add('主角.快感状态.侵蚀度', corruptDelta);
+                    Logger.info(`⏳ 每日侵蚀度变动结算：${corruptDelta > 0 ? '+'+corruptDelta : corruptDelta}`);
+                }
+            }
+
+            // 黑暗印记每回合经验结算
+            if (ctx.isNewTurn) {
+                let xpGain = 0;
+                let logDetails = [];
+                
+                const phase = ctx.get('进程.阶段');
+                const isCombatRelated = ['战斗准备', '战斗回合', '终结回合', '战斗败北', '战后处理'].includes(phase);
+                
+                const corruption = ctx.get('主角.快感状态.侵蚀度', 0);
+                if (corruption < 20) { 
+                    if (!isCombatRelated) { xpGain -= 1; logDetails.push("纯洁排斥(-1)"); }
+                }
+                else if (corruption > 70) { xpGain += 2; logDetails.push("重度侵蚀共鸣(+2)"); }
+                else if (corruption > 50) { xpGain += 1; logDetails.push("侵蚀共鸣(+1)"); }
+                
+                const semenAmt2 = ctx.get('主角.生理状态.体液与分泌.能量核心内精液.存量', 0);
+                if (semenAmt2 > 0) {
+                    let nourish = Math.floor(semenAmt2 / 20) || 1;
+                    if (nourish > 5) nourish = 5;
+                    const finalNourish = (ctx.personality === '反派') ? nourish * 2 : nourish;
+                    xpGain += finalNourish; logDetails.push(`精液滋养(+${finalNourish})`);
+                    Logger.info(`🍼 体内残留精液(${semenAmt2}ml)滋养黑暗印记: +${finalNourish} XP`);
+                } else {
+                    if (!isCombatRelated) {
+                        xpGain -= 2; logDetails.push("能量核心空虚(-2)");
+                        Logger.warn(`💧 能量核心空虚，黑暗印记缺乏白浊滋养，开始衰退: -2 XP`);
+                    } else { logDetails.push("高压期(暂缓衰退)"); }
+                }
+                
+                if (ctx.events['高潮事件']) {
+                    const climaxBonus = _.random(8, 12);
+                    xpGain += climaxBonus; logDetails.push(`高潮激化(+${climaxBonus})`);
+                }
+
+                if (xpGain !== 0) {
+                    const curXp = ctx.get('主角.黑暗印记.经验', 0);
+                    if (curXp > 0) {
+                        const finalXp = Math.max(0, curXp + xpGain);
+                        if (finalXp !== curXp) {
+                            ctx.set('主角.黑暗印记.经验', finalXp);
+                            const diff = finalXp - curXp;
+                            Logger.info(`📈 黑暗印记经验结算 [${logDetails.join(', ')}]：${diff > 0 ? '+'+diff : diff} (当前总计: ${finalXp})`);
+                        }
+                    } else {
+                        Logger.info(`🛡️ 黑暗印记尚未觉醒，免疫本次常规高潮/体液经验累积: ${xpGain > 0 ? '+'+xpGain : xpGain} XP`);
+                    }
+                }
+            }
+
+            const curseLv = this._getCurseLv(ctx.get('主角.黑暗印记.经验', 0));
             if (curseLv >= 2) {
                 const mpLoss = ctx.getPrev('主角.核心状态.能量值.当前', 0) - ctx.get('主角.核心状态.能量值.当前', 0);
                 if (mpLoss > 0) {
@@ -312,6 +439,56 @@
                     ctx.set('世界.幕间H事件.核心主题', []);
                 }
             }
+
+            // === 小英雄名录：内射 → 恶堕/善堕进度 ===
+            const roster = ctx.get('世界.小英雄名录', {});
+            const prevRoster = ctx.getPrev('世界.小英雄名录', {});
+            Object.keys(roster).forEach(realName => {
+                if (realName === '$meta' || realName === '$__META_EXTENSIBLE__$') return;
+                const hero = roster[realName] || {};
+                const prevHero = prevRoster[realName] || {};
+
+                // 进度累积：检测被主角内射次数增量
+                const curInjected = hero.被主角内射次数 || 0;
+                const prevInjected = prevHero.被主角内射次数 || 0;
+                if (curInjected > prevInjected && ctx.isNewTurn) {
+                    const delta = curInjected - prevInjected;
+                    if (ctx.personality === '英雄' && hero.人格阵营 === '反派') {
+                        ctx.add(`世界.小英雄名录.${realName}.善堕进度`, delta * 50);
+                        Logger.info(`🕊️ ${realName} 被主角内射 +${delta}，善堕进度 +${delta * 50}`);
+                    } else if (ctx.personality === '反派' && hero.人格阵营 === '英雄') {
+                        ctx.add(`世界.小英雄名录.${realName}.恶堕进度`, delta * 50);
+                        Logger.info(`💀 ${realName} 被主角内射 +${delta}，恶堕进度 +${delta * 50}`);
+                    }
+                }
+
+                // 满值推送事件（仅推送，不重置不计数）
+                const evilProg = ctx.get(`世界.小英雄名录.${realName}.恶堕进度`, 0);
+                const goodProg = ctx.get(`世界.小英雄名录.${realName}.善堕进度`, 0);
+                if (evilProg >= 100 && !ctx.events['名录小英雄恶堕事件']) {
+                    ctx.set('系统状态.待处理事件.名录小英雄恶堕事件', realName);
+                    Logger.error(`💀 ${realName} 恶堕进度满值！推送名录小英雄恶堕事件！`);
+                }
+                if (goodProg >= 100 && !ctx.events['名录小英雄善堕事件']) {
+                    ctx.set('系统状态.待处理事件.名录小英雄善堕事件', realName);
+                    Logger.event(`✨ ${realName} 善堕进度满值！推送名录小英雄善堕事件！`);
+                }
+
+                // 阵营已切换 → 重置进度 + 增加计数
+                const curAl = hero.人格阵营;
+                const prevAl = prevHero.人格阵营;
+                if (curAl !== prevAl && prevAl) {
+                    ctx.set(`世界.小英雄名录.${realName}.恶堕进度`, 0);
+                    ctx.set(`世界.小英雄名录.${realName}.善堕进度`, 0);
+                    if (curAl === '反派') {
+                        ctx.add(`世界.小英雄名录.${realName}.恶堕次数`, 1);
+                        Logger.info(`📋 ${realName} 阵营切换：英雄→反派，恶堕次数 +1`);
+                    } else {
+                        ctx.add(`世界.小英雄名录.${realName}.善堕次数`, 1);
+                        Logger.info(`📋 ${realName} 阵营切换：反派→英雄，善堕次数 +1`);
+                    }
+                }
+            });
         }
 
         runStateMachine(ctx) {
@@ -327,19 +504,33 @@
                 
                 const kinks = ctx.get('主角.快感状态.性癖', {});
                 const validKinks = Object.keys(kinks).filter(k => k !== '$meta' && kinks[k] && (kinks[k].等级 >= 1 || kinks[k].经验 >= 50));
-                if (validKinks.length > 0) {
+                const rosterForSeed = ctx.get('世界.小英雄名录', {});
+                const rosterEntries = Object.keys(rosterForSeed).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+                let useBond = false;
+                if (rosterEntries.length > 0) {
+                    if (validKinks.length === 0) { useBond = true; }
+                    else if (Math.random() < 0.3) { useBond = true; }
+                }
+                if (useBond) {
+                    const pickedName = _.sample(rosterEntries);
+                    const bondType = Math.random() < 0.5 ? '情欲' : '亲密';
+                    ctx.set('系统状态.待处理事件.幕间牵绊事件', `${pickedName}|${bondType}`);
+                    ctx.set('系统状态.幕间事件完成', false);
+                    Logger.info(`💞 幕间牵绊事件触发：${pickedName} (${bondType})`);
+                } else if (validKinks.length > 0) {
                     ctx.set('世界.幕间H事件.核心主题', [_.sample(validKinks)]);
                     ctx.set('系统状态.幕间事件完成', false);
                     Logger.info(`🎭 侦测到初始激活性癖，预埋幕间H事件种子`);
                 } else {
                     ctx.set('世界.幕间H事件.核心主题', []);
                     ctx.set('系统状态.幕间事件完成', true);
-                    Logger.info('🛡️ 无初始激活性癖，开局幕间处于安全状态');
+                    Logger.info('🛡️ 无初始激活性癖且无名录英雄，开局幕间处于安全状态');
                 }
             }
 
             if (ctx.get('进程.阶段') === '幕间休息') {
-                if (ctx.get('世界.幕间H事件.名称', '无') === '无' && ctx.isNewTurn) {
+                const hasActiveEvent = ctx.get('世界.幕间H事件.名称', '无') !== '无' || !!ctx.events['幕间牵绊事件'];
+                if (!hasActiveEvent && ctx.isNewTurn) {
                     ctx.add('系统状态.幕间回合计数', 1);
                     const count = ctx.get('系统状态.幕间回合计数', 0);
                     if (count % 3 === 0) Logger.info(`⏳ 幕间闲置回合推进：${count}`);
@@ -427,6 +618,79 @@
                 ctx.set('进程.阶段', '幕间休息');
                 Logger.event('♻️ 战后过渡完成，系统重置归档，返回幕间休息');
             }
+
+            // === 被捕囚禁阶段 ===
+            if (ctx.get('进程.阶段') === '被捕囚禁' && ctx.getPrev('进程.阶段') !== '被捕囚禁') {
+                Logger.warn('🔒 英雄被俘，转入被捕囚禁阶段...');
+                ctx.set('主角.核心状态.体力值.当前', ctx.get('主角.核心状态.体力值.最大', 100));
+                ctx.set('主角.核心状态.能量值.当前', ctx.get('主角.核心状态.能量值.最大', 100));
+                ctx.set('主角.核心状态.着装状态', false);
+                ctx.set('主角.核心状态.当前战斗姿态', '非战斗');
+                ctx.set('主角.囚禁状态.逃脱进度', 0);
+                ctx.set('主角.囚禁状态.洗脑进度', 0);
+                ctx.set('主角.囚禁状态.自由度', '严密监禁');
+                ctx.set('主角.囚禁状态.监禁回合', 0);
+                this.counters.defeatPersistence = 0;
+            }
+
+            if (ctx.get('进程.阶段') === '被捕囚禁' && ctx.isNewTurn) {
+                ctx.add('主角.囚禁状态.监禁回合', 1);
+                const prisonTurn = ctx.get('主角.囚禁状态.监禁回合', 0);
+                const corruption = ctx.get('主角.快感状态.侵蚀度', 0);
+
+                // 1. 根据侵蚀度更新自由度
+                let freedom;
+                if (corruption < 30) freedom = '严密监禁';
+                else if (corruption < 60) freedom = '有限活动';
+                else if (corruption < 80) freedom = '半自由';
+                else freedom = '信任囚徒';
+                ctx.set('主角.囚禁状态.自由度', freedom);
+
+                // 2. 逃脱进度 (正比自由度, 小数累积)
+                const escapeRanges = { '严密监禁': [1, 3], '有限活动': [2, 5], '半自由': [3, 7], '信任囚徒': [4, 9] };
+                const [escMin, escMax] = escapeRanges[freedom];
+                ctx.add('主角.囚禁状态.逃脱进度', _.random(escMin, escMax));
+
+                // 3. 洗脑事件 (累计概率, 每回合递增1%)
+                const brainRoll = Math.random() * 100;
+                if (brainRoll <= prisonTurn) {
+                    const brainGain = _.random(10, 20);
+                    ctx.add('主角.囚禁状态.洗脑进度', brainGain);
+                    ctx.set('系统状态.待处理事件.囚禁洗脑事件', true);
+                    Logger.warn(`🧠 洗脑事件触发！洗脑进度 +${brainGain} (当前: ${ctx.get('主角.囚禁状态.洗脑进度', 0)} | 概率: ${prisonTurn}%)`);
+                }
+
+                const escProgress = ctx.get('主角.囚禁状态.逃脱进度', 0);
+                if (escProgress >= 100 && !ctx.events['囚禁逃脱机会']) {
+                    ctx.set('系统状态.待处理事件.囚禁逃脱机会', true);
+                    Logger.event(`🚪 逃脱进度已达100%，推送逃脱机会事件！`);
+                }
+
+                // 3.5. 低概率身体改造事件 (每回合1%)
+                if (!ctx.events['囚禁身体改造事件'] && Math.random() < 0.01) {
+                    ctx.set('系统状态.待处理事件.囚禁身体改造事件', true);
+                    Logger.warn(`🔧 身体改造事件触发！怪人组织对主角进行了不可逆的改造实验。`);
+                }
+
+                // 3.6. 低概率奇迹救援事件 (每回合1%)
+                if (Math.random() < 0.01) {
+                    ctx.set('系统状态.待处理事件.奇迹救援事件', true);
+                    Logger.event(`🌟 奇迹救援事件触发！同伴找到了主角的位置！`);
+                }
+
+                // 4. 出口判定
+                if (ctx.get('主角.囚禁状态.洗脑进度', 0) >= 100) {
+                    ctx.set('系统状态.待处理事件.小英雄黑化', true);
+                    ctx.set('进程.阶段', '幕间休息');
+                    this._executeIntermissionHeal(ctx);
+                    Logger.error('💀 洗脑进度满值！强制触发小英雄黑化事件！');
+                } else if (corruption >= 100) {
+                    ctx.set('系统状态.待处理事件.黑化临界', true);
+                    ctx.set('进程.阶段', '幕间休息');
+                    this._executeIntermissionHeal(ctx);
+                    Logger.error('💀 侵蚀度触及100%！触发黑化临界事件！');
+                }
+            }
         }
 
         runMilestones(ctx) {
@@ -437,8 +701,14 @@
                         ctx.set('系统状态.待处理事件.武装升级事件', true); 
                         Logger.event(`💎 里程碑达成：强度突破至 ${t}，触发武装升级事件！`);
                         break; 
-                    } 
-                }
+            }
+
+            // 被捕囚禁转幕间时，推送状态演化事件
+            if (ctx.get('进程.阶段') === '幕间休息' && ctx.getPrev('进程.阶段') === '被捕囚禁' && !ctx.events['状态演化事件']) {
+                ctx.set('系统状态.待处理事件.状态演化事件', true);
+                Logger.info('🔧 从被捕囚禁回归日常，推送状态演化事件以结算永久变化。');
+            }
+        }
             }
 
             const pFame = ctx.getPrev('名声.知名度', 0), cFame = ctx.get('名声.知名度', 0);
@@ -566,6 +836,21 @@
                 ctx.add('主角.核心状态.基础强度', strGain); ctx.add('主角.核心状态.体力值.最大', hpGain); ctx.add('主角.核心状态.能量值.最大', mpGain);
                 Logger.event(`💪 战斗经验沉淀：威胁Lv${tl} 带来 强度+${strGain}, HP上限+${hpGain}, MP上限+${mpGain}`);
             }
+
+            // 小英雄名录战绩更新
+            const combatType = ctx.get('世界.当前关卡.战斗类型', '魔物');
+            if (combatType === '小英雄') {
+                const roster = ctx.get('世界.小英雄名录', {});
+                const matchedKey = Object.keys(roster).find(k => {
+                    if (k === '$meta' || k === '$__META_EXTENSIBLE__$') return false;
+                    return roster[k].英雄名 === name || roster[k].堕落英雄名 === name;
+                });
+                if (matchedKey) {
+                    if (result === 'WIN') ctx.add(`世界.小英雄名录.${matchedKey}.败于主角次数`, 1);
+                    else ctx.add(`世界.小英雄名录.${matchedKey}.战胜主角次数`, 1);
+                    Logger.info(`📋 小英雄名录更新：${matchedKey} 战绩已记录`);
+                }
+            }
         }
 
         _executeIntermissionHeal(ctx) {
@@ -587,7 +872,19 @@
             
             const kinks = ctx.get('主角.快感状态.性癖', {});
             const validKinks = Object.keys(kinks).filter(k => k !== '$meta' && kinks[k] && (kinks[k].等级 >= 1 || kinks[k].经验 >= 50));
-            if (validKinks.length > 0) {
+            const rosterForSeed2 = ctx.get('世界.小英雄名录', {});
+            const rosterEntries2 = Object.keys(rosterForSeed2).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+            let useBond2 = false;
+            if (rosterEntries2.length > 0) {
+                if (validKinks.length === 0) { useBond2 = true; }
+                else if (Math.random() < 0.3) { useBond2 = true; }
+            }
+            if (useBond2) {
+                const pickedName = _.sample(rosterEntries2);
+                const bondType = Math.random() < 0.5 ? '情欲' : '亲密';
+                ctx.set('系统状态.待处理事件.幕间牵绊事件', `${pickedName}|${bondType}`);
+                ctx.set('系统状态.幕间事件完成', false);
+            } else if (validKinks.length > 0) {
                 ctx.set('世界.幕间H事件.核心主题', [_.sample(validKinks)]); 
                 ctx.set('系统状态.幕间事件完成', false);
             } else {

@@ -1,0 +1,47 @@
+﻿<%# [系统] 幕间逻辑引擎 %>
+<%_ {
+const stat = getvar('stat_data') || {};
+const j = (v) => JSON.stringify(v);
+const isCreated = String(_.get(stat, '系统状态.主角创建完毕')) === 'true';
+const isIntermission = _.get(stat, '进程.阶段') === '幕间日常';
+const pendingEvents = _.get(stat, '系统状态.待处理事件', {});
+const hasEvents = Object.keys(pendingEvents).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$').length > 0;
+
+if (isCreated && isIntermission && !hasEvents) {
+  const turnCount = parseInt(_.get(stat, '系统状态.幕间回合计数', 0), 10);
+  const region = _.get(stat, '主角.当前区域', '废街');
+  const location = _.get(stat, '主角.当前地点', '出租屋');
+  const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+  const tier = _.get(stat, '主角.擂台数据.擂台段位', '公猪');
+  const credits = parseInt(_.get(stat, '主角.经济.信用点', 0), 10);
+  const debt = parseInt(_.get(stat, '主角.经济.债务', 0), 10);
+_%>
+# 系统指令: 幕间日常
+
+intermission_life_protocol:
+  objective: "当前处于幕间日常环节。聚焦于黑曜市底层性斗士的日常生活与角色内心，保持场景的连贯性。下一场擂台比赛的匹配将在幕间回合计数达到3后由后台自动推送。"
+
+  protagonist_context:
+    alias: "<%= alias %>"
+    tier: "<%= tier %>"
+    current_location: "<%= region %> - <%= location %>"
+    credits: <%= credits %>
+    <%_ if (debt > 0) { _%>
+    debt: "<%= debt %> 信用点"
+    <%_ } _%>
+
+  current_rhythm:
+    turn_count: <%= turnCount %>
+    auto_match_note: "幕间回合计数达到3时，后台将自动推送下一场擂台匹配。在此之前，请专注于日常。"
+
+  narrative_guidance:
+    - "保持场景的自然流动，让生活场景有机地展开。"
+    - "通过主角的感官描写黑曜市的氛围——霓虹灯的颜色、空气的味道、街道上的声音。"
+    - "挖掘主角作为性斗士之外的多重身份和人际关系。幕间是拓展人物深度的重要机会。"
+
+  polishing_instructions:
+    - "【幕间日常】严禁将主角的身体过度性化或淫乱化。幕间是挖掘人设、拓展人际关系的窗口，不是擂台性斗的延续。"
+    - "不要让主角在幕间直接发起或参与擂台战斗。比赛匹配由系统自动推送。"
+    - "保持赛博朋克底层氛围——底层性斗士的生活不富裕，环境逼仄，但主人公在擂台上下的起伏中保留着自己的方向。"
+
+<%_ } } _%>

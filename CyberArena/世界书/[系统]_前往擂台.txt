@@ -1,0 +1,162 @@
+﻿<%_{
+const stat = getvar('stat_data');
+const phase = _.get(stat, '进程.阶段', '');
+const alias = _.get(stat, '主角.基本信息.擂台代号', '主角');
+const events = _.get(stat, '系统状态.待处理事件', {});
+const arenaEvent = events['前往擂台事件']; // "观赛" / "下注" / "社交" / "闲逛"
+const rank = _.get(stat, '主角.擂台数据.擂台段位', '公猪');
+const credits = _.get(stat, '主角.经济.信用点', 0);
+const roster = _.get(stat, '记录.性斗士名录', {});
+const j = (v) => JSON.stringify(v);
+const T = ['公猪','公狗','野猫','鬣狗','猎豹','猛虎','雄狮'];
+const RACES = ['狼兽人','虎兽人','龙兽人','熊兽人','鲨鱼兽人','狐兽人','马兽人','狗兽人','猫兽人','雄性魅魔','人形史莱姆','人形触手怪','胶狼兽人','胶龙兽人','胶鲨兽人'];
+const BUILDS = ['精瘦','匀称','健壮','肥胖'];
+
+// 阴茎尺寸 (cm)
+const PENIS_TABLE = { '人类':[12,22],'狼兽人':[16,28],'虎兽人':[18,30],'龙兽人':[15,35],'熊兽人':[20,32],'鲨鱼兽人':[14,26],'狐兽人':[12,24],'马兽人':[25,50],'狗兽人':[15,28],'猫兽人':[10,20],'雄性魅魔':[14,26],'人形史莱姆':[10,30],'人形触手怪':[8,25],'胶狼兽人':[16,28],'胶龙兽人':[15,35],'胶鲨兽人':[14,26] };
+
+// 性技+忍耐度 总和 (每段位)
+const SKILL_ENDUR_TOTAL = { '公猪':[80,120],'公狗':[110,160],'野猫':[160,220],'鬣狗':[210,280],'猎豹':[280,360],'猛虎':[350,440],'雄狮':[440,600] };
+
+// 体力+精力+阈值 总和 (每段位, 每项最低50)
+const PHYS_TOTAL = { '公猪':[280,360],'公狗':[340,440],'野猫':[400,520],'鬣狗':[460,600],'猎豹':[530,690],'猛虎':[600,780],'雄狮':[700,950] };
+
+function rand(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
+function pick(arr) { return arr[rand(0,arr.length-1)]; }
+
+function randomTier(mode, oppTier) {
+  if (mode === '社交') {
+    var r = Math.random();
+    if (r < 0.15) return T[0]; // 两头少
+    if (r < 0.20) return T[6];
+    return T[rand(1,5)];       // 中间多
+  }
+  var idx = T.indexOf(oppTier);
+  if (idx < 0) idx = 3;
+  var delta = rand(-1,1);
+  var t = Math.max(0, Math.min(6, idx+delta));
+  return T[t];
+}
+
+function randomRace() { return Math.random() < 0.5 ? '人类' : pick(RACES); }
+
+function randomAge() { var r = Math.random(); if (r < 0.6) return rand(16,26); if (r < 0.9) return rand(27,40); return rand(41,50); }
+
+function buildFighter(fighterTier) {
+  var sr = SKILL_ENDUR_TOTAL[fighterTier]; var totalSkill = rand(sr[0], sr[1]);
+  var skill = Math.max(20, Math.floor(totalSkill * (0.3 + Math.random()*0.4)));
+  var endur = totalSkill - skill;
+  var pr = PHYS_TOTAL[fighterTier]; var totalPhys = rand(pr[0], pr[1]);
+  var physA = Math.max(50, Math.floor(totalPhys * (0.2+Math.random()*0.3)));
+  var physB = Math.max(50, Math.floor((totalPhys-physA) * (0.3+Math.random()*0.4)));
+  var physC = totalPhys - physA - physB; if (physC < 50) { var over = 50-physC; physC=50; physA-=Math.floor(over/2); physB-=Math.ceil(over/2); physA=Math.max(50,physA); physB=Math.max(50,physB); }
+  var rc = randomRace(); var pz = PENIS_TABLE[rc] || [12,22];
+  return {
+    擂台积分: rand(T.indexOf(fighterTier)*500, (T.indexOf(fighterTier)+1)*500-1),
+    擂台段位: fighterTier, 年龄: randomAge(), 种族: rc, 身材: pick(BUILDS),
+    性技: skill, 忍耐度: endur, 体力上限: physA, 精力上限: physB, 快感阈值: physC,
+    阴茎尺寸: rand(pz[0], pz[1]), 身体改造有无: Math.random() < 0.5,
+    人气: fighterTier === '猛虎' || fighterTier === '雄狮' ? rand(180, 500) : rand(0, 200)
+  };
+}
+
+var rosterNames = Object.keys(roster).filter(function(k){ return k!=='$meta'&&k!=='$__META_EXTENSIBLE__$'; });
+var neededRosterAdditions = [];
+var battleOpponent = null;
+_%>
+<%_ if (phase !== '幕间日常') { _%>
+phase_redirect: "当前【<%= phase %>】，擂台行动仅限幕间日常。"
+<%_ } else if (!arenaEvent) { _%>
+<%_ } else { _%>
+# 系统指令: 前往擂台·<%= arenaEvent %>
+
+system_handler:
+  direction: "<%= arenaEvent %>"
+
+<%_ if (arenaEvent === '闲逛') { _%>
+  narrative_guidance:
+    - "描写<%= alias %>在熔渣区擂台及周边闲逛的所见所闻。展示观众、赌徒、性斗士混杂的环境氛围，擂台巨大的霓虹招牌、全息投影的赛事预告、酒水区传来的吵嚷声。不引入新事件。"
+<%_ } else if (arenaEvent === '社交') {
+  // 社交: 随机3位在场，名录<5个固定+1新，否则10%概率+1新
+  var presentFighters = [];
+  if (rosterNames.length > 0) presentFighters.push(rosterNames[rand(0, rosterNames.length-1)]);
+  if (rosterNames.length > 1 && Math.random() < 0.5) { var n; do { n = pick(rosterNames); } while (presentFighters.indexOf(n)>=0); presentFighters.push(n); }
+  if (rosterNames.length > 2 && Math.random() < 0.5) { var n2; do { n2 = pick(rosterNames); } while (presentFighters.indexOf(n2)>=0); presentFighters.push(n2); }
+  while (presentFighters.length < 3) {
+    var newF = buildFighter(randomTier('社交',''));
+    neededRosterAdditions.push(newF);
+    presentFighters.push('[新增:' + newF.种族 + '/' + newF.擂台段位 + ']');
+  }
+  if (rosterNames.length >= 5 && Math.random() < 0.1) {
+    var extraF = buildFighter(randomTier('社交',''));
+    neededRosterAdditions.push(extraF);
+    presentFighters.push('[新增:' + extraF.种族 + '/' + extraF.擂台段位 + ']');
+  }
+_%>
+  narrative_guidance:
+    present_fighters: "<%= presentFighters.join(', ') %>"
+    directives:
+      - "描写<%= alias %>在擂台周边遇到以上性斗士的场景。他们是同行、前辈或新人，交谈的内容围绕性和擂台话题。"
+      - "不引入擂台战斗事件，聚焦于角色间的对话与互动。"
+<%_   if (neededRosterAdditions.length > 0) { _%>
+    roster_additions:
+      instruction: "以下为需要新增的性斗士，AI需为每人设计姓名/擂台代号/身份/性格/外貌/身材/阴茎描述/后穴描述/性斗风格/性行为偏好/身体改造/历史战绩等字段，并与随机生成的数值合并后insert到性斗士名录。"
+<%_     for (var i=0; i<neededRosterAdditions.length; i++) { var f=neededRosterAdditions[i]; _%>
+      fighter_<%= i+1 %>:
+        随机数值: <%= j(f) %>
+        AI设计: "根据以上随机数值，设计姓名、擂台代号、身份、性格、外貌、身材(基于'<%= f.身材 %>'设计身高体重和身体描写)、阴茎描述(尺寸<%= f.阴茎尺寸 %>cm)、后穴描述、性斗风格(基于性技<%= f.性技 %>和忍耐度<%= f.忍耐度 %>)、性行为偏好、身体改造(<% if(f.身体改造有无) { %>有——需创意设计<% } else { %>无<% } %>)、历史战绩。擂台系统对这些信息完全收录并公开。"
+<%_     } _%>
+<%_   } _%>
+<%_ } else {
+  // 观赛/下注: 随机一个名录内对手，若无相邻段位则新增，否则70%用现有30%新增
+  var existingOpponent = null;
+  if (rosterNames.length > 0) {
+    var tried = pick(rosterNames);
+    var tIdx = T.indexOf(_.get(roster, tried+'.擂台段位','公猪'));
+    var mcIdx = T.indexOf(rank);
+    if (Math.abs(tIdx-mcIdx) <= 1) { // 相邻段位
+      if (Math.random() < 0.7) existingOpponent = tried;
+    }
+  }
+  if (!existingOpponent) {
+    var newFighter = buildFighter(randomTier('观赛', rank));
+    neededRosterAdditions.push(newFighter);
+    battleOpponent = newFighter;
+  } else {
+    battleOpponent = roster[existingOpponent];
+    battleOpponent._name = existingOpponent;
+  }
+_%>
+<%_   if (arenaEvent === '下注') { _%>
+  narrative_guidance:
+    betting_lead:
+      - "描写<%= alias %>驻足赔率面板前，查看即将进行的比赛信息并下注。对手信息：<%= battleOpponent._name || battleOpponent.种族+'/'+battleOpponent.擂台段位 %>。"
+    directives:
+      - "下注后前往观众席，观看擂台上两名性斗士的比赛，描写比赛过程和氛围。"
+<%_   } else { _%>
+  narrative_guidance:
+    directives:
+      - "描写<%= alias %>在观众席上观看擂台上两名性斗士的比赛——他们的性斗风格、关键回合、和观众的反应。"
+<%_   } _%>
+    opponent_info:
+<%_   if (battleOpponent._name) { _%>
+      name: "<%= battleOpponent._name %>"
+      rank: "<%= battleOpponent.擂台段位 || '?' %>"
+<%_   } else { _%>
+      new_opponent_data: <%= j(battleOpponent) %>
+      instruction: "AI需为此新增性斗士设计姓名/擂台代号/身份/性格/外貌/身材/阴茎描述/后穴描述/性斗风格/性行为偏好/身体改造/历史战绩等字段，与随机数值合并后insert到性斗士名录。擂台系统对这些信息完全收录并公开。"
+<%_   } _%>
+<%_ } _%>
+
+  mandatory_data_sync:
+    instruction: "叙事结束后，移除本事件"
+<%_ if (neededRosterAdditions.length > 0) { _%>
+    roster_instruction: "为所有新增性斗士设计完整档案并insert到名录。"
+<%_ } _%>
+    patch_template: |
+      {"op":"remove","path":"/系统状态/待处理事件/前往擂台事件"}
+<%_ for (var i=0; i<neededRosterAdditions.length; i++) { var f=neededRosterAdditions[i]; _%>
+      //禁止填入未知或未公开，必须给每个字段明确赋值
+      {"op":"insert","path":"/记录/性斗士名录/[<%= i+1 %>号新性斗士姓名]","value":{ "姓名":"[AI设计]", "擂台代号":"[AI设计]", "擂台积分":<%= f.擂台积分 %>, "擂台段位":"<%= f.擂台段位 %>", "年龄":<%= f.年龄 %>, "种族":"<%= f.种族 %>", "身份":"[AI设计]", "性格":"[AI设计]", "外貌":"[AI设计]", "身材":"[AI设计——基于<%= f.身材 %>体型]", "性斗风格":"[AI设计——基于性技<%= f.性技 %>+忍耐度<%= f.忍耐度 %>]", "性行为偏好":"[AI设计]", "性技":<%= f.性技 %>, "忍耐度":<%= f.忍耐度 %>, "体力上限":<%= f.体力上限 %>, "精力上限":<%= f.精力上限 %>, "快感阈值":<%= f.快感阈值 %>, "阴茎描述":"[AI设计——尺寸<%= f.阴茎尺寸 %>cm]", "后穴描述":"[AI设计]", "身体改造":"<% if(f.身体改造有无) { %>[AI设计——有改造]<% } else { %>无改造<% } %>", "历史战绩":{ "胜":[AI根据段位设计的数值], "负":[AI根据段位设计的数值], "平":[AI根据段位设计的数值] }, "与主角对战记录":{ "胜":0, "负":0, "平":0 }, "人气":<%= f.人气 %>, "好感度":0, "与主角关系":"尚且陌生" }}
+<%_ } _%>
+<%_ } } _%>

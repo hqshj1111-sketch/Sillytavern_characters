@@ -1,0 +1,79 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+// 仅在游戏正式开始（非创角阶段）时激活
+if (_.get(stat, '进程.阶段') !== '创角阶段') {
+    // 获取气温和快感值，默认气温32度，快感0
+    const temp = parseInt(_.get(stat, '进程.当日气温', 32));
+    const pleasure = parseInt(_.get(stat, '主角.当前状态.快感值', 0));
+    const desire = parseInt(_.get(stat, '主角.当前状态.欲望值', 0));
+
+    const sunnyDays = parseInt(_.get(stat, '进程.累计晴天数', 0));
+    let adaptDesc = "";
+    if (sunnyDays < 7) {
+        adaptDesc = "都市人的娇贵：保持着白皙的肤色，对小镇的高温感到闷热不适，穿着相对拘谨。";
+    } else if (sunnyDays < 14) {
+        adaptDesc = "融入夏日：皮肤泛起健康的浅浅晒痕，逐渐习惯了出汗，穿着变得轻薄随意。";
+    } else {
+        adaptDesc = "彻底同化：变成了健康的小麦色，完全适应了燥热的空气，像本地人一样追求极简清凉的打扮，毫不在意形象。";
+    }
+
+    // --- 1. 气温反馈逻辑 ---
+    let tempDesc = "";
+    if (temp < 28) {
+        tempDesc = "气温舒适宜人，偶有微风拂过，肌肤清爽自在。";
+    } else if (temp <= 33) {
+        tempDesc = "典型的夏日高温，稍微活动便渗出薄汗，衣物微贴肌肤，空气中弥漫着燥热的气息。";
+    } else {
+        tempDesc = "灼热的盛夏顶峰，汗水将薄衫浸透紧贴身体曲线，正是最适合纳凉戏水的天气。";
+    }
+
+    // --- 2. 快感反馈逻辑 (按照 <10, 40, 60, 90 划分) ---
+    let pleasureDesc = "";
+    let stage = "";
+    
+    if (pleasure < 10) {
+        stage = "【状态平稳】";
+        pleasureDesc = "身体没有特别的反应，理智清晰，完全处于正常的日常社交状态。";
+    } else if (pleasure < 40) {
+        stage = "【轻微躁动】";
+        pleasureDesc = "身体深处泛起一丝不易察觉的酥麻。这种轻微的躁动和体温升高，很容易被误认为是炎热带来的正常反应。";
+    } else if (pleasure < 60) {
+        stage = "【半勃苏醒】";
+        pleasureDesc = "下体微微发硬，布料摩擦带来阵阵酥麻。";
+    } else if (pleasure < 90) {
+        stage = "【情欲难掩】";
+        pleasureDesc = "彻底勃起发涨，渗出清液微微打湿内裤。";
+    } else {
+        stage = "【临界隐忍】";
+        pleasureDesc = "紧绷至射精边缘，稍有刺激便溢出白浊。";
+    }
+
+    // --- 3. 性欲反馈逻辑 (按照 <20, 40, 60, 80 划分) ---
+    let desireDesc = "";
+    let desireStage = "";
+
+    if (desire < 20) {
+        desireStage = "【心如止水】";
+        desireDesc = "脑中清明，没有特别的绮念，注意力放在日常之事上。";
+    } else if (desire < 40) {
+        desireStage = "【心猿意马】";
+        desireDesc = "视线偶尔不受控制地掠过身边人的身体曲线，一些模糊的念头在脑海边缘徘徊。";
+    } else if (desire < 60) {
+        desireStage = "【想入非非】";
+        desireDesc = "脑海中不时闪过某些香艳的画面或妄想，对肢体接触的渴望悄然滋长。";
+    } else if (desire < 80) {
+        desireStage = "【春心荡漾】";
+        desireDesc = "妄想在脑中挥之不去，对身边人的体味、汗香、肌肤光泽异常敏感，心跳暗自加速。";
+    } else {
+        desireStage = "【欲火中烧】";
+        desireDesc = "满脑子都是色情的念头，视线几乎无法从他人的身体上移开，理智与本能在激烈拉扯。";
+    }
+_%>
+# 生理与环境状态监视器
+  instruction: "根据如下指导进行主角生理状态的描写。"
+【环境体感】: <%= tempDesc %>
+【高温适应】: <%= adaptDesc %>
+【主角生理】: <%= stage %> -> <%= pleasureDesc %> | 快感值 : <%= pleasure %>
+【主角心理】: <%= desireStage %> -> <%= desireDesc %> | 性欲值 : <%= desire %>
+【叙事指导】: 请将环境体感、生理躁动与心理绮念三者自然交织在一起。让身体的兴奋与脑中的妄想相互催化，营造出夏日特有的黏腻而躁动的氛围。
+<%_ } } _%>

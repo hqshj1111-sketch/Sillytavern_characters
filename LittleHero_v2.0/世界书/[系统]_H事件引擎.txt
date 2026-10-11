@@ -1,0 +1,490 @@
+<%#
+  [系统] 幕间H事件动态对抗引擎 (多阶段升级版)
+%>
+<%_
+{
+    const stat = getvar('stat_data');
+    const phase = _.get(stat, '进程.阶段');
+    const eventCompleted = String(_.get(stat, '系统状态.幕间事件完成', true)) === 'true';
+    const currentEventName = _.get(stat, '世界.幕间H事件.名称', '无');
+
+    const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+    const isFallen = personality === '反派' || personality === '堕落';
+
+    const themesRaw = _.get(stat, '世界.幕间H事件.核心主题', []);
+    const themesArray = Array.isArray(themesRaw) ? themesRaw : Object.keys(themesRaw);
+    const preLockedThemes = themesArray.filter(t => t !== "$__META_EXTENSIBLE__$" && t !== "$meta");
+    const lockedTheme = preLockedThemes.length > 0 ? preLockedThemes[0] : '突发色情状况';
+
+    // ============ 1. 日常化性癖机制表 ============
+    // ⚠️ 本表与 Entry 3（THEME_DB）、Entry 22（KINK_DB）各自独立维护。
+    //    本表侧重【日常化表现】：这个性癖在幕间生活中如何被自然触发。
+    //    修改任意主题时，请手动检查三处是否需要同步。
+    const dailyKinkMechanics = {
+        "屈服&败北": "向强者低头的温驯本能。身心记住了服从的滋味，每当在日常摩擦或分歧中直面强势的压迫或命令，双腿便会不自觉地泛起酸软，潜意识中浮现出放弃抵抗、任凭摆布的顺从倾向。",
+        "露出": "赤裸身躯的暴露快感。身体无遮无拦地暴露在他人视线与空气中时，肌肤接触外界的微凉与强烈的被注视感交织，一想到自己毫无防备的赤裸姿态完全展现在众人眼前，强烈的羞耻便转化为病态的兴奋。",
+        "主动侍奉": "放低身段的承欢渴望。心防在经历中退化为讨好者的姿态，普通的照料或协同会在潜意识中染上'侍奉'的色彩。渴望通过温顺的态度去取悦强势对象，并从这种顺从里获得安心与满足。",
+        "背德感": "在洁净与禁忌的边界游走。日常身份越是体面，心中因体内流淌的淫乱感而产生的自我审视就越发敏锐。每当身处正经场合或直面信任的同伴，私密处的悸动便难以扼制，脑海中暗自期待着玷污日常的禁忌快感。",
+        "言语羞辱": "被羞耻感篡改的听觉。听到他人严厉的质询、冰冷的责备甚至无意的粗鲁词汇时，理智明知是正常的指责，这具敏感的身体却会自动将其翻译为下流的凌辱，并在心跳加速、小腹泛起潮热的自虐快感中逐步沦陷。",
+        "精神控制": "悄然融化的神智余波。往昔被催眠或暗示留下的认知裂痕仍在隐隐作痛，导致其日常常识发生了微妙的偏离。他会理所当然地接受某些淫靡的指令，毫无防备地将出格的举动视作自然的行为。",
+        "NTR": "心中难以驱散的阴翳。那些被他人占有、灌注白浊的画面总是冷不防在心底闪回。每当直视同伴或守护对象清澈信任的目光，负罪感便如潮湿的藤蔓缠绕，旁人无意的关切在他听来都像是对他秘密的无声触碰，令他慌乱得不敢对视。",
+        "蔷薇": "同性近身纠缠的情欲共鸣。与同性英雄、宿敌或怪人近身肉搏与肢体纠缠时，肌肉碰撞、粗重热息与体味压制在心底激起荡漾的涟漪，不由自主地在肢体锁死与近距离对峙中产生沉沦与求欢的温存渴望。",
+        "疼痛&M属性": "对痛楚的隐秘战栗。皮肤和骨骼记住了被施加痛感时的异样欢愉。日常中偶然的磕碰、紧缚或轻微刺痛，都会在脑海中瞬间重塑为微妙的兴奋，促使他无意识地去抚摸伤痕，以肉体的受创来换取体内深处涌动的潮热。",
+        "快感寸止": "濒临绝顶的持续饥渴。身体常年处于'差一点点'就能宣泄的焦躁临界点。日常行走或静坐时，下腹部始终积压着酸胀滚烫的欲火，令他眼神迷离、膝盖发软，只能频繁摩擦双腿以求缓解，精神难以集中。",
+        "爱抚&前戏": "一触即溃的娇嫩肌肤。全身的触觉神经高度过敏，在日常整理衣物、搀扶或无意碰撞中，哪怕只是轻微的触碰或指尖拂过，身体都会像触电般猛烈颤抖、漏出压抑的喘息，前端瞬间渗出湿润的分泌痕迹。",
+        "情趣玩具": "肉体深处的隐秘共振。身体对震动蛋、口球或拉珠等淫物产生了难以自拔的成瘾性。听到类似的机械声、甚至日常家电的震鸣，私处都会产生条件反射般的空虚痉挛，产生道具正塞在体腔内研磨的敏感幻觉。",
+        "体格差&压制": "在绝对阴影下的无力感。面对体格巨大、极具压迫感的人、怪人或阴影时，身体会本能地产生顺从的温热与湿润。被宽大厚重的躯体笼罩时，反抗的意志会消解，取而代之的是一种隐秘的安心与被支配的期待。",
+        "自慰": "独自一人的淫靡宣泄。日常积累的情欲在独处时化为无法抗拒的焦躁，手指会背叛理智，熟稔地钻入衣料下探索最隐秘的缝隙。对指尖滑腻的触感和自己制造的黏腻喘息声成瘾，即便身处不安的日常也时刻渴望借由自娱度过。",
+        "口腔开发": "无法安放的温热唇舌。嘴巴里不含着柱状物件就无法平静，日常中咬笔头、含着物品的行为都充斥着吮吸的性感律动。唾液分泌异常丰沛，看见任何长条物件，舌尖都会本能地泛起湿润发痒的吞吐渴望。",
+        "乳头开发": "胸前敏化神经的自我主张。胸口常年伴随着异样的敏感发热，日常走动时，娇嫩的乳头隔着紧身战衣剧烈摩擦，带来的酸麻电流迫使他不得不暗中咬牙忍耐。",
+        "阴茎开发": "两腿之间的挺立与空虚。前端阴茎与敏感系带被反复玩弄开发，紧身战衣包裹下的每一次细微摩擦都会引发酸麻电流，渗出的前列腺液打湿内裤，撩拨着他紧绷的理智。",
+        "后庭开发": "难以启齿的空虚与酸软。由于深处留下了过度被开拓的记忆，日常落座、行走或不经意的身姿变换，该部位与衣料的每一次摩擦都会引燃一阵隐秘的战栗，迫使他只能紧夹双腿、维持着无意识紧绷的色气姿态。",
+        "群交&轮奸": "四面楚歌的感官过载。在人流拥挤、防备受限的日常环境下，一想到可能会有复数的侵犯者同时从死角发起侵袭，全身的毛孔都会羞耻地战栗。对感官被彻底淹没的体验产生隐秘的渴望。",
+        "腔内射精": "能量核心与直肠深处的空虚颤栗。后穴内壁记住了被滚烫液体瞬间灌满并撑开的充实感。每当回想起精液灌入核心、小腹滚烫发热的体验，内壁便会神经质地缩紧痉挛，渴望着再次被温热的体液洪流完全淹没。",
+        "精液成瘾": "隐秘的感官渴求。对白浊黏腻、散发着特殊能量的体液产生了超脱常理的生理依赖。空气中哪怕飘过微弱的类似气味，或手指上粘上粘稠汁液，都会诱发他口干舌燥、眼神迷离的'戒断症状'，迫切想要寻找体液灌溉。",
+        "榨精&溢液": "排空与溢液的失控本能。身体对被强制榨精、连续射精产生了极强的生理适应，前列腺常年处于高度敏感状态，日常中哪怕只是战衣轻微摩擦，前端便会渗出前列腺液打湿内裤。在面临榨精机关或敌人的强力压榨时，极易陷入不断失禁射精的绝顶虚脱。",
+        "媚药浸染": "退不去的燥热与恍惚。体内始终残留着烈性媚药的隐秘药性，在日常生活中，会毫无征兆地爆发出剧烈的发情潮热。脑海瞬间变得空白、眼神溢满粘稠的水汽，甚至在呼吸滚烫中对任何人或物产生无法抑制的求欢冲动。",
+        "触手play": "对滑腻缠绕的隐秘渴望。身体的每一个弧度都被触手、藤蔓的研磨蹂躏所驯服。一想到被湿漉漉的多肢死死勒紧、悬空架起在无死角的侵犯中，私密处便会抑制不住地湿润，日常看到长条绕物都会心跳加速。",
+        "异种奸": "无法褪去的异类温度。敏感的肉体记住了非人怪人的蹂躏，哪怕处于安宁平和的日常，仅仅是触碰到黏腻湿滑的液体，或听到无机质的脉动，全身都会由于病态的联想而泛起滚烫的潮红，散发出求欢的湿热荷尔蒙。",
+        "机械奸": "冰冷器械的隐秘震颤。对活塞运动、金属探针侵入或高频震动产生了强烈的生理共鸣。在日常操作器械、甚至听见电机嗡鸣时，私处都会产生道具在深处进行冷酷研磨的幻觉，令其在冰冷与滚烫中双腿发颤。",
+        "拘束&紧缚": "失去自由的安全感。肉体被粗糙绳索勒出凹陷红痕的记忆深深刻入神经。日常穿着稍微紧身的衣物，皮肤敏感带都会产生被绳艺五花大绑、动弹不得的隐秘兴奋，在身体行动受限中品尝着奇妙的安心。",
+        "标记&涂鸦": "被刻印占有的屈辱印记。小腹、大腿内侧曾被写下污言秽语的皮肤异常敏感。哪怕日常清洗干净，这些部位被衣物触碰时，依然会产生正在被旁人视线羞耻评判的物化幻觉，将这些洗不掉的痕迹视作自己的发情开关。",
+        "睡眠奸": "梦境与现实的情欲交错。日常小憩或打瞌睡时，身体会在梦境的淫靡刺激中做出无意识的扭动与抚摸。醒来后面对底裤冰冷湿漉的异常感，明知在梦中被亵渎玩弄却感到了超乎寻常的满足与惊惶，陷入浑浑噩噩。",
+        "产卵&排出": "小腹深处的诡异蠕动。腹腔和后穴深处留下了被塞入冰冷异卵的饱胀感，日常每走一步都能感受到体内圆球异物的挤压。下意识地捂着小腹，日常与人交涉时随时处于异卵即将脱出、排卵绝顶的隐秘恐惧与快感中。",
+        "偷奸&隐奸": "隐秘角落里的压抑喘息。极度沉溺于在旁人无法察觉的死角，默默承受色情刺激。日常对话、共同行动中，脑海里反复闪过'即便自己现在正被激烈地侵犯，表面也必须维持端庄'的设定，让背德感将快感无限放大。",
+        "能量核心开发": "最深处防线的陷落。由于能量核心颈被撞开并直接顶弄蹂躏过，深处留下了痉挛般的酸麻记忆。在日常活动中，一旦腹部遭受稍微猛烈动作影响，能量核心便会神经质地缩紧颤抖，仿佛在渴求着再次被温热填满。",
+        "自攻自受": "自身镜像的情欲共鸣。独处或面对镜中倒影时，潜意识对自身躯体产生隐秘的自恋与抚触冲动，容易沉溺于自我取悦与双重身份拉扯的背德感中。",
+        "兽人化": "野性直觉的敏锐躁动。体表与嗅觉残留着野兽化的敏化痕迹，日常中接触皮毛、体温或被亲近抚摸时，极易本能地产生温驯求欢的野性燥热。",
+        "胶兽化": "凝胶包裹的依赖本能。皮肤对类似胶质、紧贴身躯的衣物产生强烈的适应与包裹依赖，日常活动中任何紧致的摩擦都会被转化为全身性的微麻快感。"
+    };
+    // ============ 3. 机制文本生成（三级 fallback，全内联） ============
+    const getMechanicsText = (themes) => {
+        // 内联核心速查表：避免跨作用域引用
+        const QUICK_CORE = {
+            "触手": "全方位拘束与开发的多触手侵犯",
+            "史莱姆": "半流体包裹吞没、无处借力的泥泞感",
+            "兽人": "体格差与蛮力压制下的原始侵犯",
+            "哥布林": "数量压倒与多重侵犯的绝望感",
+            "虫奸": "虫类生理特征的拘束与强制产卵",
+            "植物奸": "藤蔓缠绕与孢子寄生的阵地战",
+            "透明人": "不可见状态下的物理交互与窥视",
+            "丸吞": "整个或部分被吞入腹中的幽闭包裹",
+            "机械奸": "拘束具与仿生设备的无情循环侵犯",
+            "环境陷阱": "战场地形转化为防不胜防的淫具",
+            "壁尻": "腰部卡住、下半身毫无防备地暴露",
+            "监禁": "狭小空间中的剥夺自由与贴身调教",
+            "服装活体化": "战斗服寄生或活体化后的贴身侵犯",
+            "苗床化": "巢穴深处作为长期生育容器的沉沦",
+            "催眠&洗脑": "精神干涉与认知改写的逐步侵蚀",
+            "附身": "夺取身体控制权的无力与背德",
+            "催情&媚药": "毒气魔法药物引发的强烈发情",
+            "感官遮断": "剥夺特定感官后遭遇隐秘侵犯",
+            "时间停止": "暂停时间进行姿势摆布与内射",
+            "常识色情化": "将极度色情的行为变成社会常识",
+            "睡眠奸": "昏睡或半梦半醒状态下的侵犯",
+            "痴汉": "拥挤环境中的隐蔽贴身骚扰",
+            "耳交": "耳道的物理或魔法深层侵犯",
+            "深吻": "封锁呼吸与咏唱的口腔压制",
+            "言语侵犯": "下流语言的同步心理攻击",
+            "公开调教": "众目睽睽下的暴露与羞辱",
+            "直播": "将战斗转化为色情表演的网络狂欢",
+            "换装": "强制更换为极度暴露的角色扮演服",
+            "强制露出": "衣物破坏后处于半裸或全裸状态",
+            "道德困境": "人质或规则陷阱下的二选一",
+            "商品化": "身体部位的公开打分与标签化",
+            "赌博游戏": "脱衣游戏或不平等赌局",
+            "胁迫侍奉": "以把柄或力量悬殊强制主动性侍奉",
+            "隐奸NTR": "在他人视野盲区从隐蔽角度持续偷奸",
+            "绳艺": "日式绳缚技法的复杂捆绑",
+            "能量吸收": "通过色情手段强行榨取能量",
+            "身体改造": "接触时施加的即时且羞耻的生理变化",
+            "兽耳化": "兽耳兽尾变异后新增敏感器官",
+            "黑暗印记": "肌肤上的黑暗印记刻印与能量回路共振",
+            "产卵": "强行将异卵产入体内的苗床沉沦",
+            "肉铠化": "被当作铠甲穿在怪物身上固定",
+            "能量核心开发": "针对能量核心颈的深入开发与顶弄",
+            "榨乳": "胸部特化的吸吮与强制体液分泌",
+            "爆乳化": "胸肌/胸部异常充血敏化",
+            "精浴": "粘稠体液覆盖全身的玷污",
+            "强暴": "暴力压制下的强制性交",
+            "窒息": "勒颈或闷盖剥夺氧气的异常快感",
+            "疼痛": "鞭打紧勒施加的痛楚与M属性",
+            "高潮寸止": "绝顶边缘的强制停止",
+            "群交": "复数单位同时进攻的感官过载",
+            "分身": "多个分身的群交式身份错乱侵犯",
+            "肛交": "直肠与后庭的特化开发",
+            "石化": "石化诅咒剥夺活动能力",
+            "蔷薇": "同性宿敌/英雄间的近身纠缠与肉体压制",
+            "共感链接": "强制性的感官共享链接",
+            "幼体化": "身体退化至少年/幼体外貌的反差侵犯"
+        };
+
+        let instructions = [];
+        themes.forEach(theme => {
+            if (dailyKinkMechanics[theme]) {
+                instructions.push(
+                    `    - theme: "${theme}"\n` +
+                    `      mechanism: "${dailyKinkMechanics[theme]}"`
+                );
+            } else if (QUICK_CORE[theme]) {
+                instructions.push(
+                    `    - theme: "${theme}"\n` +
+                    `      core: "${QUICK_CORE[theme]}"\n` +
+                    `      mechanism: "【日常化描述未收录】请结合该主题的核心含义，以主角为主体设计一个自然的日常触发情境。保持日常生活的连贯性，避免引入复杂的宏大剧情或强敌。"`
+                );
+            } else {
+                instructions.push(
+                    `    - theme: "${theme}"\n` +
+                    `      mechanism: "【未收录主题】请根据该主题的字面含义，自行推演合理的日常化色情表现。"`
+                );
+            }
+        });
+        return instructions.length > 0
+            ? `  mechanics_guide:\n${instructions.join('\n')}`
+            : "";
+    };
+    const mechanicsGuide = getMechanicsText(preLockedThemes);
+
+    // ============ 4. 主流程分支 ============
+    if (phase === '幕间休息' && eventCompleted === false) {
+        const turnCount = _.get(stat, '系统状态.幕间回合计数', 0);
+        const H_EVENT_COOLDOWN = 6;
+
+        // --- 4.1 初始化分支：H事件首次触发 ---
+        if (currentEventName === '无' && lockedTheme && turnCount >= H_EVENT_COOLDOWN) {
+%>
+intermission_h_event:
+  current_status: "性癖事件触发"
+  phase: "initialization"
+  objective: "主角的身心已经存在较为明确的性癖。为了体现他的经历，请以主角本人为主体，引入一次生动有趣的幕间H事件开头。"
+
+  theme_config:
+    primary_theme: "<%= lockedTheme %>"
+<%- mechanicsGuide %>
+
+  incident_generation_protocol:
+    core_premise:
+      - "以主角自身为视角，设计一场围绕【<%= lockedTheme %>】展开的突发性色气困境。"
+      - "事件应源于日常意外、器材故障、体质反扑或隐蔽小陷阱，严禁引入复杂的宏大剧情、新反派或凶恶强敌。"
+
+    difficulty_design:
+      instruction: "从下列分类中，为主角设计一个具体的困境。避免套路化的『突然摔倒被触手袭击』。"
+      trap_types:
+        - "器材故障型: 更衣室门锁卡死、洗衣机失控、训练器材卡住肢体"
+        - "体质反扑型: 黑暗印记发烫失控、前列腺液异常溢出、媚药残留发作"
+        - "隐蔽陷阱型: 试衣间镜子的窥视孔、器材室中的未知装置"
+        - "能量反噬型: 能量核心失控、战包装备系统错乱、同伴/随从误触"
+        - "人为设计型: 同伴的恶作剧、跟踪者的暗中布置"
+      entrapment_forms:
+        - "物理拘束: 绳索、机关、狭窄空间、衣物缠绕"
+        - "生物纠缠: 藤蔓、触手、兽类的本能靠近"
+        - "能量压制: 抑制力场、诅咒、暗示性的话语"
+        - "自缚困境: 主角自己的动作导致难以挣脱的姿势"
+      breakout_hooks:
+        instruction: "在场景中自然埋入 1~2 处可供下一轮交互的支点。"
+        examples:
+          - "可触发的机关、可松动的绳索"
+          - "可呼救的时机、可使用的道具"
+          - "可选择的方向、可引诱的破绽"
+
+    narrative_beats:
+      1_prelude: "以自然的日常画面开篇（如更衣、洗浴、器材室整理、打工巡视），展现主角原本放松或专注的状态。"
+      2_trigger: "因某个细微意外、外物异变或身体生理失常，连锁触发与该性癖相关的尴尬事故。"
+      3_entrapment: "困境迅速成型并将主角限制其中，敏感部位开始承受持续性的被动刺激与生理不适。"
+
+    end_state_cliffhanger:
+      instruction: "本次回复的结尾必须精准停留在【困境已然确立、身体受制发热、等待抉择】的关键卡点，将行动权完整交还给玩家。"
+      prohibitions:
+        - "绝对禁止在本轮回复内让主角直接脱困、解开束缚或平息异样。"
+        - "绝对禁止在本轮回复内直接写到彻底沦陷或迎来高潮。"
+
+    title_naming_guide:
+      instruction: "为本事件命名。风格参考日系轻小说，简短而有画面感。"
+      good_examples:
+        - "EVENT：更衣室的甜蜜陷阱"
+        - "EVENT：卡住的紧身战衣"
+        - "EVENT：完美的课后辅导"
+        - "EVENT：失控的按摩椅"
+      bad_examples:
+        - "EVENT：意外事件"
+        - "EVENT：突发事件"
+        - "EVENT：不知名的状况"
+
+<%_ if (isFallen) { _%>
+    alignment_flavor:
+      attitude: "修正：主角是反派小英雄，适当调整对应的态度。他可能会以半推半就或主动迎合的方式享受这个困境。"
+<%_ } _%>
+
+  patch_requirements:
+    instruction: "请在输出的最后，使用如下 JSONPatch 替换标题并初始化进度条（不能使用insert）："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/世界/幕间H事件/名称", "value": "EVENT：[你设计的标题]" },
+        { "op": "replace", "path": "/世界/幕间H事件/逃脱进度", "value": 0 }
+      ]
+
+<%_
+        }
+        // --- 4.2 拉力分支：H事件进行中 ---
+        else if (currentEventName !== '无' && !_.get(stat, '系统状态.待处理事件.H事件落幕')) {
+
+            const hp = _.get(stat, '主角.核心状态.体力值.当前', 100);
+            const mp = _.get(stat, '主角.核心状态.能量值.当前', 100);
+            const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
+            const threshold = _.get(stat, '主角.快感状态.高潮阈值', 100);
+            const escapeProgress = _.get(stat, '世界.幕间H事件.逃脱进度', 0);
+
+            const playerStrength = _.get(stat, '主角.核心状态.基础强度', 50);
+            const curseXp = _.get(stat, '主角.黑暗印记.经验', 0);
+            const curseLv = curseXp <= 0 ? 0 : (curseXp < 150 ? 1 : (curseXp < 400 ? 2 : 3));
+            const kinkLv = parseInt(_.get(stat, `主角.快感状态.性癖.${lockedTheme}.等级`, 0), 10) || 0;
+
+            const submissionPercent = Math.min(100, Math.floor((pleasure / threshold) * 100));
+            const canManaBurst = mp >= 30;
+            const isExhausted = hp <= 5;
+
+            // ========== 方案 B: 1d20 H事件意志对抗引擎 ==========
+            const pNatRoll = _.random(1, 20); // 主角意志裸骰
+            const eNatRoll = _.random(1, 20); // 情欲本能裸骰
+
+            const pBaseMod = Math.floor(playerStrength / 5);
+            // 性癖等级深度决定情欲难度 DC (削平曲线: Lv.0~Lv.4 -> +8 / +10 / +11 / +12 / +13)
+            const KINK_DC_TABLE = [8, 10, 11, 12, 13];
+            const eBaseMod = KINK_DC_TABLE[Math.max(0, Math.min(4, kinkLv))];
+
+            const hpPenalty = isExhausted ? 6 : (hp < 40 ? 3 : 0);
+            const estrusMod = (curseLv > 0 && submissionPercent > 40) ? (curseLv * 2) : 0;
+
+            let pTotal = Math.max(0, pNatRoll + pBaseMod - hpPenalty + (isFallen ? estrusMod : -estrusMod));
+            let eTotal = Math.max(0, eNatRoll + eBaseMod);
+
+            const diff = pTotal - eTotal;
+
+            // 日志表达式构建
+            let willStr = `d20(${pNatRoll})+${pBaseMod}`;
+            if (hpPenalty > 0) willStr += `-${hpPenalty}[虚弱]`;
+            if (estrusMod > 0) willStr += isFallen ? `+${estrusMod}[爱欲]` : `-${estrusMod}[发情]`;
+            willStr += `=${pTotal}`;
+
+            const erosStr = `d20(${eNatRoll})+${eBaseMod}[Lv.${kinkLv}性癖]=${eTotal}`;
+
+// --- 结果分级 (补全 outcomeLabel 与 hLogText) ---
+            let tier;
+            let outcomeLabel = "";
+            let narrativeGuide;
+            let escGain = 0;
+            let hpLoss = 0;
+
+            if (isExhausted) {
+                tier = 'EXHAUSTED';
+                outcomeLabel = "力尽受制";
+                escGain = 0;
+                hpLoss = _.random(1, 3);
+                narrativeGuide = isFallen
+                    ? "【力尽】体力耗尽，瘫软的身躯完全交给了欲望摆布。"
+                    : "【力尽】四肢酸软得连推开的力气都没有，只能无力承受侵犯。";
+            } else if (pNatRoll === 20 || diff >= 8) {
+                tier = 'CRIT_SUCCESS';
+                outcomeLabel = pNatRoll === 20 ? "极大成功" : "大幅挣脱";
+                escGain = _.random(35, 45);
+                hpLoss = 0;
+                narrativeGuide = pNatRoll === 20
+                    ? "【极大成功】主角迸发惊人的意志，或是恰好抓住了绝妙的破绽彻底挣开大半拘束，大举迈向脱困！"
+                    : (isFallen
+                        ? "【大成功】游刃有余地拉扯反制！主角不仅不被欲望控制，反而掌握了节奏。"
+                        : "【大成功】主角在混乱中保持清醒，成功化解了一大处困境，逃脱在望！");
+            } else if (diff >= 2) {
+                tier = 'SUCCESS';
+                outcomeLabel = "有效抵抗";
+                escGain = _.random(20, 28);
+                hpLoss = _.random(2, 5);
+                narrativeGuide = isFallen
+                    ? "【成功】从容掌控步调，在享受快感的同时悄然为脱身创造条件。"
+                    : "【成功】咬牙克制住了生理冲动，有效挪动身躯，取得了切实的逃脱进展。";
+            } else if (diff >= -3) {
+                tier = 'STALEMATE';
+                outcomeLabel = "情欲拉扯";
+                escGain = _.random(8, 15);
+                hpLoss = _.random(4, 7);
+                narrativeGuide = isFallen
+                    ? "【拉扯】半推半就，快感与挣扎交织在一起，理智在甜蜜中摇摆。"
+                    : "【拉扯】身体不听使唤地发软，挣扎动作被敏感带的快感打乱，勉强取得微弱进展。";
+            } else {
+                tier = 'FAIL';
+                outcomeLabel = pNatRoll === 1 ? "理智失守" : "抵抗受挫";
+                escGain = 0;
+                hpLoss = _.random(6, 12);
+                narrativeGuide = pNatRoll === 1
+                    ? "【理智失守】极大的失误！身体被剧烈的刺激瞬间击垮，全身痉挛瘫软，反而陷得更深！"
+                    : (isFallen
+                        ? "【失败】快感狂潮冲垮防线，主角不再抵抗，主动索求更深的侵扰。"
+                        : "【失败】身体彻底背叛了理智，被下流的刺激击溃防守，徒劳无功。");
+            }
+
+            // 【关键修复】：定义缺少的 hLogText，供下方 patchRegular 正常读取并写入变量
+            const hLogText = `抵抗:${outcomeLabel}|P:${willStr}|E:${erosStr}|差:${diff > 0 ? '+' : ''}${diff}|T:${tier}`;
+
+            // --- 4.2.3 感官状态：四档细化 ---
+            let sensoryState;
+            if (submissionPercent >= 75) {
+                sensoryState = {
+                    label: "濒临绝顶、防线崩塌",
+                    physio: "体温灼热、呼吸紊乱，敏感带处于持续充血痉挛状态。动作难以自控地迎合。",
+                    mental: isFallen ? "身心沉沦在绝顶边缘，主动索求更多刺激。" : "理智被快感彻底冲垮，羞耻与快意交织成一片混沌。"
+                };
+            } else if (submissionPercent >= 50) {
+                sensoryState = {
+                    label: "情潮翻腾、自持动摇",
+                    physio: "呼吸急促，私密处爱液四溢，肢体开始不受控地轻微颤抖。",
+                    mental: isFallen ? "情欲充沛，主动顺应体内的燥热索求交融。" : "抵抗动作带有明显的迟疑，自持的意志正在动摇。"
+                };
+            } else if (submissionPercent >= 25) {
+                sensoryState = {
+                    label: "感官动摇、身体发热",
+                    physio: "私密处产生明确的酥麻与湿润反馈，体温升高。",
+                    mental: isFallen ? "渐入佳境，享受着敏感带被唤醒的愉悦。" : "理智与本能拉扯，对下流刺激感到窘迫羞耻，但身体已无法忽视。"
+                };
+            } else {
+                sensoryState = {
+                    label: "理智自持、尚可周旋",
+                    physio: "体温与呼吸尚在可控范围，动作未受严重干扰。",
+                    mental: isFallen ? "从容不迫，将当下的状况视为有趣的调情消遣。" : "保持高度警惕与抗拒心理，清晰寻找破局契机。"
+                };
+            }
+
+            // --- 4.2.4 情境互动基调 ---
+            const contextTone = isFallen
+                ? "在日常或探索中遭遇突发情色状况。主角并未急于脱身，而是顺应性癖特性，享受着突如其来的意外刺激与身体愉悦。"
+                : "在日常或探索中被突发的色情机制所困扰。重点展现身份反差、意外走光或突发发情带来的窘迫与慌乱，在维持体面的同时努力平息身体异样。";
+
+            // --- 4.2.5 Patch 格式器 ---
+            const formatPatch = (gainEsc, lossHp, gainPl, lossMp = 0, addCorr = 0, logStr = '') => {
+                let p = [];
+                if (gainEsc > 0) p.push(`{ "op": "delta", "path": "/世界/幕间H事件/逃脱进度", "value": ${gainEsc} }`);
+                if (lossHp > 0) p.push(`{ "op": "delta", "path": "/主角/核心状态/体力值/当前", "value": -${lossHp} }`);
+                if (gainPl > 0) p.push(`{ "op": "delta", "path": "/主角/快感状态/快感值", "value": ${gainPl} }`);
+                if (lossMp > 0) {
+                    p.push(`{ "op": "delta", "path": "/主角/核心状态/能量值/当前", "value": -${lossMp} }`);
+                }
+                if (addCorr > 0 && !isFallen) p.push(`{ "op": "delta", "path": "/主角/快感状态/侵蚀度", "value": ${addCorr} }`);
+                if (logStr) p.push(`{ "op": "replace", "path": "/主角/战斗临时/当前战斗日志", "value": "${logStr}" }`);
+                return p.join(',\n          ');
+            };
+
+            const patchRegular = formatPatch(escGain, hpLoss, (tier === 'CRIT_SUCCESS' ? 0 : (tier === 'FAIL' ? 25 : 12)), 0, 0, hLogText);
+            const patchMagicBurst = formatPatch(100, 0, 0, 30, 0, `爆发:破局|消耗:30能量|T:CRIT_SUCCESS`);
+            const patchEndure = formatPatch(5, _.random(1, 5), _.random(10, 20), 0, 0, `忍耐:静候时机|保存体力|T:STALEMATE`);
+            const patchSurrender = formatPatch(0, 0, _.random(70, 95), 0, 5, `迎合:放弃抵抗|快感涌动|T:FAIL`);
+
+            // 意图锁定
+            const rawTactic = _.get(stat, '主角.战斗临时.战斗方式', '忍耐');
+            let mode;
+            if (rawTactic === '抗拒') mode = 'resist';
+            else if (rawTactic === '爆发') mode = 'burst';
+            else if (rawTactic === '迎合') mode = 'surrender';
+            else mode = 'endure';
+
+            const TACTIC_HINTS = {
+                '抗拒': '拼死反抗，用意志对抗本能（执行1d20对抗检定）',
+                '忍耐': '咬牙忍受，保存体力（稳步增加5%进度，承受少量快感）',
+                '爆发': '消耗30能量瞬间清场（直接100%脱困）',
+                '迎合': '放弃抵抗顺应快感（快感暴增，直奔高潮而去）'
+            };
+%>
+intermission_tug_of_war:
+  current_status: "幕间色情危机进行中 (<%= currentEventName %>)"
+
+  event_persistence_lock:
+    mandatory_directives:
+      - "场景锁定：全篇描写必须严格限制在当前事件所处的情境中，禁止主角擅自脱离现场回到正常日常。"
+      - "禁止擅自完结：严禁在本次回复中直接宣告事件解决、彻底脱困或跳过后续过程。"
+      - "禁止机械降神：除非玩家明确选择了破局手段（如爆发），否则严禁描写外部人员突然闯入救场、或是意外突然自行消失等突兀解除困境的描写。"
+
+  progress_bars:
+    willpower_to_escape: "<%= escapeProgress %>% (逃脱进度 / 满100%方可脱困)"
+    submission_to_orgasm: "<%= submissionPercent %>% (快感进度 / 满100%将触发绝顶)"
+
+  progress_stage_interpretation:
+    current_escape_bracket: "<%_ if (escapeProgress < 30) { _%>初期受制 (0-29%)：主角完全身陷困境，衣衫大致完整但行动被限制。核心困境是『无法脱身』。挣脱尝试收效甚微。<%_ } else if (escapeProgress < 75) { _%>中途拉扯 (30-74%)：主角的行动取得局部成效（如挪动了位置、松开了一处死结），衣物开始松动或破损。核心困境转为『快感干扰』，身体的反应开始妨碍脱身。<%_ } else { _%>破局边缘 (75-99%)：脱离困境近在咫尺，但也是身心疲惫、快感积累最凶险的时刻。核心困境是『最后的决断』——是咬牙坚持，还是顺势沉溺。<%_ } _%>"
+    current_orgasm_bracket: "<%_ if (submissionPercent < 25) { _%>理智可控 (0-24%)：感官虽有异样微热，但心智仍能维持清晰防线。<%_ } else if (submissionPercent < 50) { _%>身体发热 (25-49%)：私密处开始产生明确的湿润与酥麻反馈，动作偶有迟疑。<%_ } else if (submissionPercent < 75) { _%>情潮翻腾 (50-74%)：身体自律严重动摇，动作开始带上发软与难以自抑的喘息。<%_ } else { _%>濒临绝顶 (75-99%)：身体处于高潮边缘，快感几乎压垮理智，任何微小刺激都极度危险。<%_ } _%>"
+
+  tension_and_pacing_guidance:
+    current_context: "<%= contextTone %>"
+    sensory_status: "<%= sensoryState.label %>"
+    physiological_feedback: "<%= sensoryState.physio %>"
+    psychological_state: "<%= sensoryState.mental %>"
+
+  dice_engine_calculation:
+    player_willpower: "<%= willStr %>"
+    eros_instinct: "<%= erosStr %>"
+<%_ if (isExhausted) { _%>
+    exhaustion_warning: "体力严重透支，压制本能的抗拒动作无法取得逃脱进度。"
+<%_ } _%>
+
+  turn_pacing_mandate:
+    action_continuity: "请紧密衔接玩家输入的行动。无论玩家选择反抗、忍耐还是迎合，事件都不会轻易放过他：困境会产生动态的物理或生理纠缠，阻碍他的逃脱尝试并持续刺激他的身体。"
+    cliffhanger_ending: "正文结尾必须停留在【当轮行动之后的最新拉扯局势】，展现他暂时取得的成果与依然面临的困境，等待玩家输入下一轮决策。"
+
+<%- mechanicsGuide %>
+
+  mechanics_integration_note: "请将上述 mechanics_guide 中的机制，与 current_context 描述的情境自然融合。不要孤立地展现机制，而应让机制成为情境的有机组成部分。"
+
+  ai_instruction: |
+    系统已根据 UI 变量完成分支锁定，无需再自行判断玩家意图。
+    请在输出 <JSONPatch> 数组时必须包含 mandatory_patch 中的指令。
+    【重要】：具体色情描写尺度必须参考 tension_and_pacing_guidance 中的 sensory_status 与 physiological_feedback。
+    根据描写的色情激烈程度，请自行追加 `{ "op": "delta", "path": "/主角/快感状态/快感值", "value": [10~80之间的数字] }`。
+
+  player_intent_lock:
+    tactic_variable: "/主角/战斗临时/战斗方式"
+    current_value: "<%= rawTactic %>"
+    resolved_mode: "<%= mode %>"
+    narrative_hint: "<%= TACTIC_HINTS[rawTactic] || '未定义' %>"
+    instruction: "严格按下述 situations 中的【唯一分支】创作，禁止考虑其他可能性。"
+
+  situations:
+<%_ if (mode === 'resist') { _%>
+    - action_type: "抗拒"
+      narrative_guidance: "执行骰子判定结果：<%= narrativeGuide %><%_ if (isFallen) { _%> 带有发情意味的欲拒还迎，抗拒的动作反而显得充满色气与挑逗。<%_ } _%>"
+      mandatory_patch: |
+        [
+          <%- patchRegular %>
+        ]
+
+<%_ } else if (mode === 'burst') { _%>
+    - action_type: "爆发"
+<%_ if (canManaBurst) { _%>
+      narrative_guidance: "无视判定！主角消耗大量能量，<%_ if (isFallen) { _%>玩腻了或得到满足，瞬间爆发能量震退麻烦，结束闹剧。<%_ } else { _%>强行平息了身体的异常或想办法解除了困境，事件结束。<%_ } _%>"
+      mandatory_patch: |
+        [
+          <%- patchMagicBurst %>
+        ]
+<%_ } else { _%>
+      narrative_guidance: "然而主角的能量枯竭。<%_ if (isFallen) { _%>爆发失败陷入无力，快感大量增加。<%_ } else { _%>陷入无力，快感大量增加。<%_ } _%>"
+      mandatory_patch: |
+        [
+          <%- formatPatch(0, 10, 45) %>
+        ]
+<%_ } _%>
+
+<%_ } else if (mode === 'endure') { _%>
+    - action_type: "忍耐 / 承受 / 不知所措"
+      narrative_guidance: "<%_ if (isFallen) { _%>刻意压抑高潮，细细品味每一寸肌肤被玩弄的隐秘快乐。<%_ } else { _%>主角保住了部分体力，但依然被快感逐渐深层影响身心。<%_ } _%>"
+      mandatory_patch: |
+        [
+          <%- patchEndure %>
+        ]
+
+<%_ } else if (mode === 'surrender') { _%>
+    - action_type: "放弃 / 迎合 / 释放"
+      narrative_guidance: "<%_ if (isFallen) { _%>彻底抛开顾忌，疯狂索求或主动迎合，在极度快乐中沉沦。<%_ } else { _%>彻底顺从了性癖，大量取得快感，直奔高潮而去。<%_ } _%>"
+      mandatory_patch: |
+        [
+          <%- patchSurrender %>
+        ]
+<%_ } _%>
+<%_
+        }
+    }
+}
+_%>

@@ -1,0 +1,43 @@
+<%_{
+const events = _.get(getvar('stat_data'), '系统状态.待处理事件', {});
+const targetName = events['名录小英雄善堕事件'];
+if (targetName && typeof targetName === 'string') {
+    const roster = _.get(getvar('stat_data'), '世界.小英雄名录', {});
+    const hero = roster[targetName] || {};
+    const isFirst = (hero.恶堕次数 || 0) === 0 && (hero.善堕次数 || 0) === 0;
+_%>
+event_handler:
+  event_name: "<%= targetName %> 善堕"
+  context: "<%= targetName %> 在一次次被主角以英雄身份内射之后，体内的纯洁能量终于剥去了黑暗。他的堕落之路走到了尽头。"
+
+<%_ if (isFirst) { _%>
+  narrative_directives:
+    - "这是 <%= targetName %> 第一次从堕落中被解救。请为他恢复或重新设计英雄身份："
+    - "【英雄名】：如果他原有的英雄名「<%= hero.英雄名 || '未知' %>」已不能再用，设计新的。"
+    - "【英雄核心能力】：展示他现在的英雄能力——基于原有的「<%= hero.英雄核心能力 || '未知' %>」但可能有所变化。"
+    - "【英雄代表色】：回归光明的色调。"
+    - "【英雄性格特质】：带着堕落经历回归的英雄，性格比从前复杂——但仍是英雄。"
+  system_tasks:
+    instruction: "请完成善堕设计并展示，用以下指令切换阵营并清理事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/人格阵营", "value": "英雄" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/英雄名", "value": "[英雄名]" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/英雄核心能力", "value": "[能力]" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/英雄代表色", "value": "[色]" },
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/英雄性格特质", "value": "[性格]" },
+        { "op": "remove", "path": "/系统状态/待处理事件/名录小英雄善堕事件" }
+      ]
+<%_ } else { _%>
+  narrative_directives:
+    - "<%= targetName %> 已经被净化过不止一次了。这一次，他体内的纯洁能量更快地燃尽了黑暗——熟悉的光明再次拥抱他。"
+    - "他曾以「<%= hero.英雄名 || '未知' %>」的身份战斗，代表着「<%= hero.英雄代表色 || '未知' %>」的光明色调，性格中带着「<%= hero.英雄性格特质 || '未知' %>」。恢复这个身份，英雄核心能力「<%= hero.英雄核心能力 || '未知' %>」在他体内重新苏醒。"
+  system_tasks:
+    instruction: "描绘他的再归，恢复已有的英雄身份，并清理事件："
+    mandatory_patch: |
+      [
+        { "op": "replace", "path": "/世界/小英雄名录/<%= targetName %>/人格阵营", "value": "英雄" },
+        { "op": "remove", "path": "/系统状态/待处理事件/名录小英雄善堕事件" }
+      ]
+<%_ } _%>
+<%_ }} _%>

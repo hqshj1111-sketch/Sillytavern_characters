@@ -1,0 +1,142 @@
+<%_ {
+const stat = getvar('stat_data') || {};
+if (stat && _.get(stat, '进程.阶段') !== '创角阶段') {
+
+    const currentYear = _.get(stat, '进程.当前年份', '2087');
+    const currentMonth = _.get(stat, '进程.当前月份', 1);
+    const currentDay = _.get(stat, '进程.当前日份', 1);
+    const currentSlot = _.get(stat, '进程.当前时段', '晚上');
+    const weather = _.get(stat, '进程.当前天气', '阴');
+    const currentPhase = _.get(stat, '进程.阶段', '幕间日常');
+
+    const dateStr = `${currentYear}年${currentMonth}月${currentDay}日  ${currentSlot}`;
+
+    const currentRegion = _.get(stat, '主角.当前区域', '未知');
+    const currentLocation = _.get(stat, '主角.当前地点', '未知');
+    const physState = _.get(stat, '主角.当前生理', '身体状态正常');
+    const outfit = _.get(stat, '主角.当前穿着', '待设定');
+
+    const sexTech = _.get(stat, '主角.性斗数据.性技', 0);
+    const endurance = _.get(stat, '主角.性斗数据.忍耐度', 0);
+    const maxStamina = _.get(stat, '主角.性斗数据.最大体力值', 0);
+    const maxEnergy = _.get(stat, '主角.性斗数据.最大精力值', 0);
+    const pleasureThreshold = _.get(stat, '主角.性斗数据.快感阈值', 100);
+
+    const arenaRank = _.get(stat, '主角.擂台数据.擂台段位', '无');
+    const arenaPoints = _.get(stat, '主角.擂台数据.擂台积分', 0);
+    const popularity = _.get(stat, '主角.擂台数据.人气', 0);
+    const credit = _.get(stat, '主角.经济.信用点', 0);
+    const debt = _.get(stat, '主角.经济.债务', 0);
+    const debtDueDate = _.get(stat, '主角.经济.债务到期日期', '');
+
+    const wins = _.get(stat, '主角.擂台数据.战绩.胜', 0);
+    const losses = _.get(stat, '主角.擂台数据.战绩.负', 0);
+    const draws = _.get(stat, '主角.擂台数据.战绩.平', 0);
+
+    const inventory = _.get(stat, '主角.道具栏', {});
+
+    const installedMods = _.get(stat, '主角.身体改造.已安装', {});
+    const modSlots = _.get(stat, '主角.身体改造.槽位上限', 6);
+    const modKeys = Object.keys(installedMods).filter(k => k !== '$meta' && k !== "$__META_EXTENSIBLE__$");
+
+    const isBattle = currentPhase === '性斗阶段';
+    const isRest = String(_.get(stat, '擂台状态.是否休息回合')) === 'true';
+
+    const curStamina = _.get(stat, '擂台状态.主角当前体力', maxStamina);
+    const curEnergy = _.get(stat, '擂台状态.主角当前精力', maxEnergy);
+    const curPleasure = _.get(stat, '擂台状态.主角当前快感值', 0);
+    const ejacCount = _.get(stat, '擂台状态.主角本场射精次数', 0);
+    const attacker = _.get(stat, '擂台状态.当前进攻方', '—');
+    const battleRound = _.get(stat, '擂台状态.当前擂台回合数', 0);
+    const maxBattleRounds = _.get(stat, '擂台状态.最大擂台回合数', 20);
+
+    const oppName = _.get(stat, '擂台状态.对手名字', '—');
+    const oppStamina = _.get(stat, '擂台状态.对手当前体力', '—');
+    const oppEnergy = _.get(stat, '擂台状态.对手当前精力', '—');
+    const oppPleasure = _.get(stat, '擂台状态.对手当前快感值', '—');
+    const oppEjac = _.get(stat, '擂台状态.对手本场射精次数', '—');
+    const heroOdds = _.get(stat, '擂台状态.主角赔率', '—');
+    const oppOdds = _.get(stat, '擂台状态.对手赔率', '—');
+    const heroBattleFame = _.get(stat, '擂台状态.主角当前人气', 0);
+    const oppBattleFame = _.get(stat, '擂台状态.对手当前人气', 0);
+
+    // 对手最大体力/精力（从名录读取）
+    const roster = _.get(stat, '记录.性斗士名录', {});
+    let oppMaxStamina = '?', oppMaxEnergy = '?';
+    if (oppName && oppName !== '—') {
+      for (const k of Object.keys(roster)) {
+        if (k === '$meta' || k === '$__META_EXTENSIBLE__$') continue;
+        const f = roster[k];
+        if ((f.擂台代号 || k) === oppName || k === oppName) {
+          oppMaxStamina = f.体力上限 || '?';
+          oppMaxEnergy = f.精力上限 || '?';
+          break;
+        }
+      }
+    }
+
+    const alias = _.get(stat, '主角.基本信息.擂台代号', '未设定');
+_%>
+# <%= alias %> — 动态状态
+
+## 环境
+- 日期：<%= dateStr %> | 天气：<%= weather %> | 阶段：<%= currentPhase %>
+- 区域：<%= currentRegion %> | 地点：<%= currentLocation %>
+
+## 生理与着装
+- 状态：<%= physState %>
+- 穿着：<%= outfit %>
+
+## 性斗数据
+- 性技：<%= sexTech %> | 忍耐度：<%= endurance %>
+- 最大体力：<%= maxStamina %> | 最大精力：<%= maxEnergy %> | 快感阈值：<%= pleasureThreshold %>
+
+## 擂台数据
+- 段位：<%= arenaRank %> | 积分：<%= arenaPoints %> | 人气：<%= popularity %>
+- 战绩：<%= wins %>胜/<%= losses %>负/<%= draws %>平
+- 信用点：<%= credit %><%_ if (debt > 0) { _%> | 债务：<%= debt %><%_ if (debtDueDate) { _%>（到期：<%= debtDueDate %>）<%_ } _%><%_ } _%>
+
+## 道具栏
+<%_ const invKeys = Object.keys(inventory).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+if (invKeys.length === 0) { _%>
+- 空
+<%_ } else {
+  for (const k of invKeys) { _%>
+- <%= k %>：<%= inventory[k] %>
+<%_   }
+} _%>
+
+## 身体改造 [<%= modKeys.length %>/<%= modSlots %>]
+<%_ if (modKeys.length > 0) {
+  for (const k of modKeys) {
+    const mod = installedMods[k];
+    const bonuses = [];
+    if (mod.性技加成) bonuses.push('性技+' + mod.性技加成);
+    if (mod.忍耐度加成) bonuses.push('忍耐+' + mod.忍耐度加成);
+    if (mod.最大体力值加成) bonuses.push('体力上限+' + mod.最大体力值加成);
+    if (mod.最大精力值加成) bonuses.push('精力上限+' + mod.最大精力值加成);
+    if (mod.快感阈值加成) bonuses.push('阈值+' + mod.快感阈值加成);
+    const bonusStr = bonuses.length > 0 ? `（${bonuses.join('，')}）` : '';
+_%>
+  - <%= k %> [<%= mod.品质 || '普通' %>]<%_ if (mod.部位) { _%> | <%= mod.部位 %><%_ } _%><%_ if (mod.来源) { _%>（<%= mod.来源 %>）<%_ } _%> <%= bonusStr %>
+    <%= mod.外观描述 || '' %>
+<%_   }
+} else { _%>
+  - 无改造
+<%_ } _%>
+
+<%_ if (isBattle) { _%>
+## 擂台状态 [第<%= battleRound %>/<%= maxBattleRounds %>回合]<%_ if (isRest) { _%> 【休息回合】<%_ } _%>
+- 当前榨精方：<%= attacker %>
+- 对手：<%= oppName %> | 赔率：<%= heroOdds %> vs <%= oppOdds %>
+
+| 状态 | 主角 (<%= alias %>) | 对手 (<%= oppName %>) |
+|------|---------------------|----------------------|
+| 体力 | <%= curStamina %>/<%= maxStamina %> | <%= oppStamina %>/<%= oppMaxStamina %> |
+| 精力 | <%= curEnergy %>/<%= maxEnergy %> | <%= oppEnergy %>/<%= oppMaxEnergy %> |
+| 快感 | <%= curPleasure %>/<%= pleasureThreshold %> | <%= oppPleasure %> |
+| 射精 | <%= ejacCount %>次 | <%= oppEjac %>次 |
+| 人气 | <%= heroBattleFame %> | <%= oppBattleFame %> |
+<%_ } _%>
+
+<%_ } } _%>

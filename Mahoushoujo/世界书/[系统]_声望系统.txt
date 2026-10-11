@@ -1,103 +1,65 @@
-<%_{
-// --- [系统] 声望矩阵简报 ---
-// 功能：将名声数据转化为中性的社会反应倾向，供AI参考。
-if (
-  getvar('initialized_lorebooks') !== undefined &&
-  _.has(getvar('stat_data'), '名声.知名度') &&
-  _.get(getvar('stat_data'), '名声.知名度', 0) > 15
-) {
-  const personality = _.get(getvar('stat_data'), '主角.核心状态.人格状态', '善良');
-  const fame = _.get(getvar('stat_data'), '名声.知名度', 0);
-  const reputationScore = _.get(getvar('stat_data'), '名声.风评', 0);
-  const gamePhase = _.get(getvar('stat_data'), '进程.阶段');
+<%{
+const stat = getvar('stat_data');
+const fame = _.get(stat, '名声.知名度', 0);
 
-  // --- 知名度等级判定 ---
-  let fameLevel;
-  if (fame < 45) { fameLevel = "都市传说"; }
-  else if (fame < 85) { fameLevel = "公众热议"; }
-  else { fameLevel = "无人不晓"; }
+if (_.has(stat, '名声.知名度') && fame > 15) {
+  const rep      = _.get(stat, '名声.风评', 0);
+  const fameLv   = _.get(stat, '名声.知名度等级', '默默无闻');
+  const repLv    = _.get(stat, '名声.风评等级', '籍籍无名');
+  const isFallen = _.get(stat, '主角.核心状态.人格状态', '善良') === '堕落';
+  const phase    = _.get(stat, '进程.阶段', '幕间休息');
+  const inCombat = !['幕间休息', '创角阶段'].includes(phase);
 
-  // --- 社会反应倾向生成 ---
-  let socialAttitude = "";
-  const isIdle = gamePhase === '幕间休息';
+  const SPREAD = {
+    '都市传说': '仅限本地流言与网络碎片，多数人只是听说过这个名字。',
+    '公众热议': '已是社交媒体与本地报刊的常客，行动随时可能被拍摄、传播、放大。',
+    '无人不晓': '成为城市的文化符号，任何举动都会被解读、议论乃至模仿。'
+  };
 
-  if (personality === '善良') {
-    if (reputationScore >= 70) { // S级: 英雄
-      if (fameLevel === "都市传说") socialAttitude = "网络流传夸大的英雄美谈，市民普遍持尊敬态度。";
-      else if (fameLevel === "公众热议") socialAttitude = "市民普遍尊敬，投来感激与信赖的目光。";
-      else socialAttitude = "英雄形象已成为城市的重要标志，备受尊敬。";
-    }
-    else if (reputationScore >= 30) { // A级: 守护者
-      if (fameLevel === "都市传说") socialAttitude = "私下被谈论的可靠守护者，市民对其存在感到安心与好奇。";
-      else if (fameLevel === "公众热议") socialAttitude = "市民对主角的守护感到安心，心存感激。";
-      else socialAttitude = "存在本身成为城市秩序的一部分，市民已习惯并依赖。";
-    }
-    else if (reputationScore > -30) { // B级: 争议
-      if (fameLevel === "都市传说") socialAttitude = "传闻好坏参半，部分人视为英雄，部分人视为麻烦的根源。";
-      else if (fameLevel === "公众热议") socialAttitude = "一举一动都被人观察和议论，承受持续的揣测与审视。";
-      else socialAttitude = "公众看法分裂，赞美与批评并存。";
-    }
-    else if (reputationScore > -70) { // C级: 失坠
-      if (fameLevel === "都市传说") socialAttitude = "传闻倾向于负面和色情，有好事者盯上主角的肉体。";
-      else if (fameLevel === "公众热议") socialAttitude = "被视为‘荡妇’，承受带有情色意味的视线和窃窃私语。";
-      else socialAttitude = "善良市民厌弃，心怀不轨者则无顾忌地进行侵犯。";
-    }
-    else { // D级
-      if (fameLevel === "都市传说") socialAttitude = "被视为可随意使用的移动风俗店，无需承担后果。";
-      else if (fameLevel === "公众热议") socialAttitude = "媒体进行下流的报道，市民的视线开始物化。";
-      else socialAttitude = "众所周知的失败者，公众认为对其做任何事都是合理的。";
-    }
-  } else { // 恶堕路线
-    if (reputationScore <= -70) { // S级: 灾厄
-      if (fameLevel === "都市传说") socialAttitude = "在阴影面中成为令人恐惧的传说。";
-      else if (fameLevel === "公众热议") socialAttitude = "所到之处令市民惊慌逃窜，被视为公开的反派。";
-      else socialAttitude = "危险的名声征服了宽阔的区域，无人敢轻易靠近。";
-    }
-    else if (reputationScore <= -30) { // A级: 威胁
-      if (fameLevel === "都市传说") socialAttitude = "被认为是暗中活动的隐秘灾难。";
-      else if (fameLevel === "公众热议") socialAttitude = "市民见到主角会立刻陷入恐慌。";
-      else socialAttitude = "整个世界公开与主角为敌。";
-    }
-    else if (reputationScore < 30) { // C级: 滑稽
-      if (fameLevel === "都市传说") socialAttitude = "被低估的麻烦，大家觉得只是个有点棘手的地方性问题。";
-      else if (fameLevel === "公众热议") socialAttitude = "总被误解，甚至有人将其视为某种行为艺术。";
-      else socialAttitude = "形象被制作为搞笑商品，人们不再惧怕，觉得有点‘可爱’。";
-    }
-    else { // 娱乐化
-      if (fameLevel === "都市传说") socialAttitude = "主角的战斗视频在色情网站点击率爆表，被视为夜间福利。";
-      else if (fameLevel === "公众热议") socialAttitude = "自称为邪恶，但大众疯狂追捧主角的色气身姿，视为‘老婆’。";
-      else socialAttitude = "作为反派彻底失败，被邀请参加商业活动，粉丝应援。";
+  const REACTION = {
+    '圣洁的英雄':           '市民视其为精神支柱。人们主动让路、致意，孩童兴奋地呼喊那个名号，媒体争相正面报道。',
+    '可靠的守护者':         '市民对她的存在感到安心，遇事会自然地寻求帮助，态度温和而信任。',
+    '争议魔法少女':         '舆论两极分化。有人赞颂她的功绩，也有人质疑她的手段与私生活，议论声从未停歇。',
+    '无能的荡妇':           '流言沾染了浓重的情色气味。居心不良者盯上她的身体，正派市民则远远避开、窃窃私语。',
+    '公共肉便器':           '被视为可以随意侵犯的身体。任何人对她做什么都无需顾忌后果，恶意几乎不加掩饰。',
+    '令人战栗的灾厄':       '所到之处人群惊慌逃窜。那个名字本身就是一种诅咒，被当作公开的威胁加以戒备。',
+    '可怕的堕落魔法少女':   '被认定在暗中活动。人们压低嗓音谈论她，唯恐被那双眼睛注意到。',
+    '一点也不可怕而且很色': '威胁性被严重低估。大众更热衷于消费她的身姿，而非畏惧她的力量。',
+    '国民级涩情偶像':       '被疯狂追捧。恐惧感荡然无存，每次现身都会引发围观与骚动。'
+  };
+
+  let crowd = '';
+  if (inCombat && fameLv !== '都市传说') {
+    if (isFallen) {
+      crowd = (rep <= -30)
+        ? '围观者因恐惧而不敢靠近，却有胆大的挑战者冲着她的恶名而来。'
+        : '现场混杂着举着设备的看客，战斗在某种程度上已被娱乐化。';
+    } else {
+      crowd = (rep >= 30)
+        ? '充满期待的目光注视着这场战斗。这份厚望既是力量，也是不许失误的压力。'
+        : (rep > -30)
+          ? '围观者对她的表现议论纷纷，尚未形成统一的看法。'
+          : '人群中混杂着幸灾乐祸的视线。任何失态都会被迅速拍下、传播、发酵。';
     }
   }
 
-  // 战斗模式下的追加态度
-  let combatAttitude = "";
-  if (!isIdle && fameLevel !== "都市传说") {
-    if (personality === '善良') {
-      if (reputationScore >= 70) combatAttitude = "充满期待和崇拜的眼睛注视着她，带来力量的伴随压力。";
-      else if (reputationScore >= 30) combatAttitude = "守护者的身份让她在战斗中遭遇‘分心的窘迫’。";
-      else if (reputationScore > -30) combatAttitude = "围观者对她的战斗评价不一，尚未形成明确的舆论。";
-      else if (reputationScore > -70) combatAttitude = "市民将其视为反派，任何失误都会遭到荡妇羞辱。";
-      else combatAttitude = "围观者兴奋起哄，期待看到主角战败受辱，甚至有人趁乱伸出咸猪手。";
-    } else { // 堕落
-      if (reputationScore <= -70) combatAttitude = "作为强大的恶堕魔法少女被挑战。";
-      else if (reputationScore <= -30) combatAttitude = "被视为经典的反派角色。";
-      else if (reputationScore < 30) combatAttitude = "围观群众甚至在点评主角的招式，不够可怕。";
-      else combatAttitude = "周围全是举着摄像机的狂热粉丝，战斗变成了见面会。";
-    }
-  }
-
-  // --- 最终输出 ---
-  if (socialAttitude) {
+  // 预拼接条件行，避免模板层产生多余空行
+  const crowdLine = crowd ? `  combat_spectators: "${crowd}"\n` : '';
 %>
-# 社会声望值及描写指导
-当前知名度: "<%= fameLevel %>"
-当前风评分数: <%= reputationScore %>
-社会反应倾向: "<%= socialAttitude %>"
-<%_ if (combatAttitude) { _%>
-  * 战斗中的特殊关注: "<%= combatAttitude %>"
-<%_ } _%>
-<%_
-  }
-}}
-_%>
+social_reputation:
+  fame:
+    tier: "<%- fameLv %>"
+    value: <%- fame %>
+    spread: "<%- SPREAD[fameLv] || '鲜有人知。' %>"
+  public_opinion:
+    tier: "<%- repLv %>"
+    value: <%- rep %>
+    reaction: "<%- REACTION[repLv] || '社会尚未形成明确的评价。' %>"
+<%- crowdLine %>  narrative_directives:
+    - "本条为后台数据简报，严禁在正文中直接引用档位名称或数值。"
+    - "必须将其转化为路人、媒体、围观者与同伴的自然反应。"
+    - "旁观者的密度与态度必须与 spread 字段一致：巷尾发生的事不该传遍全城。"
+    - "当主角的举动与自身声望背离时，用环境反馈制造落差感。"
+<%
+}
+}%>

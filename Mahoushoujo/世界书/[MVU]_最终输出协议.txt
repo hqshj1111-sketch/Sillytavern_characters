@@ -1,0 +1,85 @@
+<%_
+// 仅在主角创建完毕后（进入正式游戏）激活此全局输出协议
+if (_.get(getvar('stat_data'), '系统状态.主角创建完毕') === true) {
+  const stat = getvar('stat_data') || {};
+  const phase = _.get(stat, '进程.阶段', '幕间休息');
+  const events = _.get(stat, '系统状态.待处理事件', {});
+  const activeKeys = Object.keys(events).filter(k => k !== '$meta' && k !== '$__META_EXTENSIBLE__$');
+  
+  const isCombat = ['战斗准备', '战斗回合', '终结回合'].includes(phase);
+  const isHEvent = (phase === '幕间休息' && _.get(stat, '世界.幕间H事件.名称', '无') !== '无');
+  const isCaptured = (_.get(stat, '系统状态.被俘状态') === true);
+  const isPureDaily = (phase === '幕间休息' && !isHEvent && !isCaptured && activeKeys.length === 0);
+_%>
+
+variable_output_protocol:
+  importance: "Highest priority. This protocol maintains the game's state tracking and must be executed at the end of every reply."
+  
+  core_rules:
+    - execution_order: "必须先完整输出叙事小说正文，随后在回复的最末尾输出，且仅输出一组 <UpdateVariable> 逻辑块。"
+    - persistence: "每一轮回复都【必须输出】变量更新块，绝对不可遗漏或中断，也不可只在思维链/思考中输出！必须在正文后输出！"
+    - standard_operations: "采用类 RFC 6902 (JSON Patch) 标准规范，仅允许使用以下 4 种操作："
+        replace: "用于替换已有路径的值（字符串、布尔值、或重置整个字典）。"
+        delta: "用于增减既有数值路径（扣除必须写负数如 -15，增加写正数如 25，禁止对非数字路径使用）。"
+        insert: "用于新增条目。数组追加使用 `/path/-`；对象/字典新增键值使用 `/path/KeyName`。"
+        remove: "用于彻底删除键值，或清除已完结的待处理事件（避免事件死循环触发）。"
+    
+    - critical_syntax_guardrails:
+        - "严格遵循 JSON 语法规范，键名与字符串必须使用半角双引号（\"）。"
+        - "严禁凭空创造未在系统变量表中声明的根节点。性癖增减必须精确到 `/主角/快感状态/性癖/[具体性癖]/经验`"
+        - "上下文指令若明确提供了 `mandatory_patch`（如战后结算、事件落幕、分娩、强制解除变身等），必须将其中的操作原样合入 `<JSONPatch>` 中，不得遗漏或私自修改路径！"
+
+  format_template: |-
+    <UpdateVariable>
+    <Analysis>$(使用精炼中文，按清单逐项检查推演)
+    正文输出完毕，接下来是变量更新计划。
+    - 事件核销：核对 mandatory_patch 需合入项，及已完结需 remove 出队的待处理事件。
+    - 生理部位：更新当前生理动态一句速写，及涉及部位的衣物破损、粘液或互动描述。
+    - 性癖管理：派发对应性癖 XP，或是觉醒新性癖。
+<%_ if (isCombat) { _%>
+    - 战局攻防：判定行动分支，结算 Boss 韧性伤害、主角受创(HP)、施法消耗(MP)及充能增长。
+    - 战况日志：确认主角变身状态，按仲裁结果生成完整战况日志字符串写入临时变量。
+<%_ } else if (isHEvent || isCaptured) { _%>
+    - 挣脱快感：判定玩家行动倾向，推导逃脱进度 delta 与快感值累积。
+    - 体液管理：结算精液存量及来源登记、体内异物塞入或取出。
+<%_ } else if (isPureDaily) { _%>
+    - 日常维持：无战斗危机不产生非必要数值消耗，仅记录剧情新道具或世界观人际关系。
+<%_ } _%>
+<%_ if (events['体内满溢事件']) { _%>
+    - 满溢排出：使用 delta 扣减存量至容量上限以下。
+<%_ } _%>
+<%_ if (events['声望结算事件']) { _%>
+    - 声望结算：按公式推导知名度与风评变动值，写入 delta。
+<%_ } _%>
+<%_ if (isCaptured || phase === '战斗败北' || events['彻底败北结算']) { _%>
+    - 改造登记：若遭受非淫纹类永久肉体变异，使用 insert 写入身体改造。
+<%_ } _%>
+<%_ if (events['状态演化事件']) { _%>
+    - 肉体演化：评估三围、体态或敏感度是否有永久改变，无改变填'无'。
+<%_ } _%>
+<%_ if (phase === '战后处理' || events['彻底败北结算'] || events['线索整理事件']) { _%>
+    - 档案清理：使用 remove 指令剔除世界观备注中针对原 BOSS 的临时弱点与环境陷阱设定。
+<%_ } _%>
+<%_ if (events['淫纹显现事件'] || events['淫纹进化事件'] || events['淫纹降级事件']) { _%>
+    - 淫纹重塑：更新专属独立淫纹描述，严禁写入身体改造。
+<%_ } _%>
+<%_ if (events['分娩事件'] || events['净化受孕事件']) { _%>
+    - 分娩净化：分娩登记子嗣/净化消耗能量，重置子宫受孕状态为未受孕。
+<%_ } _%>
+<%_ if (events['武装升级事件'] || events['性癖觉醒事件']) { _%>
+    - 里程晋阶：按触发的成长事件更新武装/服装描述，或向世界观备注登记觉醒记录。
+<%_ } _%>
+<%_ if (events['魔法少女恶堕']) { _%>
+    - 恶堕蜕变：人格翻转为堕落，更新新名字、新武器与新变身服。
+<%_ } _%>
+    - 世界观整理：登记正文中值得记录的世界观信息、设定内容；不是登记原文，而是摘出并归纳值得处理的信息。
+    - 检查完毕，将输出严格合规的 Jsonpatch，不遗漏任何要求输出的指令。
+    </Analysis>
+    <JSONPatch>
+    [
+      ...此处输出 JSON Patch 数组...
+    ]
+    </JSONPatch>
+    </UpdateVariable>
+
+<%_ } _%>

@@ -1,0 +1,340 @@
+<%_
+{
+const stat = getvar('stat_data');
+
+// --- 1. 配置常量池 ---
+const CONSTANTS = {
+    THREAT_CONFIG: {
+        '英雄': {
+            1: "Lv.1 骚扰级：敌方威胁较低，倾向于试探与干扰，不具备致命危险。",
+            2: "Lv.2 侵犯级：标准的战斗遭遇，敌方具备明确的压制与掠夺意图。",
+            3: "Lv.3 支配级：高危冲突，敌方实力强劲，追求身心防线的全面击溃。"
+        },
+        '反派': {
+            1: "Lv.1 玩物级：敌方实力悬殊，主角处于绝对的主导地位。",
+            2: "Lv.2 狩猎级：势均力敌的对手，能够提供切实的交锋刺激。",
+            3: "Lv.3 强敌级：高位威胁，具备可能反制主角的压迫感与手段。"
+        }
+    }
+};
+
+// --- 2. 战术定义（补全 撤退 与 投降） ---
+const TACTIC_DEFINITIONS = {
+    '主动': "主动：主角采取主动姿态，将战局推向自己有利的方向。争取主导权的主动行为。",
+    '牵制': "牵制：用姿态与动作分散敌人的注意力与战意。伤害较低，但充能效率更高，反伤更少。",
+    '诱惑': "诱惑：从容地勾引猎物，享受玩弄敌人的过程。自身快感会上涨，但充能效率极高。",
+    '推进': "推进：暂缓战斗动作，延续当前叙事。观察环境、对话、或沉浸于当前画面。",
+    '危机': "危机：在本轮遭遇了敌人的情色侵犯，被动承受。",
+    '必杀': "必杀：主角准备发动决定胜负的终极一击。",
+    '撤退': "撤退：中断交战，利用机动拉开身位脱离战场。需要机动检定，失败会遭追击。",
+    '投降': "投降：主动散去能量放弃抵抗，任由敌人捕获处置。直接宣告战败被俘。"
+};
+
+const mkPatch = (op, path, val) => ({ "op": op, "path": path, "value": val });
+const formatPatchBlock = (patchObj) => `<JSONPatch>\n[\n${patchObj.map(p => '  ' + JSON.stringify(p)).join(',\n')}\n]\n</JSONPatch>`;
+
+// --- 3. 主逻辑 ---
+if (_.get(stat, '进程.阶段') === '战斗回合') {
+    const personality = _.get(stat, '主角.核心状态.人格状态', '英雄');
+    const isFallen = personality === '反派' || personality === '堕落';
+    const pKey = isFallen ? '反派' : '英雄';
+    const posture = _.get(stat, '主角.核心状态.当前战斗姿态');
+
+    if (['战斗中', '劣势'].includes(posture)) {
+        const tactic = _.get(stat, '主角.战斗临时.战斗方式', '主动');
+        const tacticDesc = TACTIC_DEFINITIONS[tactic] || TACTIC_DEFINITIONS['主动'];
+
+        // 必杀充能判定
+        const purificationPower = _.get(stat, '主角.核心状态.正义充能', 0);
+        const corruptPower = _.get(stat, '主角.核心状态.混沌充能', 0);
+        const isUltimateReady = (isFallen ? corruptPower : purificationPower) >= 100;
+        const ultType = isFallen ? '堕落' : '净化';
+        const ultPath = isFallen ? "/主角/核心状态/混沌充能" : "/主角/核心状态/正义充能";
+
+        // 基础数据
+        const isTransformed = _.get(stat, '主角.核心状态.着装状态', false);
+        const playerStrength = _.get(stat, '主角.核心状态.基础强度', 50);
+        const bossStrength = _.get(stat, '世界.当前关卡.Boss基础强度', 50);
+        const threatLevel = parseInt(_.get(stat, '世界.威胁等级', 2), 10);
+        const currentPlayerHP = _.get(stat, '主角.核心状态.体力值.当前', 100);
+        const currentMaxHP = _.get(stat, '主角.核心状态.体力值.最大', 100);
+        const bossName = _.get(stat, '世界.当前关卡.名称', '未知敌人');
+        const bossType = _.get(stat, '世界.当前关卡.战斗类型', '魔物');
+        const bossThemes = (_.get(stat, '世界.当前关卡.核心主题', []) || []).filter(t => t && !t.startsWith('$'));
+
+        // ========== 1d20 经典加值引擎 ==========
+        const pNatRoll = _.random(1, 20); // 主角裸骰
+        const bNatRoll = _.random(1, 20); // 敌方裸骰
+
+        const pBaseMod = Math.floor(playerStrength / 5);
+        const bBaseMod = Math.floor(bossStrength / 5);
+
+        // 生理与发情修正
+        const curseXp = _.get(stat, '主角.黑暗印记.经验', 0);
+        const curseLv = curseXp <= 0 ? 0 : (curseXp < 150 ? 1 : (curseXp < 400 ? 2 : 3));
+        const pleasure = _.get(stat, '主角.快感状态.快感值', 0);
+        const threshold = _.get(stat, '主角.快感状态.高潮阈值', 100);
+        const ratio = threshold > 0 ? (pleasure / threshold) : 0;
+
+        let estrusMod = (curseLv > 0 && ratio > 0.4) ? (curseLv * 2) : 0;
+        const humanPenalty = !isTransformed ? 4 : 0;
+
+        // 撤退累积惩罚（越逃越难）
+        const fleeAttempts = parseInt(_.get(stat, '主角.战斗临时.撤退尝试', 0), 10);
+        const fleePenalty = (tactic === '撤退') ? (fleeAttempts * 3) : 0;
+
+        // 主角总点数
+        const pTotal = Math.max(0, pNatRoll + pBaseMod - humanPenalty - fleePenalty + (isFallen ? estrusMod : -estrusMod));
+
+        // Boss 总点数
+        let bThreatMod = (threatLevel === 1) ? -3 : (threatLevel === 3 ? 3 : 0);
+        const bTotal = Math.max(0, bNatRoll + bBaseMod + bThreatMod);
+
+        const difference = pTotal - bTotal;
+
+        // 生成高可读性表达式
+        let pExpr = `D20(${pNatRoll})+${pBaseMod}`;
+        if (humanPenalty > 0) pExpr += `-4[未着装]`;
+        if (fleePenalty > 0) pExpr += `-${fleePenalty}[已试${fleeAttempts}次]`;
+        if (estrusMod > 0) pExpr += isFallen ? `+${estrusMod}[爱欲]` : `-${estrusMod}[发情]`;
+        pExpr += `=${pTotal}`;
+
+        let bExpr = `D20(${bNatRoll})+${bBaseMod}`;
+        if (bThreatMod !== 0) bExpr += (bThreatMod > 0 ? `+${bThreatMod}[强敌]` : `${bThreatMod}[弱敌]`);
+        bExpr += `=${bTotal}`;
+
+        const logTail = `P:${pExpr}|E:${bExpr}|差:${difference > 0 ? '+' : ''}${difference}`;
+
+        // 身体状况速写
+        const hpRatio = currentMaxHP > 0 ? (currentPlayerHP / currentMaxHP) : 0;
+        let bodyState = { name: "状态稳固 (HP > 75%)", posture: "体力充沛，防线完整。" };
+        if (hpRatio <= 0.30) bodyState = { name: "力竭边缘 (HP <= 30%)", posture: "体能见底，任何刺激都可能造成决定性击溃。" };
+        else if (hpRatio <= 0.75) bodyState = { name: "破绽显露 (30% < HP <= 75%)", posture: "防御架势动摇，衣物破损，敏感带暴露。" };
+
+        const threatNarrative = CONSTANTS.THREAT_CONFIG[pKey][threatLevel] || CONSTANTS.THREAT_CONFIG[pKey][2];
+
+        // 必杀技拦截
+        let effectiveTactic = tactic;
+        let ultimateBlocked = false;
+        if (tactic === '必杀' && !isUltimateReady) { effectiveTactic = '主动'; ultimateBlocked = true; }
+
+        let outcomeLabel = "", narrativeGuide = "", finalPatch = [];
+        let bossDmgTaken = 0;
+
+        // ── 1. 必杀技 ──
+        if (tactic === '必杀' && isUltimateReady) {
+            outcomeLabel = "必杀终结";
+            const ultName = ultType === '净化' ? "净化之光" : "福音领域";
+            narrativeGuide = `主角发动必杀技【${ultName}】！给予绝杀打击，Boss 韧性归零，战斗宣告胜利。`;
+            bossDmgTaken = Math.max(0, Number(_.get(stat, '世界.当前关卡.Boss韧性值', 100)));
+            finalPatch = [
+                mkPatch("replace", "/世界/当前关卡/Boss韧性值", 0),
+                mkPatch("replace", ultPath, 0),
+                mkPatch("replace", "/主角/战斗临时/当前战斗日志", `必杀终结！|P:ULTIMATE|E:KO|T:ULT`)
+            ];
+
+        // ── 2. 撤退脱离判定 ──
+        } else if (effectiveTactic === '撤退') {
+            const isEscapeSuccess = (pNatRoll === 20 || difference >= 2);
+            if (isEscapeSuccess) {
+                outcomeLabel = "成功脱离";
+                narrativeGuide = `主角审时度势，借助掩体或能量爆发果断拉开距离，甩开【${bossName}】的追截，彻底脱离交战区域！描写主角回到安全避难所、关上房门靠在门后剧烈喘息的闭环画面。宣告本次遭遇战正式平息。`;
+                finalPatch = [
+    mkPatch("replace", "/进程/阶段", "幕间休息"),
+    mkPatch("replace", "/主角/核心状态/当前战斗姿态", "非战斗"),
+    mkPatch("replace", "/主角/核心状态/着装状态", false),
+    mkPatch("replace", "/世界/当前关卡/名称", "无"),
+    mkPatch("replace", "/系统状态/幕间回合计数", 0),
+    mkPatch("insert", "/系统状态/待处理事件/声望结算事件", JSON.stringify({
+        source: "逃离",
+        boss_name: bossName,
+        boss_type: bossType,
+        boss_themes: bossThemes
+    })),
+    mkPatch("replace", "/主角/战斗临时/当前战斗日志", `撤退成功！|${logTail}|T:CRIT_SUCCESS`)
+];
+            } else {
+                const recoil = _.random(8, 14);
+                const pl = _.random(15, 25);
+                outcomeLabel = "撤退受阻";
+                narrativeGuide = `主角试图转身逃离，但动作被【${bossName}】识破拦截！不仅未能拉开距离，反而在慌乱撤退中露出严重破绽，遭到贴身或侵犯，被迫重新退回战圈！`;
+                finalPatch = [
+                    mkPatch("delta", "/主角/核心状态/体力值/当前", -recoil),
+                    mkPatch("delta", "/主角/快感状态/快感值", pl),
+                    mkPatch("delta", "/主角/战斗临时/撤退尝试", 1),
+                    mkPatch("replace", "/主角/战斗临时/当前战斗日志", `撤退受阻！|${logTail}|T:FAIL`)
+                ];
+            }
+
+        // ── 3. 主动投降 ──
+        } else if (effectiveTactic === '投降') {
+            outcomeLabel = "主动投降";
+            narrativeGuide = `主角彻底放弃了战斗意愿，主动垂下手臂、散去战装能量，向【${bossName}】宣告投降。敌人带着狂喜与支配欲将失去防备的主角彻底捆绑俘获并带回巢穴。描绘主角主动放弃尊严、被捕获带走的沉沦开端。`;
+            finalPatch = [
+                mkPatch("replace", "/进程/阶段", "战斗败北"),
+                mkPatch("replace", "/主角/核心状态/当前战斗姿态", "力尽待辱"),
+                mkPatch("delta", "/记录/总战败次数", 1),
+                mkPatch("insert", "/系统状态/待处理事件/战败被俘结算", true),
+                mkPatch("replace", "/主角/战斗临时/当前战斗日志", `主动投降|放弃抵抗|T:SURRENDER`)
+            ];
+
+        // ── 4. 推进 ──
+        } else if (effectiveTactic === '推进') {
+            outcomeLabel = "叙事延续";
+            narrativeGuide = "主角暂缓直接攻防动作。描写战况对峙、微小细节、言语试探或心理拉扯。不结算伤害。不推进战斗节点：不结算伤害、不改变 Boss 韧性、不触发充能。若玩家连续使用超过 3 轮，请让剧情自然推进（敌人主动进攻、环境异变、或主角被察觉），避免叙事停滞。";
+            finalPatch = [
+                mkPatch("delta", "/主角/快感状态/快感值", _.random(-3, 3)),
+                mkPatch("replace", "/主角/战斗临时/当前战斗日志", `叙事延续|无骰点|T:IDLE`)
+            ];
+
+        // ── 5. 危机 ──
+        } else if (effectiveTactic === '危机') {
+            const hpCost = _.random(8, 15);
+            const pleasureGain = _.random(40, 60);
+            const chargeGain = _.random(18, 25);
+            outcomeLabel = "遭遇侵犯";
+            narrativeGuide = "主动放弃防备，敌人发起一轮充斥感官冲击的激烈侵犯。主角忍耐并大幅积蓄充能。";
+            finalPatch = [
+                mkPatch("delta", ultPath, chargeGain),
+                mkPatch("delta", "/主角/快感状态/快感值", pleasureGain),
+                mkPatch("delta", "/主角/核心状态/体力值/当前", -hpCost),
+                mkPatch("replace", "/主角/战斗临时/当前战斗日志", `遭遇侵犯|无骰点|T:CRISIS`)
+            ];
+
+        // ── 6. 战技检定 (主动 / 牵制 / 诱惑) ──
+        } else {
+            let tier;
+            if (pNatRoll === 20) {
+                tier = 'CRIT_SUCCESS';
+                outcomeLabel = "极大成功";
+            } else if (pNatRoll === 1) {
+                tier = 'CRIT_FAIL';
+                outcomeLabel = "极大失败";
+            } else if (difference >= 8) {
+                tier = 'CRIT_SUCCESS';
+                outcomeLabel = "大成功";
+            } else if (difference >= 3) {
+                tier = 'SUCCESS';
+                outcomeLabel = "成功";
+            } else if (difference >= -2) {
+                tier = 'STALEMATE';
+                outcomeLabel = "纠缠拉扯";
+            } else if (difference >= -7) {
+                tier = 'FAIL';
+                outcomeLabel = "受挫失守";
+            } else {
+                tier = 'CRIT_FAIL';
+                outcomeLabel = "大失败";
+            }
+
+            if (effectiveTactic === '牵制' || effectiveTactic === '诱惑') {
+                const configMap = {
+                    'CRIT_SUCCESS': { dmg: [18, 26], charge: [25, 35], recoil: [0, 0], pl: isFallen ? 10 : 0, txt: "极尽挑逗与牵制，敌人被彻底打乱节律，战意溃散！" },
+                    'SUCCESS':      { dmg: [10, 16], charge: [20, 26], recoil: [0, 0], pl: isFallen ? 8 : 0,  txt: "动作巧妙牵制了敌人，使其攻势放缓，主角游刃有余。" },
+                    'STALEMATE':    { dmg: [5, 10],  charge: [14, 20], recoil: [4, 8], pl: 12,                txt: "双方陷入近身纠缠，挑逗的同时被敌人反咬一口，身体泛起潮热。" },
+                    'FAIL':         { dmg: [0, 0],   charge: [10, 16], recoil: [8, 14], pl: 25,               txt: "玩火自焚！牵制失败，反被敌人借势贴身侵犯，陷入被动。" },
+                    'CRIT_FAIL':    { dmg: [0, 0],   charge: [15, 22], recoil: [15, 22], pl: 40,              txt: "猎物反噬！挑逗彻底激怒了敌人，遭到全面压制与粗暴侵犯！" }
+                }[tier];
+
+                const dmgDealt = _.random(...configMap.dmg);
+                const chargeDealt = _.random(...configMap.charge);
+                const recoilTaken = _.random(...configMap.recoil);
+                narrativeGuide = configMap.txt;
+                bossDmgTaken = dmgDealt;
+
+                finalPatch = [
+                    ...(dmgDealt > 0 ? [mkPatch("delta", "/世界/当前关卡/Boss韧性值", -dmgDealt)] : []),
+                    ...(chargeDealt > 0 ? [mkPatch("delta", ultPath, chargeDealt)] : []),
+                    ...(recoilTaken > 0 ? [mkPatch("delta", "/主角/核心状态/体力值/当前", -recoilTaken)] : []),
+                    ...(configMap.pl > 0 ? [mkPatch("delta", "/主角/快感状态/快感值", configMap.pl)] : []),
+                    mkPatch("replace", "/主角/战斗临时/当前战斗日志", `${outcomeLabel}！|${logTail}|T:${tier}`)
+                ];
+            } else {
+                const configMap = {
+                    'CRIT_SUCCESS': { dmg: [25, 35], charge: [20, 28], recoil: [0, 0],   txt: "战意如虹！精准命中破绽，对敌人造成毁灭性重创并夺得主导权！" },
+                    'SUCCESS':      { dmg: [15, 22], charge: [15, 22], recoil: [0, 0],   txt: "有效压制！攻势顺利得手，狠狠击退了敌人的企图。" },
+                    'STALEMATE':    { dmg: [8, 14],  charge: [8, 14],  recoil: [5, 10],  txt: "势均力敌。主角打出了伤害，但自身也承受了敌人的反扑与揩油。" },
+                    'FAIL':         { dmg: [0, 0],   charge: [8, 14],  recoil: [10, 18], txt: "反击受阻。敌人识破动作并趁隙反击，防线被撕开缺口！" },
+                    'CRIT_FAIL':    { dmg: [0, 0],   charge: [12, 18], recoil: [18, 26], txt: "惨烈失守！主角陷入重大破绽，遭到毫无保留的击溃与侵扰！" }
+                }[tier];
+
+                const dmgDealt = _.random(...configMap.dmg);
+                const chargeDealt = _.random(...configMap.charge);
+                const recoilTaken = _.random(...configMap.recoil);
+                narrativeGuide = configMap.txt;
+                bossDmgTaken = dmgDealt;
+
+                finalPatch = [
+                    ...(dmgDealt > 0 ? [mkPatch("delta", "/世界/当前关卡/Boss韧性值", -dmgDealt)] : []),
+                    ...(chargeDealt > 0 ? [mkPatch("delta", ultPath, chargeDealt)] : []),
+                    ...(recoilTaken > 0 ? [mkPatch("delta", "/主角/核心状态/体力值/当前", -recoilTaken)] : []),
+                    mkPatch("replace", "/主角/战斗临时/当前战斗日志", `${outcomeLabel}！|${logTail}|T:${tier}`)
+                ];
+                if (tier === 'CRIT_SUCCESS' && !isFallen) finalPatch.push(mkPatch("delta", "/主角/快感状态/侵蚀度", -5));
+            }
+        }
+
+        // ========== Boss 韧性与受击状态推演 ==========
+        const currentBossHP = Math.max(0, Math.min(100, Number(_.get(stat, '世界.当前关卡.Boss韧性值', 100))));
+        const projectedBossHP = (tactic === '必杀' && isUltimateReady) ? 0 : Math.max(0, currentBossHP - bossDmgTaken);
+        const isBossDefeatedThisTurn = (projectedBossHP <= 0 && currentBossHP > 0) || (tactic === '必杀' && isUltimateReady);
+
+        let bossStateTier = {
+            name: "完好稳固 (韧性 > 80%)",
+            guidance: `【状态充沛完好】${bossName}战力充沛，几乎未受实质损伤。气势与体能占据明显优势，神态从容甚至狂妄，正以极具压迫感的方式施展攻势或言语嘲弄。`
+        };
+
+        if (projectedBossHP <= 0) {
+            bossStateTier = {
+                name: "破防溃败 (韧性归零 0%)",
+                guidance: `【决定性击溃 / 战局终结】${bossName}的韧性防线在本回合被彻底击破归零！叙事必须描写其遭受决定性重创后战意与防御全面崩溃、力竭倒地或失去威胁的画面，宣告战斗胜利，进入战后结算。`
+            };
+        } else if (projectedBossHP <= 20) {
+            bossStateTier = {
+                name: "濒死残喘 (韧性 1% ~ 20%)",
+                guidance: `【濒临崩溃边缘】${bossName}身负致命重创，大口喘息、身躯剧烈摇晃，残存的狂妄被惊恐与力竭取代，防线千疮百孔、摇摇欲坠，处于随时可能被彻底终结的残喘状态。`
+            };
+        } else if (projectedBossHP <= 50) {
+            bossStateTier = {
+                name: "严重受挫 (韧性 21% ~ 50%)",
+                guidance: `【重创与剧烈动摇】${bossName}遭到实质性沉重打击与有效压制，攻势节律被彻底打乱，身上留下明显的创伤与狼狈痕迹，原本的嚣张与从容开始动摇，防御露出巨大破绽。`
+            };
+        } else if (projectedBossHP <= 80) {
+            bossStateTier = {
+                name: "破绽显露 (韧性 51% ~ 80%)",
+                guidance: `【受创破防】${bossName}遭到主角有效反击，身上出现击打痕迹与护甲破损，攻势略受迟滞，但核心战力尚存，正因受挫而变得更加凶狠或警惕。`
+            };
+        }
+
+        const ultimateBlockedNotice = ultimateBlocked
+            ? `\nultimate_blocked:\n  reason: "主角试图发动必杀技，但${isFallen ? '混沌充能' : '正义充能'}充能未完成。"\n  current_charge: ${isFallen ? corruptPower : purificationPower}\n  fallback_tactic: "主动"\n  instruction: "叙事中应体现主角试图蓄力但力量不足的瞬间，本回合按【主动】结算。"`
+            : '';
+_%>
+
+# 战斗描写指南：
+threat_context: "<%= threatNarrative %>"
+player_status: "<%= bodyState.name %> (<%= bodyState.posture %>)"
+boss_status:
+  name: "<%= bossName %> (<%= bossType %>)"
+  toughness_flow: "【当前韧性: <%= currentBossHP %>】 ➜ 【本轮伤害: -<%= bossDmgTaken %>】 ➜ 【结算后预计韧性: <%= projectedBossHP %>/100 (<%= projectedBossHP %>%)】"
+  state_tier: "<%= bossStateTier.name %>"
+  narrative_guidance: "<%= bossStateTier.guidance %>"
+<%_ if (isBossDefeatedThisTurn) { _%>
+  victory_notice: "【关键节点：Boss 本轮已被击败】请在正文后半段着力描绘【<%= bossName %>】被彻底击倒/制服溃败的终结画面，确立胜局！"
+<%_ } _%>
+<%_ if (!isTransformed) { _%>
+transformation_notice: "主角当前未着装。若本轮进入着装状态，请在 JSONPatch 中将 /主角/核心状态/着装状态 设为 true。"
+<%_ } _%>
+combat_resolution:
+  current_tactic: "<%= tacticDesc %>"
+  outcome_level: "<%= outcomeLabel %>"
+  narrative_directive: "<%= narrativeGuide %>"
+<%- ultimateBlockedNotice %>
+
+mandatory_patch: |
+<%- formatPatchBlock(finalPatch).split('\n').map(l => '  ' + l).join('\n') %>
+<%_
+    }
+}
+}
+_%>
